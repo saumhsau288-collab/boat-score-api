@@ -21,12 +21,13 @@ export default {
     const source = `https://makulabo-jp.com/data/${venue.padStart(2,'0')}/${Number(race)}/heatmap?hd=${date}`;
     try {
       const res = await fetch(source,{headers:{Accept:'text/html,application/xhtml+xml'},redirect:'follow',signal:AbortSignal.timeout(9000)});
-      if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502);
+if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502);
       const type=res.headers.get('content-type')||'';
       if (!/text\/html|text\/plain|application\/json/i.test(type)) return reply(request,{error:'Unexpected content type',type,source},502);
       const html=await res.text();
+const htmlLength = html.length;
       if (html.length>1_000_000) return reply(request,{error:'Response too large'},502);
-      return reply(request,{status:'fetched',source,html});
+      return reply(request,{status:'fetched',source,htmlLength});
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
   }
 };
