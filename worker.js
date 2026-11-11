@@ -55,6 +55,8 @@ last50Inspection: inspectLast50(html),
 
 embeddedDataInspection: inspectEmbeddedData(html),
 
+heatmapInspection: inspectHeatmapData(html),
+
 
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
@@ -218,6 +220,20 @@ function inspectLast50(html) {
     hasLast50: /直近50走|過去50走|最近50走/.test(text),
     hasHeatmap: /ヒートマップ/.test(text),
     hasCourseStats: /コース別|コース成績/.test(text)
+  };
+}
+
+
+function inspectHeatmapData(html) {
+  const names = ["小澤学", "藤堂里香", "鈴木結平", "中村有裕", "前田健太", "大江純"];
+  return {
+    htmlLength: html.length,
+    racerNames: names.map(name => ({
+      name,
+      found: html.includes(name)
+    })),
+    hasHeatmapTable: /枠番別ヒートマップ/.test(html),
+    hasHeatmapData: /35.{0,30}8.{0,30}2/.test(html)
   };
 }
 
