@@ -60,6 +60,9 @@ heatmapInspection: inspectHeatmapData(html),
 heatmapNumbers:
 inspectHeatmapNumbers(html),
 
+heatmapRows:
+extractHeatmapRows(html),
+
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
   }
@@ -254,6 +257,25 @@ function inspectHeatmapNumbers(html) {
       : null
   };
 }
+function extractHeatmapRows(html) {
+  const text = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
 
+  const start = text.indexOf("枠番別ヒートマップ");
+  if (start < 0) return [];
+
+  const names = extractRacerNames(html).slice(0, 6);
+
+  return names.map(name => {
+    const pos = text.indexOf(name, start);
+    return {
+      name,
+      raw: pos >= 0 ? text.slice(pos, pos + 120) : null
+    };
+  });
+}
 
 
