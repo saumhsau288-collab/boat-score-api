@@ -30,8 +30,11 @@ const htmlLength = html.length;
       return reply(request,{
   status:'fetched',
   source,
-  ...inspectBoatData(html),
-boatLinks: extractBoatLinks(html)
+  
+...inspectBoatData(html),
+boatLinks: extractBoatLinks(html),
+racerInfo: inspectRacerInfo(html)
+
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
   }
@@ -48,4 +51,19 @@ function extractBoatLinks(html) {
     .map(m => m[1])
     .filter(link => /race|player|data/i.test(link));
   return [...new Set(links)].slice(0, 30);
+}
+
+function inspectRacerInfo(html) {
+  const text = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+
+  return {
+    hasRacerInfo: /選手名|登録番号|全国勝率|当地勝率/.test(text),
+    hasMotorInfo: /モーター|2連対率/.test(text),
+    hasExhibitionInfo: /展示タイム|展示情報/.test(text),
+    textSample: text.slice(0, 500)
+  };
 }
