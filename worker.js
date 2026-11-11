@@ -27,7 +27,11 @@ if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502
       const html=await res.text();
 const htmlLength = html.length;
       if (html.length>1_000_000) return reply(request,{error:'Response too large'},502);
-      return reply(request,{status:'fetched',source,htmlLength});
+      return reply(request,{
+  status:'fetched',
+  source,
+  ...inspectBoatData(html)
+});
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
   }
 };
