@@ -30,7 +30,8 @@ const htmlLength = html.length;
       return reply(request,{
   status:'fetched',
   source,
-  ...inspectBoatData(html)
+  ...inspectBoatData(html),
+boatLinks: extractBoatLinks(html)
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
   }
