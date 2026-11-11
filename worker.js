@@ -52,6 +52,10 @@ racersByBoat: extractRacerNames(html)
   })),
 last50Inspection: inspectLast50(html),
 
+
+embeddedDataInspection: inspectEmbeddedData(html),
+
+
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
   }
@@ -185,6 +189,28 @@ function extractRacerNames(html) {
     names.filter(name => !excluded.test(name))
   )].slice(0, 30);
 }
+
+
+function inspectEmbeddedData(html) {
+  const keywords = [
+    "前田健太",
+    "中村有裕",
+    "heatmap",
+    "last50",
+    "raceData"
+  ];
+
+  return {
+    checks: keywords.map(word => ({
+      keyword: word,
+      found: html.includes(word)
+    })),
+    jsonScripts: (
+      html.match(/<script[^>]*type=["']application\/json["'][^>]*>/gi) || []
+    ).length
+  };
+}
+
 
 function inspectLast50(html) {
   const text = html.replace(/<[^>]*>/g, " ");
