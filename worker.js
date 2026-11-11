@@ -57,6 +57,8 @@ embeddedDataInspection: inspectEmbeddedData(html),
 
 heatmapInspection: inspectHeatmapData(html),
 
+heatmapNumbers:
+inspectHeatmapNumbers(html),
 
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
@@ -236,7 +238,22 @@ function inspectHeatmapData(html) {
     hasHeatmapData: /35.{0,30}8.{0,30}2/.test(html)
   };
 }
+function inspectHeatmapNumbers(html) {
+  const text = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
 
+  const pos = text.indexOf("枠番別ヒートマップ");
+
+  return {
+    found: pos >= 0,
+    sample: pos >= 0
+      ? text.slice(pos, pos + 1500)
+      : null
+  };
+}
 
 
 
