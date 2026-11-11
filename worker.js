@@ -41,7 +41,8 @@ const htmlLength = html.length;
   
 ...inspectBoatData(html),
 boatLinks: extractBoatLinks(html),
-racerInfo: inspectRacerInfo(html)
+racerInfo: inspectRacerInfo(html),
+racerNameCandidates: extractRacerNames(html)
 
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
@@ -150,4 +151,21 @@ function extractRacerData(html) {
     found: text.includes(name)
   }));
 }
+
+
+function extractRacerNames(html) {
+  const text = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+
+  const matches = [...text.matchAll(
+    /([一-龯々]{1,4}[ぁ-んァ-ヶ一-龯々]{1,5})/g
+  )];
+
+  return [...new Set(matches.map(m => m[1]))]
+    .slice(0, 30);
+}
+
 
