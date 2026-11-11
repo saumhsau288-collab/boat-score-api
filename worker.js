@@ -13,7 +13,15 @@ export default {
   async fetch(request) {
     const u = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, {status:204,headers:{...cors(request),'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600'}});
-    if (u.pathname === '/api/test') return reply(request,{status:'ok',message:'Boat Score API connected'});
+    
+if (u.pathname === '/api/racers/test') {
+  return reply(request, {
+    status: 'ok',
+    racers: extractRacerData('')
+  });
+}
+
+if (u.pathname === '/api/test') return reply(request,{status:'ok',message:'Boat Score API connected'});
     if (u.pathname !== '/api/makulabo/heatmap') return reply(request,{error:'Not found'},404);
     if (request.method !== 'GET') return reply(request,{error:'Method not allowed'},405);
     const date = u.searchParams.get('date')||'', venue=u.searchParams.get('venue')||'', race=u.searchParams.get('race')||'';
