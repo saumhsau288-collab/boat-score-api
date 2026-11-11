@@ -42,7 +42,14 @@ const htmlLength = html.length;
 ...inspectBoatData(html),
 boatLinks: extractBoatLinks(html),
 racerInfo: inspectRacerInfo(html),
-racerNameCandidates: extractRacerNames(html)
+racerNameCandidates: extractRacerNames(html),
+
+racersByBoat: extractRacerNames(html)
+  .slice(0, 6)
+  .map((name, index) => ({
+    boat: index + 1,
+    name: name
+  })),
 
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
