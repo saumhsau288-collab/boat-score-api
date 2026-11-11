@@ -50,6 +50,7 @@ racersByBoat: extractRacerNames(html)
     boat: index + 1,
     name: name
   })),
+last50Inspection: inspectLast50(html),
 
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
@@ -184,6 +185,16 @@ function extractRacerNames(html) {
     names.filter(name => !excluded.test(name))
   )].slice(0, 30);
 }
+
+function inspectLast50(html) {
+  const text = html.replace(/<[^>]*>/g, " ");
+  return {
+    hasLast50: /直近50走|過去50走|最近50走/.test(text),
+    hasHeatmap: /ヒートマップ/.test(text),
+    hasCourseStats: /コース別|コース成績/.test(text)
+  };
+}
+
 
 
 
