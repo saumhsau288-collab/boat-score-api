@@ -117,3 +117,29 @@ function testCourseWinRates() {
 
   return calculateCourseWinRates(races);
 }
+
+
+// Boat Score 選手データ抽出テスト
+function extractRacerData(html) {
+  const text = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+
+  const names = [
+    "小澤学",
+    "藤堂里香",
+    "鈴木結平",
+    "中村有裕",
+    "前田健太",
+    "大江純"
+  ];
+
+  return names.map((name, index) => ({
+    boat: index + 1,
+    name,
+    found: text.includes(name)
+  }));
+}
+
