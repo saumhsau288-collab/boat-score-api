@@ -106,3 +106,14 @@ function calculateCourseWinRates(races) {
   return result;
 }
   
+// コース別勝率を計算するためのテスト
+function testCourseWinRates() {
+  const races = [
+    { course: 1, rank: 1 },
+    { course: 1, rank: 2 },
+    { course: 2, rank: 1 },
+    { course: 2, rank: 3 }
+  ];
+
+  return calculateCourseWinRates(races);
+}
