@@ -31,3 +31,10 @@ const htmlLength = html.length;
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
   }
 };
+// Boat Score データ解析機能
+function inspectBoatData(html) {
+  return {
+    htmlLength: html.length,
+    title: html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || null
+  };
+}
