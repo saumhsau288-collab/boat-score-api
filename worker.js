@@ -153,19 +153,30 @@ function extractRacerData(html) {
 }
 
 
+
 function extractRacerNames(html) {
-  const text = html
+  const section = html.match(
+    /枠番別ヒートマップ[\s\S]{0,30000}/
+  );
+
+  if (!section) return [];
+
+  const text = section[0]
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
 
-  const matches = [...text.matchAll(
-    /([一-龯々]{1,4}[ぁ-んァ-ヶ一-龯々]{1,5})/g
-  )];
+  const names = [...text.matchAll(
+    /(?:^|\s)([一-龯々]{1,4}[ぁ-んァ-ヶ一-龯々]{1,5})(?=\s|$)/g
+  )].map(m => m[1]);
 
-  return [...new Set(matches.map(m => m[1]))]
-    .slice(0, 30);
+  const excluded = /^(総合|選手|準備中|出走表|利用規約|問い合わせ|平均|全国|当地|枠番|結果|直近|展示|勝率|集計|順位|全場|着順|走数)$/;
+
+  return [...new Set(
+    names.filter(name => !excluded.test(name))
+  )].slice(0, 30);
 }
+
 
 
