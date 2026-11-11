@@ -1,4 +1,4 @@
-ふconst ALLOWED_ORIGINS = new Set([
+const ALLOWED_ORIGINS = new Set([
   'https://ancient-brook-67e7.saumh-sau-288.workers.dev',
   'https://rough-math-6d4c.saumh-sau-288.workers.dev'
 ]);
@@ -80,3 +80,29 @@ function analyzeBoatScore(data) {
       data.hasExhibitionInfo === true
   };
 }
+
+function calculateCourseWinRates(races) {
+  const result = [];
+
+  for (let course = 1; course <= 6; course++) {
+    const records = races.filter(
+      r => Number(r.course) === course
+    );
+    const starts = records.length;
+    const wins = records.filter(
+      r => Number(r.rank) === 1
+    ).length;
+
+    result.push({
+      course,
+      starts,
+      wins,
+      winRate: starts > 0
+        ? Number((wins / starts * 100).toFixed(1))
+        : null
+    });
+  }
+
+  return result;
+}
+  
