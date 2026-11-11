@@ -257,6 +257,7 @@ function inspectHeatmapNumbers(html) {
       : null
   };
 }
+
 function extractHeatmapRows(html) {
   const text = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
@@ -271,11 +272,32 @@ function extractHeatmapRows(html) {
 
   return names.map(name => {
     const pos = text.indexOf(name, start);
+    if (pos < 0) {
+      return { name, counts: null, verified: false };
+    }
+
+    const raw = text.slice(pos + name.length, pos + name.length + 120);
+    const match = raw.match(
+      /^\s*((?:\d{1,2}\s+){6})(\d{1,2})\s+(\d\.\d{2})/
+    );
+
+    if (!match) {
+      return { name, counts: null, verified: false };
+    }
+
+    const counts = match[1].trim().split(/\s+/).map(Number);
+    const runs = Number(match[2]);
+
+    if (counts.reduce((a, b) => a + b, 0) !== runs) {
+      return { name, counts: null, verified: false };
+    }
+
     return {
       name,
-      raw: pos >= 0 ? text.slice(pos, pos + 120) : null
+      counts,
+      runs,
+      average: Number(match[3]),
+      verified: true
     };
   });
 }
-
-
