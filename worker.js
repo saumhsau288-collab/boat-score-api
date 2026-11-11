@@ -42,3 +42,9 @@ function inspectBoatData(html) {
     title: html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || null
   };
 }
+function extractBoatLinks(html) {
+  const links = [...html.matchAll(/href=["']([^"']+)["']/gi)]
+    .map(m => m[1])
+    .filter(link => /race|player|data/i.test(link));
+  return [...new Set(links)].slice(0, 30);
+}
