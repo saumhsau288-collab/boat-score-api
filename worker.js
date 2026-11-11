@@ -1,4 +1,4 @@
-const ALLOWED_ORIGINS = new Set([
+ふconst ALLOWED_ORIGINS = new Set([
   'https://ancient-brook-67e7.saumh-sau-288.workers.dev',
   'https://rough-math-6d4c.saumh-sau-288.workers.dev'
 ]);
@@ -65,5 +65,18 @@ function inspectRacerInfo(html) {
     hasMotorInfo: /モーター|2連対率/.test(text),
     hasExhibitionInfo: /展示タイム|展示情報/.test(text),
     textSample: text.slice(0, 500)
+  };
+}
+
+// Boat Score データ解析機能
+function analyzeBoatScore(data) {
+  return {
+    racerInfo: data.hasRacerInfo ?? false,
+    motorInfo: data.hasMotorInfo ?? false,
+    exhibitionInfo: data.hasExhibitionInfo ?? false,
+    dataReady:
+      data.hasRacerInfo === true &&
+      data.hasMotorInfo === true &&
+      data.hasExhibitionInfo === true
   };
 }
