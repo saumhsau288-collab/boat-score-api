@@ -341,6 +341,8 @@ const officialRacerIds = uniqueRacerLinks
   .map(link => new URL(link, "https://www.boatrace.jp").searchParams.get("toban"))
   .filter(Boolean);
 const officialRacerIdCount = officialRacerIds.length;
+const officialRacerIdsUnique =
+  new Set(officialRacerIds).size === 6;
 const officialText = html
   .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
   .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
@@ -356,6 +358,7 @@ htmlLength: html.length,
 officialTextSample: officialText.slice(0, 1500),
 racerLinkCount: racerLinks.length,
 officialRacerIdCount: officialRacerIdCount,
+officialRacerIdsUnique: officialRacerIdsUnique,
 officialRacerIds: officialRacerIds,
 uniqueRacerLinkCount: uniqueRacerLinks.length,
 racerLinkSamples: racerLinks.slice(0, 6).map(m => m[1]),
