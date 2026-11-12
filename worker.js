@@ -334,6 +334,8 @@ async function fetchOfficialRacers(date, venue, race) {
     }
 
     const html = await response.text();
+const officialRows = [];
+const racerLinks = [...html.matchAll(/href="([^"]*\/owpc\/pc\/data\/racersearch\/profile[^"]*)"/g)];
 const officialText = html
   .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
   .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
@@ -347,7 +349,7 @@ const officialNames = [];
       racers: [],
 htmlLength: html.length,
 officialTextSample: officialText.slice(0, 1500),
-nameChecks: [],
+racerLinkCount: racerLinks.length,
     };
   } catch (error) {
     return {
