@@ -309,7 +309,9 @@ function verifyHeatmapBoats(html, officialRacers) {
   : [];
 
   return racers.map((name, index) => {
-    const row = rows.find(r => r.name === name);
+    const row = rows.find(r =>
+  r.name.replace(/\s/g, "") === name.replace(/\s/g, "")
+);
     return {
      boat: officialRacers.racers.find(r => r.name === name)?.boat ?? null,
       name,
