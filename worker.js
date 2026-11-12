@@ -338,7 +338,18 @@ async function fetchOfficialRacers(date, venue, race) {
     return {
       verified: false,
       racers: [],
-      htmlLength: html.length
+htmlLength: html.length,
+nameChecks: [
+  "宇土泰就",
+  "土屋蘭",
+  "金田幸子",
+  "東口晃",
+  "原田秀弥",
+  "作間章"
+].map(name => ({
+  name,
+  found: html.replace(/\s+/g, "").includes(name)
+}))
     };
   } catch (error) {
     return {
