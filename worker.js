@@ -340,6 +340,7 @@ const officialText = html
   .replace(/<[^>]+>/g, " ")
   .replace(/\s+/g, " ")
   .trim();
+const officialNames = [];
 
     return {
       verified: false,
