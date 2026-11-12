@@ -355,11 +355,17 @@ const officialText = html
   .replace(/<[^>]+>/g, " ")
   .replace(/\s+/g, " ")
   .trim();
-const officialNames = [];
+const officialNames = [...html.matchAll(
+  /class="is-boatColor([1-6])"[\s\S]{0,1000}?profile\?toban=(\d+)[\s\S]{0,300}?>([^<>]+)<\/a>/g
+)].map(m => ({
+  boat: Number(m[1]),
+  racerId: m[2],
+  name: m[3].trim()
+}));
 
     return {
       verified: false,
-      racers: [],
+      racers: officialNames,
 htmlLength: html.length,
 officialTextSample: officialText.slice(0, 1500),
 racerLinkCount: racerLinks.length,
