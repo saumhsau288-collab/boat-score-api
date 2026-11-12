@@ -59,6 +59,9 @@ inspectHeatmapNumbers(html),
 heatmapRows:
 extractHeatmapRows(html),
 
+heatmapBoatVerification: verifyHeatmapBoats(html),
+
+
 });
     } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
   }
@@ -297,3 +300,26 @@ function extractHeatmapRows(html) {
     };
   });
 }
+
+function verifyHeatmapBoats(html) {
+  const rows = extractHeatmapRows(html);
+  const racers = [
+    "小澤学",
+    "藤堂里香",
+    "鈴木結平",
+    "中村有裕",
+    "前田健太",
+    "大江純"
+  ];
+
+  return racers.map((name, index) => {
+    const row = rows.find(r => r.name === name);
+    return {
+      boat: index + 1,
+      name,
+      counts: row?.counts ?? null,
+      verified: row?.verified === true
+    };
+  });
+}
+
