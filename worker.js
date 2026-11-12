@@ -302,24 +302,30 @@ function extractHeatmapRows(html) {
   });
 }
 
+
 function verifyHeatmapBoats(html, officialRacers) {
   const rows = extractHeatmapRows(html);
-  const racers = officialRacers?.verified
-  ? officialRacers.racers.map(r => r.name)
-  : [];
+  if (!officialRacers?.verified) return [];
 
-  return racers.map((name, index) => {
-    const row = rows.find(r =>
-  r.name.replace(/\s/g, "") === name.replace(/\s/g, "")
-);
+  return officialRacers.racers.map(racer => {
+    const normalize = name =>
+      String(name ?? "").replace(/\s/g, "");
+
+    const row = rows.find(
+      r => normalize(r.name) === normalize(racer.name)
+    );
+
     return {
-     boat: officialRacers.racers.find(r => r.name === name)?.boat ?? null,
-      name,
+      boat: racer.boat,
+      name: racer.name,
       counts: row?.counts ?? null,
-      verified: !!row && row.verified === true
+      verified: !!row &&
+        Array.isArray(row.counts) &&
+        row.counts.length === 6
     };
   });
 }
+
 
 async function fetchOfficialRacers(date, venue, race) {
   const url = new URL(
