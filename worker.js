@@ -273,7 +273,10 @@ function extractHeatmapRows(html) {
   .slice(0, 6);
 
   return names.map(name => {
-    const pos = text.indexOf(name, start);
+    const pos = text.indexOf(
+  name,
+  Math.max(start, text.indexOf("枠番別ヒートマップ", start) + 10)
+);
     if (pos < 0) {
       return { name, counts: null, verified: false };
     }
