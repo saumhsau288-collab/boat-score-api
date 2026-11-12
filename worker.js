@@ -278,7 +278,7 @@ function extractHeatmapRows(html) {
       return { name, counts: null, verified: false };
     }
 
-    const raw = text.slice(pos + name.length, pos + name.length + 120);
+    const raw = text.slice(pos + name.length, pos + name.length + 300);
     const match = raw.match(
   /^\s*((?:\d{1,2}\s+){1,12})(\d{1,2})\s+(\d+\.\d{2})(?=\s|$)/
 );
