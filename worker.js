@@ -321,7 +321,10 @@ function verifyHeatmapBoats(html, officialRacers) {
       counts: row?.counts ?? null,
       verified: !!row &&
         Array.isArray(row.counts) &&
-        row.counts.length === 6
+        row.counts.length >= 1 &&
+row.counts.length <= 6 &&
+row.counts.every(n => Number.isInteger(n) && n >= 0) &&
+row.counts.reduce((sum, n) => sum + n, 0) === row.runs
     };
   });
 }
