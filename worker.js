@@ -268,7 +268,9 @@ function extractHeatmapRows(html) {
   const start = text.indexOf("枠番別ヒートマップ");
   if (start < 0) return [];
 
-  const names = extractRacerNames(html).slice(0, 6);
+  const names = extractRacerNames(html)
+  .filter(name => text.indexOf(name, start) >= 0)
+  .slice(0, 6);
 
   return names.map(name => {
     const pos = text.indexOf(name, start);
