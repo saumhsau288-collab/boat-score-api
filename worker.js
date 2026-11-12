@@ -154,17 +154,14 @@ function extractRacerData(html) {
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
 
-  const names = [
-    "小澤学",
-    "藤堂里香",
-    "鈴木結平",
-    "中村有裕",
-    "前田健太",
-    "大江純"
-  ];
+  
+const names = extractHeatmapRows(html)
+  .map(row => row.name)
+  .filter(Boolean);
+
 
   return names.map((name, index) => ({
-    boat: index + 1,
+    boat: null,
     name,
     found: text.includes(name)
   }));
