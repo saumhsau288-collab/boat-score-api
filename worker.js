@@ -320,3 +320,35 @@ function verifyHeatmapBoats(html) {
   });
 }
 
+async function fetchOfficialRacers(date, venue, race) {
+  const url = new URL(
+    "https://www.boatrace.jp/owpc/pc/race/racelist"
+  );
+
+  url.searchParams.set("rno", String(Number(race)));
+  url.searchParams.set("jcd", String(venue).padStart(2, "0"));
+  url.searchParams.set("hd", String(date));
+
+  try {
+    const response = await fetch(url.toString());
+
+    if (!response.ok) {
+      return { verified: false, racers: [] };
+    }
+
+    const html = await response.text();
+
+    return {
+      verified: false,
+      racers: [],
+      htmlLength: html.length
+    };
+  } catch (error) {
+    return {
+      verified: false,
+      racers: [],
+      error: String(error)
+    };
+  }
+}
+
