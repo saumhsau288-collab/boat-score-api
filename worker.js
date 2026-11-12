@@ -59,7 +59,11 @@ inspectHeatmapNumbers(html),
 heatmapRows:
 extractHeatmapRows(html),
 
-heatmapBoatVerification: verifyHeatmapBoats(html),
+heatmapBoatVerification:
+  verifyHeatmapBoats(html),
+
+officialRacersInspection:
+  await fetchOfficialRacers(date, venue, race),
 
 
 });
