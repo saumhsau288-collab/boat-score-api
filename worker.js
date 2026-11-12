@@ -356,7 +356,7 @@ const officialText = html
   .replace(/\s+/g, " ")
   .trim();
 const officialNames = [...html.matchAll(
-  /class="is-boatColor([1-6])"[\s\S]{0,1000}?profile\?toban=(\d+)[\s\S]{0,300}?>([^<>]+)<\/a>/g
+ /class="[^"]*\bis-boatColor([1-6])\b[^"]*"[\s\S]{0,1000}?profile\?toban=(\d+)[\s\S]{0,300}?>([^<>]+)<\/a>/g
 )].map(m => ({
   boat: Number(m[1]),
   racerId: m[2],
