@@ -35,7 +35,8 @@ if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502
       const html=await res.text();
 const htmlLength = html.length;
       if (html.length>1_000_000) return reply(request,{error:'Response too large'},502);
-      return reply(request,{
+     const officialRacers = await fetchOfficialRacers(date, venue, race);
+return reply(request,{
   status:'fetched',
   source,
   
@@ -58,12 +59,11 @@ inspectHeatmapNumbers(html),
 
 heatmapRows:
 extractHeatmapRows(html),
-
 heatmapBoatVerification:
-  verifyHeatmapBoats(html),
+  verifyHeatmapBoats(html, officialRacers),
 
 officialRacersInspection:
-  await fetchOfficialRacers(date, venue, race),
+  officialRacers,
 
 
 });
@@ -302,17 +302,19 @@ function extractHeatmapRows(html) {
   });
 }
 
-function verifyHeatmapBoats(html) {
+function verifyHeatmapBoats(html, officialRacers) {
   const rows = extractHeatmapRows(html);
-  const racers = rows.map(row => row.name);
+  const racers = officialRacers?.verified
+  ? officialRacers.racers.map(r => r.name)
+  : [];
 
   return racers.map((name, index) => {
     const row = rows.find(r => r.name === name);
     return {
-      boat: null,
+     boat: officialRacers.racers.find(r => r.name === name)?.boat ?? null,
       name,
       counts: row?.counts ?? null,
-      verified: false
+      verified: !!row && row.verified === true
     };
   });
 }
