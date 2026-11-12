@@ -196,8 +196,6 @@ function extractRacerNames(html) {
 
 function inspectEmbeddedData(html) {
   const keywords = [
-    "前田健太",
-    "中村有裕",
     "heatmap",
     "last50",
     "raceData"
@@ -226,7 +224,9 @@ function inspectLast50(html) {
 
 
 function inspectHeatmapData(html) {
-  const names = ["小澤学", "藤堂里香", "鈴木結平", "中村有裕", "前田健太", "大江純"];
+  const names = extractHeatmapRows(html)
+  .map(row => row.name)
+  .filter(Boolean);
   return {
     htmlLength: html.length,
     racerNames: names.map(name => ({
