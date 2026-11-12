@@ -1,4 +1,4 @@
-すconst ALLOWED_ORIGINS = new Set([
+const ALLOWED_ORIGINS = new Set([
   'https://ancient-brook-67e7.saumh-sau-288.workers.dev',
   'https://rough-math-6d4c.saumh-sau-288.workers.dev'
 ]);
