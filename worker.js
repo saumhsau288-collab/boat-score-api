@@ -44,12 +44,8 @@ boatLinks: extractBoatLinks(html),
 racerInfo: inspectRacerInfo(html),
 racerNameCandidates: extractRacerNames(html),
 
-racersByBoat: extractRacerNames(html)
-  .slice(0, 6)
-  .map((name, index) => ({
-    boat: index + 1,
-    name: name
-  })),
+racersByBoat: [],
+racersByBoatVerified: false,
 last50Inspection: inspectLast50(html),
 
 
