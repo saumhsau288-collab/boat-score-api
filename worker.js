@@ -350,6 +350,7 @@ const officialNames = [];
 htmlLength: html.length,
 officialTextSample: officialText.slice(0, 1500),
 racerLinkCount: racerLinks.length,
+racerLinkSamples: racerLinks.slice(0, 6).map(m => m[1]),
     };
   } catch (error) {
     return {
