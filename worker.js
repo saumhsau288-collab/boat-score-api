@@ -300,22 +300,15 @@ function extractHeatmapRows(html) {
 
 function verifyHeatmapBoats(html) {
   const rows = extractHeatmapRows(html);
-  const racers = [
-    "小澤学",
-    "藤堂里香",
-    "鈴木結平",
-    "中村有裕",
-    "前田健太",
-    "大江純"
-  ];
+  const racers = rows.map(row => row.name);
 
   return racers.map((name, index) => {
     const row = rows.find(r => r.name === name);
     return {
-      boat: index + 1,
+      boat: null,
       name,
       counts: row?.counts ?? null,
-      verified: row?.verified === true
+      verified: false
     };
   });
 }
