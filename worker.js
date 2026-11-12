@@ -334,11 +334,18 @@ async function fetchOfficialRacers(date, venue, race) {
     }
 
     const html = await response.text();
+const officialText = html
+  .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+  .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+  .replace(/<[^>]+>/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
 
     return {
       verified: false,
       racers: [],
 htmlLength: html.length,
+officialTextSample: officialText.slice(0, 1500),
 nameChecks: [],
     };
   } catch (error) {
