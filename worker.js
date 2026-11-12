@@ -278,7 +278,7 @@ function extractHeatmapRows(html) {
 
     const raw = text.slice(pos + name.length, pos + name.length + 120);
     const match = raw.match(
-  /^\s*((?:\d{1,2}\s+){1,6})(\d{1,2})\s+(\d+\.\d{2})/
+  /^\s*((?:\d{1,2}\s+){1,6})(\d{1,2})\s+(\d+\.\d{2})(?=\s|$)/
 );
 
     if (!match) {
@@ -297,7 +297,7 @@ function extractHeatmapRows(html) {
       counts,
       runs,
       average: Number(match[3]),
-      verified: true
+      verified: false
     };
   });
 }
