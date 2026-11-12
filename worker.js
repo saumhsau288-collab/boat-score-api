@@ -364,7 +364,9 @@ const officialNames = [...html.matchAll(
 }));
 
     return {
-      verified: false,
+      verified: officialNames.length === 6 &&
+  new Set(officialNames.map(r => r.boat)).size === 6 &&
+  officialNames.every(r => r.boat >= 1 && r.boat <= 6 && r.racerId && r.name),
       racers: officialNames,
 htmlLength: html.length,
 officialTextSample: officialText.slice(0, 1500),
