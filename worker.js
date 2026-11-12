@@ -1,4 +1,4 @@
-const ALLOWED_ORIGINS = new Set([
+すconst ALLOWED_ORIGINS = new Set([
   'https://ancient-brook-67e7.saumh-sau-288.workers.dev',
   'https://rough-math-6d4c.saumh-sau-288.workers.dev'
 ]);
@@ -336,6 +336,7 @@ async function fetchOfficialRacers(date, venue, race) {
     const html = await response.text();
 const officialRows = [];
 const racerLinks = [...html.matchAll(/href="([^"]*\/owpc\/pc\/data\/racersearch\/profile[^"]*)"/g)];
+const uniqueRacerLinks = [...new Set(racerLinks.map(m => m[1]))];
 const officialText = html
   .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
   .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
@@ -350,6 +351,7 @@ const officialNames = [];
 htmlLength: html.length,
 officialTextSample: officialText.slice(0, 1500),
 racerLinkCount: racerLinks.length,
+uniqueRacerLinkCount: uniqueRacerLinks.length,
 racerLinkSamples: racerLinks.slice(0, 6).map(m => m[1]),
     };
   } catch (error) {
