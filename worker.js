@@ -340,6 +340,12 @@ const uniqueRacerLinks = [...new Set(racerLinks.map(m => m[1]))];
 const officialRacerIds = uniqueRacerLinks
   .map(link => new URL(link, "https://www.boatrace.jp").searchParams.get("toban"))
   .filter(Boolean);
+const officialRacerLinkContexts = racerLinks
+  .slice(0, 12)
+  .map(m => html.slice(
+    Math.max(0, m.index - 150),
+    m.index + m[0].length + 100
+  ));
 const officialRacerIdCount = officialRacerIds.length;
 const officialRacerIdsUnique =
   new Set(officialRacerIds).size === 6;
@@ -358,6 +364,7 @@ htmlLength: html.length,
 officialTextSample: officialText.slice(0, 1500),
 racerLinkCount: racerLinks.length,
 officialRacerIdCount: officialRacerIdCount,
+officialRacerLinkContexts: officialRacerLinkContexts,
 officialRacerIdsUnique: officialRacerIdsUnique,
 officialRacerIds: officialRacerIds,
 uniqueRacerLinkCount: uniqueRacerLinks.length,
