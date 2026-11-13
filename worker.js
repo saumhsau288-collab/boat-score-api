@@ -259,7 +259,10 @@ function inspectHeatmapNumbers(html) {
 }
 
 function extractHeatmapRows(html) {
-  const text = html
+  const tableRows = [...html.matchAll(
+  /<tr\b[^>]*>[\s\S]*?<\/tr>/gi
+)].map(m => m[0]);
+const text = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
 .replace(/<td\b[^>]*>\s*(?:&nbsp;|&#160;|\u00a0|\s)*<\/td>/gi, "<td>0</td>")
@@ -284,7 +287,8 @@ function extractHeatmapRows(html) {
 
     const raw = text.slice(pos + name.length, pos + name.length + 300);
     const match = raw.match(
-  /^\s*((?:\d{1,2}\s+){6})(\d{1,2})\s+(\d+\.\d{2})(?=\s|$)/);
+  /^\s*((?:\d{1,2}\s+){6})(\d{1,2})\s+(\d+\.\d{2})(?=\s|$)/
+);
 
     if (!match) {
       return { name, counts: null, verified: false };
