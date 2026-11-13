@@ -285,6 +285,14 @@ const text = html
   .slice(0, 6);
 
   return names.map(name => {
+
+const row = parsedTableRows.find(cells => cells.includes(name));
+
+const boat = row ? Number(row[0]) : null;
+
+const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null;
+
+
     const pos = text.indexOf(
   name,
   Math.max(start, text.indexOf("枠番別ヒートマップ", start) + 10)
@@ -310,6 +318,7 @@ const text = html
     }
 
     return {
+      boat: validBoat,
       name,
       counts,
       runs,
