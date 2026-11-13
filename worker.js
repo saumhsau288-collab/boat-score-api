@@ -346,6 +346,7 @@ function verifyHeatmapBoats(html, officialRacers) {
       name: racer.name,
       counts: row?.counts ?? null,
       verified: !!row &&
+row.boat === racer.boat &&
         Array.isArray(row.counts) &&
         row.counts.length >= 1 &&
 row.counts.length <= 6 &&
