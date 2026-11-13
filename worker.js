@@ -306,7 +306,7 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 );
     if (pos < 0) {
       return { name, counts: null, verified: false };
-    }
+    } 
 
     const raw = text.slice(pos + name.length, pos + name.length + 300);
     const match = raw.match(
