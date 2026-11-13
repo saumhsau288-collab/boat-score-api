@@ -286,7 +286,11 @@ const text = html
 
   return names.map(name => {
 
-const row = parsedTableRows.find(cells => cells.includes(name));
+const row = parsedTableRows.find(cells =>
+  cells.some(cell =>
+    cell.replace(/\s/g, "") === name.replace(/\s/g, "")
+  )
+);
 
 const boat = row ? Number(row[0]) : null;
 const tableCounts = row
