@@ -267,7 +267,12 @@ const heatmapTableRows = tableRows.filter(row =>
 );
 const parsedTableRows = heatmapTableRows.map(row => {
   const cells = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
-    .map(m => m[1].replace(/<[^>]*>/g, "").trim());
+    .map(m => m[1]
+  .replace(/<[^>]*>/g, "")
+  .replace(/&nbsp;|&#160;|&#xA0;/gi, "")
+  .replace(/\u00a0/g, "")
+  .trim()
+);
   return cells.map(cell => cell === "" || /^(?:&nbsp;|&#160;)+$/.test(cell) ? "0" : cell);
 });
 const text = html
