@@ -409,13 +409,19 @@ const officialText = html
   .replace(/<[^>]+>/g, " ")
   .replace(/\s+/g, " ")
   .trim();
+
 const officialNames = [...html.matchAll(
- /class="[^"]*\bis-boatColor([1-6])\b[^"]*"[\s\S]{0,1000}?profile\?toban=(\d+)[\s\S]{0,300}?>([^<>]+)<\/a>/g
-)].map(m => ({
-  boat: Number(m[1]),
-  racerId: m[2],
-  name: m[3].trim()
-}));
+  /<td\b[^>]*class=["'][^"']*\bis-boatColor([1-6])\b[^"']*["'][^>]*>[\s\S]*?<\/td>/gi
+)].flatMap(m => {
+  const boat = Number(m[1]);
+  const link = m[0].match(
+    /<a\b[^>]*href=["'][^"']*\/racersearch\/profile\?toban=(\d+)[^"']*["'][^>]*>([\s\S]*?)<\/a>/i
+  );
+  if (!link) return [];
+  const name = link[2].replace(/<[^>]*>/g, "").trim();
+  return name ? [{ boat, racerId: link[1], name }] : [];
+});
+
 
     return {
       verified: officialNames.length === 6 &&
