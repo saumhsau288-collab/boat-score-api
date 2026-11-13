@@ -289,7 +289,9 @@ const text = html
 const row = parsedTableRows.find(cells => cells.includes(name));
 
 const boat = row ? Number(row[0]) : null;
-
+const tableCounts = row
+  ? row.slice(2, 8).map(v => v === "" ? 0 : Number(v))
+  : null;
 const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null;
 
 
@@ -306,14 +308,14 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
   /^\s*((?:\d{1,2}\s+){6})(\d{1,2})\s+(\d+\.\d{2})(?=\s|$)/
 );
 
-    if (!match) {
-      return { name, counts: null, verified: false };
-    }
+    if (!match && !tableCounts) {
+  return { name, counts: null, verified: false };
+}
 
-    const counts = match[1].trim().split(/\s+/).map(Number);
-    const runs = Number(match[2]);
+    const counts = tableCounts;
+    const runs = counts ? counts.reduce((a, b) => a + b, 0) : 0;
 
-    if (counts.reduce((a, b) => a + b, 0) !== runs) {
+    if (!counts || counts.length !== 6 || counts.some(n => !Number.isFinite(n) || n < 0)) {
       return { name, counts: null, verified: false };
     }
 
@@ -322,7 +324,7 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
       name,
       counts,
       runs,
-      average: Number(match[3]),
+      average: runs > 0 ? counts.reduce((sum, n, i) => sum + n * (i + 1), 0) / runs : null,
       verified: false
     };
   });
