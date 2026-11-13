@@ -262,6 +262,9 @@ function extractHeatmapRows(html) {
   const tableRows = [...html.matchAll(
   /<tr\b[^>]*>[\s\S]*?<\/tr>/gi
 )].map(m => m[0]);
+const heatmapTableRows = tableRows.filter(row =>
+  /枠番|着|平均|<td\b/i.test(row)
+);
 const text = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
