@@ -292,6 +292,7 @@ const boat = row ? Number(row[0]) : null;
 const tableCounts = row
   ? row.slice(2, 8).map(v => v === "" ? 0 : Number(v))
   : null;
+
 const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null;
 
 
