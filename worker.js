@@ -312,7 +312,9 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
   return { name, counts: null, verified: false };
 }
 
-    const counts = tableCounts;
+    const counts = tableCounts ?? (
+  match ? match[1].trim().split(/\s+/).map(Number) : null
+);
     const runs = counts ? counts.reduce((a, b) => a + b, 0) : 0;
 
     if (!counts || counts.length !== 6 || counts.some(n => !Number.isFinite(n) || n < 0)) {
