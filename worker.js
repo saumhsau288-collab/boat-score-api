@@ -262,7 +262,7 @@ function extractHeatmapRows(html) {
   const text = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
-.replace(/<td\b[^>]*>\s*<\/td>/gi, "<td>0</td>")
+.replace(/<td\b[^>]*>\s*(?:&nbsp;|&#160;|\u00a0|\s)*<\/td>/gi, "<td>0</td>")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
 
