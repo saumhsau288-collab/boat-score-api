@@ -7,6 +7,13 @@ vm.runInContext(source,context,{filename:'worker.js'});
 const parse=vm.runInContext('extractOfficialBoatRows',context);
 const heat=vm.runInContext('parseLast50Heatmap',context);
 
+const startParser=vm.runInContext('extractOfficialStartExhibition',context);
+const startTable='<table><tr><th>スタート展示</th></tr>'+
+  Array.from({length:6},(_,i)=>'<tr><td colspan="3"><div>'+(i+1)+'</div><span>.'+String(i+1).padStart(2,'0')+'</span></td></tr>').join('')+'</table>';
+assert.equal(startParser(startTable).verified,true);
+assert.equal(startParser(startTable).rows[0].startTiming,0.01);
+assert.equal(startParser(startTable).rows[5].course,6);
+assert.equal(startParser(startTable.replace('<div>6</div>','<div>5</div>')).verified,false);
 const exhibitionParser=vm.runInContext('extractOfficialExhibition',context);
 const exhibitionHtml='<table><tr><th>展示<br>タイム</th><th>チルト</th></tr>'+
   Array.from({length:6},(_,i)=>'<tr><td>'+(i+1)+'</td><td></td><td>選手'+(i+1)+'</td><td>52.0kg</td><td>6.58</td><td>0.0</td></tr>').join('')+'</table>';
