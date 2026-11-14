@@ -32,7 +32,7 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <label>日付（YYYYMMDD） <input id="date" inputmode="numeric" maxlength="8" placeholder="20261114"></label>
 <label>競艇場 <select id="venue" style="font-size:16px;padding:10px;max-width:100%"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select></label>
 <label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
-<button id="checkAllVenues" type="button">全国24場の公式1R出走表を確認</button><p id="allVenuesStatus" role="status">未確認</p><button id="checkVenue" type="button">選択した競艇場の開催情報を確認</button><p id="venueStatus" role="status">未確認（開催・非開催は未判定）</p><button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
+<button id="checkAllVenues" type="button">全国24場の公式1R出走表を確認</button><label style="display:block"><input id="showConfirmedOnly" type="checkbox"> 公式1R確認済みの場だけ表示（未確認の場は非開催とは限りません）</label><p id="allVenuesStatus" role="status">未確認</p><button id="checkVenue" type="button">選択した競艇場の開催情報を確認</button><p id="venueStatus" role="status">未確認（開催・非開催は未判定）</p><button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
 <div id="rows" style="display:grid;gap:14px"></div>
 <button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
@@ -42,6 +42,13 @@ const japanDateParts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZon
 const japanToday=japanDateParts.year+japanDateParts.month+japanDateParts.day;
 document.getElementById('date').value=japanToday;
 for(let boat=1;boat<=6;boat++){const card=document.createElement('fieldset');card.style.cssText='border:1px solid #cbd5e1;border-radius:12px;padding:12px;min-width:0';const heading=document.createElement('legend');heading.textContent=boat+'号艇';heading.style.fontWeight='bold';card.appendChild(heading);const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px';for(let i=0;i<8;i++){const label=document.createElement('label');label.style.cssText='margin:0;min-width:0';const name=i===0?'登録番号':i===1?'走数':(i-1)+'着';label.textContent=name+' ';const input=document.createElement('input');input.setAttribute('aria-label',boat+'号艇 '+name);input.dataset.boat=String(boat);input.dataset.index=String(i);input.type=i===0?'text':'number';input.inputMode='numeric';input.required=true;input.style.cssText='box-sizing:border-box;width:100%;min-width:0';if(i===0)input.maxLength=4;else{input.min='0';input.max='50'}label.appendChild(input);grid.appendChild(label)}card.appendChild(grid);rows.appendChild(card)}
+const venueSelector=document.getElementById('venue');
+function filterConfirmedVenues(){
+ const only=document.getElementById('showConfirmedOnly').checked;
+ for(const option of venueSelector.options){if(!option.value)continue;option.hidden=only&&!option.textContent.includes('（公式1R確認済）')}
+ if(only&&venueSelector.selectedOptions[0]?.hidden)venueSelector.value='';
+}
+document.getElementById('showConfirmedOnly').addEventListener('change',filterConfirmedVenues);
 let venueCheckVersion=0;
 let racerFillVersion=0;
 function clearOfficialRacerAutofill(){
@@ -61,6 +68,7 @@ document.getElementById('date').addEventListener('input',()=>{
  document.getElementById('allVenuesStatus').textContent='日付が変更されました。24場を再確認してください';
  document.getElementById('venueStatus').textContent='日付が変更されました。開催情報は未確認です';
  document.getElementById('fillStatus').textContent='';
+ filterConfirmedVenues();
 });
 document.getElementById('checkAllVenues').addEventListener('click',async()=>{
  const status=document.getElementById('allVenuesStatus');
@@ -82,6 +90,7 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
   }));
   if(currentCheck!==venueCheckVersion)return;
   results.forEach((verified,i)=>{if(verified){confirmed++;batch[i].textContent+=' （公式1R確認済）'}else unknown++});
+  filterConfirmedVenues();
   status.textContent='確認中：'+Math.min(offset+4,24)+'/24場、公式1R確認済 '+confirmed+'場、未確認 '+unknown+'場';
  }
  status.textContent='公式1R確認済 '+confirmed+'場／未確認 '+unknown+'場。未確認は非開催を意味しません。';
