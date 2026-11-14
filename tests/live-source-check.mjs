@@ -239,8 +239,8 @@ try {
   const ctx=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:()=>{throw Error('No network in parser')}});
   vm.runInContext(source,ctx,{filename:'worker.js'});
   const parsed=vm.runInContext('parseOfficialFinishOrder',ctx)(body);
-  const tables=[...body.matchAll(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/gi)];
-  const headers=tables.map(m=>[...m[0].matchAll(/<th\\b[^>]*>([\\s\\S]*?)<\\/th>/gi)].map(x=>x[1].replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim()).slice(0,14));
+  const tables=[...body.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)];
+  const headers=tables.map(m=>[...m[0].matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(x=>x[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()).slice(0,14));
   console.log(JSON.stringify({source:'official_result',status:response.status,htmlLength:body.length,tableCount:tables.length,tableHeaders:headers,parserVerified:parsed.verified,parserReason:parsed.reason,finishOrder:parsed.verified?parsed.finishOrder:[]}));
 }catch(error){console.log(JSON.stringify({source:'official_result',error:String(error?.message||error)}));}
 
