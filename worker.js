@@ -58,7 +58,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
   const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boat Score 2</title>
 <style>body{font-family:system-ui,sans-serif;background:#f4f7fb;color:#14253b;margin:0}main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.65rem}section{background:white;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 9px #172a4212}label{display:block;margin:12px 0 4px;font-weight:600}input,select,button{font:inherit;padding:11px;border:1px solid #b6c4d3;border-radius:8px;max-width:100%;box-sizing:border-box}button{background:#1459b5;color:white;border:0;margin:12px 0;cursor:pointer}button:disabled{opacity:.5}a{color:#1459b5}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}small{color:#536478}.warn{color:#a64a00}</style></head>
 <body><main><h1>Boat Score 2</h1><small>開発版 20261115-rate-venue-verify · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><p>公式情報の取得状況と分析候補を確認する開発プレビューです。</p>
-<section><h2>開催情報（公式照会）</h2><button id="schedule">開催場の候補を取得</button><p id="scheduleStatus" role="status"></p><div id="scheduleOutput"></div><small>公式1Rの6艇を照合できた開催場だけを選択できます。未確認の場は休場とは断定せず、選択を保留します。</small></section>
+<section><h2>開催情報（公式照会）</h2><button id="schedule">開催場の候補を取得</button><p>一括取得できない場合：<select id="manualVenue"></select><button id="verifyOne">この競艇場を個別確認</button></p><p id="scheduleStatus" role="status"></p><div id="scheduleOutput"></div><small>公式1Rの6艇を照合できた開催場だけを選択できます。未確認の場は休場とは断定せず、選択を保留します。</small></section>
 <section><h2>レースを選択</h2><label for="day">開催日</label><input type="date" id="day"><label for="venue">競艇場</label><select id="venue"></select><label for="race">レース</label><select id="race"></select><small>公式出走表で6艇を照合できたレースだけ表示します。未確認のレースは中止とは断定しません。</small><button id="load">公式データを確認</button><p id="status" role="status"></p><div style="overflow-x:auto"><table id="comparison" style="border-collapse:collapse;width:100%;font-size:.84rem"><thead><tr><th>艇</th><th>選手名</th><th>登録番号</th><th>全国勝率</th><th>全国2連対率</th><th>全国3連対率</th><th>当地勝率</th><th>当地2連対率</th><th>当地3連対率</th><th>モーター</th><th>モーター2連対率</th><th>モーター3連対率</th><th>平均ST</th><th>展示タイム</th><th>展示ST</th><th>進入</th><th>チルト</th><th>まくらぼ50走</th></tr></thead><tbody id="comparisonBody"><tr><td colspan="18">レースを選んで「公式データを確認」を押してください</td></tr></tbody></table></div><small>選手の全国・当地2連対率／3連対率、モーター2連対率／3連対率を復元しました。公式照合できた場合のみ表示します。1着率・2着率・3着率の個別値はこの取得元からは未取得です。平均ST・まくらぼ50走も未確認です。</small><h3>選手の入賞率比較（公式照合済みのみ）</h3><div id="finishRateSummary" role="status">レースを選んで公式データを確認してください。</div><details><summary>公式データの取得結果・診断ログ</summary><pre id="output"></pre></details><h3>出走選手・診断ポイント</h3><div id="racerPoints" role="status">公式データ確認後に表示します。未確認項目は加点しません。</div></section>
 <section><h2>まくらぼ直近50走</h2><p>スクリーンショットを参考にした入力画面へ進みます。未確認の数字は予想に反映しません。</p><a href="/tools/makulabo-screenshot">まくらぼ取り込み画面を開く</a></section>
 <section><h2>本命・穴・大荒れランキング</h2><p class="warn">朝8時の自動集計は未実装です。全国ランキングは未確認データを埋めず、準備中と表示します。</p><button id="screen">選択場の暫定分析を確認</button><p id="screenStatus" role="status"></p><pre id="screenOutput"></pre><small>選択場のみ・オンデマンド分析。検証済みの的中確率ではありません。</small></section>
@@ -68,6 +68,22 @@ const day=document.getElementById('day'),venue=document.getElementById('venue'),
 const today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);day.value=today;
 venue.add(new Option('開催場を確認中…',''));venue.disabled=true;race.add(new Option('開催場を選択してください',''));race.disabled=true;
 const dateCode=()=>day.value.replaceAll('-','');
+const manualVenue=document.getElementById('manualVenue');manualVenue.add(new Option('競艇場を選択',''));names.forEach((name,i)=>manualVenue.add(new Option(name,String(i+1))));
+document.getElementById('verifyOne').onclick=async()=>{
+ const v=Number(manualVenue.value),btn=document.getElementById('verifyOne'),st=document.getElementById('scheduleStatus');
+ if(!v)return;
+ btn.disabled=true;st.textContent=names[v-1]+'の公式1Rを確認中…';
+ try{
+  const res=await fetch('/api/official/verify-one-venue?date='+dateCode()+'&venue='+v);
+  const data=await res.json();
+  if(data.verified===true){
+    if(![...venue.options].some(o=>o.value===String(v)))venue.add(new Option(names[v-1],String(v)));
+    venue.disabled=false;venue.value=String(v);venue.dispatchEvent(new Event('change'));
+    st.textContent=names[v-1]+'の公式1Rを確認しました。レース一覧を照合しています。';
+  }else st.textContent=names[v-1]+'は未確認です（'+(data.reason||'公式出走表を照合できません')+'）。休場とは断定しません。';
+ }catch(e){st.textContent='個別確認に失敗：'+e.message}finally{btn.disabled=false}
+};
+
 let scheduleRequest=0,raceListRequest=0,scheduleController=null,raceListController=null;
 async function refreshRunningVenues(){
  const token=++scheduleRequest,st=document.getElementById('scheduleStatus'),out=document.getElementById('scheduleOutput');if(scheduleController)scheduleController.abort();scheduleController=new AbortController();const controller=scheduleController;
@@ -141,6 +157,14 @@ if (u.pathname === '/api/official/schedule') {
   }catch{return reply(request,{date,verified:false,venues:[],source,reason:'Official schedule request failed'})}
 }
 
+if (u.pathname === '/api/official/verify-one-venue') {
+  const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue'));
+  if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24)return reply(request,{error:'Invalid date or venue'},400);
+  try{
+    const official=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});
+    return reply(request,{date,venue,verified:official.verified===true,reason:official.reason||null});
+  }catch(error){return reply(request,{date,venue,verified:false,reason:String(error?.message||error).slice(0,120)});}
+}
 if (u.pathname === '/api/official/active-venues') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'';
