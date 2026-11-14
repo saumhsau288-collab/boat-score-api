@@ -72,6 +72,14 @@ for (const [label,url] of targets) {
       vm.runInContext(workerSource,ctx,{filename:'worker.js'});
       const parsed=vm.runInContext('extractOfficialBoatRows',ctx)(body);
       summary.officialParser={verified:parsed.verified,candidateCount:parsed.candidateCount,boatCount:parsed.racers?.length||0};
+      const parsedStats=vm.runInContext('extractOfficialBoatStats',ctx)(body);
+      summary.officialStats={
+        verified:parsedStats.verified,
+        candidateCount:parsedStats.candidateCount,
+        boatCount:parsedStats.rows.length,
+        sample:parsedStats.verified?parsedStats.rows[0]:null
+      };
+
     }
     if(label==='official' && response.ok && !summary.hasNoDataNotice){
       const rows=[...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
