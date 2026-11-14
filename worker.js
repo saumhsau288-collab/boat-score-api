@@ -72,7 +72,9 @@ function filterConfirmedVenues(){
 document.getElementById('showConfirmedOnly').addEventListener('change',filterConfirmedVenues);
 let venueCheckVersion=0;
 let racerFillVersion=0;
+let raceDataCheckVersion=0;
 function clearOfficialRacerAutofill(){
+ raceDataCheckVersion++;
  document.getElementById('raceDataStatus').textContent='レース条件が変わりました。再確認してください';
  document.getElementById('last50Comparison').replaceChildren();
  racerFillVersion++;
@@ -85,6 +87,9 @@ function clearOfficialRacerAutofill(){
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('change',clearOfficialRacerAutofill);
 rows.addEventListener('input',event=>{const input=event.target;if(input.matches('input[data-index="0"]')){racerFillVersion++;delete input.dataset.officialAutofilled}});
 document.getElementById('date').addEventListener('input',()=>{
+ raceDataCheckVersion++;
+ document.getElementById('raceDataStatus').textContent='日付が変更されました。再確認してください';
+ document.getElementById('last50Comparison').replaceChildren();
  venueCheckVersion++;
  const selector=document.getElementById('venue');
  for(const option of selector.options){option.textContent=option.textContent.replace(/ （公式1R確認済）$/,'')}
@@ -154,6 +159,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
  const status=document.getElementById('raceDataStatus');
  const date=document.getElementById('date').value.trim(),venue=document.getElementById('venue').value.trim(),race=document.getElementById('race').value.trim();
  if(!/^20[0-9]{6}$/.test(date)||!/^([1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^([1-9]|1[0-2])$/.test(race)){status.textContent='日付・競艇場・レース番号を確認してください';return}
+ const checkVersion=++raceDataCheckVersion;
  const button=document.getElementById('checkRaceData');button.disabled=true;
  document.getElementById('last50Comparison').replaceChildren();
  status.textContent='公式出走表・展示・スタート・気象を照合中…';
@@ -165,7 +171,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   ]);
   const data=await response.json();
   const makulabo=makulaboResponse?.ok?await makulaboResponse.json():null;
-  if(date!==document.getElementById('date').value.trim()||venue!==document.getElementById('venue').value.trim()||race!==document.getElementById('race').value.trim())return;
+  if(checkVersion!==raceDataCheckVersion||date!==document.getElementById('date').value.trim()||venue!==document.getElementById('venue').value.trim()||race!==document.getElementById('race').value.trim())return;
   if(!response.ok){status.textContent='公式データの取得に失敗しました';return}
   const checks=[['選手',data.racersVerified],['勝率・モーター',data.statsVerified],['展示',data.exhibitionVerified],['ST・進入',data.startVerified],['風速・波',data.weatherVerified],['風向',data.windDirectionVerified],['まくらぼ50走',makulabo?.last50Verified],['まくらぼヒートマップ',makulabo?.heatmapReadyForAnalysis]];
   status.textContent=checks.map(([name,ok])=>name+'：'+(ok===true?'確認済':'未確認')).join(' ／ ')+'。'+(data.dataReadyForPrediction===true&&makulabo?.last50Verified===true?'データ準備完了':'不足項目があるため予想は保留');
@@ -177,7 +183,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
    const header=document.createElement('tr');['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均'].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border:1px solid #cbd5e1;padding:4px';header.appendChild(th)});table.appendChild(header);
    makulabo.last50ByBoat.slice().sort((a,b)=>a.boat-b.boat).forEach(row=>{const tr=document.createElement('tr');[row.boat,row.name,...row.counts,row.runs,row.average].forEach(value=>{const td=document.createElement('td');td.textContent=String(value);td.style.cssText='border:1px solid #cbd5e1;padding:4px;text-align:center';tr.appendChild(td)});table.appendChild(tr)});comparison.appendChild(table);
   }
- }catch{if(date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim()&&race===document.getElementById('race').value.trim())status.textContent='通信エラー：データの充足状況は未確認です'}finally{button.disabled=false}
+ }catch{if(checkVersion===raceDataCheckVersion&&date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim()&&race===document.getElementById('race').value.trim())status.textContent='通信エラー：データの充足状況は未確認です'}finally{button.disabled=false}
 });
 document.getElementById('fillRacers').addEventListener('click',async()=>{
  const status=document.getElementById('fillStatus');
