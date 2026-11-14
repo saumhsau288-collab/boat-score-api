@@ -319,7 +319,7 @@ assert.ok(screenshotHtml.includes('この記録は画面表示のみで保存さ
 assert.ok(screenshotHtml.includes('このレースの公式確定着順と照合'));
 assert.ok(screenshotHtml.includes("result.verified!==true"));
 assert.ok(screenshotHtml.includes('5指標首位艇の1着一致：'));
-assert.ok(screenshotHtml.includes('単一レースの事後照合であり、的中率ではありません'));
+assert.ok(screenshotHtml.includes('単一レースの事後照合であり、事前予想の的中率ではありません'));
 assert.ok(screenshotHtml.includes('モーター2連率'));
 assert.ok(screenshotHtml.includes("'1着率','3連対率'"));
 assert.ok(screenshotHtml.includes('row.counts[0]/row.runs*100'));
