@@ -92,6 +92,33 @@ assert.equal(beforePayload.startVerified,true);
 assert.equal(beforePayload.exhibitionByBoat.length,6);
 assert.equal(beforePayload.startByCourse.length,6);
 assert.equal(beforePayload.dataReadyForPrediction,false);
+const combinedRacelist='<table>'+Array.from({length:6},(_,i)=>
+  '<tr><td>'+(i+1)+'</td><td></td><td>400'+(i+1)+' / B1 選手'+(i+1)+'</td>'+
+  '<td>F0 L0 0.18</td><td>3.77 11.43 28.57</td><td>2.25 0.00 12.50</td>'+
+  '<td>35 19.61 37.25</td><td>27 26.92 48.08</td>'+
+  '<td><a href="/owpc/pc/data/racersearch/profile?toban=400'+(i+1)+'">選手'+(i+1)+'</a></td></tr>').join('')+'</table>';
+const combinedBefore=beforeTable+beforeStart+
+  '<div>水面気象情報 16:03現在 気温 9.0℃ 風速 1m 水温 13.0℃ 波高 1cm</div>';
+const combinedFetch=async url=>{
+  if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
+  if(String(url)===beforeUrl)return new Response(combinedBefore,{status:200});
+  throw Error('Unexpected combined URL: '+url);
+};
+const ctx4=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:combinedFetch});
+vm.runInContext(source,ctx4,{filename:'worker.js'});
+const combinedWorker=vm.runInContext('workerExport',ctx4);
+const combinedResponse=await combinedWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=1&race=1'));
+assert.equal(combinedResponse.status,200);
+const combinedPayload=await combinedResponse.json();
+assert.equal(combinedPayload.status,'official_sources_verified');
+assert.equal(combinedPayload.racersVerified,true);
+assert.equal(combinedPayload.statsVerified,true);
+assert.equal(combinedPayload.exhibitionVerified,true);
+assert.equal(combinedPayload.startVerified,true);
+assert.equal(combinedPayload.weatherVerified,true);
+assert.equal(combinedPayload.dataReadyForPrediction,false);
+const badCombined=await combinedWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=99&race=1'));
+assert.equal(badCombined.status,400);
 const invalidBefore=await beforeWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=25&race=1'));
 assert.equal(invalidBefore.status,400);
 const invalidOfficial=await worker.fetch(new Request('https://example.com/api/official/racers?date=20261113&venue=99&race=1'));
