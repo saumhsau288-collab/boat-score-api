@@ -288,6 +288,23 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      const shortSamples=rows.filter(row=>row.sampleRuns<50).sort((a,b)=>a.boat-b.boat);
      sampleNotice.textContent=shortSamples.length?'直近50走に満たない艇：'+shortSamples.map(row=>String(row.boat)+'号艇 '+String(row.sampleRuns)+'走').join('、')+'。走数が少ない成績の解釈には注意が必要です。':'直近走数：全艇50走を確認。';
      comparison.appendChild(sampleNotice);
+     const scenario=document.createElement('p');
+     const reliableSamples=rows.every(row=>row.sampleRuns>=30);
+     const stableCourses=rows.every(row=>row.boat===row.course);
+     const weatherKnown=data.weatherVerified===true&&data.windDirectionVerified===true;
+     if(!reliableSamples||!stableCourses||!weatherKnown){
+      const reasons=[];
+      if(!reliableSamples)reasons.push('直近走数30走未満の艇あり');
+      if(!stableCourses)reasons.push('展示進入変更あり');
+      if(!weatherKnown)reasons.push('風向・風速・波高の確認不足');
+      scenario.textContent='本命・逆転・穴の候補判定：保留（'+reasons.join('、')+'）。5指標順位は参考表示のみです。';
+     }else{
+      const top=totals.filter(row=>row.total===totals[0].total);
+      const outer=totals.filter(row=>row.boat>=4);
+      const strongestOuter=outer.length?outer[0]:null;
+      scenario.textContent='仮説の検討対象：5指標首位 '+top.map(row=>String(row.boat)+'号艇').join('・')+' ／ 外枠比較首位 '+(strongestOuter?String(strongestOuter.boat)+'号艇':'該当なし')+'。本命・逆転・穴の着順予測ではありません。';
+     }
+     comparison.appendChild(scenario);
      const heading=document.createElement('h3');heading.textContent='実験的な5指標比較（予想ではありません）';comparison.appendChild(heading);
      const note=document.createElement('p');note.textContent='暫定比較順位は同点なら同順位です（表示順のみ艇番順）。着順予測・買い目ではありません。全国勝率・モーター2連率・展示タイム・展示ST・直近3連対率を各6〜1点の順位点で合計（最大30点）。同値は同点順位の平均点を付与。展示進入と直近走数は参考表示のみで加点しません。枠有利、進入変動、風、波、オッズ、相手関係は未反映。的中率や回収率の検証前につき買い目には使わないでください。';comparison.appendChild(note);
      const scoreScroll=document.createElement('div');scoreScroll.style.cssText='max-width:100%;overflow-x:auto';
