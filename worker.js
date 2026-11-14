@@ -1001,7 +1001,7 @@ function parseOfficialFinishOrder(html) {
   if(!candidate)return {verified:false,finishOrder:[],reason:'result_table_missing'};
   const rows=[...candidate.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(match=>{
     const cells=[...match[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
-      .map(cell=>cell[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim());
+      .map(cell=>cell[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim().normalize('NFKC'));
     const rank=cells[0],boat=cells[1];
     return /^[1-6]$/.test(rank)&&/^[1-6]$/.test(boat)?{rank:Number(rank),boat:Number(boat)}:null;
   }).filter(Boolean);
