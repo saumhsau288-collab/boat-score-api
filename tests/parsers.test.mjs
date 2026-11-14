@@ -503,3 +503,32 @@ assert.ok(source.includes('diagnostics:{upstreamStatus:upstream.status'));
 assert.ok(source.includes('htmlBytes:html.length'));
 assert.ok(source.includes('tableCount:'));
 assert.ok(source.includes('hasResultHeading:'));
+
+const resultUrl='https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&hd=20261113';
+const resultContext=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{
+    assert.equal(String(url),resultUrl);
+    return new Response('<html>'+nestedHeaderTable+'</html>',{status:200,headers:{'content-type':'text/html'}});
+  }});
+vm.runInContext(source,resultContext,{filename:'worker.js'});
+const resultWorker=vm.runInContext('workerExport',resultContext);
+const resultResponse=await resultWorker.fetch(new Request('https://example.com/api/official/result?date=20261113&venue=1&race=1'));
+assert.equal(resultResponse.status,200);
+const resultBody=await resultResponse.json();
+assert.equal(resultBody.verified,true);
+assert.deepEqual(resultBody.finishOrder,[3,1,5,2,4,6]);
+assert.equal(resultBody.diagnostics.upstreamStatus,200);
+assert.equal(resultBody.diagnostics.tableCount,1);
+assert.equal(resultBody.diagnostics.hasResultHeading,true);
+assert.equal(resultBody.dataReadyForPrediction,false);
+const resultBadResponse=await resultWorker.fetch(new Request('https://example.com/api/official/result?date=bad&venue=1&race=1'));
+assert.equal(resultBadResponse.status,400);
+const resultMissingContext=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async()=>new Response('<html><p>No result yet</p></html>',{status:200})});
+vm.runInContext(source,resultMissingContext,{filename:'worker.js'});
+const resultMissingWorker=vm.runInContext('workerExport',resultMissingContext);
+const resultMissingResponse=await resultMissingWorker.fetch(new Request('https://example.com/api/official/result?date=20261113&venue=1&race=1'));
+const resultMissingBody=await resultMissingResponse.json();
+assert.equal(resultMissingBody.verified,false);
+assert.equal(resultMissingBody.reason,'result_table_missing');
+assert.equal(resultMissingBody.diagnostics.tableCount,0);
