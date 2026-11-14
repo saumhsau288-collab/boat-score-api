@@ -207,6 +207,8 @@ assert.match(screenshotHtml,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/)
 assert.match(screenshotHtml,/document\.createElement\('fieldset'\)/);
 assert.match(screenshotHtml,/rows\.appendChild\(card\)/);
 assert.doesNotMatch(screenshotHtml,/<tbody id="rows">/);
+assert.ok(screenshotHtml.includes("timeZone:'Asia/Tokyo'"));
+assert.ok(screenshotHtml.includes("document.getElementById('date').value=japanToday"));
 const badCombined=await combinedWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=99&race=1'));
 assert.equal(badCombined.status,400);
 const invalidBefore=await beforeWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=25&race=1'));
