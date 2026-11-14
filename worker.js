@@ -45,8 +45,8 @@ for(let boat=1;boat<=6;boat++){const card=document.createElement('fieldset');car
 const venueSelector=document.getElementById('venue');
 function filterConfirmedVenues(){
  const only=document.getElementById('showConfirmedOnly').checked;
- for(const option of venueSelector.options){if(!option.value)continue;option.hidden=only&&!option.textContent.includes('（公式1R確認済）')}
- if(only&&venueSelector.selectedOptions[0]?.hidden)venueSelector.value='';
+ for(const option of venueSelector.options){if(!option.value)continue;const hide=only&&!option.textContent.includes('（公式1R確認済）');option.hidden=hide;option.disabled=hide}
+ if(only&&venueSelector.selectedOptions[0]?.disabled){venueSelector.value='';clearOfficialRacerAutofill()}
 }
 document.getElementById('showConfirmedOnly').addEventListener('change',filterConfirmedVenues);
 let venueCheckVersion=0;
