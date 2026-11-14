@@ -14,3 +14,6 @@ jobs:
           node-version: '22'
       - name: Check Worker syntax
         run: node --check --input-type=module < worker.js
+
+      - name: Run synthetic parser regression tests
+        run: node tests/parsers.test.mjs
