@@ -184,6 +184,13 @@ assert.match(screenshotHtml,/id="zoomReset"/);
 assert.match(screenshotHtml,/Math\.min\(4,/);
 assert.match(screenshotHtml,/touch-action:pan-x pan-y/);
 assert.match(screenshotHtml,/id="fillRacers"/);
+assert.match(screenshotHtml,/id="checkRaceData"/);
+assert.match(screenshotHtml,/id="raceDataStatus"/);
+assert.ok(screenshotHtml.includes("'/api/official/race-data?'"));
+assert.ok(screenshotHtml.includes("['選手',data.racersVerified]"));
+assert.ok(screenshotHtml.includes("['まくらぼ50走',data.makulaboLast50Verified]"));
+assert.ok(screenshotHtml.includes("不足項目があるため予想は保留"));
+
 assert.match(screenshotHtml,/\/api\/official\/racers\?/);
 assert.match(screenshotHtml,/racersByBoatVerified!==true/);
 assert.match(screenshotHtml,/racerId/);
