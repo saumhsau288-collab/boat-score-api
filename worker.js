@@ -53,7 +53,7 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <label>日付（YYYYMMDD） <input id="date" inputmode="numeric" maxlength="8" placeholder="20261114"></label>
 <label>競艇場 <select id="venue" style="font-size:16px;padding:10px;max-width:100%"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select></label>
 <label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
-<button id="checkSchedule" type="button">公式開催一覧の候補を確認</button><p id="scheduleStatus" role="status">開催一覧は未照合です</p><button id="checkAllVenues" type="button">全国24場の公式1R出走表を確認</button><label style="display:block"><input id="showConfirmedOnly" type="checkbox"> 公式1R確認済みの場だけ表示（未確認の場は非開催とは限りません）</label><p id="allVenuesStatus" role="status">未確認</p><button id="checkVenue" type="button">選択した競艇場の開催情報を確認</button><p id="venueStatus" role="status">未確認（開催・非開催は未判定）</p><button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
+<button id="checkSchedule" type="button">公式開催一覧の候補を確認</button><p id="scheduleStatus" role="status">開催一覧は未照合です</p><button id="checkAllVenues" type="button">全国24場の公式1R出走表を確認</button><label style="display:block"><input id="showConfirmedOnly" type="checkbox"> 公式1R確認済みの場だけ表示（未確認の場は非開催とは限りません）</label><p id="allVenuesStatus" role="status">未確認</p><button id="checkVenue" type="button">選択した競艇場の開催情報を確認</button><p id="venueStatus" role="status">未確認（開催・非開催は未判定）</p><button id="checkRaceData" type="button">選択レースの公式データ充足状況を確認</button><p id="raceDataStatus" role="status">未確認</p><button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
 <div id="rows" style="display:grid;gap:14px"></div>
 <button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
@@ -73,6 +73,7 @@ document.getElementById('showConfirmedOnly').addEventListener('change',filterCon
 let venueCheckVersion=0;
 let racerFillVersion=0;
 function clearOfficialRacerAutofill(){
+ document.getElementById('raceDataStatus').textContent='レース条件が変わりました。再確認してください';
  racerFillVersion++;
  for(let boat=1;boat<=6;boat++){
   const input=rows.querySelector('input[data-boat="'+boat+'"][data-index="0"]');
@@ -147,6 +148,21 @@ document.getElementById('checkVenue').addEventListener('click',async()=>{
   if(checkVersion!==venueCheckVersion||date!==document.getElementById('date').value.trim()||venue!==document.getElementById('venue').value.trim())return;
   status.textContent=response.ok&&data.racersByBoatVerified===true?'公式1R出走表を確認できました（開催確認の参考情報）':'公式1R出走表を確認できません。非開催とは断定できません';
  }catch{if(checkVersion===venueCheckVersion&&date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim())status.textContent='通信エラー：開催・非開催は未判定です'}
+});
+document.getElementById('checkRaceData').addEventListener('click',async()=>{
+ const status=document.getElementById('raceDataStatus');
+ const date=document.getElementById('date').value.trim(),venue=document.getElementById('venue').value.trim(),race=document.getElementById('race').value.trim();
+ if(!/^20[0-9]{6}$/.test(date)||!/^([1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^([1-9]|1[0-2])$/.test(race)){status.textContent='日付・競艇場・レース番号を確認してください';return}
+ const button=document.getElementById('checkRaceData');button.disabled=true;
+ status.textContent='公式出走表・展示・スタート・気象を照合中…';
+ try{
+  const response=await fetch('/api/official/race-data?'+new URLSearchParams({date,venue,race}),{signal:AbortSignal.timeout(20000)});
+  const data=await response.json();
+  if(date!==document.getElementById('date').value.trim()||venue!==document.getElementById('venue').value.trim()||race!==document.getElementById('race').value.trim())return;
+  if(!response.ok){status.textContent='公式データの取得に失敗しました';return}
+  const checks=[['選手',data.racersVerified],['勝率・モーター',data.statsVerified],['展示',data.exhibitionVerified],['ST・進入',data.startVerified],['風速・波',data.weatherVerified],['風向',data.windDirectionVerified],['まくらぼ50走',data.makulaboLast50Verified]];
+  status.textContent=checks.map(([name,ok])=>name+'：'+(ok===true?'確認済':'未確認')).join(' ／ ')+'。'+(data.dataReadyForPrediction===true?'データ準備完了':'不足項目があるため予想は保留');
+ }catch{if(date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim()&&race===document.getElementById('race').value.trim())status.textContent='通信エラー：データの充足状況は未確認です'}finally{button.disabled=false}
 });
 document.getElementById('fillRacers').addEventListener('click',async()=>{
  const status=document.getElementById('fillStatus');
