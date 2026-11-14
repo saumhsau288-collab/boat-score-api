@@ -415,23 +415,29 @@ row.counts.reduce((sum, n) => sum + n, 0) === row.runs
 
 
 function extractOfficialBoatRows(html) {
-  // A boat number must be present in the same row as exactly one racer profile.
-  // Do not infer boat numbers from the order of links on the page.
+  // The official site repeats the same racer profile link within each
+  // four-row boat group. Deduplicate IDs, never infer boats by link order.
   const rows = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
   const candidates = [];
   for (const [, row] of rows) {
     const cells = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(m => m[1]);
-    if (cells.length < 2) continue;
+    if (cells.length < 3) continue;
     const first = cells[0].replace(/<[^>]*>/g, ' ').replace(/\s+/g, '').trim();
     const boat = /^[１-６]$/.test(first) ? first.charCodeAt(0) - '１'.charCodeAt(0) + 1 :
       (/^[1-6]$/.test(first) ? Number(first) : null);
     if (!boat) continue;
     const links = [...row.matchAll(/<a\b[^>]*href=["']([^"']*racersearch\/profile[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi)];
-    if (links.length !== 1) continue;
-    let racerId = null;
-    try { racerId = new URL(links[0][1], 'https://www.boatrace.jp').searchParams.get('toban'); } catch {}
-    const name = links[0][2].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    if (!/^\d{4}$/.test(racerId || '') || !name) continue;
+    const ids = [...new Set(links.map(link => {
+      try { return new URL(link[1], 'https://www.boatrace.jp').searchParams.get('toban'); }
+      catch { return null; }
+    }).filter(id => /^\d{4}$/.test(id || '')))];
+    if (ids.length !== 1) continue;
+    const racerId = ids[0];
+    const cellText = cells[2].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!new RegExp('(?:^|\\s)' + racerId + '(?:\\s|/)').test(cellText)) continue;
+    const name = cellText.replace(new RegExp('^.*?' + racerId + '\\s*/\\s*[A-Z][12]?\\s*'), '')
+      .split(/\s+(?:北海道|青森|岩手|宮城|秋田|山形|福島|茨城|栃木|群馬|埼玉|千葉|東京|神奈川|新潟|富山|石川|福井|山梨|長野|岐阜|静岡|愛知|三重|滋賀|京都|大阪|兵庫|奈良|和歌山|鳥取|島根|岡山|広島|山口|徳島|香川|愛媛|高知|福岡|佐賀|長崎|熊本|大分|宮崎|鹿児島|沖縄)\s*[/／]/)[0].trim();
+    if (!name || name === cellText) continue;
     candidates.push({boat, racerId, name});
   }
   const verified = candidates.length === 6 &&
