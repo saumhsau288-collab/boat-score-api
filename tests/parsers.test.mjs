@@ -50,6 +50,15 @@ assert.equal(daily.chaos.length,1);
 assert.equal(daily.held,1);
 assert.equal(daily.verifiedProbability,false);
 assert.equal(classifyDaily([]).main.length,0);
+const morningInput=vm.runInContext('buildMorningRaceInputs',context);
+const morningStats=Array.from({length:6},(_,i)=>({boat:i+1,nationwide:{winRate:7-i*0.5},motor:{secondPlaceRate:40-i*3}}));
+const morningReady=morningInput('20261115',1,1,{verified:true,statsVerified:true,statsByBoat:morningStats});
+assert.equal(morningReady.ready,true);
+assert.equal(morningReady.rankedScores.length,6);
+assert.equal(morningReady.missingInputs.includes('weather'),true);
+assert.equal(morningInput('20261115',1,1,{verified:true,statsVerified:false,statsByBoat:morningStats}).ready,false);
+assert.equal(morningInput('20261115',1,1,{verified:true,statsVerified:true,statsByBoat:morningStats.slice(0,5)}).ready,false);
+assert.equal(morningInput('20261115',1,1,{verified:true,statsVerified:true,statsByBoat:morningStats.map((x,i)=>i===0?{...x,motor:{secondPlaceRate:NaN}}:x)}).ready,false);
 const finishTable='<table><tr><th>着順</th><th>艇番</th></tr>'+
  [3,1,5,2,4,6].map((boat,i)=>'<tr><td>'+(i+1)+'</td><td>'+boat+'</td></tr>').join('')+'</table>';
 assert.equal(finishParser(finishTable).verified,true);
