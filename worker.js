@@ -199,6 +199,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
    wrap.appendChild(table);comparison.appendChild(wrap);
    const note=document.createElement('p');note.textContent='確認済みの公式データのみ表示。展示STは本番のSTではありません。未確認項目は予想に利用しません。';comparison.appendChild(note);
   }
+  if(makulabo?.last50Verified!==true){const warning=document.createElement('p');warning.textContent='まくらぼ直近50走が未確認のため、50走比較と30点評価は表示できません。';comparison.appendChild(warning)}
   if(makulabo?.last50Verified===true&&Array.isArray(makulabo.last50ByBoat)&&makulabo.last50ByBoat.length===6&&makulabo.last50ByBoat.every(row=>Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isInteger(row.runs)&&row.runs>0&&Array.isArray(row.counts)&&row.counts.length===6&&row.counts.every(n=>Number.isInteger(n)&&n>=0)&&row.counts.reduce((sum,n)=>sum+n,0)===row.runs)&&new Set(makulabo.last50ByBoat.map(row=>row.boat)).size===6){
    const heading=document.createElement('h3');heading.textContent='まくらぼ直近50走・枠別比較';comparison.appendChild(heading);
    const note=document.createElement('p');note.textContent='公式選手名と照合済みの集計値です。1着率と3連対率は直近走数を分母に計算した参考値です。予想評価点にはまだ変換していません。';comparison.appendChild(note);
