@@ -196,7 +196,8 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   if(makulabo?.last50Verified===true&&Array.isArray(makulabo.last50ByBoat)&&makulabo.last50ByBoat.length===6&&makulabo.last50ByBoat.every(row=>Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isInteger(row.runs)&&row.runs>0&&Array.isArray(row.counts)&&row.counts.length===6&&row.counts.every(n=>Number.isInteger(n)&&n>=0)&&row.counts.reduce((sum,n)=>sum+n,0)===row.runs)&&new Set(makulabo.last50ByBoat.map(row=>row.boat)).size===6){
    const heading=document.createElement('h3');heading.textContent='まくらぼ直近50走・枠別比較';comparison.appendChild(heading);
    const note=document.createElement('p');note.textContent='公式選手名と照合済みの集計値です。1着率と3連対率は直近走数を分母に計算した参考値です。予想評価点にはまだ変換していません。';comparison.appendChild(note);
-   const table=document.createElement('table');table.style.cssText='width:100%;border-collapse:collapse;font-size:13px';
+   const scroll=document.createElement('div');scroll.style.cssText='max-width:100%;overflow-x:auto';
+   const table=document.createElement('table');table.style.cssText='border-collapse:collapse;font-size:13px;white-space:nowrap';
    const header=document.createElement('tr');['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均','1着率','3連対率'].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border:1px solid #cbd5e1;padding:4px';header.appendChild(th)});table.appendChild(header);
    const summary=document.createElement('p');
    const sortedByFirst=makulabo.last50ByBoat.slice().sort((a,b)=>(b.counts[0]/b.runs)-(a.counts[0]/a.runs)||a.boat-b.boat);
@@ -212,6 +213,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      const stat=stats.get(row.boat),ex=exhibitions.get(row.boat),st=starts.get(row.boat);
      return stat&&ex&&st&&Number.isFinite(stat.nationwide?.winRate)&&Number.isFinite(stat.motor?.secondPlaceRate)&&Number.isFinite(ex.exhibitionTime)&&Number.isInteger(st.course)&&typeof st.startTiming==='number'&&Number.isFinite(st.startTiming);
     });
+    if(!complete){const warning=document.createElement('p');warning.textContent='5指標比較は未表示：公式データの数値・進入・展示STが6艇分そろっていません。未確認値を0点扱いしません。';comparison.appendChild(warning)}
     if(complete){
      const rows=makulabo.last50ByBoat.map(row=>({
       boat:row.boat,
@@ -243,7 +245,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      });comparison.appendChild(table);
     }
    }
-   makulabo.last50ByBoat.slice().sort((a,b)=>a.boat-b.boat).forEach(row=>{const tr=document.createElement('tr');[row.boat,row.name,...row.counts,row.runs,row.average,(row.counts[0]/row.runs*100).toFixed(1)+'%',((row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100).toFixed(1)+'%'].forEach(value=>{const td=document.createElement('td');td.textContent=String(value);td.style.cssText='border:1px solid #cbd5e1;padding:4px;text-align:center';tr.appendChild(td)});table.appendChild(tr)});comparison.appendChild(table);
+   makulabo.last50ByBoat.slice().sort((a,b)=>a.boat-b.boat).forEach(row=>{const tr=document.createElement('tr');[row.boat,row.name,...row.counts,row.runs,row.average,(row.counts[0]/row.runs*100).toFixed(1)+'%',((row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100).toFixed(1)+'%'].forEach(value=>{const td=document.createElement('td');td.textContent=String(value);td.style.cssText='border:1px solid #cbd5e1;padding:4px;text-align:center';tr.appendChild(td)});table.appendChild(tr)});scroll.appendChild(table);comparison.appendChild(scroll);
   }
  }catch{if(checkVersion===raceDataCheckVersion&&date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim()&&race===document.getElementById('race').value.trim())status.textContent='通信エラー：データの充足状況は未確認です'}finally{button.disabled=false}
 });
