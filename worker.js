@@ -46,15 +46,16 @@ if (u.pathname === '/api/official/race-data') {
   const normalize=name=>String(name||'').replace(/\s/g,'');
   const exhibitionMatches=official.verified&&exhibition.verified&&
     exhibition.rows.every((row,i)=>row.boat===official.racers[i].boat&&normalize(row.name)===normalize(official.racers[i].name));
-  const complete=official.verified&&official.statsVerified&&exhibitionMatches&&start.verified&&weather.verified;
+  const startMatches=official.verified&&start.verified&&start.rows.every(row=>official.racers.some(r=>r.boat===row.boat)) && new Set(start.rows.map(row=>row.course)).size===6;
+  const complete=official.verified&&official.statsVerified&&exhibitionMatches&&startMatches&&weather.verified;
   return reply(request,{
     status:complete?'official_sources_verified':'partial',
     racersVerified:official.verified,statsVerified:official.statsVerified===true,
-    exhibitionVerified:exhibitionMatches,startVerified:start.verified,weatherVerified:weather.verified===true,
+    exhibitionVerified:exhibitionMatches,startVerified:startMatches,weatherVerified:weather.verified===true,
     racersByBoat:official.verified?official.racers:[],
     statsByBoat:official.statsVerified?official.statsByBoat:[],
     exhibitionByBoat:exhibitionMatches?exhibition.rows:[],
-    startByCourse:start.rows,weather,
+    startByCourse:startMatches?start.rows:[],weather,
     makulaboLast50Verified:false,windDirectionVerified:false,
     dataReadyForPrediction:false
   });
