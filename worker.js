@@ -195,10 +195,10 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   }
   if(makulabo?.last50Verified===true&&Array.isArray(makulabo.last50ByBoat)&&makulabo.last50ByBoat.length===6){
    const heading=document.createElement('h3');heading.textContent='まくらぼ直近50走・枠別比較';comparison.appendChild(heading);
-   const note=document.createElement('p');note.textContent='公式選手名と照合済みの集計値です。着順回数と平均着順を表示し、予想評価点にはまだ変換していません。';comparison.appendChild(note);
+   const note=document.createElement('p');note.textContent='公式選手名と照合済みの集計値です。1着率と3連対率は直近走数を分母に計算した参考値です。予想評価点にはまだ変換していません。';comparison.appendChild(note);
    const table=document.createElement('table');table.style.cssText='width:100%;border-collapse:collapse;font-size:13px';
-   const header=document.createElement('tr');['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均'].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border:1px solid #cbd5e1;padding:4px';header.appendChild(th)});table.appendChild(header);
-   makulabo.last50ByBoat.slice().sort((a,b)=>a.boat-b.boat).forEach(row=>{const tr=document.createElement('tr');[row.boat,row.name,...row.counts,row.runs,row.average].forEach(value=>{const td=document.createElement('td');td.textContent=String(value);td.style.cssText='border:1px solid #cbd5e1;padding:4px;text-align:center';tr.appendChild(td)});table.appendChild(tr)});comparison.appendChild(table);
+   const header=document.createElement('tr');['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均','1着率','3連対率'].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border:1px solid #cbd5e1;padding:4px';header.appendChild(th)});table.appendChild(header);
+   makulabo.last50ByBoat.slice().sort((a,b)=>a.boat-b.boat).forEach(row=>{const tr=document.createElement('tr');[row.boat,row.name,...row.counts,row.runs,row.average,(row.counts[0]/row.runs*100).toFixed(1)+'%',((row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100).toFixed(1)+'%'].forEach(value=>{const td=document.createElement('td');td.textContent=String(value);td.style.cssText='border:1px solid #cbd5e1;padding:4px;text-align:center';tr.appendChild(td)});table.appendChild(tr)});comparison.appendChild(table);
   }
  }catch{if(checkVersion===raceDataCheckVersion&&date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim()&&race===document.getElementById('race').value.trim())status.textContent='通信エラー：データの充足状況は未確認です'}finally{button.disabled=false}
 });
