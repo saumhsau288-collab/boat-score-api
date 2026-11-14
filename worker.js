@@ -43,7 +43,9 @@ const japanToday=japanDateParts.year+japanDateParts.month+japanDateParts.day;
 document.getElementById('date').value=japanToday;
 for(let boat=1;boat<=6;boat++){const card=document.createElement('fieldset');card.style.cssText='border:1px solid #cbd5e1;border-radius:12px;padding:12px;min-width:0';const heading=document.createElement('legend');heading.textContent=boat+'号艇';heading.style.fontWeight='bold';card.appendChild(heading);const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px';for(let i=0;i<8;i++){const label=document.createElement('label');label.style.cssText='margin:0;min-width:0';const name=i===0?'登録番号':i===1?'走数':(i-1)+'着';label.textContent=name+' ';const input=document.createElement('input');input.setAttribute('aria-label',boat+'号艇 '+name);input.dataset.boat=String(boat);input.dataset.index=String(i);input.type=i===0?'text':'number';input.inputMode='numeric';input.required=true;input.style.cssText='box-sizing:border-box;width:100%;min-width:0';if(i===0)input.maxLength=4;else{input.min='0';input.max='50'}label.appendChild(input);grid.appendChild(label)}card.appendChild(grid);rows.appendChild(card)}
 let venueCheckVersion=0;
+let racerFillVersion=0;
 function clearOfficialRacerAutofill(){
+ racerFillVersion++;
  for(let boat=1;boat<=6;boat++){
   const input=rows.querySelector('input[data-boat="'+boat+'"][data-index="0"]');
   if(input&&input.dataset.officialAutofilled==='true'){input.value='';delete input.dataset.officialAutofilled}
@@ -51,7 +53,7 @@ function clearOfficialRacerAutofill(){
  document.getElementById('fillStatus').textContent='レース条件が変わりました。公式登録番号を再取得してください';
 }
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('change',clearOfficialRacerAutofill);
-rows.addEventListener('input',event=>{const input=event.target;if(input.matches('input[data-index="0"]'))delete input.dataset.officialAutofilled});
+rows.addEventListener('input',event=>{const input=event.target;if(input.matches('input[data-index="0"]')){racerFillVersion++;delete input.dataset.officialAutofilled}});
 document.getElementById('date').addEventListener('input',()=>{
  venueCheckVersion++;
  const selector=document.getElementById('venue');
@@ -102,11 +104,13 @@ document.getElementById('fillRacers').addEventListener('click',async()=>{
  const status=document.getElementById('fillStatus');
  status.textContent='公式出走表を確認中…';
  const date=document.getElementById('date').value.trim(),venue=document.getElementById('venue').value.trim(),race=document.getElementById('race').value.trim();
+ const fillVersion=++racerFillVersion;
  if(!/^20[0-9]{6}$/.test(date)||!/^([1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^([1-9]|1[0-2])$/.test(race)){status.textContent='日付・競艇場・レース番号を確認してください';return}
  try{
   const params=new URLSearchParams({date,venue,race});
-  const response=await fetch('/api/official/racers?'+params);
+  const response=await fetch('/api/official/racers?'+params,{signal:AbortSignal.timeout(12000)});
   const payload=await response.json();
+  if(fillVersion!==racerFillVersion||date!==document.getElementById('date').value.trim()||venue!==document.getElementById('venue').value.trim()||race!==document.getElementById('race').value.trim())return;
   const racers=payload.racersByBoat;
   if(!response.ok||payload.racersByBoatVerified!==true||!Array.isArray(racers)||racers.length!==6||
     racers.some((r,i)=>r.boat!==i+1||!/^[0-9]{4}$/.test(r.racerId))){
@@ -114,7 +118,7 @@ document.getElementById('fillRacers').addEventListener('click',async()=>{
   }
   racers.forEach((r,i)=>{const input=rows.querySelector('input[data-boat="'+(i+1)+'"][data-index="0"]');input.value=r.racerId;input.dataset.officialAutofilled='true'});
   status.textContent='公式の6艇分の登録番号を入力しました。画像と照合してください';
- }catch{status.textContent='通信に失敗しました。後で再試行してください'}
+ }catch{if(fillVersion===racerFillVersion)status.textContent='通信に失敗しました。後で再試行してください'}
 });
 document.getElementById('set50').addEventListener('click',()=>{
  for(let boat=1;boat<=6;boat++){rows.querySelector('input[data-boat="'+boat+'"][data-index="1"]').value='50'}
