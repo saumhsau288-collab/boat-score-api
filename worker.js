@@ -298,8 +298,8 @@ const row = parsedTableRows.find(cells =>
 );
 
 const boat = row ? Number(row[0]) : null;
-const tableCounts = row
-  ? row.slice(2, 8).map(v => v === "" ? 0 : Number(v))
+const tableCounts = row && row.length >= 8
+  ? row.slice(2, 8).map(v => /^\\d+$/.test(v) ? Number(v) : null)
   : null;
 
 const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null;
@@ -327,7 +327,7 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 );
     const runs = counts ? counts.reduce((a, b) => a + b, 0) : 0;
 
-    if (!counts || counts.length !== 6 || counts.some(n => !Number.isFinite(n) || n < 0)) {
+    if (!counts || counts.length !== 6 || counts.some(n => !Number.isInteger(n) || n < 0)) {
       return { name, counts: null, verified: false };
     }
 
@@ -361,9 +361,9 @@ function verifyHeatmapBoats(html, officialRacers) {
       counts: row?.counts ?? null,
       verified: !!row &&
 row.boat === racer.boat &&
+        rows.filter(candidate => String(candidate.name).replace(/\\s/g, "") === normalize(racer.name)).length === 1 &&
         Array.isArray(row.counts) &&
-        row.counts.length >= 1 &&
-row.counts.length <= 6 &&
+        row.counts.length === 6 &&
 row.counts.every(n => Number.isInteger(n) && n >= 0) &&
 row.counts.reduce((sum, n) => sum + n, 0) === row.runs
     };
