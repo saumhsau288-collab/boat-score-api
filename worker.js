@@ -50,6 +50,7 @@ function clearOfficialRacerAutofill(){
  document.getElementById('fillStatus').textContent='レース条件が変わりました。公式登録番号を再取得してください';
 }
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('change',clearOfficialRacerAutofill);
+rows.addEventListener('input',event=>{const input=event.target;if(input.matches('input[data-index="0"]'))delete input.dataset.officialAutofilled});
 document.getElementById('date').addEventListener('input',()=>{
  venueCheckVersion++;
  const selector=document.getElementById('venue');
