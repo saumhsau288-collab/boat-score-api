@@ -38,11 +38,12 @@ if (u.pathname === '/api/official/beforeinfo') {
     if(html.length>1000000)return reply(request,{status:'unavailable',reason:'response_too_large',dataReadyForPrediction:false},502);
     const exhibition=extractOfficialExhibition(html);
     const start=extractOfficialStartExhibition(html);
+    const weather=extractOfficialWeather(html);
     return reply(request,{
       status:exhibition.verified&&start.verified?'verified':'partial',
       exhibitionVerified:exhibition.verified,startVerified:start.verified,
       exhibitionByBoat:exhibition.rows,startByCourse:start.rows,
-      dataReadyForPrediction:false
+      weather, dataReadyForPrediction:false
     });
   } catch(e) {
     return reply(request,{status:'unavailable',reason:'upstream_fetch_failed',dataReadyForPrediction:false},502);
@@ -459,6 +460,27 @@ row.counts.reduce((sum, n) => sum + n, 0) === row.runs
   });
 }
 
+
+function extractOfficialWeather(html) {
+  const plain=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ')
+    .replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+  const section=plain.match(/水面気象情報([\s\S]{0,350})/);
+  if(!section)return {verified:false,reason:'weather_section_missing'};
+  const text=section[1];
+  const number=(label,unit)=>{
+    const m=text.match(new RegExp(label+'\\s*([+-]?\\d+(?:\\.\\d+)?)\\s*'+unit));
+    return m?Number(m[1]):null;
+  };
+  const windSpeed=number('風速','m'),waveHeight=number('波高','cm');
+  const airTemperature=number('気温','℃'),waterTemperature=number('水温','℃');
+  const verified=windSpeed!==null&&windSpeed>=0&&windSpeed<=60&&
+    waveHeight!==null&&waveHeight>=0&&waveHeight<=500;
+  return {verified,windSpeed:verified?windSpeed:null,waveHeight:verified?waveHeight:null,
+    airTemperature:airTemperature!==null&&airTemperature>=-30&&airTemperature<=50?airTemperature:null,
+    waterTemperature:waterTemperature!==null&&waterTemperature>=-5&&waterTemperature<=45?waterTemperature:null,
+    windDirection:null,windDirectionVerified:false};
+}
 
 function extractOfficialStartExhibition(html) {
   const table=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)]
