@@ -33,6 +33,8 @@ if (u.pathname === '/api/official/racers') {
     source:'BOAT RACE official racelist',
     racersByBoat:official.verified?official.racers:[],
     racersByBoatVerified:official.verified,
+    statsByBoat:official.statsVerified?official.statsByBoat:[],
+    statsVerified:official.statsVerified===true,
     candidateCount:official.officialBoatRowCandidates||0,
     dataReadyForPrediction:false,
     reason:official.verified?'Other required inputs are not yet verified':'Official six-boat identity verification failed'
@@ -431,6 +433,37 @@ row.counts.reduce((sum, n) => sum + n, 0) === row.runs
 }
 
 
+function extractOfficialBoatStats(html) {
+  const results = [];
+  const rows = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
+  for (const [, row] of rows) {
+    const cells = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim());
+    if (cells.length < 8) continue;
+    const boat = /^[１-６]$/.test(cells[0]) ? cells[0].charCodeAt(0)-'１'.charCodeAt(0)+1 : (/^[1-6]$/.test(cells[0]) ? Number(cells[0]) : null);
+    if (!boat) continue;
+    const ids=[...new Set([...row.matchAll(/toban=(\d{4})/g)].map(m=>m[1]))];
+    if (ids.length !== 1 || !cells[2].includes(ids[0])) continue;
+    const triple = value => {
+      const m=value.match(/^(\d{1,2}\.\d{2})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})$/);
+      if (!m) return null;
+      const numbers=m.slice(1).map(Number);
+      return numbers[0]<=10 && numbers[1]<=100 && numbers[2]<=100 ?
+        {winRate:numbers[0],secondPlaceRate:numbers[1],thirdPlaceRate:numbers[2]} : null;
+    };
+    const equipment=value=>{
+      const m=value.match(/^(\d{1,3})\s+(\d{1,3}\.\d{2})\s+(\d{1,3}\.\d{2})$/);
+      if (!m || Number(m[2])>100 || Number(m[3])>100) return null;
+      return {number:Number(m[1]),secondPlaceRate:Number(m[2]),thirdPlaceRate:Number(m[3])};
+    };
+    const nationwide=triple(cells[4]), local=triple(cells[5]), motor=equipment(cells[6]), hull=equipment(cells[7]);
+    if (!nationwide || !local || !motor || !hull) continue;
+    results.push({boat,racerId:ids[0],nationwide,local,motor,hull});
+  }
+  const verified=results.length===6 && new Set(results.map(x=>x.boat)).size===6 &&
+    new Set(results.map(x=>x.racerId)).size===6;
+  return {verified,rows:verified?results.sort((a,b)=>a.boat-b.boat):[],candidateCount:results.length};
+}
+
 function extractOfficialBoatRows(html) {
   // The official site repeats the same racer profile link within each
   // four-row boat group. Deduplicate IDs, never infer boats by link order.
@@ -485,6 +518,8 @@ async function fetchOfficialRacers(date, venue, race) {
 
     const html = await response.text();
 const officialRows = extractOfficialBoatRows(html);
+const officialStats = extractOfficialBoatStats(html);
+const statsMatch = officialRows.verified && officialStats.verified && officialStats.rows.every((stat,i)=>stat.boat===officialRows.racers[i].boat && stat.racerId===officialRows.racers[i].racerId);
 const racerLinks = [...html.matchAll(/href="([^"]*\/owpc\/pc\/data\/racersearch\/profile[^"]*)"/g)];
 const uniqueRacerLinks = [...new Set(racerLinks.map(m => m[1]))];
 const officialRacerIds = uniqueRacerLinks
@@ -513,6 +548,8 @@ const officialNames = officialRows.racers;
 
     return {
       verified: officialRows.verified,
+      statsVerified: statsMatch,
+      statsByBoat: statsMatch ? officialStats.rows : [],
       officialBoatRowCandidates: officialRows.candidateCount,
       racers: officialNames,
 htmlLength: html.length,
