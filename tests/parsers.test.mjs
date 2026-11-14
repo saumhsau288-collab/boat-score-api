@@ -11,6 +11,9 @@ const finishTable='<table><tr><th>着順</th><th>艇番</th></tr>'+
  [3,1,5,2,4,6].map((boat,i)=>'<tr><td>'+(i+1)+'</td><td>'+boat+'</td></tr>').join('')+'</table>';
 assert.equal(finishParser(finishTable).verified,true);
 assert.equal(Array.from(finishParser(finishTable).finishOrder).join('-'),'3-1-5-2-4-6');
+const officialHeaderTable=finishTable.replace('<th>着順</th><th>艇番</th>','<th>着</th><th>枠</th>');
+assert.equal(finishParser(officialHeaderTable).verified,true);
+assert.equal(Array.from(finishParser(officialHeaderTable).finishOrder).join('-'),'3-1-5-2-4-6');
 const wideDigits='０１２３４５６７８９';
 const wideFinish=finishTable.replace(/<td>[1-6]<\/td>/g,cell=>cell.replace(/[0-9]/g,d=>wideDigits[Number(d)]));
 assert.equal(finishParser(wideFinish).verified,true);
