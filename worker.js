@@ -415,23 +415,30 @@ row.counts.reduce((sum, n) => sum + n, 0) === row.runs
 
 
 function extractOfficialBoatRows(html) {
+  // A boat number must be present in the same row as exactly one racer profile.
+  // Do not infer boat numbers from the order of links on the page.
   const rows = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
-  const matches = [];
-  for (const [,row] of rows) {
-    const cells = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
-      .map(m => m[1]);
-    const first = cells[0]?.replace(/<[^>]*>/g,'').trim();
-    if (!/^[1-6]$/.test(first || '')) continue;
-    const links = [...row.matchAll(/<a\b[^>]*href=["'][^"']*racersearch\/profile\?toban=(\d+)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi)];
+  const candidates = [];
+  for (const [, row] of rows) {
+    const cells = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(m => m[1]);
+    if (cells.length < 2) continue;
+    const first = cells[0].replace(/<[^>]*>/g, ' ').replace(/\s+/g, '').trim();
+    const boat = /^[１-６]$/.test(first) ? first.charCodeAt(0) - '１'.charCodeAt(0) + 1 :
+      (/^[1-6]$/.test(first) ? Number(first) : null);
+    if (!boat) continue;
+    const links = [...row.matchAll(/<a\b[^>]*href=["']([^"']*racersearch\/profile[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi)];
     if (links.length !== 1) continue;
-    const name = links[0][2].replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
-    if (!name) continue;
-    matches.push({boat:Number(first),racerId:links[0][1],name});
+    let racerId = null;
+    try { racerId = new URL(links[0][1], 'https://www.boatrace.jp').searchParams.get('toban'); } catch {}
+    const name = links[0][2].replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!/^\d{4}$/.test(racerId || '') || !name) continue;
+    candidates.push({boat, racerId, name});
   }
-  const verified = matches.length === 6 &&
-    new Set(matches.map(r=>r.boat)).size === 6 &&
-    new Set(matches.map(r=>r.racerId)).size === 6;
-  return {verified,racers:verified?matches.sort((a,b)=>a.boat-b.boat):[],candidateCount:matches.length};
+  const verified = candidates.length === 6 &&
+    new Set(candidates.map(r => r.boat)).size === 6 &&
+    new Set(candidates.map(r => r.racerId)).size === 6;
+  return {verified, racers: verified ? candidates.sort((a,b) => a.boat-b.boat) : [],
+    candidateCount: candidates.length};
 }
 
 async function fetchOfficialRacers(date, venue, race) {
