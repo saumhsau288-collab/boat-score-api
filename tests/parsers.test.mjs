@@ -532,3 +532,22 @@ const resultMissingBody=await resultMissingResponse.json();
 assert.equal(resultMissingBody.verified,false);
 assert.equal(resultMissingBody.reason,'result_table_missing');
 assert.equal(resultMissingBody.diagnostics.tableCount,0);
+
+const resultHttpErrorContext=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async()=>new Response('Unavailable',{status:503})});
+vm.runInContext(source,resultHttpErrorContext,{filename:'worker.js'});
+const resultHttpErrorWorker=vm.runInContext('workerExport',resultHttpErrorContext);
+const resultHttpErrorResponse=await resultHttpErrorWorker.fetch(new Request('https://example.com/api/official/result?date=20261113&venue=1&race=1'));
+const resultHttpErrorBody=await resultHttpErrorResponse.json();
+assert.equal(resultHttpErrorBody.verified,false);
+assert.equal(resultHttpErrorBody.reason,'official_result_http_error');
+assert.equal(resultHttpErrorBody.upstreamStatus,503);
+const resultNetworkErrorContext=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async()=>{throw Error('Simulated upstream network failure')}});
+vm.runInContext(source,resultNetworkErrorContext,{filename:'worker.js'});
+const resultNetworkErrorWorker=vm.runInContext('workerExport',resultNetworkErrorContext);
+const resultNetworkErrorResponse=await resultNetworkErrorWorker.fetch(new Request('https://example.com/api/official/result?date=20261113&venue=1&race=1'));
+const resultNetworkErrorBody=await resultNetworkErrorResponse.json();
+assert.equal(resultNetworkErrorBody.verified,false);
+assert.equal(resultNetworkErrorBody.reason,'official_result_fetch_failed');
+assert.deepEqual(resultNetworkErrorBody.finishOrder,[]);
