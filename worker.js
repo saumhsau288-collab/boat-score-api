@@ -480,9 +480,9 @@ if (u.pathname === '/api/test') return reply(request,{status:'ok',message:'Boat 
     const source = `https://makulabo-jp.com/data/${venue.padStart(2,'0')}/${Number(race)}?hd=${date}`;
     try {
       const res = await fetch(source,{headers:{Accept:'text/html,application/xhtml+xml'},redirect:'follow',signal:AbortSignal.timeout(9000)});
-if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502);
+if (!res.ok) return reply(request,{status:'unavailable',reason:'upstream_http_error',upstreamStatus:res.status,source,last50Verified:false,heatmapReadyForAnalysis:false,dataReadyForPrediction:false},502);
       const type=res.headers.get('content-type')||'';
-      if (!/text\/html|text\/plain|application\/json/i.test(type)) return reply(request,{error:'Unexpected content type',type,source},502);
+      if (!/text\/html|text\/plain|application\/json/i.test(type)) return reply(request,{status:'unavailable',reason:'unexpected_content_type',type,source,last50Verified:false,heatmapReadyForAnalysis:false,dataReadyForPrediction:false},502);
       const html=await res.text();
 const htmlLength = html.length;
       const plainText = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ');
@@ -538,7 +538,7 @@ officialRacersInspection:
 
 
 });
-    } catch(e) {return reply(request,{error:'Upstream fetch failed',detail:String(e?.message||e)},502);}
+    } catch(e) {return reply(request,{status:'unavailable',reason:'upstream_fetch_failed',last50Verified:false,heatmapReadyForAnalysis:false,dataReadyForPrediction:false},502);}
   }
 };
 // Boat Score データ解析機能
