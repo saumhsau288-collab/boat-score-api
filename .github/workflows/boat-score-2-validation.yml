@@ -1,0 +1,16 @@
+name: Boat Score 2 validation
+on:
+  push:
+    branches:
+      - boat-score-2-data-fix-20261114
+  workflow_dispatch:
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Worker syntax
+        run: node --check --input-type=module < worker.js
