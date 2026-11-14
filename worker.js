@@ -49,6 +49,7 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
  const options=[...selector.options].filter(o=>o.value);
  options.forEach(o=>{o.disabled=false;o.textContent=o.textContent.replace(/ （公式1R確認済）$/,'')});
  const button=document.getElementById('checkAllVenues');button.disabled=true;
+ try{
  status.textContent='24場の公式1Rを照合中…（未確認の場は選択可能のまま）';
  let confirmed=0,unknown=0;
  for(let offset=0;offset<options.length;offset+=4){
@@ -61,7 +62,7 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
   status.textContent='確認中：'+Math.min(offset+4,24)+'/24場、公式1R確認済 '+confirmed+'場、未確認 '+unknown+'場';
  }
  status.textContent='公式1R確認済 '+confirmed+'場／未確認 '+unknown+'場。未確認は非開催を意味しません。';
- button.disabled=false;
+ }finally{button.disabled=false}
 });
 document.getElementById('checkVenue').addEventListener('click',async()=>{
  const status=document.getElementById('venueStatus');
