@@ -319,6 +319,14 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
       scenario.textContent='仮説の検討対象：5指標首位 '+top.map(row=>String(row.boat)+'号艇').join('・')+' ／ 外枠比較首位 '+(strongestOuter?String(strongestOuter.boat)+'号艇':'該当なし')+'。本命・逆転・穴の着順予測ではありません。';
      }
      comparison.appendChild(scenario);
+     const candidatesLine=document.createElement('p');
+     const candidateGate=officialReady&&makulabo.last50Verified===true&&reliableSamples&&stableCourses&&weatherKnown;
+     const candidateScores=totals.map(row=>({boat:row.boat,score:row.total}));
+     const candidates=candidateGate?rankTrifectaCandidates(candidateScores):{ready:false};
+     candidatesLine.textContent=candidates.ready?
+      '試験的な三連単候補（未検証の5指標順位モデル）：本命6点 '+candidates.main.map(x=>x.join('-')).join('、')+' ／ 外枠1着の穴6点 '+candidates.upset.map(x=>x.join('-')).join('、')+'。的中確率や期待回収率は算出していません。':
+      '三連単の本命6点・穴6点：保留（公式6艇情報、まくらぼ直近50走、展示・進入・風の検証が必要）。';
+     comparison.appendChild(candidatesLine);
      const audit=document.createElement('p');
      const orderedBoats=totals.map(row=>String(row.boat)+'号艇='+String(row.total)+'点').join('、');
      audit.textContent='過去レース照合用記録：日付 '+date+'／場コード '+venue+'／'+race+'R／5指標 '+orderedBoats+'／候補 '+scenario.textContent+'／確定着順 未照合';
@@ -995,6 +1003,24 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 
 
 // Parse the published six-row heatmap table without guessing blank cells.
+function rankTrifectaCandidates(rankedScores) {
+  if(!Array.isArray(rankedScores)||rankedScores.length!==6||new Set(rankedScores.map(x=>x.boat)).size!==6||
+    !rankedScores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)))
+    return {ready:false,main:[],upset:[],reason:'six_verified_scores_required'};
+  const scores=new Map(rankedScores.map(x=>[x.boat,x.score]));
+  const combinations=[];
+  for(let first=1;first<=6;first++)for(let second=1;second<=6;second++)for(let third=1;third<=6;third++){
+    if(first===second||first===third||second===third)continue;
+    const strength=scores.get(first)*0.56+scores.get(second)*0.29+scores.get(third)*0.15;
+    combinations.push({boats:[first,second,third],strength});
+  }
+  const ordered=combinations.sort((a,b)=>b.strength-a.strength||a.boats.join('').localeCompare(b.boats.join('')));
+  const main=ordered.slice(0,6).map(x=>x.boats);
+  const used=new Set(main.map(x=>x.join('-')));
+  const upset=ordered.filter(x=>x.boats[0]>=4&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
+  return {ready:main.length===6&&upset.length===6,main,upset,reason:null,method:'five_factor_heuristic_unvalidated'};
+}
+
 function parseOfficialFinishOrder(html) {
   const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(match=>match[0]);
   const candidate=tables.find(table=>{const headers=[...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim());return headers.some(h=>h==='着'||h==='着順')&&headers.some(h=>h==='枠'||h==='艇番');});
