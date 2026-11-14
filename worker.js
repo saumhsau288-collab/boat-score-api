@@ -21,6 +21,33 @@ if (u.pathname === '/api/racers/test') {
   });
 }
 
+if (u.pathname === '/api/official/beforeinfo') {
+  if (request.method !== 'GET') return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'',venue=u.searchParams.get('venue')||'',race=u.searchParams.get('race')||'';
+  if(!/^20\d{6}$/.test(date)||!/^\d{1,2}$/.test(venue)||!/^\d{1,2}$/.test(race)||
+     Number(venue)<1||Number(venue)>24||Number(race)<1||Number(race)>12)
+    return reply(request,{error:'Invalid parameters'},400);
+  const url=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
+  url.searchParams.set('rno',String(Number(race)));
+  url.searchParams.set('jcd',String(venue).padStart(2,'0'));
+  url.searchParams.set('hd',date);
+  try {
+    const res=await fetch(url.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(10000)});
+    if(!res.ok)return reply(request,{status:'unavailable',reason:'upstream_http_'+res.status,dataReadyForPrediction:false},502);
+    const html=await res.text();
+    if(html.length>1000000)return reply(request,{status:'unavailable',reason:'response_too_large',dataReadyForPrediction:false},502);
+    const exhibition=extractOfficialExhibition(html);
+    const start=extractOfficialStartExhibition(html);
+    return reply(request,{
+      status:exhibition.verified&&start.verified?'verified':'partial',
+      exhibitionVerified:exhibition.verified,startVerified:start.verified,
+      exhibitionByBoat:exhibition.rows,startByCourse:start.rows,
+      dataReadyForPrediction:false
+    });
+  } catch(e) {
+    return reply(request,{status:'unavailable',reason:'upstream_fetch_failed',dataReadyForPrediction:false},502);
+  }
+}
 if (u.pathname === '/api/official/racers') {
   if (request.method !== 'GET') return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'', venue=u.searchParams.get('venue')||'', race=u.searchParams.get('race')||'';
