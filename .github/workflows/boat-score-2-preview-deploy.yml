@@ -1,6 +1,9 @@
-name: Deploy Boat Score 2 preview (manual only)
+name: Deploy Boat Score 2 isolated preview
 
 on:
+  push:
+    branches:
+      - boat-score-2-data-fix-20261114
   workflow_dispatch:
 
 permissions:
