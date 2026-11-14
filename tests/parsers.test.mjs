@@ -68,6 +68,25 @@ const officialPayload=await officialEndpoint.json();
 assert.equal(officialPayload.racersByBoatVerified,true);
 assert.equal(officialPayload.racersByBoat.length,6);
 assert.equal(officialPayload.dataReadyForPrediction,false);
+const beforeUrl='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=1&jcd=01&hd=20261113';
+const beforeTable='<table><tr><th>展示<br>タイム</th><th>チルト</th></tr>'+
+  Array.from({length:6},(_,i)=>'<tr><td>'+(i+1)+'</td><td></td><td>選手'+(i+1)+'</td><td>52.0kg</td><td>6.58</td><td>0.0</td></tr>').join('')+'</table>';
+const beforeStart='<table><tr><th>スタート展示</th></tr>'+
+  Array.from({length:6},(_,i)=>'<tr><td colspan="3">'+(i+1)+' .0'+(i+1)+'</td></tr>').join('')+'</table>';
+const ctx3=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{assert.equal(String(url),beforeUrl);return new Response(beforeTable+beforeStart,{status:200});}});
+vm.runInContext(source,ctx3,{filename:'worker.js'});
+const beforeWorker=vm.runInContext('workerExport',ctx3);
+const beforeResponse=await beforeWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=1&race=1'));
+assert.equal(beforeResponse.status,200);
+const beforePayload=await beforeResponse.json();
+assert.equal(beforePayload.exhibitionVerified,true);
+assert.equal(beforePayload.startVerified,true);
+assert.equal(beforePayload.exhibitionByBoat.length,6);
+assert.equal(beforePayload.startByCourse.length,6);
+assert.equal(beforePayload.dataReadyForPrediction,false);
+const invalidBefore=await beforeWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=25&race=1'));
+assert.equal(invalidBefore.status,400);
 const invalidOfficial=await worker.fetch(new Request('https://example.com/api/official/racers?date=20261113&venue=99&race=1'));
 assert.equal(invalidOfficial.status,400);
 assert.equal(fetchCalls.length,3);
