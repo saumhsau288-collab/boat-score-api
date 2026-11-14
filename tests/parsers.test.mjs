@@ -194,7 +194,7 @@ assert.match(screenshotHtml,/count===total/);
 assert.match(screenshotHtml,/着順回数の合計と走数が一致しません/);
 assert.match(screenshotHtml,/r\.finishCounts\.reduce/);
 assert.match(screenshotHtml,/公式選手番号：6艇一致/);
-const inlineScripts=[...screenshotHtml.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/gi)].map(m=>m[1]);
+const inlineScripts=[...screenshotHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
 assert.equal(inlineScripts.length,1,'Screenshot page should have one inline script');
 for(const script of inlineScripts)new vm.Script(script,{filename:'screenshot-review-inline.js'});
 const badCombined=await combinedWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=99&race=1'));
