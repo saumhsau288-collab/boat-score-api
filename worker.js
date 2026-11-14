@@ -156,12 +156,17 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
  const button=document.getElementById('checkRaceData');button.disabled=true;
  status.textContent='公式出走表・展示・スタート・気象を照合中…';
  try{
-  const response=await fetch('/api/official/race-data?'+new URLSearchParams({date,venue,race}),{signal:AbortSignal.timeout(20000)});
+  const params=new URLSearchParams({date,venue,race});
+  const [response,makulaboResponse]=await Promise.all([
+   fetch('/api/official/race-data?'+params,{signal:AbortSignal.timeout(20000)}),
+   fetch('/api/makulabo/heatmap?'+params,{signal:AbortSignal.timeout(12000)}).catch(()=>null)
+  ]);
   const data=await response.json();
+  const makulabo=makulaboResponse?.ok?await makulaboResponse.json():null;
   if(date!==document.getElementById('date').value.trim()||venue!==document.getElementById('venue').value.trim()||race!==document.getElementById('race').value.trim())return;
   if(!response.ok){status.textContent='公式データの取得に失敗しました';return}
-  const checks=[['選手',data.racersVerified],['勝率・モーター',data.statsVerified],['展示',data.exhibitionVerified],['ST・進入',data.startVerified],['風速・波',data.weatherVerified],['風向',data.windDirectionVerified],['まくらぼ50走',data.makulaboLast50Verified]];
-  status.textContent=checks.map(([name,ok])=>name+'：'+(ok===true?'確認済':'未確認')).join(' ／ ')+'。'+(data.dataReadyForPrediction===true?'データ準備完了':'不足項目があるため予想は保留');
+  const checks=[['選手',data.racersVerified],['勝率・モーター',data.statsVerified],['展示',data.exhibitionVerified],['ST・進入',data.startVerified],['風速・波',data.weatherVerified],['風向',data.windDirectionVerified],['まくらぼ50走',makulabo?.last50Verified],['まくらぼヒートマップ',makulabo?.heatmapReadyForAnalysis]];
+  status.textContent=checks.map(([name,ok])=>name+'：'+(ok===true?'確認済':'未確認')).join(' ／ ')+'。'+(data.dataReadyForPrediction===true&&makulabo?.last50Verified===true?'データ準備完了':'不足項目があるため予想は保留');
  }catch{if(date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim()&&race===document.getElementById('race').value.trim())status.textContent='通信エラー：データの充足状況は未確認です'}finally{button.disabled=false}
 });
 document.getElementById('fillRacers').addEventListener('click',async()=>{
