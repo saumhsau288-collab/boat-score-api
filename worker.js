@@ -34,6 +34,11 @@ if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502
       if (!/text\/html|text\/plain|application\/json/i.test(type)) return reply(request,{error:'Unexpected content type',type,source},502);
       const html=await res.text();
 const htmlLength = html.length;
+      const plainText = html.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,' ').replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ');
+      const hasHeatmapHeading = /枠番別ヒートマップ/.test(plainText);
+      const accessRestricted = /ログイン|会員登録|有料会員|新規登録/.test(plainText) && !hasHeatmapHeading;
+      if (accessRestricted) return reply(request,{status:'unavailable',reason:'access_restricted_or_login_required',source, dataReadyForPrediction:false, last50Verified:false});
+      if (!hasHeatmapHeading) return reply(request,{status:'unavailable',reason:'heatmap_not_present_in_response',source,htmlLength,dataReadyForPrediction:false,last50Verified:false});
       if (html.length>1_000_000) return reply(request,{error:'Response too large'},502);
      const officialRacers = await fetchOfficialRacers(date, venue, race);
      const verifiedRows = verifyHeatmapBoats(html, officialRacers);
