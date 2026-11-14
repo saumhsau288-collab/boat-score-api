@@ -8,10 +8,12 @@ for (const [label,url] of targets) {
     const type=response.headers.get('content-type') || '';
     const body=await response.text();
     const text=body.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<[^>]*>/g,' ');
-    const summary={source:label,status:response.status,contentType:type.split(';')[0],htmlLength:body.length,
+    const title=(body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]||'').replace(/\s+/g,' ').trim().slice(0,120);
+    const summary={source:label,status:response.status,finalUrl:response.url,documentTitle:title,contentType:type.split(';')[0],htmlLength:body.length,
       heatmapHeading:/枠番別ヒートマップ/.test(text),
       racerProfiles:(body.match(/racersearch\/profile/g)||[]).length,
-      loginOrSignup:/ログイン|会員登録|新規登録/.test(text)};
+      loginOrSignup:/ログイン|会員登録|新規登録/.test(text),
+      dataKeywords:{heatmap:/ヒートマップ/.test(text),last50:/直近50走|過去50走|50走/.test(text),race:/出走表|レース/.test(text)}};
     console.log(JSON.stringify(summary));
   } catch (e) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
