@@ -6,6 +6,14 @@ const context=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:(
 vm.runInContext(source,context,{filename:'worker.js'});
 const parse=vm.runInContext('extractOfficialBoatRows',context);
 const heat=vm.runInContext('parseLast50Heatmap',context);
+const finishParser=vm.runInContext('parseOfficialFinishOrder',context);
+const finishTable='<table><tr><th>着順</th><th>艇番</th></tr>'+
+ [3,1,5,2,4,6].map((boat,i)=>'<tr><td>'+(i+1)+'</td><td>'+boat+'</td></tr>').join('')+'</table>';
+assert.equal(finishParser(finishTable).verified,true);
+assert.equal(Array.from(finishParser(finishTable).finishOrder).join('-'),'3-1-5-2-4-6');
+assert.equal(finishParser(finishTable.replace('<td>6</td></tr>','<td>3</td></tr>')).verified,false);
+assert.equal(finishParser('<table><tr><th>着順</th><th>艇番</th></tr><tr><td>1</td><td>3</td></tr></table>').verified,false);
+
 
 const weatherParser=vm.runInContext('extractOfficialWeather',context);
 const weather=weatherParser('<div>水面気象情報 16:03現在 気温 9.0℃ 雨 風速 1m 水温 13.0℃ 波高 1cm</div>');
