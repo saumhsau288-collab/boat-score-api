@@ -134,6 +134,17 @@ try {
   console.log(JSON.stringify({source:'official_beforeinfo',status:response.status,finalUrl:response.url,
     title:body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim()||'',
     htmlLength:body.length,tableCount:(body.match(/<table\b/gi)||[]).length,
+    tableShapes:[...body.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map((m,i)=>({
+      index:i,classes:m[0].slice(0,160),
+      rowCount:(m[0].match(/<tr\b/gi)||[]).length,
+      firstRows:[...m[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].slice(0,8).map(row=>({
+        attrs:row[0].slice(0,100),
+        cells:[...row[1].matchAll(/<t[dh]\b([^>]*)>([\s\S]*?)<\/t[dh]>/gi)].slice(0,12).map(c=>({
+          attrs:c[1].slice(0,70),text:c[2].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,85)
+        }))
+      }))
+    })),
+    windContexts:[...plain.matchAll(/風向|風速|波高|気温|水温/g)].slice(0,12).map(m=>plain.slice(Math.max(0,m.index-35),m.index+75)),
     headings,rowSamples,keywords:{
       exhibition:plain.includes('展示タイム'),start:plain.includes('スタート展示'),
       wind:plain.includes('風速'),entry:plain.includes('進入'),noData:plain.includes('データがありません')
