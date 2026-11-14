@@ -71,11 +71,31 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <div id="rows" style="display:grid;gap:14px"></div>
 <button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
+<section id="dailyRanking" style="margin:30px 0;padding:16px;border:1px solid #cbd5e1;border-radius:12px" aria-label="朝8時の全国レース分析">
+<h2>朝8:00 全国レース分析ランキング</h2>
+<p>本命寄り・穴候補・本命崩れの大荒れ候補を各最大20R表示する予定です。未確認のレースを順位に入れません。</p>
+<p id="dailyRankingDate" role="status">対象日：確認中</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button type="button" data-ranking="main">本命 最大20R</button>
+<button type="button" data-ranking="upset">穴 最大20R</button>
+<button type="button" data-ranking="chaos">大荒れ 最大20R</button>
+</div>
+<p id="dailyRankingStatus" role="status">朝8時の全国一括分析は未実装です。検証済みのランキングはありません。</p>
+<ol id="dailyRankingList"></ol>
+<small>朝の事前評価と締切10分前の直前評価は別に保存する予定です。的中確率や回収率は未検証です。</small>
+</section>
 <script>
 const rows=document.getElementById('rows');
 const japanDateParts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(part=>part.type!=='literal').map(part=>[part.type,part.value]));
 const japanToday=japanDateParts.year+japanDateParts.month+japanDateParts.day;
 document.getElementById('date').value=japanToday;
+document.getElementById('dailyRankingDate').textContent='対象日：'+japanToday+'（日本時間）';
+document.querySelectorAll('[data-ranking]').forEach(button=>button.addEventListener('click',()=>{
+ const names={main:'本命寄り',upset:'穴候補',chaos:'本命崩れ・大荒れ候補'};
+ document.getElementById('dailyRankingList').replaceChildren();
+ document.getElementById('dailyRankingStatus').textContent=names[button.dataset.ranking]+'：検証済みの朝8時分析データはまだありません。架空の順位は表示しません。';
+}));
+
 for(let boat=1;boat<=6;boat++){const card=document.createElement('fieldset');card.style.cssText='border:1px solid #cbd5e1;border-radius:12px;padding:12px;min-width:0';const heading=document.createElement('legend');heading.textContent=boat+'号艇';heading.style.fontWeight='bold';card.appendChild(heading);const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px';for(let i=0;i<8;i++){const label=document.createElement('label');label.style.cssText='margin:0;min-width:0';const name=i===0?'登録番号':i===1?'走数':(i-1)+'着';label.textContent=name+' ';const input=document.createElement('input');input.setAttribute('aria-label',boat+'号艇 '+name);input.dataset.boat=String(boat);input.dataset.index=String(i);input.type=i===0?'text':'number';input.inputMode='numeric';input.required=true;input.style.cssText='box-sizing:border-box;width:100%;min-width:0';if(i===0)input.maxLength=4;else{input.min='0';input.max='50'}label.appendChild(input);grid.appendChild(label)}card.appendChild(grid);rows.appendChild(card)}
 const venueSelector=document.getElementById('venue');
 function filterConfirmedVenues(){
