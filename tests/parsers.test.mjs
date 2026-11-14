@@ -207,6 +207,10 @@ assert.ok(screenshotHtml.includes('const sortedByFirst='));
 assert.ok(screenshotHtml.includes('const sortedByTop3='));
 assert.ok(screenshotHtml.includes('実験的な5指標比較（予想ではありません）'));
 assert.ok(screenshotHtml.includes('公式データの艇番・選手ID・進入の対応を確認できません'));
+assert.ok(screenshotHtml.includes('公式の出走表・勝率とモーター・展示・進入/STのいずれかが未確認'));
+assert.ok(screenshotHtml.includes('stat.motor.secondPlaceRate<=100'));
+assert.ok(screenshotHtml.includes('st.startTiming>=0&&st.startTiming<=1'));
+
 assert.ok(screenshotHtml.includes('String(stat.racerId)===String(racer.racerId)'));
 assert.ok(screenshotHtml.includes('new Set(data.startByCourse.map(row=>row.course)).size===6'));
 
