@@ -117,6 +117,19 @@ assert.equal(combinedPayload.exhibitionVerified,true);
 assert.equal(combinedPayload.startVerified,true);
 assert.equal(combinedPayload.weatherVerified,true);
 assert.equal(combinedPayload.dataReadyForPrediction,false);
+const mismatchCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{
+    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
+    if(String(url)===beforeUrl)return new Response(combinedBefore.replace('選手1','別人'),{status:200});
+    throw Error('Unexpected mismatch URL: '+url);
+  }});
+vm.runInContext(source,mismatchCtx,{filename:'worker.js'});
+const mismatchWorker=vm.runInContext('workerExport',mismatchCtx);
+const mismatchResponse=await mismatchWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=1&race=1'));
+const mismatchPayload=await mismatchResponse.json();
+assert.equal(mismatchPayload.exhibitionVerified,false);
+assert.equal(mismatchPayload.exhibitionByBoat.length,0);
+assert.equal(mismatchPayload.dataReadyForPrediction,false);
 const badCombined=await combinedWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=99&race=1'));
 assert.equal(badCombined.status,400);
 const invalidBefore=await beforeWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=25&race=1'));
