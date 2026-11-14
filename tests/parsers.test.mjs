@@ -158,6 +158,8 @@ assert.equal(combinedPayload.exhibitionVerified,true);
 assert.equal(combinedPayload.startVerified,true);
 assert.equal(combinedPayload.weatherVerified,true);
 assert.equal(combinedPayload.windDirectionVerified,false);
+assert.equal(combinedPayload.missingInputs.length,1);
+assert.equal(combinedPayload.missingInputs[0],'windDirection');
 assert.equal(combinedPayload.weather.windDirection,null);
 assert.equal(combinedPayload.dataReadyForPrediction,false);
 const directionalCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
@@ -173,6 +175,7 @@ assert.equal(directionalResponse.status,200);
 const directionalPayload=await directionalResponse.json();
 assert.equal(directionalPayload.weatherVerified,true);
 assert.equal(directionalPayload.windDirectionVerified,true);
+assert.equal(directionalPayload.missingInputs.length,0);
 assert.equal(directionalPayload.weather.windDirection,'北東');
 assert.equal(directionalPayload.dataReadyForPrediction,false);
 const mismatchCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
