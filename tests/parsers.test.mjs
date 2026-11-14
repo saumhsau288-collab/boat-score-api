@@ -56,6 +56,26 @@ assert.equal(heat(good).verified,true);
 assert.equal(heat(good.replace('<td>50</td>','<td>49</td>')).verified,false);
 assert.equal(heat(good.replace('<td>3.10</td>','<td>1.00</td>')).verified,false);
 assert.equal(heat('<p>ログインしてください</p>').verified,false);
+// Regression fixture transcribed from the publicly visible 2026-11-10 Gamagori 2R heatmap.
+// The 1st boat has only four runs; empty finish cells represent zero.
+const publishedHeatRows=[
+ [1,'高村諒',[1,0,0,1,0,2],4,4.25],
+ [2,'麻生慎介',[8,12,14,9,3,3],49,2.92],
+ [3,'川口貴久',[7,14,5,10,10,3],49,3.22],
+ [4,'本田愛',[1,7,5,8,14,14],49,4.41],
+ [5,'鈴木結平',[0,1,1,6,10,29],47,5.38],
+ [6,'三浦洋次',[0,5,6,7,23,8],49,4.47]
+];
+const publishedHtml='<h3>枠番別ヒートマップ</h3><table>'+
+ publishedHeatRows.map(([boat,name,counts,runs,average])=>
+ '<tr>'+[boat,name,...counts.map(n=>n===0?'':n),runs,average.toFixed(2)].map(v=>'<td>'+v+'</td>').join('')+'</tr>').join('')+'</table>';
+const publishedParsed=heat(publishedHtml);
+assert.equal(publishedParsed.verified,true);
+assert.equal(publishedParsed.rows.length,6);
+assert.equal(publishedParsed.rows[0].runs,4);
+assert.equal(publishedParsed.rows[0].counts[1],0);
+assert.equal(publishedParsed.rows[4].runs,47);
+assert.equal(heat(publishedHtml.replace('<td>4.25</td>','<td>4.26</td>')).verified,false);
 console.log('Boat Score 2 synthetic parser tests passed');
 
 const officialUrl='https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=01&hd=20261113';
