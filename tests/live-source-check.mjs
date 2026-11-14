@@ -137,6 +137,9 @@ try {
   const ctx=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:()=>{throw Error('Network disabled')}});
   vm.runInContext(workerSource,ctx,{filename:'worker.js'});
   const exhibition=vm.runInContext('extractOfficialExhibition',ctx)(body);
+  const startExhibition=vm.runInContext('extractOfficialStartExhibition',ctx)(body);
+  console.log(JSON.stringify({source:'official_start_exhibition',verified:startExhibition.verified,
+    candidateCount:startExhibition.candidateCount,rows:startExhibition.rows}));
   console.log(JSON.stringify({source:'official_exhibition',verified:exhibition.verified,
     candidateCount:exhibition.candidateCount,rows:exhibition.rows}));
   console.log(JSON.stringify({source:'official_beforeinfo',status:response.status,finalUrl:response.url,
