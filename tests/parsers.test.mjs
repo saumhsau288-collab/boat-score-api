@@ -329,7 +329,11 @@ assert.ok(screenshotHtml.includes('保存済み最大30レースを公式結果�
 assert.ok(screenshotHtml.includes('const selected=records.slice(0,30)'));
 assert.ok(screenshotHtml.includes('outerChecked++'));
 assert.ok(screenshotHtml.includes('detailRows.push('));
-assert.ok(screenshotHtml.includes('判定できたレース：'));
+assert.ok(screenshotHtml.includes('レース別結果：'));
+assert.ok(screenshotHtml.includes('同点首位 '));
+assert.ok(screenshotHtml.includes('tiedChecked++'));
+assert.ok(screenshotHtml.includes('保留（公式着順未確認）'));
+assert.ok(screenshotHtml.includes('保留（保存点数が不正）'));
 assert.ok(screenshotHtml.includes('result.finishOrder.join'))
 assert.ok(screenshotHtml.includes('正式な事前予想的中率ではありません'));
 assert.ok(screenshotHtml.includes('判定保留') || screenshotHtml.includes('／保留'));
