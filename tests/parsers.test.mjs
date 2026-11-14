@@ -188,7 +188,8 @@ assert.match(screenshotHtml,/id="checkRaceData"/);
 assert.match(screenshotHtml,/id="raceDataStatus"/);
 assert.ok(screenshotHtml.includes("'/api/official/race-data?'"));
 assert.ok(screenshotHtml.includes("['選手',data.racersVerified]"));
-assert.ok(screenshotHtml.includes("['まくらぼ50走',data.makulaboLast50Verified]"));
+assert.ok(screenshotHtml.includes("['まくらぼ50走',makulabo?.last50Verified]"));
+assert.ok(screenshotHtml.includes("['まくらぼヒートマップ',makulabo?.heatmapReadyForAnalysis]"));
 assert.ok(screenshotHtml.includes("不足項目があるため予想は保留"));
 
 assert.match(screenshotHtml,/\/api\/official\/racers\?/);
