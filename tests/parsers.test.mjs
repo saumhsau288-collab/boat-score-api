@@ -288,6 +288,9 @@ assert.ok(screenshotHtml.includes('風向は公式データから確認できる
 
 assert.ok(screenshotHtml.includes('totals.filter(other=>other.total>row.total).length'));
 assert.ok(screenshotHtml.includes('同点なら同順位です'));
+assert.ok(screenshotHtml.includes("['艇','展示進入','直近走数'"));
+assert.ok(screenshotHtml.includes('row.course,row.sampleRuns'));
+assert.ok(screenshotHtml.includes('展示進入と直近走数は参考表示のみで加点しません'));
 assert.ok(screenshotHtml.includes('モーター2連率'));
 assert.ok(screenshotHtml.includes("'1着率','3連対率'"));
 assert.ok(screenshotHtml.includes('row.counts[0]/row.runs*100'));
