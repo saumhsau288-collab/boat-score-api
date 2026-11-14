@@ -286,6 +286,8 @@ assert.ok(screenshotHtml.includes("windDirection:'風向'"));
 assert.ok(screenshotHtml.includes("data.weatherVerified===true?data.weather:null"));
 assert.ok(screenshotHtml.includes('風向は公式データから確認できるまで未確認'));
 
+assert.ok(screenshotHtml.includes('totals.filter(other=>other.total>row.total).length'));
+assert.ok(screenshotHtml.includes('同点なら同順位です'));
 assert.ok(screenshotHtml.includes('モーター2連率'));
 assert.ok(screenshotHtml.includes("'1着率','3連対率'"));
 assert.ok(screenshotHtml.includes('row.counts[0]/row.runs*100'));
