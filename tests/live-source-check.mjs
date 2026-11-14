@@ -131,6 +131,14 @@ try {
   const rowSamples=rows.filter(m=>/展示|進入|風|ST|タイム|[１-６]/.test(m[1]))
     .slice(0,12).map(m=>[...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
       .map(c=>c[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,70)).slice(0,14));
+  const {readFileSync}=await import('node:fs');
+  const vm=await import('node:vm');
+  const workerSource=readFileSync('worker.js','utf8').replace('export default {','const workerExport = {');
+  const ctx=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:()=>{throw Error('Network disabled')}});
+  vm.runInContext(workerSource,ctx,{filename:'worker.js'});
+  const exhibition=vm.runInContext('extractOfficialExhibition',ctx)(body);
+  console.log(JSON.stringify({source:'official_exhibition',verified:exhibition.verified,
+    candidateCount:exhibition.candidateCount,rows:exhibition.rows}));
   console.log(JSON.stringify({source:'official_beforeinfo',status:response.status,finalUrl:response.url,
     title:body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim()||'',
     htmlLength:body.length,tableCount:(body.match(/<table\b/gi)||[]).length,
