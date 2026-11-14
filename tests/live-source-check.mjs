@@ -55,6 +55,15 @@ for (const [label,url] of targets) {
       racerNumberMatches:(text.match(/\b[0-9]{4}\b/g)||[]).length,
       heatmapDataRows:(body.match(/heatmap[-_]?row|heatmap[-_]?data/gi)||[]).length
     };
+    if(label==='official' && response.ok && !summary.hasNoDataNotice){
+      const {readFileSync}=await import('node:fs');
+      const vm=await import('node:vm');
+      const workerSource=readFileSync('worker.js','utf8').replace('export default {','const workerExport = {');
+      const ctx=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:()=>{throw Error('Network disabled in parser inspection')}});
+      vm.runInContext(workerSource,ctx,{filename:'worker.js'});
+      const parsed=vm.runInContext('extractOfficialBoatRows',ctx)(body);
+      summary.officialParser={verified:parsed.verified,reason:parsed.reason||null,boatCount:parsed.racers?.length||0};
+    }
     console.log(JSON.stringify(summary));
   } catch (e) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
