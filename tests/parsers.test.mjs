@@ -545,6 +545,22 @@ assert.equal(resultMissingBody.verified,false);
 assert.equal(resultMissingBody.reason,'result_table_missing');
 assert.equal(resultMissingBody.diagnostics.tableCount,0);
 
+const incidentEndpointContext=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{
+    assert.equal(String(url),resultUrl);
+    return new Response('<html>'+incidentTable+'</html>',{status:200,headers:{'content-type':'text/html'}});
+  }});
+vm.runInContext(source,incidentEndpointContext,{filename:'worker.js'});
+const incidentEndpointWorker=vm.runInContext('workerExport',incidentEndpointContext);
+const incidentEndpointResponse=await incidentEndpointWorker.fetch(new Request('https://example.com/api/official/result?date=20261113&venue=1&race=1'));
+const incidentEndpointBody=await incidentEndpointResponse.json();
+assert.equal(incidentEndpointBody.verified,false);
+assert.equal(incidentEndpointBody.podiumVerified,true);
+assert.deepEqual(incidentEndpointBody.podium,[2,6,5]);
+assert.deepEqual(incidentEndpointBody.finishOrder,[]);
+assert.equal(incidentEndpointBody.reason,'result_rows_incomplete_or_nonstandard');
+assert.equal(incidentEndpointBody.dataReadyForPrediction,false);
+
 const resultHttpErrorContext=vm.createContext({URL,Response,Request,Headers,AbortSignal,
   fetch:async()=>new Response('Unavailable',{status:503})});
 vm.runInContext(source,resultHttpErrorContext,{filename:'worker.js'});
