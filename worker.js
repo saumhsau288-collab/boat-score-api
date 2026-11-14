@@ -74,7 +74,7 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
  for(let offset=0;offset<options.length;offset+=4){
   const batch=options.slice(offset,offset+4);
   const results=await Promise.all(batch.map(async option=>{
-   try{const response=await fetch('/api/official/racers?'+new URLSearchParams({date,venue:option.value,race:'1'}));
+   try{const response=await fetch('/api/official/racers?'+new URLSearchParams({date,venue:option.value,race:'1'}),{signal:AbortSignal.timeout(12000)});
     const data=await response.json();return response.ok&&data.racersByBoatVerified===true}catch{return false}
   }));
   if(currentCheck!==venueCheckVersion)return;
