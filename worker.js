@@ -199,6 +199,14 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   const w=data.weatherVerified===true?data.weather:null;
   weatherLine.textContent='風速：'+(w&&Number.isFinite(w.windSpeed)?w.windSpeed+'m/s':'未確認')+' ／ 波高：'+(w&&Number.isFinite(w.waveHeight)?w.waveHeight+'cm':'未確認')+' ／ 風向：'+(data.windDirectionVerified===true&&w?.windDirection?w.windDirection:'未確認');
   comparison.appendChild(weatherLine);
+  const weatherCaution=document.createElement('p');
+  const weatherAlerts=[];
+  if(w&&Number.isFinite(w.windSpeed)&&w.windSpeed>=5)weatherAlerts.push('風速5m/s以上');
+  if(w&&Number.isFinite(w.waveHeight)&&w.waveHeight>=5)weatherAlerts.push('波高5cm以上');
+  if(weatherAlerts.length)weatherCaution.textContent='水面状況の注意：'+weatherAlerts.join('・')+'。これは確認済み数値に基づく表示で、艇ごとの有利不利や着順を推定するものではありません。';
+  else if(!w)weatherCaution.textContent='水面状況は未確認です。風や波の条件を推測で補いません。';
+  else weatherCaution.textContent='風速・波高の確認値を表示しています。水面条件だけで着順を推定しません。';
+  comparison.appendChild(weatherCaution);
   const weatherNote=document.createElement('p');weatherNote.textContent='風・波は現在の5指標比較点に加点していません。風向は公式データから確認できるまで未確認と表示します。';comparison.appendChild(weatherNote);
   if(data.racersVerified===true&&Array.isArray(data.racersByBoat)&&data.racersByBoat.length===6){
    const heading=document.createElement('h3');heading.textContent='公式データ・6艇比較';comparison.appendChild(heading);
