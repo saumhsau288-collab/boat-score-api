@@ -244,7 +244,7 @@ try {
   const finishTable=tables.find(m=>/着/.test(m[0])&&/枠/.test(m[0]));
   const finishRows=finishTable?[...finishTable[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].slice(0,9).map(m=>[...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(c=>c[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,65))):[];
   console.log(JSON.stringify({source:'official_result_rows',rows:finishRows}));
-  console.log(JSON.stringify({source:'official_result',status:response.status,htmlLength:body.length,tableCount:tables.length,tableHeaders:headers,parserVerified:parsed.verified,parserReason:parsed.reason,finishOrder:parsed.verified?parsed.finishOrder:[]}));
+  console.log(JSON.stringify({source:'official_result',status:response.status,htmlLength:body.length,tableCount:tables.length,tableHeaders:headers,parserVerified:parsed.verified,podiumVerified:parsed.podiumVerified,podium:parsed.podiumVerified?parsed.podium:[],parserReason:parsed.reason,finishOrder:parsed.verified?parsed.finishOrder:[]}));
 }catch(error){console.log(JSON.stringify({source:'official_result',error:String(error?.message||error)}));}
 
 console.log('Diagnostics only: no login bypass, no page contents stored, no deployment');
