@@ -101,10 +101,13 @@ for (const [label,url] of targets) {
           status:candidateResponse.status,contentType:candidateType.split(';')[0],bodyLength:candidateText.length,
           topLevelKeys:payload&&typeof payload==='object'?Object.keys(payload).slice(0,35):[],
           raceKeys:race&&typeof race==='object'?Object.keys(race).slice(0,35):[],
+          raceAvailable:race!==null&&typeof race==='object',
+          raceIsNull:payload?.race===null,
           racerCount:racerRows?.length??null,
           racerFieldNames:racerRows?.[0]&&typeof racerRows[0]==='object'?Object.keys(racerRows[0]).slice(0,45):[],
           last50CandidateFields:racerRows?.[0]&&typeof racerRows[0]==='object'?Object.keys(racerRows[0]).filter(k=>/50|recent|history|course|lane|heat|race/i.test(k)).slice(0,25):[],
-          errorCode:payload?.error?.code??null
+          errorCode:payload?.error?.code??null,
+          dataVerified:racerRows?.length===6
         };
       }catch(error){summary.racelistApiProbe={error:String(error).slice(0,150)}}
     }
