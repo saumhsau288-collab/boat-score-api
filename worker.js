@@ -21,6 +21,23 @@ if (u.pathname === '/api/racers/test') {
   });
 }
 
+if (u.pathname === '/api/official/racers') {
+  if (request.method !== 'GET') return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'', venue=u.searchParams.get('venue')||'', race=u.searchParams.get('race')||'';
+  if (!/^20\d{6}$/.test(date) || !/^\d{1,2}$/.test(venue) || !/^\d{1,2}$/.test(race) ||
+      Number(venue)<1 || Number(venue)>24 || Number(race)<1 || Number(race)>12)
+    return reply(request,{error:'Invalid parameters'},400);
+  const official=await fetchOfficialRacers(date,venue,race);
+  return reply(request,{
+    status:official.verified?'verified':'unavailable',
+    source:'BOAT RACE official racelist',
+    racersByBoat:official.verified?official.racers:[],
+    racersByBoatVerified:official.verified,
+    candidateCount:official.officialBoatRowCandidates||0,
+    dataReadyForPrediction:false,
+    reason:official.verified?'Other required inputs are not yet verified':'Official six-boat identity verification failed'
+  });
+}
 if (u.pathname === '/api/test') return reply(request,{status:'ok',message:'Boat Score API connected'});
     if (u.pathname !== '/api/makulabo/heatmap') return reply(request,{error:'Not found'},404);
     if (request.method !== 'GET') return reply(request,{error:'Method not allowed'},405);
