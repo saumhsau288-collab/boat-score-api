@@ -27,7 +27,7 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <title>Boat Score 2 | 画像確認</title><style>body{font-family:system-ui,sans-serif;max-width:650px;margin:20px auto;padding:0 14px;color:#172033}label{display:block;margin:12px 0}input{font-size:16px;max-width:100%;padding:8px}input[type=number]{width:68px}img{max-width:100%;max-height:55vh;object-fit:contain}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:5px}button{font-size:16px;padding:12px;margin:15px 0}small{color:#555}</style></head>
 <body><h1>Boat Score 2：まくらぼ画像確認</h1>
 <p>画像はこの端末内で表示します。自動OCRは未実装です。画像はサーバーへ送信しません。</p>
-<label>スクリーンショットを選択 <input id="photo" type="file" accept="image/*"></label><img id="preview" alt="選択した画像のプレビュー" hidden>
+<label>スクリーンショットを選択 <input id="photo" type="file" accept="image/*"></label>
 <div><button id="zoomOut" type="button">縮小 −</button><button id="zoomIn" type="button">拡大 ＋</button><button id="zoomReset" type="button">元に戻す</button></div><div id="imageViewport" style="overflow:auto;max-height:60vh;touch-action:pan-x pan-y"><img id="zoomPreview" alt="拡大画像" hidden style="max-width:none;width:100%;height:auto"></div>
 <label>日付（YYYYMMDD） <input id="date" inputmode="numeric" maxlength="8" placeholder="20261114"></label>
 <label>競艇場番号（1〜24） <input id="venue" type="number" min="1" max="24"></label>
@@ -47,7 +47,7 @@ document.getElementById('zoomIn').addEventListener('click',()=>{zoom=Math.min(4,
 document.getElementById('zoomOut').addEventListener('click',()=>{zoom=Math.max(1,Math.round((zoom-0.25)*100)/100);applyZoom()});
 document.getElementById('zoomReset').addEventListener('click',()=>{zoom=1;applyZoom();viewport.scrollTo(0,0)});
 let objectUrl;
-document.getElementById('photo').addEventListener('change',e=>{if(objectUrl)URL.revokeObjectURL(objectUrl);const file=e.target.files?.[0];const img=document.getElementById('preview');if(file&&file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);img.src=objectUrl;img.hidden=false;zoomPreview.src=objectUrl;zoomPreview.hidden=false;zoom=1;applyZoom()}else{img.hidden=true;img.removeAttribute('src');zoomPreview.hidden=true;zoomPreview.removeAttribute('src')}});
+document.getElementById('photo').addEventListener('change',e=>{if(objectUrl)URL.revokeObjectURL(objectUrl);const file=e.target.files?.[0];if(file&&file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);zoomPreview.src=objectUrl;zoomPreview.hidden=false;zoom=1;applyZoom()}else{zoomPreview.hidden=true;zoomPreview.removeAttribute('src')}});
 document.getElementById('check').addEventListener('click',async()=>{
  const out=document.getElementById('result');out.textContent='照合中…';
  try{
