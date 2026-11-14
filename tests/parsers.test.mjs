@@ -6,6 +6,12 @@ const context=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:(
 vm.runInContext(source,context,{filename:'worker.js'});
 const parse=vm.runInContext('extractOfficialBoatRows',context);
 const heat=vm.runInContext('parseLast50Heatmap',context);
+
+const exhibitionParser=vm.runInContext('extractOfficialExhibition',context);
+const exhibitionHtml='<table><tr><th>展示<br>タイム</th><th>チルト</th></tr>'+
+  Array.from({length:6},(_,i)=>'<tr><td>'+(i+1)+'</td><td></td><td>選手'+(i+1)+'</td><td>52.0kg</td><td>6.58</td><td>0.0</td></tr>').join('')+'</table>';
+assert.equal(exhibitionParser(exhibitionHtml).verified,true);
+assert.equal(exhibitionParser(exhibitionHtml).rows[0].exhibitionTime,6.58);
 const stats=vm.runInContext('extractOfficialBoatStats',context);
 const officialStatRows='<table>'+Array.from({length:6},(_,i)=>'<tr><td>'+(i+1)+'</td><td></td><td>400'+(i+1)+' / B1 選手'+(i+1)+'</td><td>F0 L0 0.18</td><td>3.77 11.43 28.57</td><td>2.25 0.00 12.50</td><td>35 19.61 37.25</td><td>27 26.92 48.08</td><td><a href="/owpc/pc/data/racersearch/profile?toban=400'+(i+1)+'">選手'+(i+1)+'</a></td></tr>').join('')+'</table>';
 assert.equal(stats(officialStatRows).verified,true);
