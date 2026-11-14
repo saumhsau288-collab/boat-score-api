@@ -342,6 +342,28 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      });
      comparison.appendChild(snapshotButton);
      comparison.appendChild(snapshotStatus);
+     const listButton=document.createElement('button');
+     listButton.type='button';
+     listButton.textContent='端末に保存した分析記録を一覧表示';
+     const listStatus=document.createElement('p');
+     listStatus.textContent='未表示';
+     listButton.addEventListener('click',()=>{
+      try{
+       const records=[];
+       for(let i=0;i<localStorage.length;i++){
+        const key=localStorage.key(i);
+        if(!key||!key.startsWith('boatScore2:snapshot:'))continue;
+        try{
+         const row=JSON.parse(localStorage.getItem(key));
+         if(row&&row.schema===1&&/^20[0-9]{6}$/.test(String(row.date))&&Number(row.venue)>=1&&Number(row.venue)<=24&&Number(row.race)>=1&&Number(row.race)<=12&&Array.isArray(row.rankedScores)&&row.rankedScores.length===6)records.push(row);
+        }catch{}
+       }
+       records.sort((a,b)=>String(b.recordedAt||'').localeCompare(String(a.recordedAt||'')));
+       listStatus.textContent=records.length?'保存済み '+records.length+'件（直近30件を表示）：'+records.slice(0,30).map(row=>String(row.date)+'／場'+String(row.venue)+'／'+String(row.race)+'R／保存 '+String(row.recordedAt||'時刻不明')).join(' ｜ '):'保存済みの有効な分析記録はありません。';
+      }catch{listStatus.textContent='端末の保存記録を読み取れませんでした。'}
+     });
+     comparison.appendChild(listButton);
+     comparison.appendChild(listStatus);
      const resultButton=document.createElement('button');
      resultButton.type='button';
      resultButton.textContent='このレースの公式確定着順と照合';
