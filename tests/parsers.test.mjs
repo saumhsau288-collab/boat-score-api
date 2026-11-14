@@ -97,6 +97,20 @@ assert.equal(payload.last50Verified,true);
 assert.equal(payload.last50ByBoat.length,6);
 assert.equal(payload.dataReadyForPrediction,false);
 assert.equal(fetchCalls.length,2);
+const mismatchCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{
+    if(String(url)===makulaboUrl)return new Response(good.replace('選手1','別の選手'),{status:200,headers:{'content-type':'text/html'}});
+    if(String(url)===officialUrl)return new Response(official,{status:200,headers:{'content-type':'text/html'}});
+    throw Error('Unexpected mismatch URL: '+url);
+  }});
+vm.runInContext(source,mismatchCtx,{filename:'worker.js'});
+const mismatchWorker=vm.runInContext('workerExport',mismatchCtx);
+const mismatchResponse=await mismatchWorker.fetch(new Request('https://example.com/api/makulabo/heatmap?date=20261113&venue=1&race=1'));
+assert.equal(mismatchResponse.status,200);
+const mismatchPayload=await mismatchResponse.json();
+assert.equal(mismatchPayload.last50Verified,false);
+assert.equal(mismatchPayload.last50ByBoat.length,0);
+assert.equal(mismatchPayload.dataReadyForPrediction,false);
 const invalid=await worker.fetch(new Request('https://example.com/api/makulabo/heatmap?date=20261113&venue=25&race=1'));
 assert.equal(invalid.status,400);
 assert.equal(fetchCalls.length,2);
