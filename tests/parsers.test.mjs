@@ -238,6 +238,9 @@ assert.match(screenshotHtml,/id="raceDataStatus"/);
 assert.ok(screenshotHtml.includes("document.getElementById('last50Comparison').replaceChildren()"));
 assert.ok(screenshotHtml.includes('公式データ・6艇比較'));
 assert.ok(screenshotHtml.includes('水面気象・確認状況'));
+assert.ok(screenshotHtml.includes('公式データの不足項目：'));
+assert.ok(screenshotHtml.includes('data.missingInputs'));
+assert.ok(screenshotHtml.includes("windDirection:'風向'"));
 assert.ok(screenshotHtml.includes("data.weatherVerified===true?data.weather:null"));
 assert.ok(screenshotHtml.includes('風向は公式データから確認できるまで未確認'));
 
