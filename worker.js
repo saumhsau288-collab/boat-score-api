@@ -26,7 +26,7 @@ if (u.pathname === '/api/test') return reply(request,{status:'ok',message:'Boat 
     if (request.method !== 'GET') return reply(request,{error:'Method not allowed'},405);
     const date = u.searchParams.get('date')||'', venue=u.searchParams.get('venue')||'', race=u.searchParams.get('race')||'';
     if (!/^20\d{6}$/.test(date) || !/^\d{1,2}$/.test(venue) || !/^\d{1,2}$/.test(race) || Number(venue)<1 || Number(venue)>24 || Number(race)<1 || Number(race)>12) return reply(request,{error:'Invalid parameters'},400);
-    const source = `https://makulabo-jp.com/data/${venue.padStart(2,'0')}/${Number(race)}/heatmap?hd=${date}`;
+    const source = `https://makulabo-jp.com/data/${venue.padStart(2,'0')}/${Number(race)}?hd=${date}`;
     try {
       const res = await fetch(source,{headers:{Accept:'text/html,application/xhtml+xml'},redirect:'follow',signal:AbortSignal.timeout(9000)});
 if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502);
