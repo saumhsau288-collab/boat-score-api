@@ -36,6 +36,10 @@ if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502
 const htmlLength = html.length;
       if (html.length>1_000_000) return reply(request,{error:'Response too large'},502);
      const officialRacers = await fetchOfficialRacers(date, venue, race);
+     const verifiedRows = verifyHeatmapBoats(html, officialRacers);
+     const allSixVerified = verifiedRows.length === 6 &&
+       verifiedRows.every(row => row.verified === true) &&
+       new Set(verifiedRows.map(row => row.boat)).size === 6;
 return reply(request,{
   status:'fetched',
   source,
@@ -45,8 +49,10 @@ boatLinks: extractBoatLinks(html),
 racerInfo: inspectRacerInfo(html),
 racerNameCandidates: extractRacerNames(html),
 
-racersByBoat: [],
-racersByBoatVerified: false,
+racersByBoat: allSixVerified ? verifiedRows : [],
+racersByBoatVerified: allSixVerified,
+dataReadyForPrediction: allSixVerified,
+dataQualityReason: allSixVerified ? null : 'Six uniquely matched, verified boat rows are required; no unverified heatmap data is used',
 last50Inspection: inspectLast50(html),
 
 
@@ -59,8 +65,7 @@ inspectHeatmapNumbers(html),
 
 heatmapRows:
 extractHeatmapRows(html),
-heatmapBoatVerification:
-  verifyHeatmapBoats(html, officialRacers),
+heatmapBoatVerification: verifiedRows,
 
 officialRacersInspection:
   officialRacers,
@@ -428,6 +433,7 @@ const officialNames = [...html.matchAll(
     return {
       verified: officialNames.length === 6 &&
   new Set(officialNames.map(r => r.boat)).size === 6 &&
+  new Set(officialNames.map(r => r.racerId)).size === 6 &&
   officialNames.every(r => r.boat >= 1 && r.boat <= 6 && r.racerId && r.name),
       racers: officialNames,
 htmlLength: html.length,
