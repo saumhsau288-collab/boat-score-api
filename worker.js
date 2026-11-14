@@ -435,7 +435,7 @@ row.counts.reduce((sum, n) => sum + n, 0) === row.runs
 
 function extractOfficialExhibition(html) {
   const table=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)]
-    .map(m=>m[0]).find(t=>/展示\s*タイム/.test(t) && /チルト/.test(t));
+    .map(m=>m[0]).find(t=>/展示\s*タイム/.test(t.replace(/<[^>]*>/g,' ')) && /チルト/.test(t));
   if (!table) return {verified:false,rows:[]};
   const rows=[];
   for (const [,row] of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
