@@ -191,6 +191,10 @@ assert.ok(screenshotHtml.includes('公式データ・6艇比較'));
 assert.ok(screenshotHtml.includes('モーター2連率'));
 assert.ok(screenshotHtml.includes("'1着率','3連対率'"));
 assert.ok(screenshotHtml.includes('row.counts[0]/row.runs*100'));
+assert.ok(screenshotHtml.includes('参考比較（直近走数ベース）'));
+assert.ok(screenshotHtml.includes('枠・相手関係・展示・風などを反映した予想順位ではありません'));
+assert.ok(screenshotHtml.includes('const sortedByFirst='));
+assert.ok(screenshotHtml.includes('const sortedByTop3='));
 assert.ok(screenshotHtml.includes('(row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100'));
 
 assert.ok(screenshotHtml.includes('展示STは本番のSTではありません'));
