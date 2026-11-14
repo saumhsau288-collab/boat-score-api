@@ -62,7 +62,7 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
   status.textContent='確認中：'+Math.min(offset+4,24)+'/24場、公式1R確認済 '+confirmed+'場、未確認 '+unknown+'場';
  }
  status.textContent='公式1R確認済 '+confirmed+'場／未確認 '+unknown+'場。未確認は非開催を意味しません。';
- }finally{button.disabled=false}
+ }catch{status.textContent='一括確認で予期しないエラーが発生しました。開催状況は未確定です。'}finally{button.disabled=false}
 });
 document.getElementById('checkVenue').addEventListener('click',async()=>{
  const status=document.getElementById('venueStatus');
