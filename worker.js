@@ -45,7 +45,7 @@ if (u.pathname === '/api/official/result') {
     if(!upstream.ok)return reply(request,{verified:false,finishOrder:[],reason:'official_result_http_error',source,upstreamStatus:upstream.status});
     const html=await upstream.text();
     const parsed=parseOfficialFinishOrder(html);
-    return reply(request,{...parsed,date,venue:Number(venue),race:Number(race),source,diagnostics:{upstreamStatus:upstream.status,htmlBytes:html.length,tableCount:(html.match(/<table\\b/gi)||[]).length,hasResultHeading:/着順|レース結果|着/.test(html)},dataReadyForPrediction:false});
+    return reply(request,{...parsed,date,venue:Number(venue),race:Number(race),source,diagnostics:{upstreamStatus:upstream.status,htmlBytes:html.length,tableCount:(html.match(/<table\b/gi)||[]).length,hasResultHeading:/着順|レース結果|着/.test(html)},dataReadyForPrediction:false});
   }catch{return reply(request,{verified:false,finishOrder:[],reason:'official_result_fetch_failed',source})}
 }
 
