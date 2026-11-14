@@ -41,6 +41,7 @@ const htmlLength = html.length;
       if (!hasHeatmapHeading) return reply(request,{status:'unavailable',reason:'heatmap_not_present_in_response',source,htmlLength,dataReadyForPrediction:false,last50Verified:false});
       if (html.length>1_000_000) return reply(request,{error:'Response too large'},502);
      const officialRacers = await fetchOfficialRacers(date, venue, race);
+     const parsedLast50 = parseLast50Heatmap(html);
      const verifiedRows = verifyHeatmapBoats(html, officialRacers);
      const allSixVerified = verifiedRows.length === 6 &&
        verifiedRows.every(row => row.verified === true) &&
@@ -60,9 +61,10 @@ dataReadyForPrediction: false,
 heatmapReadyForAnalysis: allSixVerified,
 dataQualityReason: allSixVerified ? 'Heatmap verified, but last-50 and other required prediction inputs remain unverified' : 'Six uniquely matched, verified boat rows are required; no unverified heatmap data is used',
 last50Inspection: inspectLast50(html),
-last50ByBoat: [],
-last50Verified: false,
-last50Status: 'not_verified',
+last50ByBoat: parsedLast50.verified ? parsedLast50.rows : [],
+last50Verified: parsedLast50.verified,
+last50Status: parsedLast50.verified ? 'table_validated' : 'not_verified',
+last50ParseReason: parsedLast50.reason,
 last50Reason: 'No reliable six-racer, 50-race structured extraction is implemented; missing data must not be estimated',
 
 
@@ -357,6 +359,30 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
   });
 }
 
+
+// Parse the published six-row heatmap table without guessing blank cells.
+function parseLast50Heatmap(html) {
+  const section = html.split(/枠番別ヒートマップ/)[1];
+  if (!section) return {verified:false,rows:[],reason:'heading_missing'};
+  const table = section.match(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/i);
+  if (!table) return {verified:false,rows:[],reason:'table_missing'};
+  const rows = [...table[0].matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)].map(m => {
+    const cells = [...m[1].matchAll(/<t[dh]\\b[^>]*>([\\s\\S]*?)<\\/t[dh]>/gi)]
+      .map(c => c[1].replace(/<[^>]*>/g,'').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').trim());
+    if (cells.length < 10 || !/^[1-6]$/.test(cells[0])) return null;
+    const counts = cells.slice(2,8).map(v => v === '' ? 0 : (/^\\d+$/.test(v) ? Number(v) : NaN));
+    const runs = /^\\d+$/.test(cells[8]) ? Number(cells[8]) : NaN;
+    const avg = Number(cells[9]);
+    const weighted = counts.reduce((sum,n,i) => sum + n*(i+1),0);
+    if (!cells[1] || !counts.every(Number.isInteger) || !Number.isInteger(runs) || runs < 1 || runs > 50 ||
+        counts.reduce((a,b)=>a+b,0)!==runs || !Number.isFinite(avg) ||
+        Math.abs(weighted/runs-avg)>0.011) return null;
+    return {boat:Number(cells[0]),name:cells[1],counts,runs,average:avg};
+  }).filter(Boolean);
+  const verified = rows.length===6 && new Set(rows.map(r=>r.boat)).size===6 &&
+    new Set(rows.map(r=>r.name.replace(/\\s/g,''))).size===6;
+  return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table'};
+}
 
 function verifyHeatmapBoats(html, officialRacers) {
   const rows = extractHeatmapRows(html);
