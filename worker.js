@@ -364,6 +364,50 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      });
      comparison.appendChild(listButton);
      comparison.appendChild(listStatus);
+     const batchButton=document.createElement('button');
+     batchButton.type='button';
+     batchButton.textContent='保存済み最大30レースを公式結果と参考照合';
+     const batchStatus=document.createElement('p');
+     batchStatus.textContent='未照合（通信が発生します）';
+     batchButton.addEventListener('click',async()=>{
+      batchButton.disabled=true;
+      let checked=0,matched=0,unmatched=0,held=0,outerChecked=0,outerMatched=0;
+      try{
+       const records=[];
+       for(let i=0;i<localStorage.length;i++){
+        const key=localStorage.key(i);
+        if(!key||!key.startsWith('boatScore2:snapshot:'))continue;
+        try{
+         const row=JSON.parse(localStorage.getItem(key));
+         if(row&&row.schema===1&&/^20[0-9]{6}$/.test(String(row.date))&&Number.isInteger(Number(row.venue))&&Number(row.venue)>=1&&Number(row.venue)<=24&&Number.isInteger(Number(row.race))&&Number(row.race)>=1&&Number(row.race)<=12)records.push(row);
+        }catch{}
+       }
+       records.sort((a,b)=>String(b.recordedAt||'').localeCompare(String(a.recordedAt||'')));
+       const selected=records.slice(0,30);
+       if(!selected.length){batchStatus.textContent='保存済み記録がありません。先に分析時点を端末に記録してください。';return}
+       for(const row of selected){
+        batchStatus.textContent='参考照合中：'+String(checked+held+1)+'／'+selected.length+'件';
+        const scores=row.rankedScores;
+        if(!Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x.boat)).size!==6||!scores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))){held++;continue}
+        try{
+         const response=await fetch('/api/official/result?'+new URLSearchParams({date:row.date,venue:row.venue,race:row.race}),{signal:AbortSignal.timeout(12000)});
+         if(!response.ok){held++;continue}
+         const result=await response.json();
+         if(result.verified!==true||!Array.isArray(result.finishOrder)||result.finishOrder.length!==6||new Set(result.finishOrder).size!==6||!result.finishOrder.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){held++;continue}
+         const best=Math.max(...scores.map(x=>x.score));
+         const leaders=scores.filter(x=>x.score===best).map(x=>x.boat);
+         const hit=leaders.includes(result.finishOrder[0]);
+         checked++;
+         if(hit)matched++;else unmatched++;
+         if(leaders.length===1&&leaders[0]>=4){outerChecked++;if(hit)outerMatched++}
+        }catch{held++}
+       }
+       batchStatus.textContent='参考照合：対象'+selected.length+'件／判定'+checked+'件／一致'+matched+'件／不一致'+unmatched+'件／保留'+held+'件。首位艇1着一致率 '+(checked?(matched/checked*100).toFixed(1)+'%':'算出不可')+'（同点首位を含む）。外枠単独首位 '+outerChecked+'件／一致'+outerMatched+'件'+(outerChecked?'／'+(outerMatched/outerChecked*100).toFixed(1)+'%':'')+'。端末時計・保存時刻は第三者未検証のため、正式な事前予想的中率ではありません。';
+      }catch{batchStatus.textContent='端末の保存記録を読み取れませんでした。'}
+      finally{batchButton.disabled=false}
+     });
+     comparison.appendChild(batchButton);
+     comparison.appendChild(batchStatus);
      const resultButton=document.createElement('button');
      resultButton.type='button';
      resultButton.textContent='このレースの公式確定着順と照合';
