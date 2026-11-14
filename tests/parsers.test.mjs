@@ -25,6 +25,18 @@ assert.equal(finishParser(finishTable.replace('<td>6</td></tr>','<td>3</td></tr>
 assert.equal(finishParser('<table><tr><th>着順</th><th>艇番</th></tr><tr><td>1</td><td>3</td></tr></table>').verified,false);
 
 
+const incidentTable='<table><tr><th>着</th><th>枠</th><th>ボートレーサー</th></tr>'+
+  [['１',2],['２',6],['３',5],['４',4],['落',3],['妨',1]]
+    .map(row=>'<tr><td>'+row[0]+'</td><td>'+row[1]+'</td><td>選手</td></tr>').join('')+'</table>';
+const incidentResult=finishParser(incidentTable);
+assert.equal(incidentResult.verified,false);
+assert.equal(incidentResult.podiumVerified,true);
+assert.equal(Array.from(incidentResult.podium).join('-'),'2-6-5');
+assert.equal(incidentResult.finishOrder.length,0);
+const duplicateIncident=finishParser(incidentTable.replace('<td>妨</td><td>1</td>','<td>妨</td><td>2</td>'));
+assert.equal(duplicateIncident.podiumVerified,false);
+assert.equal(finishParser(finishTable).podiumVerified,true);
+
 const weatherParser=vm.runInContext('extractOfficialWeather',context);
 const weather=weatherParser('<div>水面気象情報 16:03現在 気温 9.0℃ 雨 風速 1m 水温 13.0℃ 波高 1cm</div>');
 assert.equal(weather.verified,true);
