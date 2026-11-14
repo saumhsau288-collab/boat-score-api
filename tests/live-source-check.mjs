@@ -14,12 +14,12 @@ for (const [label,url] of targets) {
       racerProfiles:(body.match(/racersearch\/profile/g)||[]).length,
       loginOrSignup:/ログイン|会員登録|新規登録/.test(text),
       dataKeywords:{heatmap:/ヒートマップ/.test(text),last50:/直近50走|過去50走|50走/.test(text),race:/出走表|レース/.test(text)}};
-    const tables=(body.match(/<table\\b/gi)||[]).length;
-    const headings=[...body.matchAll(/<h[1-6]\\b[^>]*>([\\s\\S]*?)<\\/h[1-6]>/gi)].slice(0,20).map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim().slice(0,70));
+    const tables=(body.match(/<table\b/gi)||[]).length;
+    const headings=[...body.matchAll(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/gi)].slice(0,20).map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,70));
     summary.tableCount=tables;
     summary.headings=headings;
     summary.heatmapKeywordCount=(text.match(/ヒートマップ/g)||[]).length;
-    summary.officialProfileLinkCount=(body.match(/toban=\\d+/g)||[]).length;
+    summary.officialProfileLinkCount=(body.match(/toban=\d+/g)||[]).length;
     console.log(JSON.stringify(summary));
   } catch (e) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
