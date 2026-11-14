@@ -196,6 +196,10 @@ assert.ok(screenshotHtml.includes('枠・相手関係・展示・風などを反
 assert.ok(screenshotHtml.includes('const sortedByFirst='));
 assert.ok(screenshotHtml.includes('const sortedByTop3='));
 assert.ok(screenshotHtml.includes('実験的な5指標比較（予想ではありません）'));
+assert.ok(screenshotHtml.includes('公式データの艇番・選手ID・進入の対応を確認できません'));
+assert.ok(screenshotHtml.includes('String(stat.racerId)===String(racer.racerId)'));
+assert.ok(screenshotHtml.includes('new Set(data.startByCourse.map(row=>row.course)).size===6'));
+
 assert.ok(screenshotHtml.includes('5指標比較は未表示：公式データの数値'));
 assert.ok(screenshotHtml.includes('scroll.appendChild(table);comparison.appendChild(scroll)'));
 
