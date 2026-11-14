@@ -415,16 +415,16 @@ row.counts.reduce((sum, n) => sum + n, 0) === row.runs
 
 
 function extractOfficialBoatRows(html) {
-  const rows = [...html.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)];
+  const rows = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
   const matches = [];
   for (const [,row] of rows) {
-    const cells = [...row.matchAll(/<td\\b[^>]*>([\\s\\S]*?)<\\/td>/gi)]
+    const cells = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
       .map(m => m[1]);
     const first = cells[0]?.replace(/<[^>]*>/g,'').trim();
     if (!/^[1-6]$/.test(first || '')) continue;
-    const links = [...row.matchAll(/<a\\b[^>]*href=["'][^"']*racersearch\\/profile\\?toban=(\\d+)[^"']*["'][^>]*>([\\s\\S]*?)<\\/a>/gi)];
+    const links = [...row.matchAll(/<a\b[^>]*href=["'][^"']*racersearch\/profile\?toban=(\d+)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi)];
     if (links.length !== 1) continue;
-    const name = links[0][2].replace(/<[^>]*>/g,'').replace(/\\s+/g,' ').trim();
+    const name = links[0][2].replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();
     if (!name) continue;
     matches.push({boat:Number(first),racerId:links[0][1],name});
   }
