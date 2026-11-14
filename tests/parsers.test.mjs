@@ -325,6 +325,11 @@ assert.ok(screenshotHtml.includes('保存時点の5指標首位艇の1着一致�
 assert.ok(screenshotHtml.includes('端末に保存した分析記録を一覧表示'));
 assert.ok(screenshotHtml.includes("key.startsWith('boatScore2:snapshot:')"));
 assert.ok(screenshotHtml.includes('records.slice(0,30)'));
+assert.ok(screenshotHtml.includes('保存済み最大30レースを公式結果と参考照合'));
+assert.ok(screenshotHtml.includes('const selected=records.slice(0,30)'));
+assert.ok(screenshotHtml.includes('outerChecked++'));
+assert.ok(screenshotHtml.includes('正式な事前予想的中率ではありません'));
+assert.ok(screenshotHtml.includes('判定保留') || screenshotHtml.includes('／保留'));
 assert.ok(screenshotHtml.includes('保存済みの有効な分析記録はありません'));
 assert.ok(screenshotHtml.includes('saved.rankedScores.filter'));
 assert.ok(screenshotHtml.includes('事前予想の的中率としては未検証です'));
