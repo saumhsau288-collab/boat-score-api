@@ -1,5 +1,5 @@
 const targets = [
-  ['official', 'https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=01&hd=20261113'],
+  ['official', 'https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=02&hd=20261109'],
   ['makulabo', 'https://makulabo-jp.com/data/01/1?hd=20261113']
 ];
 for (const [label,url] of targets) {
@@ -48,6 +48,12 @@ for (const [label,url] of targets) {
       relevantScriptPaths:relevantSources.map(src=>{try{return new URL(src,response.url).pathname.slice(0,150)}catch{return 'unparsed'}}),
       htmlContainsJsonData:body.includes('application/ld+json'),
       dataAttributes:(body.match(/\bdata-[a-z-]+=/gi)||[]).length
+    };
+    const heatPos=text.indexOf('ヒートマップ');
+    summary.heatmapContext=heatPos>=0?text.slice(Math.max(0,heatPos-100),heatPos+180).replace(/\s+/g,' ').trim():null;
+    summary.visibleRaceDataIndicators={
+      racerNumberMatches:(text.match(/\b[0-9]{4}\b/g)||[]).length,
+      heatmapDataRows:(body.match(/heatmap[-_]?row|heatmap[-_]?data/gi)||[]).length
     };
     console.log(JSON.stringify(summary));
   } catch (e) {
