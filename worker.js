@@ -43,6 +43,8 @@ const htmlLength = html.length;
      const officialRacers = await fetchOfficialRacers(date, venue, race);
      const parsedLast50 = parseLast50Heatmap(html);
      const verifiedRows = verifyHeatmapBoats(html, officialRacers);
+     const last50MatchesOfficial = parsedLast50.verified && officialRacers.verified &&
+       parsedLast50.rows.every(row => officialRacers.racers.some(r => r.boat === row.boat && r.name.replace(/\s/g,'') === row.name.replace(/\s/g,'')));
      const allSixVerified = verifiedRows.length === 6 &&
        verifiedRows.every(row => row.verified === true) &&
        new Set(verifiedRows.map(row => row.boat)).size === 6;
@@ -61,9 +63,9 @@ dataReadyForPrediction: false,
 heatmapReadyForAnalysis: allSixVerified,
 dataQualityReason: allSixVerified ? 'Heatmap verified, but last-50 and other required prediction inputs remain unverified' : 'Six uniquely matched, verified boat rows are required; no unverified heatmap data is used',
 last50Inspection: inspectLast50(html),
-last50ByBoat: parsedLast50.verified ? parsedLast50.rows : [],
-last50Verified: parsedLast50.verified,
-last50Status: parsedLast50.verified ? 'table_validated' : 'not_verified',
+last50ByBoat: last50MatchesOfficial ? parsedLast50.rows : [],
+last50Verified: last50MatchesOfficial,
+last50Status: last50MatchesOfficial ? 'officially_matched' : 'not_verified',
 last50ParseReason: parsedLast50.reason,
 last50Reason: 'No reliable six-racer, 50-race structured extraction is implemented; missing data must not be estimated',
 
