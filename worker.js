@@ -74,6 +74,7 @@ let venueCheckVersion=0;
 let racerFillVersion=0;
 function clearOfficialRacerAutofill(){
  document.getElementById('raceDataStatus').textContent='レース条件が変わりました。再確認してください';
+ document.getElementById('last50Comparison').replaceChildren();
  racerFillVersion++;
  for(let boat=1;boat<=6;boat++){
   const input=rows.querySelector('input[data-boat="'+boat+'"][data-index="0"]');
@@ -154,6 +155,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
  const date=document.getElementById('date').value.trim(),venue=document.getElementById('venue').value.trim(),race=document.getElementById('race').value.trim();
  if(!/^20[0-9]{6}$/.test(date)||!/^([1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^([1-9]|1[0-2])$/.test(race)){status.textContent='日付・競艇場・レース番号を確認してください';return}
  const button=document.getElementById('checkRaceData');button.disabled=true;
+ document.getElementById('last50Comparison').replaceChildren();
  status.textContent='公式出走表・展示・スタート・気象を照合中…';
  try{
   const params=new URLSearchParams({date,venue,race});
