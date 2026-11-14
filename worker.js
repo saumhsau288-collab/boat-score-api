@@ -137,7 +137,7 @@ if (u.pathname === '/api/official/active-venues') {
   if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
   // Run independent official 1R checks concurrently rather than waiting for
   // six sequential timeout batches. A failed check is UNKNOWN, not closed.
-  return reply(request,await getVerifiedList('venues:'+date,async()=>{const candidates=await officialScheduleVenueCandidates(date);const checks=await mapOfficialLimited(candidates||Array.from({length:24},(_,i)=>i+1),5,async venue=>{
+  let result;try{result=await getVerifiedList('venues:'+date,async()=>{const candidates=await officialScheduleVenueCandidates(date);const limited=(candidates||[]).slice(0,5);const checks=await mapOfficialLimited(limited,2,async venue=>{
     try{
       const official=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});
       return {venue,status:official.verified===true?'race1_entry_verified':'unverified',
@@ -150,7 +150,9 @@ if (u.pathname === '/api/official/active-venues') {
   const verifiedVenues=checks.filter(x=>x.status==='race1_entry_verified').map(x=>x.venue);
   return {date,verifiedVenues,checks,discovery:candidates?'official_schedule_link_candidates':'all_24_venues_fallback',
     coverage:'official_race1_entry_only',completeScheduleVerified:false,
-    note:'Unverified venues may be closed, not yet published, or inaccessible. Do not label them as non-running.'};}));
+    note:'This is a bounded diagnostic scan, not a complete schedule. Unverified venues are not necessarily closed.',
+    scannedCount:checks.length,scanLimit:5,scanComplete:!!candidates&&candidates.length<=5,
+    candidateCount:candidates?candidates.length:null};});}catch(error){return reply(request,{date,verifiedVenues:[],checks:[],status:'unavailable',reason:'venue_scan_failed',message:String(error?.message||error).slice(0,180),completeScheduleVerified:false},200)}return reply(request,result);
 }
 
 if (u.pathname === '/api/official/verified-races') {
