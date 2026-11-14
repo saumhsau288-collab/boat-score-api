@@ -876,12 +876,12 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 
 // Parse the published six-row heatmap table without guessing blank cells.
 function parseOfficialFinishOrder(html) {
-  const tables=[...html.matchAll(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/gi)].map(match=>match[0]);
+  const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(match=>match[0]);
   const candidate=tables.find(table=>/着順/.test(table)&&/艇番/.test(table));
   if(!candidate)return {verified:false,finishOrder:[],reason:'result_table_missing'};
-  const rows=[...candidate.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)].map(match=>{
-    const cells=[...match[1].matchAll(/<t[dh]\\b[^>]*>([\\s\\S]*?)<\\/t[dh]>/gi)]
-      .map(cell=>cell[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\\s+/g,' ').trim());
+  const rows=[...candidate.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(match=>{
+    const cells=[...match[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
+      .map(cell=>cell[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim());
     const rank=cells[0],boat=cells[1];
     return /^[1-6]$/.test(rank)&&/^[1-6]$/.test(boat)?{rank:Number(rank),boat:Number(boat)}:null;
   }).filter(Boolean);
