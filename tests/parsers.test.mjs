@@ -285,6 +285,10 @@ assert.ok(screenshotHtml.includes('data.missingInputs'));
 assert.ok(screenshotHtml.includes("windDirection:'風向'"));
 assert.ok(screenshotHtml.includes("data.weatherVerified===true?data.weather:null"));
 assert.ok(screenshotHtml.includes('風向は公式データから確認できるまで未確認'));
+assert.ok(screenshotHtml.includes('風速5m/s以上'));
+assert.ok(screenshotHtml.includes('波高5cm以上'));
+assert.ok(screenshotHtml.includes('風や波の条件を推測で補いません'));
+assert.ok(screenshotHtml.includes('艇ごとの有利不利や着順を推定するものではありません'));
 
 assert.ok(screenshotHtml.includes('totals.filter(other=>other.total>row.total).length'));
 assert.ok(screenshotHtml.includes('同点なら同順位です'));
