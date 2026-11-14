@@ -90,11 +90,13 @@ document.getElementById('checkVenue').addEventListener('click',async()=>{
  const date=document.getElementById('date').value.trim(),venue=document.getElementById('venue').value.trim();
  if(!/^20[0-9]{6}$/.test(date)||!/^([1-9]|1[0-9]|2[0-4])$/.test(venue)){status.textContent='日付と競艇場を選択してください';return}
  status.textContent='公式1R出走表を確認中…';
+ const checkVersion=venueCheckVersion;
  try{
-  const response=await fetch('/api/official/racers?'+new URLSearchParams({date,venue,race:'1'}));
+  const response=await fetch('/api/official/racers?'+new URLSearchParams({date,venue,race:'1'}),{signal:AbortSignal.timeout(12000)});
   const data=await response.json();
+  if(checkVersion!==venueCheckVersion||date!==document.getElementById('date').value.trim()||venue!==document.getElementById('venue').value.trim())return;
   status.textContent=response.ok&&data.racersByBoatVerified===true?'公式1R出走表を確認できました（開催確認の参考情報）':'公式1R出走表を確認できません。非開催とは断定できません';
- }catch{status.textContent='通信エラー：開催・非開催は未判定です'}
+ }catch{if(checkVersion===venueCheckVersion&&date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim())status.textContent='通信エラー：開催・非開催は未判定です'}
 });
 document.getElementById('fillRacers').addEventListener('click',async()=>{
  const status=document.getElementById('fillStatus');
