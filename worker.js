@@ -68,7 +68,7 @@ async function refreshRunningVenues(){
  st.textContent='公式1R出走表で開催場を照合中…';out.textContent='';
  try{
   const res=await fetch('/api/official/active-venues?date='+dateCode(),{signal:controller.signal});
-  const data=await res.json();if(token!==scheduleRequest)return;
+  const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw Error('開催情報APIがJSONを返しませんでした（HTTP '+res.status+'）。一時的な通信障害の可能性があります。')}if(token!==scheduleRequest)return;
   if(!res.ok)throw Error('HTTP '+res.status);
   const confirmed=Array.isArray(data.verifiedVenues)?data.verifiedVenues.filter(v=>Number.isInteger(v)&&v>=1&&v<=24):[];
   venue.replaceChildren(new Option(confirmed.length?'開催場を選択':'開催場を確認できません',''));
@@ -83,7 +83,7 @@ function clearRaceDisplay(){raceDataRequest++;if(raceDataController){raceDataCon
 day.addEventListener('change',()=>{clearRaceDisplay();refreshRunningVenues()});
 race.addEventListener('change',clearRaceDisplay);
 refreshRunningVenues();
-async function refreshVerifiedRaces(){const token=++raceListRequest;if(raceListController)raceListController.abort();raceListController=new AbortController();const controller=raceListController;clearRaceDisplay();race.disabled=true;race.replaceChildren(new Option('レースを確認中…',''));if(!venue.value)return;const selectedVenue=venue.value,selectedDate=dateCode();try{const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue,{signal:controller.signal});const data=await res.json();if(token!==raceListRequest||selectedDate!==dateCode()||selectedVenue!==venue.value)return;if(!res.ok)throw Error('HTTP '+res.status);const confirmed=Array.isArray(data.verifiedRaces)?data.verifiedRaces.filter(v=>Number.isInteger(v)&&v>=1&&v<=12):[];race.replaceChildren(new Option(confirmed.length?'レースを選択':'確認できるレースなし',''));confirmed.forEach(v=>race.add(new Option(v+'R',String(v))));race.disabled=confirmed.length===0;document.getElementById('status').textContent=confirmed.length?'公式出走表で確認済み：'+confirmed.length+'レース':'公式出走表を確認できません。休止とは断定しません。'}catch(e){if(token!==raceListRequest)return;race.replaceChildren(new Option('レース情報を取得できません',''));race.disabled=true;document.getElementById('status').textContent='レース確認に失敗: '+e.message;}}
+async function refreshVerifiedRaces(){const token=++raceListRequest;if(raceListController)raceListController.abort();raceListController=new AbortController();const controller=raceListController;clearRaceDisplay();race.disabled=true;race.replaceChildren(new Option('レースを確認中…',''));if(!venue.value)return;const selectedVenue=venue.value,selectedDate=dateCode();try{const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue,{signal:controller.signal});const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw Error('レース一覧APIがJSONを返しませんでした（HTTP '+res.status+'）')}if(token!==raceListRequest||selectedDate!==dateCode()||selectedVenue!==venue.value)return;if(!res.ok)throw Error('HTTP '+res.status);const confirmed=Array.isArray(data.verifiedRaces)?data.verifiedRaces.filter(v=>Number.isInteger(v)&&v>=1&&v<=12):[];race.replaceChildren(new Option(confirmed.length?'レースを選択':'確認できるレースなし',''));confirmed.forEach(v=>race.add(new Option(v+'R',String(v))));race.disabled=confirmed.length===0;document.getElementById('status').textContent=confirmed.length?'公式出走表で確認済み：'+confirmed.length+'レース':'公式出走表を確認できません。休止とは断定しません。'}catch(e){if(token!==raceListRequest)return;race.replaceChildren(new Option('レース情報を取得できません',''));race.disabled=true;document.getElementById('status').textContent='レース確認に失敗: '+e.message;}}
 venue.addEventListener('change',refreshVerifiedRaces);
 async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
 document.getElementById('schedule').onclick=refreshRunningVenues;
@@ -120,7 +120,7 @@ if (u.pathname === '/api/official/active-venues') {
   if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
   // Run independent official 1R checks concurrently rather than waiting for
   // six sequential timeout batches. A failed check is UNKNOWN, not closed.
-  return reply(request,await getVerifiedList('venues:'+date,async()=>{const checks=await mapOfficialLimited(Array.from({length:24},(_,i)=>i+1),5,async venue=>{
+  return reply(request,await getVerifiedList('venues:'+date,async()=>{const checks=await mapOfficialLimited(Array.from({length:24},(_,i)=>i+1),8,async venue=>{
     try{
       const official=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});
       return {venue,status:official.verified===true?'race1_entry_verified':'unverified',
@@ -141,7 +141,7 @@ if (u.pathname === '/api/official/verified-races') {
   const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue'));
   if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24)
     return reply(request,{error:'Invalid date or venue'},400);
-  return reply(request,await getVerifiedList('races:'+date+':'+venue,async()=>{const checks=await mapOfficialLimited(Array.from({length:12},(_,i)=>i+1),5,async race=>{
+  return reply(request,await getVerifiedList('races:'+date+':'+venue,async()=>{const checks=await mapOfficialLimited(Array.from({length:12},(_,i)=>i+1),6,async race=>{
     try{
       const official=await fetchOfficialRacers(date,venue,race,{verificationOnly:true});
       return {race,verified:official.verified===true};
@@ -1525,7 +1525,7 @@ async function fetchOfficialRacers(date, venue, race, options={}) {
     // never treat a timeout or an unverified response as valid racer data.
     let response;
     let lastTransportError;
-    for (const timeoutMs of (options.verificationOnly ? [7000] : [10000, 18000])) {
+    for (const timeoutMs of (options.verificationOnly ? [4000] : [10000, 18000])) {
       try {
         response = await fetch(url.toString(), {
           headers: {Accept: 'text/html,application/xhtml+xml'},
