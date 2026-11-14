@@ -20,3 +20,27 @@ assert.equal(heat(good.replace('<td>50</td>','<td>49</td>')).verified,false);
 assert.equal(heat(good.replace('<td>3.10</td>','<td>1.00</td>')).verified,false);
 assert.equal(heat('<p>ログインしてください</p>').verified,false);
 console.log('Boat Score 2 synthetic parser tests passed');
+
+const officialUrl='https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=01&hd=20261113';
+const makulaboUrl='https://makulabo-jp.com/data/01/1?hd=20261113';
+const fetchCalls=[];
+const mockFetch=async url=>{
+  const target=String(url); fetchCalls.push(target);
+  if(target===makulaboUrl) return new Response(good,{status:200,headers:{'content-type':'text/html'}});
+  if(target===officialUrl) return new Response(official,{status:200,headers:{'content-type':'text/html'}});
+  throw Error('Unexpected fetch URL: '+target);
+};
+const ctx2=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:mockFetch});
+vm.runInContext(source,ctx2,{filename:'worker.js'});
+const worker=vm.runInContext('workerExport',ctx2);
+const response=await worker.fetch(new Request('https://example.com/api/makulabo/heatmap?date=20261113&venue=1&race=1'));
+assert.equal(response.status,200);
+const payload=await response.json();
+assert.equal(payload.last50Verified,true);
+assert.equal(payload.last50ByBoat.length,6);
+assert.equal(payload.dataReadyForPrediction,false);
+assert.equal(fetchCalls.length,2);
+const invalid=await worker.fetch(new Request('https://example.com/api/makulabo/heatmap?date=20261113&venue=25&race=1'));
+assert.equal(invalid.status,400);
+assert.equal(fetchCalls.length,2);
+console.log('Boat Score 2 mocked endpoint tests passed');
