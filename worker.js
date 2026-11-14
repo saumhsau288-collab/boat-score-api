@@ -85,6 +85,7 @@ document.getElementById('check').addEventListener('click',async()=>{
  const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
  const data=Array.from({length:6},(_,i)=>{const fields=[...rows.querySelectorAll('input[data-boat="'+(i+1)+'"]')];return {boat:i+1,racerId:fields[0].value.trim(),sampleSize:Number(fields[1].value),finishCounts:fields.slice(2).map(x=>Number(x.value))}});
  if(!/^[0-9]{8}$/.test(date)||data.some(r=>!/^[0-9]{4}$/.test(r.racerId))||[...rows.querySelectorAll('input')].some(x=>!x.value.trim()))throw Error('入力漏れがあります');
+ if(data.some(r=>r.sampleSize<1||r.sampleSize>50||r.finishCounts.some(n=>!Number.isInteger(n)||n<0||n>50)||r.finishCounts.reduce((a,b)=>a+b,0)!==r.sampleSize))throw Error('着順回数の合計と走数が一致しません。各艇の入力を確認してください');
  const response=await fetch('/api/makulabo/screenshot-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,venue,race,rows:data})});
  const result=await response.json();out.textContent=result.identityVerified?'公式選手番号：6艇一致。画像から入力した着順回数は未検証です。予想用の確認済みデータにはなりません。':(result.error||'公式選手番号との一致を確認できませんでした。データは採用されません。');
  }catch(error){out.textContent=String(error.message||error)}
