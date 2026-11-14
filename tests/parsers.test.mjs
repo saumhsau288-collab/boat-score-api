@@ -7,6 +7,13 @@ vm.runInContext(source,context,{filename:'worker.js'});
 const parse=vm.runInContext('extractOfficialBoatRows',context);
 const heat=vm.runInContext('parseLast50Heatmap',context);
 
+const weatherParser=vm.runInContext('extractOfficialWeather',context);
+const weather=weatherParser('<div>水面気象情報 16:03現在 気温 9.0℃ 雨 風速 1m 水温 13.0℃ 波高 1cm</div>');
+assert.equal(weather.verified,true);
+assert.equal(weather.windSpeed,1);
+assert.equal(weather.waveHeight,1);
+assert.equal(weather.windDirectionVerified,false);
+assert.equal(weatherParser('<div>水面気象情報 風速 100m 波高 1cm</div>').verified,false);
 const startParser=vm.runInContext('extractOfficialStartExhibition',context);
 const startTable='<table><tr><th>スタート展示</th></tr>'+
   Array.from({length:6},(_,i)=>'<tr><td colspan="3"><div>'+(i+1)+'</div><span>.'+String(i+1).padStart(2,'0')+'</span></td></tr>').join('')+'</table>';
