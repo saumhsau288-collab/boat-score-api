@@ -211,6 +211,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
    summary.textContent='参考比較（直近走数ベース）：1着率トップ '+sortedByFirst[0].boat+'号艇 ／ 3連対率トップ '+sortedByTop3[0].boat+'号艇。枠・相手関係・展示・風などを反映した予想順位ではありません。';
    comparison.appendChild(summary);
    const officialReady=data.racersVerified===true&&data.statsVerified===true&&data.exhibitionVerified===true&&data.startVerified===true&&Array.isArray(data.statsByBoat)&&data.statsByBoat.length===6&&Array.isArray(data.exhibitionByBoat)&&data.exhibitionByBoat.length===6&&Array.isArray(data.startByCourse)&&data.startByCourse.length===6;
+   if(!officialReady){const warning=document.createElement('p');warning.textContent='5指標比較は未表示：公式の出走表・勝率とモーター・展示・進入/STのいずれかが未確認です。';comparison.appendChild(warning)}
    const uniqueSix=rows=>Array.isArray(rows)&&rows.length===6&&new Set(rows.map(x=>x.boat)).size===6&&rows.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6);
    const racerMatch=officialReady&&uniqueSix(data.racersByBoat)&&uniqueSix(data.statsByBoat)&&uniqueSix(data.exhibitionByBoat)&&uniqueSix(data.startByCourse)&&data.racersByBoat.every(racer=>data.statsByBoat.some(stat=>stat.boat===racer.boat&&String(stat.racerId)===String(racer.racerId)))&&new Set(data.startByCourse.map(row=>row.course)).size===6&&data.startByCourse.every(row=>Number.isInteger(row.course)&&row.course>=1&&row.course<=6);
    if(officialReady&&!racerMatch){const warning=document.createElement('p');warning.textContent='5指標比較は未表示：公式データの艇番・選手ID・進入の対応を確認できません。';comparison.appendChild(warning)}
@@ -220,7 +221,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
     const starts=new Map(data.startByCourse.map(x=>[x.boat,x]));
     const complete=makulabo.last50ByBoat.every(row=>{
      const stat=stats.get(row.boat),ex=exhibitions.get(row.boat),st=starts.get(row.boat);
-     return stat&&ex&&st&&Number.isFinite(stat.nationwide?.winRate)&&Number.isFinite(stat.motor?.secondPlaceRate)&&Number.isFinite(ex.exhibitionTime)&&Number.isInteger(st.course)&&typeof st.startTiming==='number'&&Number.isFinite(st.startTiming);
+     return stat&&ex&&st&&Number.isFinite(stat.nationwide?.winRate)&&stat.nationwide.winRate>=0&&stat.nationwide.winRate<=10&&Number.isFinite(stat.motor?.secondPlaceRate)&&stat.motor.secondPlaceRate>=0&&stat.motor.secondPlaceRate<=100&&Number.isFinite(ex.exhibitionTime)&&ex.exhibitionTime>=5&&ex.exhibitionTime<=9&&Number.isInteger(st.course)&&typeof st.startTiming==='number'&&Number.isFinite(st.startTiming)&&st.startTiming>=0&&st.startTiming<=1;
     });
     if(!complete){const warning=document.createElement('p');warning.textContent='5指標比較は未表示：公式データの数値・進入・展示STが6艇分そろっていません。未確認値を0点扱いしません。';comparison.appendChild(warning)}
     if(complete){
