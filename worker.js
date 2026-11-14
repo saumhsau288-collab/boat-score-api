@@ -394,14 +394,14 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
          const response=await fetch('/api/official/result?'+new URLSearchParams({date:row.date,venue:row.venue,race:row.race}),{signal:AbortSignal.timeout(12000)});
          if(!response.ok){held++;detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：保留（公式取得失敗）');continue}
          const result=await response.json();
-         if(result.verified!==true||!Array.isArray(result.finishOrder)||result.finishOrder.length!==6||new Set(result.finishOrder).size!==6||!result.finishOrder.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){held++;detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：保留（公式着順未確認）');continue}
+         if(result.podiumVerified!==true||!Array.isArray(result.podium)||result.podium.length!==3||new Set(result.podium).size!==3||!result.podium.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){held++;detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：保留（公式着順未確認）');continue}
          const best=Math.max(...scores.map(x=>x.score));
          const leaders=scores.filter(x=>x.score===best).map(x=>x.boat);
-         const hit=leaders.includes(result.finishOrder[0]);
+         const hit=leaders.includes(result.podium[0]);
          checked++;
          if(hit)matched++;else unmatched++;
          if(leaders.length>1){tiedChecked++;if(hit)tiedMatched++}
-         detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：'+(hit?'一致':'不一致')+'／首位'+leaders.join(',')+'号艇／確定'+result.finishOrder.join('-'));
+         detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：'+(hit?'一致':'不一致')+'／首位'+leaders.join(',')+'号艇／確定'+result.podium.join('-'));
          if(leaders.length===1&&leaders[0]>=4){outerChecked++;if(hit)outerMatched++}
         }catch{held++;detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：保留（通信エラー）')}
        }
@@ -422,11 +422,11 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
       try{
        const response=await fetch('/api/official/result?'+new URLSearchParams({date,venue,race}),{signal:AbortSignal.timeout(12000)});
        const result=await response.json();
-       if(!response.ok||result.verified!==true||!Array.isArray(result.finishOrder)||result.finishOrder.length!==6){
+       if(!response.ok||result.podiumVerified!==true||!Array.isArray(result.podium)||result.podium.length!==3||new Set(result.podium).size!==3||!result.podium.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){
         resultStatus.textContent='確定着順を照合できません：'+String(result.reason||result.error||'取得失敗')+'。未確認結果を採用しません。';
         return;
        }
-       const winner=result.finishOrder[0];
+       const winner=result.podium[0];
        let saved=null;
        try{
         const raw=localStorage.getItem('boatScore2:snapshot:'+date+':'+venue+':'+race);
@@ -434,13 +434,13 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
        }catch{}
        const validSnapshot=saved&&saved.schema===1&&saved.date===date&&String(saved.venue)===String(venue)&&String(saved.race)===String(race)&&Array.isArray(saved.rankedScores)&&saved.rankedScores.length===6&&new Set(saved.rankedScores.map(row=>row.boat)).size===6&&saved.rankedScores.every(row=>Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isFinite(row.score));
        if(!validSnapshot){
-        resultStatus.textContent='公式確定着順：'+result.finishOrder.join('-')+' ／ 保存済み分析がないため一致判定は保留。現在の再計算値を過去の予想として扱いません。';
+        resultStatus.textContent='公式確定着順：'+result.podium.join('-')+' ／ 保存済み分析がないため一致判定は保留。現在の再計算値を過去の予想として扱いません。';
         return;
        }
        const topScore=Math.max(...saved.rankedScores.map(row=>row.score));
        const topBoats=saved.rankedScores.filter(row=>row.score===topScore).map(row=>row.boat);
        const matched=topBoats.includes(winner);
-       resultStatus.textContent='公式確定着順：'+result.finishOrder.join('-')+' ／ 保存時点の5指標首位艇の1着一致：'+(matched?'一致':'不一致')+'（首位同点 '+topBoats.length+'艇、端末保存 '+String(saved.recordedAt||'時刻不明')+'）。端末時計と保存内容は第三者検証されておらず、事前予想の的中率としては未検証です。';
+       resultStatus.textContent='公式確定着順：'+result.podium.join('-')+' ／ 保存時点の5指標首位艇の1着一致：'+(matched?'一致':'不一致')+'（首位同点 '+topBoats.length+'艇、端末保存 '+String(saved.recordedAt||'時刻不明')+'）。端末時計と保存内容は第三者検証されておらず、事前予想の的中率としては未検証です。';
       }catch{resultStatus.textContent='通信エラー：確定着順は未照合です。'}
       finally{resultButton.disabled=false}
      });
@@ -1009,7 +1009,7 @@ function parseOfficialFinishOrder(html) {
   const uniqueRanks=new Set(numeric.map(row=>row.rank));
   const uniqueBoats=new Set(rows.map(row=>row.boat));
   const podium=[1,2,3].map(rank=>numeric.find(row=>row.rank===rank)?.boat);
-  const podiumVerified=podium.every(Boolean)&&new Set(podium).size===3&&uniqueRanks.size===numeric.length&&uniqueBoats.size===rows.length;
+  const podiumVerified=rows.length===6&&uniqueBoats.size===6&&podium.every(Boolean)&&new Set(podium).size===3&&uniqueRanks.size===numeric.length;
   const fullVerified=rows.length===6&&numeric.length===6&&uniqueRanks.size===6&&uniqueBoats.size===6;
   if(!fullVerified)return {verified:false,finishOrder:[],podiumVerified,podium:podiumVerified?podium:[],reason:'result_rows_incomplete_or_nonstandard'};
   numeric.sort((a,b)=>a.rank-b.rank);
