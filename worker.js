@@ -66,14 +66,7 @@ if (u.pathname === '/api/daily/verified-venue-screen') {
   if(first.verified!==true)return reply(request,{date,venue,verified:false,eligible:0,
     categories:{main:[],upset:[],chaos:[]},records:[],
     reason:'official_race1_unverified',scheduleVerified:false});
-  const records=[];
-  for(let start=1;start<=12;start+=3){
-    const batch=await Promise.all([start,start+1,start+2].map(async race=>{
-      const official=race===1?first:await fetchOfficialRacers(date,venue,race);
-      return buildMorningRaceInputs(date,venue,race,official);
-    }));
-    records.push(...batch);
-  }
+  const records=await scanVenueMorning(date,venue,first);
   const eligible=records.filter(x=>x.ready===true);
   const categories=classifyDailyRaceCandidates(eligible);
   return reply(request,{date,venue,verified:true,verification:'official_1R_six_boat_entry',
@@ -99,15 +92,7 @@ if (u.pathname === '/api/daily/national-screen') {
   if(!venues.length||venues.length>24||venues.some(v=>!Number.isInteger(v)||v<1||v>24))
     return reply(request,{error:'Provide verified venue codes as comma-separated venues=1,2,... (1-24)'},400);
   const records=[];
-  for(const venue of venues){
-    for(let start=1;start<=12;start+=3){
-      const batch=await Promise.all([start,start+1,start+2].map(async race=>{
-        const official=await fetchOfficialRacers(date,venue,race);
-        return buildMorningRaceInputs(date,venue,race,official);
-      }));
-      records.push(...batch);
-    }
-  }
+  for(const venue of venues) records.push(...await scanVenueMorning(date,venue));
   const eligible=records.filter(x=>x.ready===true);
   const categories=classifyDailyRaceCandidates(eligible);
   const picksByRace=eligible.map(x=>({venue:x.venue,race:x.race,
@@ -124,14 +109,7 @@ if (u.pathname === '/api/daily/venue-screen') {
   const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue'));
   if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24)
     return reply(request,{error:'Invalid date or venue'},400);
-  const records=[];
-  for(let start=1;start<=12;start+=3){
-    const batch=await Promise.all([start,start+1,start+2].map(async race=>{
-      const official=await fetchOfficialRacers(date,venue,race);
-      return buildMorningRaceInputs(date,venue,race,official);
-    }));
-    records.push(...batch);
-  }
+  const records=await scanVenueMorning(date,venue);
   const eligible=records.filter(x=>x.ready===true);
   const classification=classifyDailyRaceCandidates(eligible);
   return reply(request,{date,venue,scanned:12,eligible:eligible.length,held:12-eligible.length,
@@ -1128,6 +1106,18 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 
 
 // Parse the published six-row heatmap table without guessing blank cells.
+async function scanVenueMorning(date,venue,firstOfficial=null) {
+  const records=[];
+  for(let start=1;start<=12;start+=3){
+    const batch=await Promise.all([start,start+1,start+2].map(async race=>{
+      const official=race===1&&firstOfficial?firstOfficial:await fetchOfficialRacers(date,venue,race);
+      return buildMorningRaceInputs(date,venue,race,official);
+    }));
+    records.push(...batch);
+  }
+  return records;
+}
+
 function buildMorningRaceInputs(date,venue,race,official) {
   if(!/^20[0-9]{6}$/.test(String(date))||!Number.isInteger(venue)||venue<1||venue>24||
     !Number.isInteger(race)||race<1||race>12||
