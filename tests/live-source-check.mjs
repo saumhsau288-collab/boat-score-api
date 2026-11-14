@@ -22,14 +22,14 @@ for (const [label,url] of targets) {
     summary.officialProfileLinkCount=(body.match(/toban=\d+/g)||[]).length;
 
     summary.pageStructure={
-      scriptTags:(body.match(/<script\\b/gi)||[]).length,
-      inlineJsonScripts:(body.match(/<script\\b[^>]*type=['"]application\\/json['"]/gi)||[]).length,
+      scriptTags:(body.match(/<script\b/gi)||[]).length,
+      inlineJsonScripts:(body.match(/<script\b[^>]*type=['"]application\/json['"]/gi)||[]).length,
       nextDataMarker:body.includes('__NEXT_DATA__'),
       nuxtDataMarker:body.includes('__NUXT__'),
-      apiReferences:(body.match(/\\/api\\//g)||[]).length,
-      heatmapWordInScript: /<script\\b[^>]*>[\\s\\S]*?ヒートマップ[\\s\\S]*?<\\/script>/i.test(body),
-      canvasTags:(body.match(/<canvas\\b/gi)||[]).length,
-      svgTags:(body.match(/<svg\\b/gi)||[]).length
+      apiReferences:(body.match(/\/api\//g)||[]).length,
+      heatmapWordInScript:/<script\b[^>]*>[\s\S]*?ヒートマップ[\s\S]*?<\/script>/i.test(body),
+      canvasTags:(body.match(/<canvas\b/gi)||[]).length,
+      svgTags:(body.match(/<svg\b/gi)||[]).length
     };
     console.log(JSON.stringify(summary));
   } catch (e) {
