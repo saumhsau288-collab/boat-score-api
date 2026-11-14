@@ -34,7 +34,7 @@ if (!res.ok) return reply(request,{error:'Upstream HTTP '+res.status,source},502
       if (!/text\/html|text\/plain|application\/json/i.test(type)) return reply(request,{error:'Unexpected content type',type,source},502);
       const html=await res.text();
 const htmlLength = html.length;
-      const plainText = html.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,' ').replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ');
+      const plainText = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ');
       const hasHeatmapHeading = /枠番別ヒートマップ/.test(plainText);
       const accessRestricted = /ログイン|会員登録|有料会員|新規登録/.test(plainText) && !hasHeatmapHeading;
       if (accessRestricted) return reply(request,{status:'unavailable',reason:'access_restricted_or_login_required',source, dataReadyForPrediction:false, last50Verified:false});
@@ -366,14 +366,14 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 function parseLast50Heatmap(html) {
   const section = html.split(/枠番別ヒートマップ/)[1];
   if (!section) return {verified:false,rows:[],reason:'heading_missing'};
-  const table = section.match(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/i);
+  const table = section.match(/<table\b[^>]*>[\s\S]*?<\/table>/i);
   if (!table) return {verified:false,rows:[],reason:'table_missing'};
-  const rows = [...table[0].matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)].map(m => {
-    const cells = [...m[1].matchAll(/<t[dh]\\b[^>]*>([\\s\\S]*?)<\\/t[dh]>/gi)]
+  const rows = [...table[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m => {
+    const cells = [...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
       .map(c => c[1].replace(/<[^>]*>/g,'').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').trim());
     if (cells.length < 10 || !/^[1-6]$/.test(cells[0])) return null;
-    const counts = cells.slice(2,8).map(v => v === '' ? 0 : (/^\\d+$/.test(v) ? Number(v) : NaN));
-    const runs = /^\\d+$/.test(cells[8]) ? Number(cells[8]) : NaN;
+    const counts = cells.slice(2,8).map(v => v === '' ? 0 : (/^\d+$/.test(v) ? Number(v) : NaN));
+    const runs = /^\d+$/.test(cells[8]) ? Number(cells[8]) : NaN;
     const avg = Number(cells[9]);
     const weighted = counts.reduce((sum,n,i) => sum + n*(i+1),0);
     if (!cells[1] || !counts.every(Number.isInteger) || !Number.isInteger(runs) || runs < 1 || runs > 50 ||
@@ -382,7 +382,7 @@ function parseLast50Heatmap(html) {
     return {boat:Number(cells[0]),name:cells[1],counts,runs,average:avg};
   }).filter(Boolean);
   const verified = rows.length===6 && new Set(rows.map(r=>r.boat)).size===6 &&
-    new Set(rows.map(r=>r.name.replace(/\\s/g,''))).size===6;
+    new Set(rows.map(r=>r.name.replace(/\s/g,''))).size===6;
   return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table'};
 }
 
@@ -404,7 +404,7 @@ function verifyHeatmapBoats(html, officialRacers) {
       counts: row?.counts ?? null,
       verified: !!row &&
 row.boat === racer.boat &&
-        rows.filter(candidate => String(candidate.name).replace(/\\s/g, "") === normalize(racer.name)).length === 1 &&
+        rows.filter(candidate => String(candidate.name).replace(/\s/g, "") === normalize(racer.name)).length === 1 &&
         Array.isArray(row.counts) &&
         row.counts.length === 6 &&
 row.counts.every(n => Number.isInteger(n) && n >= 0) &&
@@ -469,7 +469,7 @@ const officialNames = [...html.matchAll(
 
 
     return {
-      verified: officialNames.length === 6 &&
+      verified: false && officialNames.length === 6 &&
   new Set(officialNames.map(r => r.boat)).size === 6 &&
   new Set(officialNames.map(r => r.racerId)).size === 6 &&
   officialNames.every(r => r.boat >= 1 && r.boat <= 6 && r.racerId && r.name),
