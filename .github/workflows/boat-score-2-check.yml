@@ -32,6 +32,8 @@ jobs:
             '/api/official/racers',
             '/api/official/race-data',
             '/api/official/active-venues',
+            '/api/official/verified-races',
+            '/api/version',
             '/api/daily/venue-screen',
             '/api/daily/verified-venue-screen',
             '/api/daily/national-screen'
@@ -60,6 +62,15 @@ jobs:
           ]) assert.ok(code.includes(ui), 'Missing Boat Score 2 UI/data guard: ' + ui);
           assert.ok(!code.includes("for(let i=1;i<=24;i++)venue.add("),
             'Old 24-venue unfiltered selector unexpectedly restored');
+          for (const guard of [
+            'mapOfficialLimited(',
+            'getVerifiedList(',
+            'verificationOnly:true',
+            'raceListController.abort()',
+            'raceDataController.abort()',
+            'refreshVerifiedRaces',
+            'AbortController()'
+          ]) assert.ok(code.includes(guard), 'Missing schedule or cancellation guard: ' + guard);
           assert.ok(code.includes("race.disabled||!race.value"),
             'Race fetch must require a verified venue and selected race');
           console.log('Static endpoint, Boat Score 2 UI and safety checks passed');
