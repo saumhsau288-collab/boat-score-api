@@ -20,6 +20,22 @@ assert.ok([...picks.main,...picks.upset].every(row=>new Set(row).size===3&&row.e
 assert.equal(rankTrifecta(validSix.slice(0,5)).ready,false);
 assert.equal(rankTrifecta(validSix.map((row,i)=>i===5?{boat:1,score:10}:row)).ready,false);
 assert.equal(rankTrifecta(validSix.map((row,i)=>i===0?{boat:1,score:NaN}:row)).ready,false);
+const outerFollow=vm.runInContext('summarizeHistoricalOuterFollow',context);
+const followSample=[
+ {podiumVerified:true,podium:[3,4,5]},
+ {podiumVerified:true,podium:[3,1,2]},
+ {podiumVerified:true,podium:[6,1,2]},
+ {podiumVerified:false,podium:[3,4,5]},
+ {podiumVerified:true,podium:[3,3,5]}
+];
+const followSummary=outerFollow(followSample);
+assert.equal(followSummary.verifiedRaces,3);
+assert.equal(followSummary.eligibleRaces,2);
+assert.equal(followSummary.followRaces,1);
+assert.equal(followSummary.rate,0.5);
+assert.equal(followSummary.ready,false);
+assert.equal(outerFollow(Array.from({length:30},()=>({podiumVerified:true,podium:[3,4,5]}))).ready,true);
+assert.equal(outerFollow([]).rate,null);
 const finishTable='<table><tr><th>着順</th><th>艇番</th></tr>'+
  [3,1,5,2,4,6].map((boat,i)=>'<tr><td>'+(i+1)+'</td><td>'+boat+'</td></tr>').join('')+'</table>';
 assert.equal(finishParser(finishTable).verified,true);
