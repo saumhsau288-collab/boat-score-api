@@ -203,6 +203,10 @@ assert.deepEqual(venueOptions.map(m=>Number(m[1])),Array.from({length:24},(_,i)=
 assert.equal(venueOptions[0][2],'桐生');
 assert.equal(venueOptions[15][2],'児島');
 assert.equal(venueOptions[23][2],'大村');
+assert.match(screenshotHtml,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+assert.match(screenshotHtml,/document\.createElement\('fieldset'\)/);
+assert.match(screenshotHtml,/rows\.appendChild\(card\)/);
+assert.doesNotMatch(screenshotHtml,/<tbody id="rows">/);
 const badCombined=await combinedWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=99&race=1'));
 assert.equal(badCombined.status,400);
 const invalidBefore=await beforeWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=25&race=1'));
