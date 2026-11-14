@@ -6,6 +6,12 @@ const context=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:(
 vm.runInContext(source,context,{filename:'worker.js'});
 const parse=vm.runInContext('extractOfficialBoatRows',context);
 const heat=vm.runInContext('parseLast50Heatmap',context);
+const stats=vm.runInContext('extractOfficialBoatStats',context);
+const officialStatRows='<table>'+Array.from({length:6},(_,i)=>'<tr><td>'+(i+1)+'</td><td></td><td>400'+(i+1)+' / B1 選手'+(i+1)+'</td><td>F0 L0 0.18</td><td>3.77 11.43 28.57</td><td>2.25 0.00 12.50</td><td>35 19.61 37.25</td><td>27 26.92 48.08</td><td><a href="/owpc/pc/data/racersearch/profile?toban=400'+(i+1)+'">選手'+(i+1)+'</a></td></tr>').join('')+'</table>';
+assert.equal(stats(officialStatRows).verified,true);
+assert.equal(stats(officialStatRows).rows[0].motor.secondPlaceRate,19.61);
+assert.equal(stats(officialStatRows.replace('19.61','119.61')).verified,false);
+
 const row=(boat,id,name)=>'<tr><td>'+boat+'</td><td><a href="/owpc/pc/data/racersearch/profile?toban='+id+'">'+name+'</a></td></tr>';
 const official='<table>'+Array.from({length:6},(_,i)=>row(i+1,4001+i,'選手'+(i+1))).join('')+'</table>';
 assert.equal(parse(official).verified,true);
