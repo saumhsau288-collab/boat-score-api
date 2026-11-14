@@ -40,20 +40,10 @@ async function officialScheduleVenueCandidates(date) {
     return codes.size?[...codes].sort((a,b)=>a-b):null;
   }catch{return null;}
 }
-const verifiedListCache = new Map();
-async function getVerifiedList(key, producer) {
-  const now=Date.now(), prior=verifiedListCache.get(key);
-  if(prior && prior.expires>now)return prior.promise;
-  if(verifiedListCache.size>80)verifiedListCache.clear();
-  const entry={expires:now+90000,promise:null};
-  entry.promise=Promise.resolve().then(producer).then(result=>{
-    // Recheck soon if upstream verification was incomplete.
-    if(!result.checks?.every(c=>c.verified===true || c.status==='race1_entry_verified'))
-      entry.expires=Date.now()+15000;
-    return result;
-  }).catch(error=>{if(verifiedListCache.get(key)===entry)verifiedListCache.delete(key);throw error;});
-  verifiedListCache.set(key,entry);
-  return entry.promise;
+// Never share in-flight fetch promises across Cloudflare Worker requests.
+// A promise started in another request context can never settle here.
+async function getVerifiedList(_key, producer) {
+  return await producer();
 }
 
 export default {
