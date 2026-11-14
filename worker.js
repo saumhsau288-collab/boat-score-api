@@ -35,6 +35,27 @@ if (u.pathname === '/api/official/schedule') {
   }catch{return reply(request,{date,verified:false,venues:[],source,reason:'Official schedule request failed'})}
 }
 
+if (u.pathname === '/api/daily/venue-screen') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue'));
+  if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24)
+    return reply(request,{error:'Invalid date or venue'},400);
+  const records=[];
+  for(let start=1;start<=12;start+=3){
+    const batch=await Promise.all([start,start+1,start+2].map(async race=>{
+      const official=await fetchOfficialRacers(date,venue,race);
+      return buildMorningRaceInputs(date,venue,race,official);
+    }));
+    records.push(...batch);
+  }
+  const eligible=records.filter(x=>x.ready===true);
+  const classification=classifyDailyRaceCandidates(eligible);
+  return reply(request,{date,venue,scanned:12,eligible:eligible.length,held:12-eligible.length,
+    categories:classification,records:records.map((x,i)=>({race:i+1,ready:x.ready,reason:x.reason||null})),
+    asOf:'request_time_not_0800_snapshot',officialScheduleVerified:false,
+    notice:'This is an on-demand venue screening, not an 08:00 nationwide snapshot. No result is a validated probability.'});
+}
+
 if (u.pathname === '/api/official/result') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'',venue=u.searchParams.get('venue')||'',race=u.searchParams.get('race')||'';
