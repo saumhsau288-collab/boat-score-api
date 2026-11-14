@@ -14,6 +14,23 @@ export default {
     const u = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, {status:204,headers:{...cors(request),'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600'}});
     
+if (u.pathname === '/api/official/schedule') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'';
+  if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
+  const source='https://www.boatrace.jp/owpc/pc/race/index?hd='+date;
+  try{
+    const upstream=await fetch(source,{signal:AbortSignal.timeout(12000)});
+    if(!upstream.ok)return reply(request,{date,verified:false,venues:[],reason:'Official schedule unavailable',source});
+    const html=await upstream.text();
+    const links=[...html.matchAll(/href=["']([^"']*\\/owpc\\/pc\\/race\\/racelist[^"']*)["']/gi)];
+    const codes=new Set();
+    for(const match of links){try{const link=new URL(match[1].replace(/&amp;/g,'&'),'https://www.boatrace.jp');const code=Number(link.searchParams.get('jcd'));if(code>=1&&code<=24&&(!link.searchParams.get('hd')||link.searchParams.get('hd')===date))codes.add(code)}catch{}}
+    const venues=[...codes].sort((a,b)=>a-b);
+    return reply(request,{date,verified:false,venues,source,reason:'Venue links are diagnostic candidates only; not a verified complete schedule',linkCount:links.length});
+  }catch{return reply(request,{date,verified:false,venues:[],source,reason:'Official schedule request failed'})}
+}
+
 if (u.pathname === '/api/racers/test') {
   return reply(request, {
     status: 'ok',
