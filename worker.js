@@ -51,7 +51,7 @@ if (u.pathname === '/api/daily/venue-screen') {
   const eligible=records.filter(x=>x.ready===true);
   const classification=classifyDailyRaceCandidates(eligible);
   return reply(request,{date,venue,scanned:12,eligible:eligible.length,held:12-eligible.length,
-    categories:classification,records:records.map((x,i)=>({race:i+1,ready:x.ready,reason:x.reason||null})),
+    categories:classification,records:records.map((x,i)=>{const picks=x.ready?rankTrifectaCandidates(x.rankedScores):null;return {race:i+1,ready:x.ready,reason:x.reason||null,officialVerified:x.officialVerified===true,missingInputs:x.missingInputs||[],picks:picks?.ready?{main:picks.main,upset:picks.upset,method:picks.method}:null};}),
     asOf:'request_time_not_0800_snapshot',officialScheduleVerified:false,
     notice:'This is an on-demand venue screening, not an 08:00 nationwide snapshot. No result is a validated probability.'});
 }
