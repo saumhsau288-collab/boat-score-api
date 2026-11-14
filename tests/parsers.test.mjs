@@ -239,6 +239,11 @@ assert.ok(screenshotHtml.includes("document.getElementById('last50Comparison').r
 assert.ok(screenshotHtml.includes('公式データ・6艇比較'));
 assert.ok(screenshotHtml.includes('水面気象・確認状況'));
 assert.ok(screenshotHtml.includes('公式データの不足項目：'));
+assert.ok(screenshotHtml.includes('まくらぼの不足項目：'));
+assert.ok(screenshotHtml.includes('取得できませんでした（通信または取得先の制限）'));
+assert.ok(screenshotHtml.includes('直近50走の確認ができません'));
+assert.ok(screenshotHtml.includes('ヒートマップの確認ができません'));
+
 assert.ok(screenshotHtml.includes('data.missingInputs'));
 assert.ok(screenshotHtml.includes("windDirection:'風向'"));
 assert.ok(screenshotHtml.includes("data.weatherVerified===true?data.weather:null"));
