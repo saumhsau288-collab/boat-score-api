@@ -83,6 +83,7 @@ document.getElementById('date').addEventListener('input',()=>{
  const selector=document.getElementById('venue');
  for(const option of selector.options){option.textContent=option.textContent.replace(/ （公式1R確認済）$/,'')}
  document.getElementById('allVenuesStatus').textContent='日付が変更されました。24場を再確認してください';
+ document.getElementById('scheduleStatus').textContent='日付が変更されました。開催一覧の候補を再確認してください';
  document.getElementById('venueStatus').textContent='日付が変更されました。開催情報は未確認です';
  document.getElementById('fillStatus').textContent='';
  filterConfirmedVenues();
