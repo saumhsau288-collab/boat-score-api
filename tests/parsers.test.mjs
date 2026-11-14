@@ -498,3 +498,8 @@ const invalidOfficial=await worker.fetch(new Request('https://example.com/api/of
 assert.equal(invalidOfficial.status,400);
 assert.equal(fetchCalls.length,3);
 console.log('Boat Score 2 mocked endpoint tests passed');
+
+assert.ok(source.includes('diagnostics:{upstreamStatus:upstream.status'));
+assert.ok(source.includes('htmlBytes:html.length'));
+assert.ok(source.includes('tableCount:'));
+assert.ok(source.includes('hasResultHeading:'));
