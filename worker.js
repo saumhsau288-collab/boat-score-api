@@ -122,7 +122,7 @@ if (u.pathname === '/api/official/active-venues') {
   // six sequential timeout batches. A failed check is UNKNOWN, not closed.
   return reply(request,await getVerifiedList('venues:'+date,async()=>{const checks=await mapOfficialLimited(Array.from({length:24},(_,i)=>i+1),5,async venue=>{
     try{
-      const official=await fetchOfficialRacers(date,venue,1);
+      const official=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});
       return {venue,status:official.verified===true?'race1_entry_verified':'unverified',
         statsVerified:official.statsVerified===true,
         reason:official.verified===true?null:(official.reason||'official_rows_unverified')};
@@ -143,7 +143,7 @@ if (u.pathname === '/api/official/verified-races') {
     return reply(request,{error:'Invalid date or venue'},400);
   return reply(request,await getVerifiedList('races:'+date+':'+venue,async()=>{const checks=await mapOfficialLimited(Array.from({length:12},(_,i)=>i+1),5,async race=>{
     try{
-      const official=await fetchOfficialRacers(date,venue,race);
+      const official=await fetchOfficialRacers(date,venue,race,{verificationOnly:true});
       return {race,verified:official.verified===true};
     }catch{return {race,verified:false};}
   });
@@ -1511,7 +1511,7 @@ function extractOfficialBoatRows(html) {
     candidateCount: candidates.length};
 }
 
-async function fetchOfficialRacers(date, venue, race) {
+async function fetchOfficialRacers(date, venue, race, options={}) {
   const url = new URL(
     "https://www.boatrace.jp/owpc/pc/race/racelist"
   );
@@ -1525,7 +1525,7 @@ async function fetchOfficialRacers(date, venue, race) {
     // never treat a timeout or an unverified response as valid racer data.
     let response;
     let lastTransportError;
-    for (const timeoutMs of [10000, 18000]) {
+    for (const timeoutMs of (options.verificationOnly ? [7000] : [10000, 18000])) {
       try {
         response = await fetch(url.toString(), {
           headers: {Accept: 'text/html,application/xhtml+xml'},
