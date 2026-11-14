@@ -326,6 +326,22 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      const auditNote=document.createElement('p');
      auditNote.textContent='この記録は画面表示のみで保存されません。下のボタンで確定着順を事後照合できますが、分析データの取得時刻・オッズ・締切前時点の保存がないため、過去予想の的中率として集計できません。';
      comparison.appendChild(auditNote);
+     const snapshotButton=document.createElement('button');
+     snapshotButton.type='button';
+     snapshotButton.textContent='分析時点を端末に記録';
+     const snapshotStatus=document.createElement('p');
+     snapshotStatus.textContent='未保存（保存時刻は端末時計に依存します）';
+     snapshotButton.addEventListener('click',()=>{
+      const record={schema:1,recordedAt:new Date().toISOString(),date,venue,race,rankedScores:totals.map(row=>({boat:row.boat,score:row.total})),scenario:scenario.textContent,officialVerified:officialReady,makulaboVerified:makulabo.last50Verified===true,weatherVerified:data.weatherVerified===true};
+      try{
+       const key='boatScore2:snapshot:'+date+':'+venue+':'+race;
+       if(localStorage.getItem(key)){snapshotStatus.textContent='既存の記録があります。上書きを避けるため保存しませんでした。';return}
+       localStorage.setItem(key,JSON.stringify(record));
+       snapshotStatus.textContent='端末内に記録：'+record.recordedAt+'（UTC）。端末時計の時刻であり、締切前を第三者が証明する記録ではありません。';
+      }catch{snapshotStatus.textContent='保存できませんでした。ブラウザーの保存設定・容量を確認してください。'}
+     });
+     comparison.appendChild(snapshotButton);
+     comparison.appendChild(snapshotStatus);
      const resultButton=document.createElement('button');
      resultButton.type='button';
      resultButton.textContent='このレースの公式確定着順と照合';
