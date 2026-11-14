@@ -176,6 +176,23 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   const checks=[['選手',data.racersVerified],['勝率・モーター',data.statsVerified],['展示',data.exhibitionVerified],['ST・進入',data.startVerified],['風速・波',data.weatherVerified],['風向',data.windDirectionVerified],['まくらぼ50走',makulabo?.last50Verified],['まくらぼヒートマップ',makulabo?.heatmapReadyForAnalysis]];
   status.textContent=checks.map(([name,ok])=>name+'：'+(ok===true?'確認済':'未確認')).join(' ／ ')+'。'+(data.dataReadyForPrediction===true&&makulabo?.last50Verified===true?'データ準備完了':'不足項目があるため予想は保留');
   const comparison=document.getElementById('last50Comparison');comparison.replaceChildren();
+  if(data.racersVerified===true&&Array.isArray(data.racersByBoat)&&data.racersByBoat.length===6){
+   const heading=document.createElement('h3');heading.textContent='公式データ・6艇比較';comparison.appendChild(heading);
+   const wrap=document.createElement('div');wrap.style.cssText='max-width:100%;overflow-x:auto';
+   const table=document.createElement('table');table.style.cssText='border-collapse:collapse;font-size:13px;white-space:nowrap';
+   const header=document.createElement('tr');['艇','選手','全国勝率','当地勝率','モーター2連率','展示タイム','チルト','進入','展示ST'].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border:1px solid #cbd5e1;padding:5px';header.appendChild(th)});table.appendChild(header);
+   const statMap=new Map((data.statsVerified===true?data.statsByBoat:[]).map(x=>[x.boat,x]));
+   const exhibitionMap=new Map((data.exhibitionVerified===true?data.exhibitionByBoat:[]).map(x=>[x.boat,x]));
+   const startMap=new Map((data.startVerified===true?data.startByCourse:[]).map(x=>[x.boat,x]));
+   const show=value=>value===null||value===undefined?'未確認':String(value);
+   data.racersByBoat.slice().sort((a,b)=>a.boat-b.boat).forEach(racer=>{
+    const stat=statMap.get(racer.boat),exhibition=exhibitionMap.get(racer.boat),start=startMap.get(racer.boat);
+    const values=[racer.boat,racer.name,stat?.nationwide?.winRate,stat?.local?.winRate,stat?.motor?.secondPlaceRate===undefined?null:stat.motor.secondPlaceRate+'%',exhibition?.exhibitionTime,exhibition?.tilt,start?.course,start?.startTiming];
+    const tr=document.createElement('tr');values.forEach(value=>{const td=document.createElement('td');td.textContent=show(value);td.style.cssText='border:1px solid #cbd5e1;padding:5px;text-align:center';tr.appendChild(td)});table.appendChild(tr);
+   });
+   wrap.appendChild(table);comparison.appendChild(wrap);
+   const note=document.createElement('p');note.textContent='確認済みの公式データのみ表示。展示STは本番のSTではありません。未確認項目は予想に利用しません。';comparison.appendChild(note);
+  }
   if(makulabo?.last50Verified===true&&Array.isArray(makulabo.last50ByBoat)&&makulabo.last50ByBoat.length===6){
    const heading=document.createElement('h3');heading.textContent='まくらぼ直近50走・枠別比較';comparison.appendChild(heading);
    const note=document.createElement('p');note.textContent='公式選手名と照合済みの集計値です。着順回数と平均着順を表示し、予想評価点にはまだ変換していません。';comparison.appendChild(note);
