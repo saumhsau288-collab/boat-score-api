@@ -176,6 +176,11 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   const checks=[['選手',data.racersVerified],['勝率・モーター',data.statsVerified],['展示',data.exhibitionVerified],['ST・進入',data.startVerified],['風速・波',data.weatherVerified],['風向',data.windDirectionVerified],['まくらぼ50走',makulabo?.last50Verified],['まくらぼヒートマップ',makulabo?.heatmapReadyForAnalysis]];
   status.textContent=checks.map(([name,ok])=>name+'：'+(ok===true?'確認済':'未確認')).join(' ／ ')+'。'+(data.dataReadyForPrediction===true&&makulabo?.last50Verified===true?'データ準備完了':'不足項目があるため予想は保留');
   const comparison=document.getElementById('last50Comparison');comparison.replaceChildren();
+  const missingLabels={racers:'選手情報',stats:'勝率・モーター',exhibition:'展示情報',start:'進入・展示ST',weather:'風速・波高',windDirection:'風向'};
+  const missing=Array.isArray(data.missingInputs)?data.missingInputs.filter(key=>Object.hasOwn(missingLabels,key)):[];
+  const missingLine=document.createElement('p');
+  missingLine.textContent='公式データの不足項目：'+(missing.length?missing.map(key=>missingLabels[key]).join('、'):'なし（取得項目の照合結果）');
+  comparison.appendChild(missingLine);
   const weatherHeading=document.createElement('h3');weatherHeading.textContent='水面気象・確認状況';comparison.appendChild(weatherHeading);
   const weatherLine=document.createElement('p');
   const w=data.weatherVerified===true?data.weather:null;
