@@ -38,6 +38,8 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
 <script>
 const rows=document.getElementById('rows');
+const japanToday=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/-/g,'');
+document.getElementById('date').value=japanToday;
 for(let boat=1;boat<=6;boat++){const card=document.createElement('fieldset');card.style.cssText='border:1px solid #cbd5e1;border-radius:12px;padding:12px;min-width:0';const heading=document.createElement('legend');heading.textContent=boat+'号艇';heading.style.fontWeight='bold';card.appendChild(heading);const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px';for(let i=0;i<8;i++){const label=document.createElement('label');label.style.cssText='margin:0;min-width:0';const name=i===0?'登録番号':i===1?'走数':(i-1)+'着';label.textContent=name+' ';const input=document.createElement('input');input.setAttribute('aria-label',boat+'号艇 '+name);input.dataset.boat=String(boat);input.dataset.index=String(i);input.type=i===0?'text':'number';input.inputMode='numeric';input.required=true;input.style.cssText='box-sizing:border-box;width:100%;min-width:0';if(i===0)input.maxLength=4;else{input.min='0';input.max='50'}label.appendChild(input);grid.appendChild(label)}card.appendChild(grid);rows.appendChild(card)}
 document.getElementById('fillRacers').addEventListener('click',async()=>{
  const status=document.getElementById('fillStatus');
