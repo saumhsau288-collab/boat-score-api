@@ -117,6 +117,22 @@ assert.equal(beforePayload.windDirectionVerified,false);
 assert.equal(beforePayload.exhibitionByBoat.length,6);
 assert.equal(beforePayload.startByCourse.length,6);
 assert.equal(beforePayload.dataReadyForPrediction,false);
+const beforeWeatherCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{
+    assert.equal(String(url),beforeUrl);
+    return new Response(beforeTable+beforeStart+'<div>水面気象情報 風向：西北西、風速 2m 波高 4cm</div>',{status:200});
+  }});
+vm.runInContext(source,beforeWeatherCtx,{filename:'worker.js'});
+const beforeWeatherWorker=vm.runInContext('workerExport',beforeWeatherCtx);
+const beforeWeatherResponse=await beforeWeatherWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=1&race=1'));
+assert.equal(beforeWeatherResponse.status,200);
+const beforeWeatherPayload=await beforeWeatherResponse.json();
+assert.equal(beforeWeatherPayload.weatherVerified,true);
+assert.equal(beforeWeatherPayload.windDirectionVerified,true);
+assert.equal(beforeWeatherPayload.weather.windDirection,'西北西');
+assert.equal(beforeWeatherPayload.weather.windSpeed,2);
+assert.equal(beforeWeatherPayload.weather.waveHeight,4);
+assert.equal(beforeWeatherPayload.dataReadyForPrediction,false);
 const combinedRacelist='<table>'+Array.from({length:6},(_,i)=>
   '<tr><td>'+(i+1)+'</td><td></td><td>400'+(i+1)+' / B1 選手'+(i+1)+'</td>'+
   '<td>F0 L0 0.18</td><td>3.77 11.43 28.57</td><td>2.25 0.00 12.50</td>'+
