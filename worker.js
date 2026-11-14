@@ -184,7 +184,11 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   const makulaboLine=document.createElement('p');
   const makulaboIssues=[];
   if(!makulaboResponse?.ok)makulaboIssues.push('取得できませんでした（通信または取得先の制限）');
-  else{
+  else if(makulabo?.status==='unavailable'){
+   const reasons={access_restricted_or_login_required:'ログイン・会員登録が必要な可能性',heatmap_requires_client_side_rendering:'ページ内で追加読み込みが必要',heatmap_not_present_in_response:'取得ページにヒートマップが見つかりません'};
+   makulaboIssues.push(reasons[makulabo.reason]||'取得ページを確認できません');
+  }
+  else if(makulabo?.status!=='unavailable'){
    if(makulabo?.last50Verified!==true)makulaboIssues.push('直近50走の確認ができません');
    if(makulabo?.heatmapReadyForAnalysis!==true)makulaboIssues.push('ヒートマップの確認ができません');
   }
