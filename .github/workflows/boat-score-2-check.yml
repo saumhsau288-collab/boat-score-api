@@ -21,3 +21,30 @@ jobs:
           node-version: '22'
       - name: Check worker JavaScript syntax (no deployment)
         run: node --input-type=module --check < worker.js
+      - name: Check essential endpoints and fail-closed guards
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import assert from 'node:assert/strict';
+          const code = readFileSync('worker.js', 'utf8');
+          for (const endpoint of [
+            '/api/official/racers',
+            '/api/official/race-data',
+            '/api/official/active-venues',
+            '/api/daily/venue-screen',
+            '/api/daily/verified-venue-screen',
+            '/api/daily/national-screen'
+          ]) assert.ok(code.includes(endpoint), 'Missing endpoint: ' + endpoint);
+          for (const marker of [
+            'async function scanVenueMorning(',
+            'function buildMorningRaceInputs(',
+            'function rankTrifectaCandidates(',
+            'official_six_boat_stats_unverified',
+            'official_timeout',
+            'AbortSignal.timeout(10000)'
+          ]) assert.ok(code.includes(marker), 'Missing safety check: ' + marker);
+          assert.equal((code.match(/async function scanVenueMorning\(/g) || []).length, 1,
+            'Expected exactly one shared venue scanner');
+          console.log('Static endpoint and safety checks passed');
+          NODE
