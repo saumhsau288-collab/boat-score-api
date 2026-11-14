@@ -130,6 +130,19 @@ const mismatchPayload=await mismatchResponse.json();
 assert.equal(mismatchPayload.exhibitionVerified,false);
 assert.equal(mismatchPayload.exhibitionByBoat.length,0);
 assert.equal(mismatchPayload.dataReadyForPrediction,false);
+const missingStartCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{
+    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
+    if(String(url)===beforeUrl)return new Response(combinedBefore.replace('<td colspan="3">6 .06</td>','<td colspan="3">5 .06</td>'),{status:200});
+    throw Error('Unexpected start URL: '+url);
+  }});
+vm.runInContext(source,missingStartCtx,{filename:'worker.js'});
+const missingStartWorker=vm.runInContext('workerExport',missingStartCtx);
+const missingStartResponse=await missingStartWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=1&race=1'));
+const missingStartPayload=await missingStartResponse.json();
+assert.equal(missingStartPayload.startVerified,false);
+assert.equal(missingStartPayload.startByCourse.length,0);
+assert.equal(missingStartPayload.dataReadyForPrediction,false);
 const badCombined=await combinedWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=99&race=1'));
 assert.equal(badCombined.status,400);
 const invalidBefore=await beforeWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=25&race=1'));
