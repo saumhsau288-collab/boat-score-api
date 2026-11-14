@@ -54,7 +54,7 @@ jobs:
           URL="https://boat-score-2-preview.saumh-sau-288.workers.dev/api/version"
           for attempt in 1 2 3 4 5; do
             if curl --fail --silent --show-error --max-time 15 "$URL" -o version.json &&
-              node -e "const d=require('./version.json');if(d.app!=='Boat Score 2 preview'||d.build!=='20261115-auto-preview-check'||d.sourceBranch!=='boat-score-2-data-fix-20261114')process.exit(1)"; then
+              node -e "const fs=require('fs');const d=require('./version.json');const src=fs.readFileSync('worker.js','utf8');const match=src.match(/build:'([^']+)'/);if(!match||d.app!=='Boat Score 2 preview'||d.build!==match[1]||d.sourceBranch!=='boat-score-2-data-fix-20261114')process.exit(1)"; then
               echo "Verified isolated preview build and source branch"
               exit 0
             fi
