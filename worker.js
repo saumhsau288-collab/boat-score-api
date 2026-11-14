@@ -433,6 +433,25 @@ row.counts.reduce((sum, n) => sum + n, 0) === row.runs
 }
 
 
+function extractOfficialExhibition(html) {
+  const table=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)]
+    .map(m=>m[0]).find(t=>/展示\s*タイム/.test(t) && /チルト/.test(t));
+  if (!table) return {verified:false,rows:[]};
+  const rows=[];
+  for (const [,row] of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const cells=[...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)]
+      .map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim());
+    if(cells.length<6 || !/^[1-6]$/.test(cells[0])) continue;
+    const boat=Number(cells[0]),name=cells[2];
+    const time=/^\d\.\d{2}$/.test(cells[4])?Number(cells[4]):null;
+    const tilt=/^-?\d+(?:\.\d+)?$/.test(cells[5])?Number(cells[5]):null;
+    if(!name || time===null || time<5 || time>9 || tilt===null || tilt< -2 || tilt>3) continue;
+    rows.push({boat,name,exhibitionTime:time,tilt});
+  }
+  const verified=rows.length===6 && new Set(rows.map(r=>r.boat)).size===6;
+  return {verified,rows:verified?rows.sort((a,b)=>a.boat-b.boat):[],candidateCount:rows.length};
+}
+
 function extractOfficialBoatStats(html) {
   const results = [];
   const rows = [...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
