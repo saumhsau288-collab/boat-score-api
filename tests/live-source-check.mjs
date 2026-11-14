@@ -83,6 +83,17 @@ for (const [label,url] of targets) {
         profileParentTags:[...body.matchAll(/<a\b[^>]*racersearch\/profile[^>]*>/gi)].slice(0,4).map(m=>body.slice(Math.max(0,m.index-250),m.index).match(/<([a-z][\w-]*)\b[^>]*>\s*$/i)?.[1]||'unknown')
       };
     }
+    if(label==='official' && response.ok && !summary.hasNoDataNotice){
+      const rows=[...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
+      summary.racerRowShape=rows.filter(m=>/racersearch\/profile/.test(m[1])).slice(0,6).map(m=>{
+        const cells=[...m[1].matchAll(/<td\b([^>]*)>([\s\S]*?)<\/td>/gi)];
+        return {
+          cells:cells.length,
+          firstCells:cells.slice(0,4).map(c=>({attrs:c[1].slice(0,90),text:c[2].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,70)})),
+          profileIds:[...new Set([...m[1].matchAll(/toban=(\d{4})/g)].map(x=>x[1]))]
+        };
+      });
+    }
     console.log(JSON.stringify(summary));
   } catch (e) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
