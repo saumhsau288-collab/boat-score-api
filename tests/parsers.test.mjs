@@ -13,6 +13,12 @@ assert.equal(weather.verified,true);
 assert.equal(weather.windSpeed,1);
 assert.equal(weather.waveHeight,1);
 assert.equal(weather.windDirectionVerified,false);
+const weatherWithDirection=weatherParser('<div>水面気象情報 風向 北北東 風速 3m 波高 2cm</div>');
+assert.equal(weatherWithDirection.verified,true);
+assert.equal(weatherWithDirection.windDirection,'北北東');
+assert.equal(weatherWithDirection.windDirectionVerified,true);
+assert.equal(weatherParser('<div>水面気象情報 風向 不明 風速 3m 波高 2cm</div>').windDirectionVerified,false);
+assert.equal(weatherParser('<div>水面気象情報 風向 北北東 風速 100m 波高 2cm</div>').windDirectionVerified,false);
 assert.equal(weatherParser('<div>水面気象情報 風速 100m 波高 1cm</div>').verified,false);
 const startParser=vm.runInContext('extractOfficialStartExhibition',context);
 const startTable='<table><tr><th>スタート展示</th></tr>'+
