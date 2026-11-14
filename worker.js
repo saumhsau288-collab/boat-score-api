@@ -176,6 +176,12 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   const checks=[['選手',data.racersVerified],['勝率・モーター',data.statsVerified],['展示',data.exhibitionVerified],['ST・進入',data.startVerified],['風速・波',data.weatherVerified],['風向',data.windDirectionVerified],['まくらぼ50走',makulabo?.last50Verified],['まくらぼヒートマップ',makulabo?.heatmapReadyForAnalysis]];
   status.textContent=checks.map(([name,ok])=>name+'：'+(ok===true?'確認済':'未確認')).join(' ／ ')+'。'+(data.dataReadyForPrediction===true&&makulabo?.last50Verified===true?'データ準備完了':'不足項目があるため予想は保留');
   const comparison=document.getElementById('last50Comparison');comparison.replaceChildren();
+  const weatherHeading=document.createElement('h3');weatherHeading.textContent='水面気象・確認状況';comparison.appendChild(weatherHeading);
+  const weatherLine=document.createElement('p');
+  const w=data.weatherVerified===true?data.weather:null;
+  weatherLine.textContent='風速：'+(w&&Number.isFinite(w.windSpeed)?w.windSpeed+'m/s':'未確認')+' ／ 波高：'+(w&&Number.isFinite(w.waveHeight)?w.waveHeight+'cm':'未確認')+' ／ 風向：'+(data.windDirectionVerified===true&&w?.windDirection?w.windDirection:'未確認');
+  comparison.appendChild(weatherLine);
+  const weatherNote=document.createElement('p');weatherNote.textContent='風・波は現在の5指標比較点に加点していません。風向は公式データから確認できるまで未確認と表示します。';comparison.appendChild(weatherNote);
   if(data.racersVerified===true&&Array.isArray(data.racersByBoat)&&data.racersByBoat.length===6){
    const heading=document.createElement('h3');heading.textContent='公式データ・6艇比較';comparison.appendChild(heading);
    const wrap=document.createElement('div');wrap.style.cssText='max-width:100%;overflow-x:auto';
