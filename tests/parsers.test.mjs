@@ -69,6 +69,18 @@ assert.equal(fetchCalls.length,2);
 const invalid=await worker.fetch(new Request('https://example.com/api/makulabo/heatmap?date=20261113&venue=25&race=1'));
 assert.equal(invalid.status,400);
 assert.equal(fetchCalls.length,2);
+const loadingCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{
+    assert.equal(String(url),makulaboUrl);
+    return new Response('<h2>桐生 1 R</h2><div>ヒートマップ 読み込み中</div>',{status:200,headers:{'content-type':'text/html'}});
+  }});
+vm.runInContext(source,loadingCtx,{filename:'worker.js'});
+const loadingWorker=vm.runInContext('workerExport',loadingCtx);
+const loadingResponse=await loadingWorker.fetch(new Request('https://example.com/api/makulabo/heatmap?date=20261113&venue=1&race=1'));
+const loadingPayload=await loadingResponse.json();
+assert.equal(loadingPayload.reason,'heatmap_requires_client_side_rendering');
+assert.equal(loadingPayload.last50Verified,false);
+assert.equal(loadingPayload.dataReadyForPrediction,false);
 const officialEndpoint=await worker.fetch(new Request('https://example.com/api/official/racers?date=20261113&venue=1&race=1'));
 assert.equal(officialEndpoint.status,200);
 const officialPayload=await officialEndpoint.json();
