@@ -41,7 +41,9 @@ const rows=document.getElementById('rows');
 const japanToday=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replace(/-/g,'');
 document.getElementById('date').value=japanToday;
 for(let boat=1;boat<=6;boat++){const card=document.createElement('fieldset');card.style.cssText='border:1px solid #cbd5e1;border-radius:12px;padding:12px;min-width:0';const heading=document.createElement('legend');heading.textContent=boat+'号艇';heading.style.fontWeight='bold';card.appendChild(heading);const grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px';for(let i=0;i<8;i++){const label=document.createElement('label');label.style.cssText='margin:0;min-width:0';const name=i===0?'登録番号':i===1?'走数':(i-1)+'着';label.textContent=name+' ';const input=document.createElement('input');input.setAttribute('aria-label',boat+'号艇 '+name);input.dataset.boat=String(boat);input.dataset.index=String(i);input.type=i===0?'text':'number';input.inputMode='numeric';input.required=true;input.style.cssText='box-sizing:border-box;width:100%;min-width:0';if(i===0)input.maxLength=4;else{input.min='0';input.max='50'}label.appendChild(input);grid.appendChild(label)}card.appendChild(grid);rows.appendChild(card)}
+let venueCheckVersion=0;
 document.getElementById('date').addEventListener('input',()=>{
+ venueCheckVersion++;
  const selector=document.getElementById('venue');
  for(const option of selector.options){option.textContent=option.textContent.replace(/ （公式1R確認済）$/,'')}
  document.getElementById('allVenuesStatus').textContent='日付が変更されました。24場を再確認してください';
@@ -56,6 +58,7 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
  const options=[...selector.options].filter(o=>o.value);
  options.forEach(o=>{o.disabled=false;o.textContent=o.textContent.replace(/ （公式1R確認済）$/,'')});
  const button=document.getElementById('checkAllVenues');button.disabled=true;
+ const currentCheck=++venueCheckVersion;
  try{
  status.textContent='24場の公式1Rを照合中…（未確認の場は選択可能のまま）';
  let confirmed=0,unknown=0;
@@ -65,6 +68,7 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
    try{const response=await fetch('/api/official/racers?'+new URLSearchParams({date,venue:option.value,race:'1'}));
     const data=await response.json();return response.ok&&data.racersByBoatVerified===true}catch{return false}
   }));
+  if(currentCheck!==venueCheckVersion)return;
   results.forEach((verified,i)=>{if(verified){confirmed++;batch[i].textContent+=' （公式1R確認済）'}else unknown++});
   status.textContent='確認中：'+Math.min(offset+4,24)+'/24場、公式1R確認済 '+confirmed+'場、未確認 '+unknown+'場';
  }
