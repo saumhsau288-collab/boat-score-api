@@ -181,6 +181,15 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
   const missingLine=document.createElement('p');
   missingLine.textContent='公式データの不足項目：'+(missing.length?missing.map(key=>missingLabels[key]).join('、'):'なし（取得項目の照合結果）');
   comparison.appendChild(missingLine);
+  const makulaboLine=document.createElement('p');
+  const makulaboIssues=[];
+  if(!makulaboResponse?.ok)makulaboIssues.push('取得できませんでした（通信または取得先の制限）');
+  else{
+   if(makulabo?.last50Verified!==true)makulaboIssues.push('直近50走の確認ができません');
+   if(makulabo?.heatmapReadyForAnalysis!==true)makulaboIssues.push('ヒートマップの確認ができません');
+  }
+  makulaboLine.textContent='まくらぼの不足項目：'+(makulaboIssues.length?makulaboIssues.join('、'):'なし（取得項目の照合結果）');
+  comparison.appendChild(makulaboLine);
   const weatherHeading=document.createElement('h3');weatherHeading.textContent='水面気象・確認状況';comparison.appendChild(weatherHeading);
   const weatherLine=document.createElement('p');
   const w=data.weatherVerified===true?data.weather:null;
