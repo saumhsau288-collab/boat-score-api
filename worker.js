@@ -1441,7 +1441,7 @@ async function fetchOfficialRacers(date, venue, race) {
       return {verified:false,statsVerified:false,statsByBoat:[],racers:[],reason:'official_response_too_large'};
 const officialRows = extractOfficialBoatRows(html);
 const officialStats = extractOfficialBoatStats(html);
-const statsMatch = officialRows.verified && officialStats.verified && officialStats.rows.every((stat,i)=>stat.boat===officialRows.racers[i].boat && stat.racerId===officialRows.racers[i].racerId);
+const statsMatch = officialRows.verified && officialStats.verified && officialStats.rows.length===6 && officialRows.racers.length===6 && officialStats.rows.every((stat,i)=>stat.boat===officialRows.racers[i].boat && stat.racerId===officialRows.racers[i].racerId);
 const racerLinks = [...html.matchAll(/href="([^"]*\/owpc\/pc\/data\/racersearch\/profile[^"]*)"/g)];
 const uniqueRacerLinks = [...new Set(racerLinks.map(m => m[1]))];
 const officialRacerIds = uniqueRacerLinks
