@@ -77,6 +77,7 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
  const selector=document.getElementById('venue');
  const options=[...selector.options].filter(o=>o.value);
  options.forEach(o=>{o.disabled=false;o.textContent=o.textContent.replace(/ （公式1R確認済）$/,'')});
+ filterConfirmedVenues();
  const button=document.getElementById('checkAllVenues');button.disabled=true;
  const currentCheck=++venueCheckVersion;
  try{
