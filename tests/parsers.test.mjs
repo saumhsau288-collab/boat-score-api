@@ -75,7 +75,7 @@ assert.equal(publishedParsed.rows.length,6);
 assert.equal(publishedParsed.rows[0].runs,4);
 assert.equal(publishedParsed.rows[0].counts[1],0);
 assert.equal(publishedParsed.rows[4].runs,47);
-assert.equal(heat(publishedHtml.replace('<td>4.25</td>','<td>4.26</td>')).verified,false);
+assert.equal(heat(publishedHtml.replace('<td>4.25</td>','<td>4.30</td>')).verified,false);
 console.log('Boat Score 2 synthetic parser tests passed');
 
 const officialUrl='https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=01&hd=20261113';
