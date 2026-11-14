@@ -732,7 +732,7 @@ if (u.pathname === '/api/official/race-data') {
   if(weather.windDirectionVerified!==true)missingInputs.push('windDirection');
   return reply(request,{
     status:complete?'official_sources_verified':'partial',missingInputs,
-    diagnostics:{officialRacersReason:official.verified?null:(official.reason||'official_racer_rows_not_verified'),officialRacerCandidateCount:official.officialBoatRowCandidates??null,officialResponseLength:official.htmlLength??null,officialStatsReason:official.statsVerified?null:'official_stats_not_verified',beforeinfoReason:beforeFailureReason||(before?'beforeinfo_parsing_not_verified': 'beforeinfo_unavailable'),beforeinfoResponseLength:before?.length??null,selectedDate:date,selectedVenue:Number(venue),selectedRace:Number(race)},
+    diagnostics:{officialRacersReason:official.verified?null:(official.reason||'official_racer_rows_not_verified'),officialRacerCandidateCount:official.officialBoatRowCandidates??null,officialResponseLength:official.htmlLength??null,officialStatsReason:official.statsVerified?null:'official_stats_not_verified',beforeinfoReason:beforeFailureReason||(before?(exhibition.verified&&start.verified&&weather.verified?'beforeinfo_verified':'beforeinfo_parsing_not_verified'):'beforeinfo_unavailable'),beforeinfoResponseLength:before?.length??null,selectedDate:date,selectedVenue:Number(venue),selectedRace:Number(race)},
     racersVerified:official.verified,statsVerified:official.statsVerified===true,
     exhibitionVerified:exhibitionMatches,startVerified:startMatches,weatherVerified:weather.verified===true,
     racersByBoat:official.verified?official.racers:[],
@@ -1448,10 +1448,23 @@ async function fetchOfficialRacers(date, venue, race) {
   url.searchParams.set("hd", String(date));
 
   try {
-    const response = await fetch(url.toString(), {
-      headers: {Accept: 'text/html'},
-      signal: AbortSignal.timeout(10000)
-    });
+    // Official pages can respond slowly from Workers. Retry only transport failures;
+    // never treat a timeout or an unverified response as valid racer data.
+    let response;
+    let lastTransportError;
+    for (const timeoutMs of [10000, 18000]) {
+      try {
+        response = await fetch(url.toString(), {
+          headers: {Accept: 'text/html,application/xhtml+xml'},
+          signal: AbortSignal.timeout(timeoutMs)
+        });
+        break;
+      } catch (error) {
+        lastTransportError = error;
+        if (error?.name !== 'TimeoutError' && error?.name !== 'AbortError') throw error;
+      }
+    }
+    if (!response) throw lastTransportError || new Error('official_transport_failed');
 
     if (!response.ok) {
       return { verified: false, statsVerified: false, statsByBoat: [], racers: [],
