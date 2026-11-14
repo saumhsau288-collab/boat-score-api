@@ -35,6 +35,20 @@ if (u.pathname === '/api/official/schedule') {
   }catch{return reply(request,{date,verified:false,venues:[],source,reason:'Official schedule request failed'})}
 }
 
+if (u.pathname === '/api/official/result') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'',venue=u.searchParams.get('venue')||'',race=u.searchParams.get('race')||'';
+  if(!/^20[0-9]{6}$/.test(date)||!/^[0-9]{1,2}$/.test(venue)||!/^[0-9]{1,2}$/.test(race)||Number(venue)<1||Number(venue)>24||Number(race)<1||Number(race)>12)return reply(request,{error:'Invalid parameters'},400);
+  const source='https://www.boatrace.jp/owpc/pc/race/raceresult?rno='+Number(race)+'&jcd='+venue.padStart(2,'0')+'&hd='+date;
+  try{
+    const upstream=await fetch(source,{signal:AbortSignal.timeout(12000)});
+    if(!upstream.ok)return reply(request,{verified:false,finishOrder:[],reason:'official_result_http_error',source,upstreamStatus:upstream.status});
+    const html=await upstream.text();
+    const parsed=parseOfficialFinishOrder(html);
+    return reply(request,{...parsed,date,venue:Number(venue),race:Number(race),source,dataReadyForPrediction:false});
+  }catch{return reply(request,{verified:false,finishOrder:[],reason:'official_result_fetch_failed',source})}
+}
+
 if (u.pathname === '/api/racers/test') {
   return reply(request, {
     status: 'ok',
@@ -861,6 +875,21 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 
 
 // Parse the published six-row heatmap table without guessing blank cells.
+function parseOfficialFinishOrder(html) {
+  const tables=[...html.matchAll(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/gi)].map(match=>match[0]);
+  const candidate=tables.find(table=>/着順/.test(table)&&/艇番/.test(table));
+  if(!candidate)return {verified:false,finishOrder:[],reason:'result_table_missing'};
+  const rows=[...candidate.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)].map(match=>{
+    const cells=[...match[1].matchAll(/<t[dh]\\b[^>]*>([\\s\\S]*?)<\\/t[dh]>/gi)]
+      .map(cell=>cell[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\\s+/g,' ').trim());
+    const rank=cells[0],boat=cells[1];
+    return /^[1-6]$/.test(rank)&&/^[1-6]$/.test(boat)?{rank:Number(rank),boat:Number(boat)}:null;
+  }).filter(Boolean);
+  if(rows.length!==6||new Set(rows.map(row=>row.rank)).size!==6||new Set(rows.map(row=>row.boat)).size!==6)return {verified:false,finishOrder:[],reason:'result_rows_incomplete_or_nonstandard'};
+  rows.sort((a,b)=>a.rank-b.rank);
+  return {verified:true,finishOrder:rows.map(row=>row.boat),reason:null};
+}
+
 function parseLast50Heatmap(html) {
   const section = html.split(/枠番別ヒートマップ/)[1];
   if (!section) return {verified:false,rows:[],reason:'heading_missing'};
