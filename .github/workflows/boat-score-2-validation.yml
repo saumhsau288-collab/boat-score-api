@@ -18,6 +18,9 @@ jobs:
       - name: Run synthetic parser regression tests
         run: node tests/parsers.test.mjs
 
+      - name: Check live diagnostic syntax
+        run: node --check tests/live-source-check.mjs
+
       - name: Diagnose public sources (non-blocking)
         continue-on-error: true
         run: node tests/live-source-check.mjs
