@@ -1023,6 +1023,39 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 
 
 // Parse the published six-row heatmap table without guessing blank cells.
+function classifyDailyRaceCandidates(races) {
+  if(!Array.isArray(races))return {main:[],upset:[],chaos:[],held:0};
+  const categories={main:[],upset:[],chaos:[]};
+  let held=0;
+  const seen=new Set();
+  for(const race of races){
+    const key=String(race?.date)+':'+String(race?.venue)+':'+String(race?.race);
+    const scores=race?.rankedScores;
+    if(seen.has(key))continue;
+    seen.add(key);
+    if(!/^20[0-9]{6}$/.test(String(race?.date))||!Number.isInteger(race?.venue)||race.venue<1||race.venue>24||
+      !Number.isInteger(race?.race)||race.race<1||race.race>12||
+      race?.officialVerified!==true||race?.statsVerified!==true||
+      !Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x.boat)).size!==6||
+      !scores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))){
+      held++;continue;
+    }
+    const ordered=scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
+    const lead=ordered[0].score-ordered[1].score;
+    const spread=ordered[0].score-ordered[5].score;
+    const outer=Math.max(...ordered.filter(x=>x.boat>=4).map(x=>x.score));
+    const inner=Math.max(...ordered.filter(x=>x.boat<=3).map(x=>x.score));
+    const item={date:race.date,venue:race.venue,race:race.race,lead,spread,outerGap:outer-inner,
+      status:'provisional_not_calibrated'};
+    const category=lead>=3&&ordered[0].boat<=3?'main':outer>=inner?'upset':'chaos';
+    categories[category].push({...item,category,score:category==='main'?lead:category==='upset'?outer-inner:-spread});
+  }
+  for(const category of Object.keys(categories))
+    categories[category].sort((a,b)=>b.score-a.score||a.venue-b.venue||a.race-b.race);
+  return {main:categories.main.slice(0,20),upset:categories.upset.slice(0,20),chaos:categories.chaos.slice(0,20),held,
+    method:'unvalidated_five_factor_screening',verifiedProbability:false};
+}
+
 function summarizeHistoricalOuterFollow(results) {
   if(!Array.isArray(results))return {verifiedRaces:0,eligibleRaces:0,followRaces:0,rate:null,ready:false};
   let verifiedRaces=0,eligibleRaces=0,followRaces=0;
