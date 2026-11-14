@@ -372,6 +372,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      batchButton.addEventListener('click',async()=>{
       batchButton.disabled=true;
       let checked=0,matched=0,unmatched=0,held=0,outerChecked=0,outerMatched=0;
+      const detailRows=[];
       try{
        const records=[];
        for(let i=0;i<localStorage.length;i++){
@@ -399,10 +400,11 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
          const hit=leaders.includes(result.finishOrder[0]);
          checked++;
          if(hit)matched++;else unmatched++;
+         detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：'+(hit?'一致':'不一致')+'／首位'+leaders.join(',')+'号艇／確定'+result.finishOrder.join('-'));
          if(leaders.length===1&&leaders[0]>=4){outerChecked++;if(hit)outerMatched++}
         }catch{held++}
        }
-       batchStatus.textContent='参考照合：対象'+selected.length+'件／判定'+checked+'件／一致'+matched+'件／不一致'+unmatched+'件／保留'+held+'件。首位艇1着一致率 '+(checked?(matched/checked*100).toFixed(1)+'%':'算出不可')+'（同点首位を含む）。外枠単独首位 '+outerChecked+'件／一致'+outerMatched+'件'+(outerChecked?'／'+(outerMatched/outerChecked*100).toFixed(1)+'%':'')+'。端末時計・保存時刻は第三者未検証のため、正式な事前予想的中率ではありません。';
+       batchStatus.textContent='参考照合：対象'+selected.length+'件／判定'+checked+'件／一致'+matched+'件／不一致'+unmatched+'件／保留'+held+'件。首位艇1着一致率 '+(checked?(matched/checked*100).toFixed(1)+'%':'算出不可')+'（同点首位を含む）。外枠単独首位 '+outerChecked+'件／一致'+outerMatched+'件'+(outerChecked?'／'+(outerMatched/outerChecked*100).toFixed(1)+'%':'')+'。端末時計・保存時刻は第三者未検証のため、正式な事前予想的中率ではありません。 判定できたレース：'+(detailRows.length?detailRows.join(' ｜ '):'なし');
       }catch{batchStatus.textContent='端末の保存記録を読み取れませんでした。'}
       finally{batchButton.disabled=false}
      });
