@@ -32,7 +32,7 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <label>日付（YYYYMMDD） <input id="date" inputmode="numeric" maxlength="8" placeholder="20261114"></label>
 <label>競艇場番号（1〜24） <input id="venue" type="number" min="1" max="24"></label>
 <label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
-<button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p>
+<button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
 <div style="overflow-x:auto"><table><thead><tr><th>艇</th><th>登録番号</th><th>走数</th><th>1着</th><th>2着</th><th>3着</th><th>4着</th><th>5着</th><th>6着</th></tr></thead><tbody id="rows"></tbody></table></div>
 <button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
@@ -56,6 +56,19 @@ document.getElementById('fillRacers').addEventListener('click',async()=>{
   racers.forEach((r,i)=>{rows.querySelector('input[data-boat="'+(i+1)+'"][data-index="0"]').value=r.racerId});
   status.textContent='公式の6艇分の登録番号を入力しました。画像と照合してください';
  }catch{status.textContent='通信に失敗しました。後で再試行してください'}
+});
+document.getElementById('set50').addEventListener('click',()=>{
+ for(let boat=1;boat<=6;boat++){rows.querySelector('input[data-boat="'+boat+'"][data-index="1"]').value='50'}
+ document.getElementById('countStatus').textContent='走数を50に設定しました。画像の対象期間が50走であることを確認してください';
+});
+rows.addEventListener('input',event=>{
+ const input=event.target;if(!input.matches('input[data-boat]'))return;
+ const boat=input.getAttribute('data-boat'),fields=[...rows.querySelectorAll('input[data-boat="'+boat+'"]')];
+ const status=document.getElementById('countStatus');
+ if(fields.slice(1).some(x=>x.value.trim()==='')){status.textContent=boat+'号艇：着順回数を入力中';return}
+ const count=fields.slice(2).reduce((sum,x)=>sum+Number(x.value),0);
+ const total=Number(fields[1].value);
+ status.textContent=boat+'号艇：着順合計 '+count+' / '+total+'走'+(count===total?'（一致）':'（不一致）');
 });
 let zoom=1;
 const zoomPreview=document.getElementById('zoomPreview');
