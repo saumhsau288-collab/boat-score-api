@@ -1023,6 +1023,31 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 
 
 // Parse the published six-row heatmap table without guessing blank cells.
+function buildMorningRaceInputs(date,venue,race,official) {
+  if(!/^20[0-9]{6}$/.test(String(date))||!Number.isInteger(venue)||venue<1||venue>24||
+    !Number.isInteger(race)||race<1||race>12||
+    official?.verified!==true||official?.statsVerified!==true||
+    !Array.isArray(official.statsByBoat)||official.statsByBoat.length!==6)
+    return {ready:false,reason:'official_six_boat_stats_unverified'};
+  const stats=official.statsByBoat;
+  const boats=stats.map(x=>x.boat);
+  if(new Set(boats).size!==6||!boats.every(x=>Number.isInteger(x)&&x>=1&&x<=6))
+    return {ready:false,reason:'invalid_boat_identity'};
+  const scoreRows=stats.map(x=>{
+    const win=Number(x.nationwide?.winRate);
+    const motor=Number(x.motor?.secondPlaceRate);
+    return {boat:x.boat,win,motor};
+  });
+  if(!scoreRows.every(x=>Number.isFinite(x.win)&&x.win>=0&&x.win<=10&&Number.isFinite(x.motor)&&x.motor>=0&&x.motor<=100))
+    return {ready:false,reason:'invalid_or_missing_morning_metrics'};
+  const ranks=(key)=>new Map(scoreRows.slice().sort((a,b)=>b[key]-a[key]||a.boat-b.boat)
+    .map((x,i)=>[x.boat,6-i]));
+  const winRanks=ranks('win'),motorRanks=ranks('motor');
+  return {ready:true,date,venue,race,officialVerified:true,statsVerified:true,
+    rankedScores:scoreRows.map(x=>({boat:x.boat,score:winRanks.get(x.boat)+motorRanks.get(x.boat)})),
+    method:'two_factor_morning_screening_unvalidated',missingInputs:['last50','course','exhibition','start','weather']};
+}
+
 function classifyDailyRaceCandidates(races) {
   if(!Array.isArray(races))return {main:[],upset:[],chaos:[],held:0};
   const categories={main:[],upset:[],chaos:[]};
