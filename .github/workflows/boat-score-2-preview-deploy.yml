@@ -24,8 +24,15 @@ jobs:
             echo "::error::Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub Actions secrets."
             exit 1
           fi
-      - name: Checkout development code
+      - name: Checkout Boat Score 2 development branch only
         uses: actions/checkout@v4
+        with:
+          ref: boat-score-2-data-fix-20261114
+          persist-credentials: false
+      - name: Confirm isolated source branch
+        run: |
+          test "$(git branch --show-current)" = "boat-score-2-data-fix-20261114"
+          echo "Deploying Boat Score 2 development branch only"
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
