@@ -420,6 +420,7 @@ if (u.pathname === '/api/official/beforeinfo') {
     return reply(request,{
       status:exhibition.verified&&start.verified?'verified':'partial',
       exhibitionVerified:exhibition.verified,startVerified:start.verified,
+      weatherVerified:weather.verified===true,windDirectionVerified:weather.windDirectionVerified===true,
       exhibitionByBoat:exhibition.rows,startByCourse:start.rows,
       weather, dataReadyForPrediction:false
     });
@@ -860,7 +861,7 @@ function extractOfficialWeather(html) {
   return {verified,windSpeed:verified?windSpeed:null,waveHeight:verified?waveHeight:null,
     airTemperature:airTemperature!==null&&airTemperature>=-30&&airTemperature<=50?airTemperature:null,
     waterTemperature:waterTemperature!==null&&waterTemperature>=-5&&waterTemperature<=45?waterTemperature:null,
-    windDirection:windDirection,windDirectionVerified:verified&&windDirection!==null};
+    windDirection:verified?windDirection:null,windDirectionVerified:verified&&windDirection!==null};
 }
 
 function extractOfficialStartExhibition(html) {
