@@ -196,6 +196,9 @@ assert.ok(screenshotHtml.includes('枠・相手関係・展示・風などを反
 assert.ok(screenshotHtml.includes('const sortedByFirst='));
 assert.ok(screenshotHtml.includes('const sortedByTop3='));
 assert.ok(screenshotHtml.includes('実験的な5指標比較（予想ではありません）'));
+assert.ok(screenshotHtml.includes('5指標比較は未表示：公式データの数値'));
+assert.ok(screenshotHtml.includes('scroll.appendChild(table);comparison.appendChild(scroll)'));
+
 assert.ok(screenshotHtml.includes('同値は同点順位の平均点を付与'));
 assert.ok(screenshotHtml.includes('ordered[end][key]===ordered[i][key]'));
 assert.ok(screenshotHtml.includes('points.set(ordered[j].boat,averagePoints)'));
