@@ -1003,6 +1003,23 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 
 
 // Parse the published six-row heatmap table without guessing blank cells.
+function summarizeHistoricalOuterFollow(results) {
+  if(!Array.isArray(results))return {verifiedRaces:0,eligibleRaces:0,followRaces:0,rate:null,ready:false};
+  let verifiedRaces=0,eligibleRaces=0,followRaces=0;
+  for(const result of results){
+    const podium=result?.podium;
+    if(result?.podiumVerified!==true||!Array.isArray(podium)||podium.length!==3||
+      new Set(podium).size!==3||!podium.every(x=>Number.isInteger(x)&&x>=1&&x<=6))continue;
+    verifiedRaces++;
+    const winner=podium[0];
+    if(winner>=6)continue;
+    eligibleRaces++;
+    if(podium[1]>winner||podium[2]>winner)followRaces++;
+  }
+  return {verifiedRaces,eligibleRaces,followRaces,rate:eligibleRaces?followRaces/eligibleRaces:null,
+    ready:eligibleRaces>=30,definition:'winner_lower_boat_number_than_second_or_third'};
+}
+
 function rankTrifectaCandidates(rankedScores) {
   if(!Array.isArray(rankedScores)||rankedScores.length!==6||new Set(rankedScores.map(x=>x.boat)).size!==6||
     !rankedScores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)))
