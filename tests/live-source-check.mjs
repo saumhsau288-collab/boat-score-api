@@ -111,6 +111,20 @@ for (const [label,url] of targets) {
         };
       }catch(error){summary.racelistApiProbe={error:String(error).slice(0,150)}}
     }
+    if(label==='makulabo'){
+      const dates=['20261109','20261112','20261113','20261114'];
+      summary.racelistDateProbe=await Promise.all(dates.map(async hd=>{
+        try{
+          const url=new URL('/api/racelist/01/1?hd='+hd,response.url);
+          const res=await fetch(url,{signal:AbortSignal.timeout(10000),headers:{Accept:'application/json'}});
+          const payload=await res.json();
+          const race=payload?.race;
+          const racers=Array.isArray(race?.racers)?race.racers:null;
+          return {hd,status:res.status,hasRace:!!race,racerCount:racers?.length??null,
+            raceFields:race&&typeof race==='object'?Object.keys(race).slice(0,15):[]};
+        }catch(error){return {hd,error:String(error).slice(0,110)}}
+      }));
+    }
     summary.visibleRaceDataIndicators={
       racerNumberMatches:(text.match(/\b[0-9]{4}\b/g)||[]).length,
       heatmapDataRows:(body.match(/heatmap[-_]?row|heatmap[-_]?data/gi)||[]).length
