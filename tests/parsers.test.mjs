@@ -189,6 +189,10 @@ assert.match(screenshotHtml,/id="raceDataStatus"/);
 assert.ok(screenshotHtml.includes("document.getElementById('last50Comparison').replaceChildren()"));
 assert.ok(screenshotHtml.includes('公式データ・6艇比較'));
 assert.ok(screenshotHtml.includes('モーター2連率'));
+assert.ok(screenshotHtml.includes("'1着率','3連対率'"));
+assert.ok(screenshotHtml.includes('row.counts[0]/row.runs*100'));
+assert.ok(screenshotHtml.includes('(row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100'));
+
 assert.ok(screenshotHtml.includes('展示STは本番のSTではありません'));
 assert.ok(screenshotHtml.includes("data.statsVerified===true?data.statsByBoat:[]"));
 
