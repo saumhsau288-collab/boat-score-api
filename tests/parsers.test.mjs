@@ -214,6 +214,13 @@ assert.ok(screenshotHtml.includes("document.getElementById('checkVenue').addEven
 assert.ok(screenshotHtml.includes("非開催とは断定できません"));
 assert.ok(screenshotHtml.includes("race:'1'"));
 assert.ok(screenshotHtml.includes('id="checkAllVenues"'));
+assert.ok(screenshotHtml.includes('id="checkSchedule"'));
+assert.ok(screenshotHtml.includes('id="scheduleStatus"'));
+assert.ok(screenshotHtml.includes("document.getElementById('checkSchedule').addEventListener"));
+assert.ok(screenshotHtml.includes("'/api/official/schedule?'"));
+assert.ok(screenshotHtml.includes("開催確定や選択制限には使用しません"));
+assert.ok(screenshotHtml.includes("日付が変更されました。開催一覧の候補を再確認してください"));
+
 assert.ok(screenshotHtml.includes("offset+=4"));
 assert.ok(screenshotHtml.includes("Promise.all(batch.map"));
 assert.ok(screenshotHtml.includes("未確認は非開催を意味しません"));
