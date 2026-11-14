@@ -31,6 +31,15 @@ for (const [label,url] of targets) {
       canvasTags:(body.match(/<canvas\b/gi)||[]).length,
       svgTags:(body.match(/<svg\b/gi)||[]).length
     };
+    const svgBlocks=[...body.matchAll(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi)];
+    summary.svgInspection={
+      blocks:svgBlocks.length,
+      withText:svgBlocks.filter(m=>/<text\b/i.test(m[0])).length,
+      withRect:svgBlocks.filter(m=>/<rect\b/i.test(m[0])).length,
+      withPath:svgBlocks.filter(m=>/<path\b/i.test(m[0])).length,
+      textLabels:[...new Set(svgBlocks.flatMap(m=>[...m[0].matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/gi)].map(x=>x[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean)))].slice(0,25)
+    };
+    summary.hasNoDataNotice=/データがありません/.test(text);
     console.log(JSON.stringify(summary));
   } catch (e) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
