@@ -36,6 +36,20 @@ assert.equal(followSummary.rate,0.5);
 assert.equal(followSummary.ready,false);
 assert.equal(outerFollow(Array.from({length:30},()=>({podiumVerified:true,podium:[3,4,5]}))).ready,true);
 assert.equal(outerFollow([]).rate,null);
+const classifyDaily=vm.runInContext('classifyDailyRaceCandidates',context);
+const dailyRows=[
+ {date:'20261115',venue:1,race:1,officialVerified:true,statsVerified:true,rankedScores:[30,22,18,16,14,12].map((score,i)=>({boat:i+1,score}))},
+ {date:'20261115',venue:1,race:2,officialVerified:true,statsVerified:true,rankedScores:[18,19,20,30,28,25].map((score,i)=>({boat:i+1,score}))},
+ {date:'20261115',venue:1,race:3,officialVerified:true,statsVerified:true,rankedScores:[20,19,18,17,16,15].map((score,i)=>({boat:i+1,score}))},
+ {date:'20261115',venue:1,race:4,officialVerified:false,statsVerified:true,rankedScores:[30,22,18,16,14,12].map((score,i)=>({boat:i+1,score}))}
+];
+const daily=classifyDaily(dailyRows.concat(dailyRows[0]));
+assert.equal(daily.main.length,1);
+assert.equal(daily.upset.length,1);
+assert.equal(daily.chaos.length,1);
+assert.equal(daily.held,1);
+assert.equal(daily.verifiedProbability,false);
+assert.equal(classifyDaily([]).main.length,0);
 const finishTable='<table><tr><th>着順</th><th>艇番</th></tr>'+
  [3,1,5,2,4,6].map((boat,i)=>'<tr><td>'+(i+1)+'</td><td>'+boat+'</td></tr>').join('')+'</table>';
 assert.equal(finishParser(finishTable).verified,true);
