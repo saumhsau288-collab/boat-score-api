@@ -49,7 +49,7 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <label>日付（YYYYMMDD） <input id="date" inputmode="numeric" maxlength="8" placeholder="20261114"></label>
 <label>競艇場 <select id="venue" style="font-size:16px;padding:10px;max-width:100%"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select></label>
 <label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
-<button id="checkAllVenues" type="button">全国24場の公式1R出走表を確認</button><label style="display:block"><input id="showConfirmedOnly" type="checkbox"> 公式1R確認済みの場だけ表示（未確認の場は非開催とは限りません）</label><p id="allVenuesStatus" role="status">未確認</p><button id="checkVenue" type="button">選択した競艇場の開催情報を確認</button><p id="venueStatus" role="status">未確認（開催・非開催は未判定）</p><button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
+<button id="checkSchedule" type="button">公式開催一覧の候補を確認</button><p id="scheduleStatus" role="status">開催一覧は未照合です</p><button id="checkAllVenues" type="button">全国24場の公式1R出走表を確認</button><label style="display:block"><input id="showConfirmedOnly" type="checkbox"> 公式1R確認済みの場だけ表示（未確認の場は非開催とは限りません）</label><p id="allVenuesStatus" role="status">未確認</p><button id="checkVenue" type="button">選択した競艇場の開催情報を確認</button><p id="venueStatus" role="status">未確認（開催・非開催は未判定）</p><button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
 <div id="rows" style="display:grid;gap:14px"></div>
 <button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
@@ -113,6 +113,22 @@ document.getElementById('checkAllVenues').addEventListener('click',async()=>{
  }
  status.textContent='公式1R確認済 '+confirmed+'場／未確認 '+unknown+'場。未確認は非開催を意味しません。';
  }catch{status.textContent='一括確認で予期しないエラーが発生しました。開催状況は未確定です。'}finally{button.disabled=false}
+});
+document.getElementById('checkSchedule').addEventListener('click',async()=>{
+ const status=document.getElementById('scheduleStatus');
+ const date=document.getElementById('date').value.trim();
+ if(!/^20[0-9]{6}$/.test(date)){status.textContent='日付を確認してください';return}
+ const button=document.getElementById('checkSchedule');button.disabled=true;
+ try{
+  status.textContent='公式開催一覧を確認中…';
+  const response=await fetch('/api/official/schedule?'+new URLSearchParams({date}),{signal:AbortSignal.timeout(12000)});
+  const data=await response.json();
+  if(date!==document.getElementById('date').value.trim())return;
+  if(!response.ok){status.textContent='開催一覧の取得に失敗しました';return}
+  const codes=Array.isArray(data.venues)?data.venues:[];
+  const names=codes.map(code=>[...document.getElementById('venue').options].find(o=>o.value===String(code))?.textContent).filter(Boolean);
+  status.textContent='公式リンクから抽出した候補 '+names.length+'場：'+(names.join('、')||'なし')+'。未検証のため、開催確定や選択制限には使用しません';
+ }catch{if(date===document.getElementById('date').value.trim())status.textContent='開催一覧の通信エラーです。開催・非開催は未判定です'}finally{button.disabled=false}
 });
 document.getElementById('checkVenue').addEventListener('click',async()=>{
  const status=document.getElementById('venueStatus');
