@@ -1,0 +1,23 @@
+name: Boat Score 2 syntax check
+
+on:
+  push:
+    branches:
+      - boat-score-2-data-fix-20261114
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out development branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check worker JavaScript syntax (no deployment)
+        run: node --input-type=module --check < worker.js
