@@ -998,16 +998,22 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 function parseOfficialFinishOrder(html) {
   const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(match=>match[0]);
   const candidate=tables.find(table=>{const headers=[...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim());return headers.some(h=>h==='着'||h==='着順')&&headers.some(h=>h==='枠'||h==='艇番');});
-  if(!candidate)return {verified:false,finishOrder:[],reason:'result_table_missing'};
+  if(!candidate)return {verified:false,finishOrder:[],podiumVerified:false,podium:[],reason:'result_table_missing'};
   const rows=[...candidate.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(match=>{
     const cells=[...match[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
       .map(cell=>cell[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim().normalize('NFKC'));
     const rank=cells[0],boat=cells[1];
-    return /^[1-6]$/.test(rank)&&/^[1-6]$/.test(boat)?{rank:Number(rank),boat:Number(boat)}:null;
+    return /^[1-6]$/.test(boat)?{rank,boat:Number(boat)}:null;
   }).filter(Boolean);
-  if(rows.length!==6||new Set(rows.map(row=>row.rank)).size!==6||new Set(rows.map(row=>row.boat)).size!==6)return {verified:false,finishOrder:[],reason:'result_rows_incomplete_or_nonstandard'};
-  rows.sort((a,b)=>a.rank-b.rank);
-  return {verified:true,finishOrder:rows.map(row=>row.boat),reason:null};
+  const numeric=rows.filter(row=>/^[1-6]$/.test(row.rank)).map(row=>({rank:Number(row.rank),boat:row.boat}));
+  const uniqueRanks=new Set(numeric.map(row=>row.rank));
+  const uniqueBoats=new Set(rows.map(row=>row.boat));
+  const podium=[1,2,3].map(rank=>numeric.find(row=>row.rank===rank)?.boat);
+  const podiumVerified=podium.every(Boolean)&&new Set(podium).size===3&&uniqueRanks.size===numeric.length&&uniqueBoats.size===rows.length;
+  const fullVerified=rows.length===6&&numeric.length===6&&uniqueRanks.size===6&&uniqueBoats.size===6;
+  if(!fullVerified)return {verified:false,finishOrder:[],podiumVerified,podium:podiumVerified?podium:[],reason:'result_rows_incomplete_or_nonstandard'};
+  numeric.sort((a,b)=>a.rank-b.rank);
+  return {verified:true,finishOrder:numeric.map(row=>row.boat),podiumVerified:true,podium:numeric.slice(0,3).map(row=>row.boat),reason:null};
 }
 
 function parseLast50Heatmap(html) {
