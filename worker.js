@@ -433,6 +433,24 @@ row.counts.reduce((sum, n) => sum + n, 0) === row.runs
 }
 
 
+function extractOfficialStartExhibition(html) {
+  const table=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)]
+    .map(m=>m[0]).find(t=>/スタート展示/.test(t));
+  if (!table) return {verified:false,rows:[],candidateCount:0};
+  const candidates=[];
+  for(const [,row] of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
+    const text=row.replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+    const match=text.match(/^([1-6])\s+([FfLl]?\s*\.?\d{1,2})$/);
+    if(!match) continue;
+    const boat=Number(match[1]),stText=match[2].replace(/\s/g,'');
+    const st=stText.startsWith('F')||stText.startsWith('L') ? stText.toUpperCase() : Number(stText);
+    if(typeof st==='number' && (st<0 || st>1)) continue;
+    candidates.push({boat,course:candidates.length+1,startTiming:st});
+  }
+  const verified=candidates.length===6 && new Set(candidates.map(x=>x.boat)).size===6;
+  return {verified,rows:verified?candidates:[],candidateCount:candidates.length};
+}
+
 function extractOfficialExhibition(html) {
   const table=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)]
     .map(m=>m[0]).find(t=>/展示\s*タイム/.test(t.replace(/<[^>]*>/g,' ')) && /チルト/.test(t));
