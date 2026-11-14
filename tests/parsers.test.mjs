@@ -186,6 +186,9 @@ assert.match(screenshotHtml,/touch-action:pan-x pan-y/);
 assert.match(screenshotHtml,/id="fillRacers"/);
 assert.match(screenshotHtml,/id="checkRaceData"/);
 assert.match(screenshotHtml,/id="raceDataStatus"/);
+assert.ok(screenshotHtml.includes("document.getElementById('last50Comparison').replaceChildren()"));
+assert.ok(screenshotHtml.includes("function clearOfficialRacerAutofill()"));
+
 assert.ok(screenshotHtml.includes("'/api/official/race-data?'"));
 assert.ok(screenshotHtml.includes("['選手',data.racersVerified]"));
 assert.ok(screenshotHtml.includes("['まくらぼ50走',makulabo?.last50Verified]"));
