@@ -218,6 +218,8 @@ assert.ok(screenshotHtml.includes("offset+=4"));
 assert.ok(screenshotHtml.includes("Promise.all(batch.map"));
 assert.ok(screenshotHtml.includes("未確認は非開催を意味しません"));
 assert.ok(screenshotHtml.includes("o.disabled=false"));
+assert.ok(screenshotHtml.includes("finally{button.disabled=false}"));
+assert.ok(screenshotHtml.includes("button.disabled=true"));
 const badCombined=await combinedWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=99&race=1'));
 assert.equal(badCombined.status,400);
 const invalidBefore=await beforeWorker.fetch(new Request('https://example.com/api/official/beforeinfo?date=20261113&venue=25&race=1'));
