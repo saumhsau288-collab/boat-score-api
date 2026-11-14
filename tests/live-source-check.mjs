@@ -4,7 +4,16 @@ const targets = [
 ];
 for (const [label,url] of targets) {
   try {
-    const response = await fetch(url,{redirect:'follow',signal:AbortSignal.timeout(10000),headers:{Accept:'text/html'}});
+    let response;
+    for(let attempt=1;attempt<=2;attempt++){
+      try {
+        response=await fetch(url,{redirect:'follow',signal:AbortSignal.timeout(label==='official'?20000:10000),headers:{Accept:'text/html'}});
+        break;
+      } catch(error) {
+        if(attempt===2 || error?.name!=='TimeoutError') throw error;
+        console.log(JSON.stringify({source:label,event:'retry_after_timeout',attempt}));
+      }
+    }
     const type=response.headers.get('content-type') || '';
     const body=await response.text();
     const text=body.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<[^>]*>/g,' ');
@@ -62,7 +71,7 @@ for (const [label,url] of targets) {
       const ctx=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:()=>{throw Error('Network disabled in parser inspection')}});
       vm.runInContext(workerSource,ctx,{filename:'worker.js'});
       const parsed=vm.runInContext('extractOfficialBoatRows',ctx)(body);
-      summary.officialParser={verified:parsed.verified,reason:parsed.reason||null,boatCount:parsed.racers?.length||0};
+      summary.officialParser={verified:parsed.verified,candidateCount:parsed.candidateCount,boatCount:parsed.racers?.length||0};
     }
     console.log(JSON.stringify(summary));
   } catch (e) {
