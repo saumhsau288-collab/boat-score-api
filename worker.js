@@ -203,6 +203,38 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
    const sortedByTop3=makulabo.last50ByBoat.slice().sort((a,b)=>((b.counts[0]+b.counts[1]+b.counts[2])/b.runs)-((a.counts[0]+a.counts[1]+a.counts[2])/a.runs)||a.boat-b.boat);
    summary.textContent='参考比較（直近走数ベース）：1着率トップ '+sortedByFirst[0].boat+'号艇 ／ 3連対率トップ '+sortedByTop3[0].boat+'号艇。枠・相手関係・展示・風などを反映した予想順位ではありません。';
    comparison.appendChild(summary);
+   const officialReady=data.racersVerified===true&&data.statsVerified===true&&data.exhibitionVerified===true&&data.startVerified===true&&Array.isArray(data.statsByBoat)&&data.statsByBoat.length===6&&Array.isArray(data.exhibitionByBoat)&&data.exhibitionByBoat.length===6&&Array.isArray(data.startByCourse)&&data.startByCourse.length===6;
+   if(officialReady){
+    const stats=new Map(data.statsByBoat.map(x=>[x.boat,x]));
+    const exhibitions=new Map(data.exhibitionByBoat.map(x=>[x.boat,x]));
+    const starts=new Map(data.startByCourse.map(x=>[x.boat,x]));
+    const complete=makulabo.last50ByBoat.every(row=>{
+     const stat=stats.get(row.boat),ex=exhibitions.get(row.boat),st=starts.get(row.boat);
+     return stat&&ex&&st&&Number.isFinite(stat.nationwide?.winRate)&&Number.isFinite(stat.motor?.secondPlaceRate)&&Number.isFinite(ex.exhibitionTime)&&Number.isInteger(st.course)&&typeof st.startTiming==='number'&&Number.isFinite(st.startTiming);
+    });
+    if(complete){
+     const rows=makulabo.last50ByBoat.map(row=>({
+      boat:row.boat,
+      win:stats.get(row.boat).nationwide.winRate,
+      motor:stats.get(row.boat).motor.secondPlaceRate,
+      time:exhibitions.get(row.boat).exhibitionTime,
+      st:starts.get(row.boat).startTiming,
+      top3:(row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100
+     }));
+     const rank=(key,ascending=false)=>{
+      const ordered=rows.slice().sort((a,b)=>(ascending?a[key]-b[key]:b[key]-a[key])||a.boat-b.boat);
+      return new Map(ordered.map((row,index)=>[row.boat,6-index]));
+     };
+     const factors=[['win',false],['motor',false],['time',true],['st',true],['top3',false]].map(([key,ascending])=>rank(key,ascending));
+     const heading=document.createElement('h3');heading.textContent='実験的な5指標比較（予想ではありません）';comparison.appendChild(heading);
+     const note=document.createElement('p');note.textContent='全国勝率・モーター2連率・展示タイム・展示ST・直近3連対率を各6〜1点の同順位なし順位点で合計（最大30点）。同値は艇番順。枠有利、進入変動、風、波、オッズ、相手関係は未反映。的中率や回収率の検証前につき買い目には使わないでください。';comparison.appendChild(note);
+     const table=document.createElement('table');table.style.cssText='border-collapse:collapse;font-size:13px';
+     const header=document.createElement('tr');['艇','比較点（30点満点）'].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border:1px solid #cbd5e1;padding:5px';header.appendChild(th)});table.appendChild(header);
+     rows.slice().sort((a,b)=>a.boat-b.boat).forEach(row=>{
+      const tr=document.createElement('tr');[row.boat,factors.reduce((sum,map)=>sum+map.get(row.boat),0)].forEach(value=>{const td=document.createElement('td');td.textContent=String(value);td.style.cssText='border:1px solid #cbd5e1;padding:5px;text-align:center';tr.appendChild(td)});table.appendChild(tr);
+     });comparison.appendChild(table);
+    }
+   }
    makulabo.last50ByBoat.slice().sort((a,b)=>a.boat-b.boat).forEach(row=>{const tr=document.createElement('tr');[row.boat,row.name,...row.counts,row.runs,row.average,(row.counts[0]/row.runs*100).toFixed(1)+'%',((row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100).toFixed(1)+'%'].forEach(value=>{const td=document.createElement('td');td.textContent=String(value);td.style.cssText='border:1px solid #cbd5e1;padding:4px;text-align:center';tr.appendChild(td)});table.appendChild(tr)});comparison.appendChild(table);
   }
  }catch{if(checkVersion===raceDataCheckVersion&&date===document.getElementById('date').value.trim()&&venue===document.getElementById('venue').value.trim()&&race===document.getElementById('race').value.trim())status.textContent='通信エラー：データの充足状況は未確認です'}finally{button.disabled=false}
