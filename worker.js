@@ -50,11 +50,17 @@ if (u.pathname === '/api/makulabo/screenshot-review') {
     boat:row.boat,racerId:row.racerId,sampleSize:row.sampleSize,
     finishCounts:[...row.finishCounts]
   })).sort((a,b)=>a.boat-b.boat);
+  const official=await fetchOfficialRacers(date,venue,race);
+  const identityVerified=official.verified===true&&normalized.every((row,i)=>
+    row.boat===official.racers[i].boat&&row.racerId===official.racers[i].racerId);
   return reply(request,{
-    status:'awaiting_official_identity_match',source:'manually_reviewed_screenshot',
-    date,venue,race,rows:normalized,
-    identityVerified:false,makulaboLast50Verified:false,dataReadyForPrediction:false,
-    note:'Transcribed screenshot values only; compare racer IDs with official entry list before use'
+    status:identityVerified?'official_identity_matched':'awaiting_official_identity_match',
+    source:'manually_reviewed_screenshot',date,venue,race,
+    rows:identityVerified?normalized:[],
+    identityVerified,makulaboLast50Verified:false,dataReadyForPrediction:false,
+    note:identityVerified
+      ?'Official racer IDs matched; screenshot values remain manually transcribed and unverified'
+      :'Official racer IDs unavailable or mismatched; screenshot values withheld'
   });
 }
 if (u.pathname === '/api/official/race-data') {
