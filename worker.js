@@ -707,7 +707,7 @@ if (u.pathname === '/api/official/race-data') {
       const res=await fetch(beforeUrl.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(10000)});
       if(!res.ok){beforeFailureReason='official_beforeinfo_http_'+res.status;return null;}
       const contentType=res.headers.get('content-type')||'';
-      if(contentType&&!/text\\/html|application\\/xhtml\\+xml/i.test(contentType)){beforeFailureReason='official_beforeinfo_content_type';return null;}
+      if(contentType&&!/text\/html|application\/xhtml\+xml/i.test(contentType)){beforeFailureReason='official_beforeinfo_content_type';return null;}
       const html=await res.text();
       if(html.length>1000000){beforeFailureReason='official_beforeinfo_too_large';return null;}
       return html;
