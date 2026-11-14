@@ -119,4 +119,25 @@ for (const [label,url] of targets) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
   }
 }
+
+const beforeUrl='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno=1&jcd=02&hd=20261109';
+try {
+  const response=await fetch(beforeUrl,{redirect:'follow',signal:AbortSignal.timeout(20000),headers:{Accept:'text/html'}});
+  const body=await response.text();
+  const plain=body.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
+  const headings=[...body.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)]
+    .map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean).slice(0,45);
+  const rows=[...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
+  const rowSamples=rows.filter(m=>/展示|進入|風|ST|タイム|[１-６]/.test(m[1]))
+    .slice(0,12).map(m=>[...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
+      .map(c=>c[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,70)).slice(0,14));
+  console.log(JSON.stringify({source:'official_beforeinfo',status:response.status,finalUrl:response.url,
+    title:body.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim()||'',
+    htmlLength:body.length,tableCount:(body.match(/<table\b/gi)||[]).length,
+    headings,rowSamples,keywords:{
+      exhibition:plain.includes('展示タイム'),start:plain.includes('スタート展示'),
+      wind:plain.includes('風速'),entry:plain.includes('進入'),noData:plain.includes('データがありません')
+    }}));
+} catch(e){console.log(JSON.stringify({source:'official_beforeinfo',error:String(e?.message||e)}));}
+
 console.log('Diagnostics only: no login bypass, no page contents stored, no deployment');
