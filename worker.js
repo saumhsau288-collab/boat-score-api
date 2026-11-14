@@ -124,6 +124,7 @@ const htmlLength = html.length;
       const hasHeatmapHeading = /枠番別ヒートマップ/.test(plainText);
       const accessRestricted = /ログイン|会員登録|有料会員|新規登録/.test(plainText) && !hasHeatmapHeading;
       if (accessRestricted) return reply(request,{status:'unavailable',reason:'access_restricted_or_login_required',source, dataReadyForPrediction:false, last50Verified:false});
+      if (/ヒートマップ\s*読み込み中/.test(plainText) && !/<table\b/i.test(html)) return reply(request,{status:'unavailable',reason:'heatmap_requires_client_side_rendering',source,htmlLength,dataReadyForPrediction:false,last50Verified:false,last50ByBoat:[]});
       if (!hasHeatmapHeading) return reply(request,{status:'unavailable',reason:'heatmap_not_present_in_response',source,htmlLength,dataReadyForPrediction:false,last50Verified:false});
       if (html.length>1_000_000) return reply(request,{error:'Response too large'},502);
      const officialRacers = await fetchOfficialRacers(date, venue, race);
