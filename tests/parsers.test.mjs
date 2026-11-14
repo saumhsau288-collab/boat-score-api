@@ -188,6 +188,10 @@ assert.match(screenshotHtml,/id="checkRaceData"/);
 assert.match(screenshotHtml,/id="raceDataStatus"/);
 assert.ok(screenshotHtml.includes("document.getElementById('last50Comparison').replaceChildren()"));
 assert.ok(screenshotHtml.includes('公式データ・6艇比較'));
+assert.ok(screenshotHtml.includes('水面気象・確認状況'));
+assert.ok(screenshotHtml.includes("data.weatherVerified===true?data.weather:null"));
+assert.ok(screenshotHtml.includes('風向は公式データから確認できるまで未確認'));
+
 assert.ok(screenshotHtml.includes('モーター2連率'));
 assert.ok(screenshotHtml.includes("'1着率','3連対率'"));
 assert.ok(screenshotHtml.includes('row.counts[0]/row.runs*100'));
