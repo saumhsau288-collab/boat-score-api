@@ -21,6 +21,38 @@ if (u.pathname === '/api/racers/test') {
   });
 }
 
+if (u.pathname === '/tools/makulabo-screenshot') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const html=String.raw`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boat Score 2 | 画像確認</title><style>body{font-family:system-ui,sans-serif;max-width:650px;margin:20px auto;padding:0 14px;color:#172033}label{display:block;margin:12px 0}input{font-size:16px;max-width:100%;padding:8px}input[type=number]{width:68px}img{max-width:100%;max-height:55vh;object-fit:contain}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #ddd;padding:5px}button{font-size:16px;padding:12px;margin:15px 0}small{color:#555}</style></head>
+<body><h1>Boat Score 2：まくらぼ画像確認</h1>
+<p>画像はこの端末内で表示します。自動OCRは未実装です。画像はサーバーへ送信しません。</p>
+<label>スクリーンショットを選択 <input id="photo" type="file" accept="image/*"></label><img id="preview" alt="選択した画像のプレビュー" hidden>
+<label>日付（YYYYMMDD） <input id="date" inputmode="numeric" maxlength="8" placeholder="20261114"></label>
+<label>競艇場番号（1〜24） <input id="venue" type="number" min="1" max="24"></label>
+<label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
+<p>画像を見ながら登録番号・走数・1〜6着回数を入力してください。6艇すべて必要です。</p>
+<div style="overflow-x:auto"><table><thead><tr><th>艇</th><th>登録番号</th><th>走数</th><th>1着</th><th>2着</th><th>3着</th><th>4着</th><th>5着</th><th>6着</th></tr></thead><tbody id="rows"></tbody></table></div>
+<button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+<small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
+<script>
+const rows=document.getElementById('rows');
+for(let boat=1;boat<=6;boat++){const tr=document.createElement('tr');tr.innerHTML='<th>'+boat+'</th>'+Array.from({length:8},(_,i)=>'<td><input aria-label="'+boat+'号艇 '+(i===0?'登録番号':i===1?'走数':i-1+'着')+'" data-boat="'+boat+'" data-index="'+i+'" type="'+(i===0?'text':'number')+'" '+(i===0?'inputmode="numeric" maxlength="4"':'min="0" max="50"')+' required></td>').join('');rows.appendChild(tr)}
+let objectUrl;
+document.getElementById('photo').addEventListener('change',e=>{if(objectUrl)URL.revokeObjectURL(objectUrl);const file=e.target.files?.[0];const img=document.getElementById('preview');if(file&&file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);img.src=objectUrl;img.hidden=false}else{img.hidden=true;img.removeAttribute('src')}});
+document.getElementById('check').addEventListener('click',async()=>{
+ const out=document.getElementById('result');out.textContent='照合中…';
+ try{
+ const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
+ const data=Array.from({length:6},(_,i)=>{const fields=[...rows.querySelectorAll('input[data-boat="'+(i+1)+'"]')];return {boat:i+1,racerId:fields[0].value.trim(),sampleSize:Number(fields[1].value),finishCounts:fields.slice(2).map(x=>Number(x.value))}});
+ if(!/^[0-9]{8}$/.test(date)||data.some(r=>!/^[0-9]{4}$/.test(r.racerId))||[...rows.querySelectorAll('input')].some(x=>!x.value.trim()))throw Error('入力漏れがあります');
+ const response=await fetch('/api/makulabo/screenshot-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,venue,race,rows:data})});
+ const result=await response.json();out.textContent=result.identityVerified?'公式選手番号との一致を確認しました。画像の数値は未検証です。':(result.error||'公式情報との一致を確認できませんでした。');
+ }catch(error){out.textContent=String(error.message||error)}
+});
+</script></body></html>`;
+  return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; img-src blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'"}});
+}
 if (u.pathname === '/api/makulabo/screenshot-review') {
   if(request.method!=='POST')return reply(request,{error:'Method not allowed'},405);
   const type=request.headers.get('content-type')||'';
