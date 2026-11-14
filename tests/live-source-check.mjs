@@ -229,4 +229,19 @@ try {
     }}));
 } catch(e){console.log(JSON.stringify({source:'official_beforeinfo',error:String(e?.message||e)}));}
 
+const resultUrl='https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=02&hd=20261109';
+try {
+  const response=await fetch(resultUrl,{signal:AbortSignal.timeout(20000),headers:{Accept:'text/html'}});
+  const body=await response.text();
+  const {readFileSync}=await import('node:fs');
+  const vm=await import('node:vm');
+  const source=readFileSync('worker.js','utf8').replace('export default {','const workerExport = {');
+  const ctx=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:()=>{throw Error('No network in parser')}});
+  vm.runInContext(source,ctx,{filename:'worker.js'});
+  const parsed=vm.runInContext('parseOfficialFinishOrder',ctx)(body);
+  const tables=[...body.matchAll(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/gi)];
+  const headers=tables.map(m=>[...m[0].matchAll(/<th\\b[^>]*>([\\s\\S]*?)<\\/th>/gi)].map(x=>x[1].replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim()).slice(0,14));
+  console.log(JSON.stringify({source:'official_result',status:response.status,htmlLength:body.length,tableCount:tables.length,tableHeaders:headers,parserVerified:parsed.verified,parserReason:parsed.reason,finishOrder:parsed.verified?parsed.finishOrder:[]}));
+}catch(error){console.log(JSON.stringify({source:'official_result',error:String(error?.message||error)}));}
+
 console.log('Diagnostics only: no login bypass, no page contents stored, no deployment');
