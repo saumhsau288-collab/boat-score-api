@@ -196,6 +196,10 @@ assert.ok(screenshotHtml.includes('枠・相手関係・展示・風などを反
 assert.ok(screenshotHtml.includes('const sortedByFirst='));
 assert.ok(screenshotHtml.includes('const sortedByTop3='));
 assert.ok(screenshotHtml.includes('実験的な5指標比較（予想ではありません）'));
+assert.ok(screenshotHtml.includes('同値は同点順位の平均点を付与'));
+assert.ok(screenshotHtml.includes('ordered[end][key]===ordered[i][key]'));
+assert.ok(screenshotHtml.includes('points.set(ordered[j].boat,averagePoints)'));
+
 assert.ok(screenshotHtml.includes('data.statsVerified===true&&data.exhibitionVerified===true&&data.startVerified===true'));
 assert.ok(screenshotHtml.includes('買い目には使わないでください'));
 assert.ok(screenshotHtml.includes("['win',false],['motor',false],['time',true],['st',true],['top3',false]"));
