@@ -35,6 +35,37 @@ if (u.pathname === '/api/official/schedule') {
   }catch{return reply(request,{date,verified:false,venues:[],source,reason:'Official schedule request failed'})}
 }
 
+if (u.pathname === '/api/daily/national-screen') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'';
+  if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
+  // Never infer an official nationwide schedule from incomplete venue links.
+  // Explicit venue selection makes the scope auditable and avoids labeling absent data as closed.
+  const raw=u.searchParams.get('venues')||'';
+  const venues=[...new Set(raw.split(',').filter(Boolean).map(Number))];
+  if(!venues.length||venues.length>24||venues.some(v=>!Number.isInteger(v)||v<1||v>24))
+    return reply(request,{error:'Provide verified venue codes as comma-separated venues=1,2,... (1-24)'},400);
+  const records=[];
+  for(const venue of venues){
+    for(let start=1;start<=12;start+=3){
+      const batch=await Promise.all([start,start+1,start+2].map(async race=>{
+        const official=await fetchOfficialRacers(date,venue,race);
+        return buildMorningRaceInputs(date,venue,race,official);
+      }));
+      records.push(...batch);
+    }
+  }
+  const eligible=records.filter(x=>x.ready===true);
+  const categories=classifyDailyRaceCandidates(eligible);
+  const picksByRace=eligible.map(x=>({venue:x.venue,race:x.race,
+    picks:rankTrifectaCandidates(x.rankedScores)}));
+  return reply(request,{date,venuesRequested:venues,scanned:records.length,
+    eligible:eligible.length,held:records.length-eligible.length,categories,
+    picksByRace,officialScheduleVerified:false,nationwideComplete:false,
+    asOf:'request_time_not_0800_snapshot',
+    notice:'On-demand screening of explicitly supplied venues only. Not an automatic 08:00 nationwide run. Rankings and trifectas are unvalidated heuristic candidates; missing last50, course, exhibition, start and weather.'});
+}
+
 if (u.pathname === '/api/daily/venue-screen') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue'));
