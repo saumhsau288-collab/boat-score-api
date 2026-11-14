@@ -28,6 +28,7 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <body><h1>Boat Score 2：まくらぼ画像確認</h1>
 <p>画像はこの端末内で表示します。自動OCRは未実装です。画像はサーバーへ送信しません。</p>
 <label>スクリーンショットを選択 <input id="photo" type="file" accept="image/*"></label><img id="preview" alt="選択した画像のプレビュー" hidden>
+<div><button id="zoomOut" type="button">縮小 −</button><button id="zoomIn" type="button">拡大 ＋</button><button id="zoomReset" type="button">元に戻す</button></div><div id="imageViewport" style="overflow:auto;max-height:60vh;touch-action:pan-x pan-y"><img id="zoomPreview" alt="拡大画像" hidden style="max-width:none;width:100%;height:auto"></div>
 <label>日付（YYYYMMDD） <input id="date" inputmode="numeric" maxlength="8" placeholder="20261114"></label>
 <label>競艇場番号（1〜24） <input id="venue" type="number" min="1" max="24"></label>
 <label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
@@ -38,8 +39,15 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <script>
 const rows=document.getElementById('rows');
 for(let boat=1;boat<=6;boat++){const tr=document.createElement('tr');tr.innerHTML='<th>'+boat+'</th>'+Array.from({length:8},(_,i)=>'<td><input aria-label="'+boat+'号艇 '+(i===0?'登録番号':i===1?'走数':i-1+'着')+'" data-boat="'+boat+'" data-index="'+i+'" type="'+(i===0?'text':'number')+'" '+(i===0?'inputmode="numeric" maxlength="4"':'min="0" max="50"')+' required></td>').join('');rows.appendChild(tr)}
+let zoom=1;
+const zoomPreview=document.getElementById('zoomPreview');
+const viewport=document.getElementById('imageViewport');
+function applyZoom(){zoomPreview.style.width=(zoom*100)+'%'}
+document.getElementById('zoomIn').addEventListener('click',()=>{zoom=Math.min(4,Math.round((zoom+0.25)*100)/100);applyZoom()});
+document.getElementById('zoomOut').addEventListener('click',()=>{zoom=Math.max(1,Math.round((zoom-0.25)*100)/100);applyZoom()});
+document.getElementById('zoomReset').addEventListener('click',()=>{zoom=1;applyZoom();viewport.scrollTo(0,0)});
 let objectUrl;
-document.getElementById('photo').addEventListener('change',e=>{if(objectUrl)URL.revokeObjectURL(objectUrl);const file=e.target.files?.[0];const img=document.getElementById('preview');if(file&&file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);img.src=objectUrl;img.hidden=false}else{img.hidden=true;img.removeAttribute('src')}});
+document.getElementById('photo').addEventListener('change',e=>{if(objectUrl)URL.revokeObjectURL(objectUrl);const file=e.target.files?.[0];const img=document.getElementById('preview');if(file&&file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);img.src=objectUrl;img.hidden=false;zoomPreview.src=objectUrl;zoomPreview.hidden=false;zoom=1;applyZoom()}else{img.hidden=true;img.removeAttribute('src');zoomPreview.hidden=true;zoomPreview.removeAttribute('src')}});
 document.getElementById('check').addEventListener('click',async()=>{
  const out=document.getElementById('result');out.textContent='照合中…';
  try{
