@@ -324,7 +324,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      audit.textContent='過去レース照合用記録：日付 '+date+'／場コード '+venue+'／'+race+'R／5指標 '+orderedBoats+'／候補 '+scenario.textContent+'／確定着順 未照合';
      comparison.appendChild(audit);
      const auditNote=document.createElement('p');
-     auditNote.textContent='この記録は画面表示のみで保存されません。確定着順・取得時刻・オッズとの照合は未実施です。';
+     auditNote.textContent='この記録は画面表示のみで保存されません。下のボタンで確定着順を事後照合できますが、分析データの取得時刻・オッズ・締切前時点の保存がないため、過去予想の的中率として集計できません。';
      comparison.appendChild(auditNote);
      const resultButton=document.createElement('button');
      resultButton.type='button';
@@ -345,7 +345,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
        const topScore=totals[0].total;
        const topBoats=totals.filter(row=>row.total===topScore).map(row=>row.boat);
        const matched=topBoats.includes(winner);
-       resultStatus.textContent='公式確定着順：'+result.finishOrder.join('-')+' ／ 5指標首位艇の1着一致：'+(matched?'一致':'不一致')+'（首位同点 '+topBoats.length+'艇）。これは単一レースの事後照合であり、的中率ではありません。';
+       resultStatus.textContent='公式確定着順：'+result.finishOrder.join('-')+' ／ 5指標首位艇の1着一致：'+(matched?'一致':'不一致')+'（首位同点 '+topBoats.length+'艇）。これは単一レースの事後照合であり、事前予想の的中率ではありません。取得時点が締切前だった証拠も保存していません。';
       }catch{resultStatus.textContent='通信エラー：確定着順は未照合です。'}
       finally{resultButton.disabled=false}
      });
