@@ -87,6 +87,27 @@ for (const [label,url] of targets) {
       }));
       summary.clientBundleInspection=inspected.filter(x=>x.keywordCount||x.error||x.status!==200);
     }
+    if(label==='makulabo'){
+      const candidateUrl=new URL('/api/racelist/01/1?hd=20261113',response.url);
+      try{
+        const candidateResponse=await fetch(candidateUrl,{signal:AbortSignal.timeout(10000),headers:{Accept:'application/json'}});
+        const candidateType=candidateResponse.headers.get('content-type')||'';
+        const candidateText=await candidateResponse.text();
+        let payload=null;
+        if(candidateType.includes('json'))try{payload=JSON.parse(candidateText)}catch{}
+        const race=payload?.race??payload;
+        const racerRows=Array.isArray(race?.racers)?race.racers:null;
+        summary.racelistApiProbe={
+          status:candidateResponse.status,contentType:candidateType.split(';')[0],bodyLength:candidateText.length,
+          topLevelKeys:payload&&typeof payload==='object'?Object.keys(payload).slice(0,35):[],
+          raceKeys:race&&typeof race==='object'?Object.keys(race).slice(0,35):[],
+          racerCount:racerRows?.length??null,
+          racerFieldNames:racerRows?.[0]&&typeof racerRows[0]==='object'?Object.keys(racerRows[0]).slice(0,45):[],
+          last50CandidateFields:racerRows?.[0]&&typeof racerRows[0]==='object'?Object.keys(racerRows[0]).filter(k=>/50|recent|history|course|lane|heat|race/i.test(k)).slice(0,25):[],
+          errorCode:payload?.error?.code??null
+        };
+      }catch(error){summary.racelistApiProbe={error:String(error).slice(0,150)}}
+    }
     summary.visibleRaceDataIndicators={
       racerNumberMatches:(text.match(/\b[0-9]{4}\b/g)||[]).length,
       heatmapDataRows:(body.match(/heatmap[-_]?row|heatmap[-_]?data/gi)||[]).length
