@@ -223,11 +223,19 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      }));
      const rank=(key,ascending=false)=>{
       const ordered=rows.slice().sort((a,b)=>(ascending?a[key]-b[key]:b[key]-a[key])||a.boat-b.boat);
-      return new Map(ordered.map((row,index)=>[row.boat,6-index]));
+      const points=new Map();
+      for(let i=0;i<ordered.length;){
+       let end=i+1;
+       while(end<ordered.length&&ordered[end][key]===ordered[i][key])end++;
+       const averagePoints=( (6-i)+(6-(end-1)) )/2;
+       for(let j=i;j<end;j++)points.set(ordered[j].boat,averagePoints);
+       i=end;
+      }
+      return points;
      };
      const factors=[['win',false],['motor',false],['time',true],['st',true],['top3',false]].map(([key,ascending])=>rank(key,ascending));
      const heading=document.createElement('h3');heading.textContent='実験的な5指標比較（予想ではありません）';comparison.appendChild(heading);
-     const note=document.createElement('p');note.textContent='全国勝率・モーター2連率・展示タイム・展示ST・直近3連対率を各6〜1点の同順位なし順位点で合計（最大30点）。同値は艇番順。枠有利、進入変動、風、波、オッズ、相手関係は未反映。的中率や回収率の検証前につき買い目には使わないでください。';comparison.appendChild(note);
+     const note=document.createElement('p');note.textContent='全国勝率・モーター2連率・展示タイム・展示ST・直近3連対率を各6〜1点の順位点で合計（最大30点）。同値は同点順位の平均点を付与。枠有利、進入変動、風、波、オッズ、相手関係は未反映。的中率や回収率の検証前につき買い目には使わないでください。';comparison.appendChild(note);
      const table=document.createElement('table');table.style.cssText='border-collapse:collapse;font-size:13px';
      const header=document.createElement('tr');['艇','比較点（30点満点）'].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border:1px solid #cbd5e1;padding:5px';header.appendChild(th)});table.appendChild(header);
      rows.slice().sort((a,b)=>a.boat-b.boat).forEach(row=>{
