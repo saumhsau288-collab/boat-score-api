@@ -251,7 +251,7 @@ const scheduleUrl='https://www.boatrace.jp/owpc/pc/race/index?hd=20261113';
 let scheduleFetchCount=0;
 const scheduleCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,fetch:async url=>{
   assert.equal(String(url),scheduleUrl);scheduleFetchCount++;
-  return new Response('<a href="/owpc/pc/race/racelist?jcd=16&amp;hd=20261113">児島</a><a href="/owpc/pc/race/racelist?jcd=01&amp;hd=20261113">桐生</a><a href="/owpc/pc/race/racelist?jcd=16&amp;hd=20261113">重複</a><a href="/owpc/pc/race/racelist?jcd=24&amp;hd=20261112">別日</a>');
+  return new Response('<h3>11月13日のレース情報</h3><a href="/owpc/pc/race/racelist?jcd=16&amp;hd=20261113">児島</a><a href="/owpc/pc/race/racelist?jcd=01&amp;hd=20261113">桐生</a><a href="/owpc/pc/race/racelist?jcd=16&amp;hd=20261113">重複</a><a href="/owpc/pc/race/racelist?jcd=24&amp;hd=20261112">別日</a>');
 }});
 vm.runInContext(source,scheduleCtx,{filename:'worker.js'});
 const scheduleWorker=vm.runInContext('workerExport',scheduleCtx);
