@@ -40,6 +40,15 @@ for (const [label,url] of targets) {
       textLabels:[...new Set(svgBlocks.flatMap(m=>[...m[0].matchAll(/<text\b[^>]*>([\s\S]*?)<\/text>/gi)].map(x=>x[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean)))].slice(0,25)
     };
     summary.hasNoDataNotice=/データがありません/.test(text);
+    const scriptSources=[...body.matchAll(/<script\b[^>]*src=["']([^"']+)["']/gi)].map(m=>m[1]);
+    const relevantSources=scriptSources.filter(src=>/data|race|heat|chart|main|app/i.test(src)).slice(0,12);
+    summary.renderingClues={
+      svgWithAccessibleLabel:svgBlocks.filter(m=>/aria-label=|<title\b/i.test(m[0])).length,
+      scriptsWithSrc:scriptSources.length,
+      relevantScriptPaths:relevantSources.map(src=>{try{return new URL(src,response.url).pathname.slice(0,150)}catch{return 'unparsed'}}),
+      htmlContainsJsonData:body.includes('application/ld+json'),
+      dataAttributes:(body.match(/\bdata-[a-z-]+=/gi)||[]).length
+    };
     console.log(JSON.stringify(summary));
   } catch (e) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
