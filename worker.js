@@ -21,6 +21,42 @@ if (u.pathname === '/api/racers/test') {
   });
 }
 
+if (u.pathname === '/api/makulabo/screenshot-review') {
+  if(request.method!=='POST')return reply(request,{error:'Method not allowed'},405);
+  const type=request.headers.get('content-type')||'';
+  if(!type.toLowerCase().startsWith('application/json'))return reply(request,{error:'JSON required'},415);
+  let input;
+  try{
+    const raw=await request.text();
+    if(raw.length>16000)return reply(request,{error:'Payload too large'},413);
+    input=JSON.parse(raw);
+  }catch{return reply(request,{error:'Invalid JSON'},400)}
+  const date=input?.date,venue=input?.venue,race=input?.race,rows=input?.rows;
+  if(typeof date!=='string'||!/^20\d{6}$/.test(date)||
+    !Number.isInteger(venue)||venue<1||venue>24||
+    !Number.isInteger(race)||race<1||race>12||
+    !Array.isArray(rows)||rows.length!==6)
+    return reply(request,{error:'Expected date, venue, race and exactly six reviewed rows'},400);
+  const valid=rows.every(row=>row&&Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&
+    typeof row.racerId==='string'&&/^\d{4}$/.test(row.racerId)&&
+    Number.isInteger(row.sampleSize)&&row.sampleSize>=1&&row.sampleSize<=50&&
+    Array.isArray(row.finishCounts)&&row.finishCounts.length===6&&
+    row.finishCounts.every(n=>Number.isInteger(n)&&n>=0&&n<=50)&&
+    row.finishCounts.reduce((a,b)=>a+b,0)===row.sampleSize);
+  if(!valid||new Set(rows.map(r=>r.boat)).size!==6||
+    new Set(rows.map(r=>r.racerId)).size!==6)
+    return reply(request,{error:'Invalid boat/racer IDs or finish counts'},400);
+  const normalized=rows.map(row=>({
+    boat:row.boat,racerId:row.racerId,sampleSize:row.sampleSize,
+    finishCounts:[...row.finishCounts]
+  })).sort((a,b)=>a.boat-b.boat);
+  return reply(request,{
+    status:'awaiting_official_identity_match',source:'manually_reviewed_screenshot',
+    date,venue,race,rows:normalized,
+    identityVerified:false,makulaboLast50Verified:false,dataReadyForPrediction:false,
+    note:'Transcribed screenshot values only; compare racer IDs with official entry list before use'
+  });
+}
 if (u.pathname === '/api/official/race-data') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'',venue=u.searchParams.get('venue')||'',race=u.searchParams.get('race')||'';
