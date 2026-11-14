@@ -92,7 +92,10 @@ if (u.pathname === '/api/daily/national-screen') {
   // Never infer an official nationwide schedule from incomplete venue links.
   // Explicit venue selection makes the scope auditable and avoids labeling absent data as closed.
   const raw=u.searchParams.get('venues')||'';
-  const venues=[...new Set(raw.split(',').filter(Boolean).map(Number))];
+  const tokens=raw.split(',').map(x=>x.trim());
+  if(tokens.some(x=>!/^([1-9]|1[0-9]|2[0-4])$/.test(x)))
+    return reply(request,{error:'Invalid venue codes; use comma-separated integers 1-24'},400);
+  const venues=[...new Set(tokens.map(Number))];
   if(!venues.length||venues.length>24||venues.some(v=>!Number.isInteger(v)||v<1||v>24))
     return reply(request,{error:'Provide verified venue codes as comma-separated venues=1,2,... (1-24)'},400);
   const records=[];
@@ -1180,7 +1183,7 @@ function classifyDailyRaceCandidates(races) {
   for(const category of Object.keys(categories))
     categories[category].sort((a,b)=>b.score-a.score||a.venue-b.venue||a.race-b.race);
   return {main:categories.main.slice(0,20),upset:categories.upset.slice(0,20),chaos:categories.chaos.slice(0,20),held,
-    method:'unvalidated_five_factor_screening',verifiedProbability:false};
+    method:'unvalidated_two_factor_screening',verifiedProbability:false};
 }
 
 function summarizeHistoricalOuterFollow(results) {
@@ -1215,7 +1218,7 @@ function rankTrifectaCandidates(rankedScores) {
   const main=ordered.slice(0,6).map(x=>x.boats);
   const used=new Set(main.map(x=>x.join('-')));
   const upset=ordered.filter(x=>x.boats[0]>=4&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
-  return {ready:main.length===6&&upset.length===6,main,upset,reason:null,method:'five_factor_heuristic_unvalidated'};
+  return {ready:main.length===6&&upset.length===6,main,upset,reason:null,method:'two_factor_heuristic_unvalidated'};
 }
 
 function parseOfficialFinishOrder(html) {
