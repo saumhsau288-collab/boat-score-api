@@ -47,3 +47,18 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@4 deploy worker.js --name boat-score-2-preview --compatibility-date 2026-11-01
+      - name: Verify deployed preview version
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://boat-score-2-preview.saumh-sau-288.workers.dev/api/version"
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent --show-error --max-time 15 "$URL" -o version.json &&
+              node -e "const d=require('./version.json');if(d.app!=='Boat Score 2 preview'||d.build!=='20261115-auto-preview-check'||d.sourceBranch!=='boat-score-2-data-fix-20261114')process.exit(1)"; then
+              echo "Verified isolated preview build and source branch"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Preview version endpoint does not match expected Boat Score 2 development build"
+          exit 1
