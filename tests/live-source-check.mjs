@@ -60,6 +60,17 @@ for (const [label,url] of targets) {
     };
     const heatPos=text.indexOf('ヒートマップ');
     summary.heatmapContext=heatPos>=0?text.slice(Math.max(0,heatPos-100),heatPos+180).replace(/\s+/g,' ').trim():null;
+    if(label==='makulabo'){
+      const scripts=[...body.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+      summary.clientDataClues={
+        scriptPaths:scripts.map(m=>m[1].match(/\bsrc=["']([^"']+)["']/i)?.[1]).filter(Boolean)
+          .map(src=>{try{return new URL(src,response.url).pathname.slice(0,130)}catch{return 'invalid'}}).slice(0,24),
+        inlineFetchPathHints:[...new Set(scripts.filter(m=>!/\bsrc=/.test(m[1]))
+          .flatMap(m=>[...m[2].matchAll(/(?:fetch\s*\(|axios\.(?:get|post)\s*\()\s*["'`]([^"'`]{1,140})/g)].map(x=>x[1])))].slice(0,15),
+        inlineScriptCount:scripts.filter(m=>!/\bsrc=/.test(m[1])).length,
+        scriptTextMentionsHeatmap:scripts.filter(m=>/heatmap|ヒートマップ/i.test(m[2])).length
+      };
+    }
     summary.visibleRaceDataIndicators={
       racerNumberMatches:(text.match(/\b[0-9]{4}\b/g)||[]).length,
       heatmapDataRows:(body.match(/heatmap[-_]?row|heatmap[-_]?data/gi)||[]).length
