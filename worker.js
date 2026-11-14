@@ -35,6 +35,27 @@ if (u.pathname === '/api/official/schedule') {
   }catch{return reply(request,{date,verified:false,venues:[],source,reason:'Official schedule request failed'})}
 }
 
+if (u.pathname === '/api/official/active-venues') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'';
+  if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
+  const checks=[];
+  // A verified six-boat official 1R entry list is evidence of a race being scheduled;
+  // failure to verify is UNKNOWN, never proof of a non-running venue.
+  for(let start=1;start<=24;start+=4){
+    const batch=await Promise.all([start,start+1,start+2,start+3].map(async venue=>{
+      const official=await fetchOfficialRacers(date,venue,1);
+      return {venue,status:official.verified===true?'race1_entry_verified':'unverified',
+        statsVerified:official.statsVerified===true};
+    }));
+    checks.push(...batch);
+  }
+  const verifiedVenues=checks.filter(x=>x.status==='race1_entry_verified').map(x=>x.venue);
+  return reply(request,{date,verifiedVenues,checks,
+    coverage:'official_race1_entry_only',completeScheduleVerified:false,
+    note:'Unverified venues may be closed, not yet published, or inaccessible. Do not label them as non-running.'});
+}
+
 if (u.pathname === '/api/daily/national-screen') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'';
