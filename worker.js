@@ -32,13 +32,31 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <label>日付（YYYYMMDD） <input id="date" inputmode="numeric" maxlength="8" placeholder="20261114"></label>
 <label>競艇場番号（1〜24） <input id="venue" type="number" min="1" max="24"></label>
 <label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
-<p>画像を見ながら登録番号・走数・1〜6着回数を入力してください。6艇すべて必要です。</p>
+<button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p>
 <div style="overflow-x:auto"><table><thead><tr><th>艇</th><th>登録番号</th><th>走数</th><th>1着</th><th>2着</th><th>3着</th><th>4着</th><th>5着</th><th>6着</th></tr></thead><tbody id="rows"></tbody></table></div>
 <button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
 <script>
 const rows=document.getElementById('rows');
 for(let boat=1;boat<=6;boat++){const tr=document.createElement('tr');tr.innerHTML='<th>'+boat+'</th>'+Array.from({length:8},(_,i)=>'<td><input aria-label="'+boat+'号艇 '+(i===0?'登録番号':i===1?'走数':i-1+'着')+'" data-boat="'+boat+'" data-index="'+i+'" type="'+(i===0?'text':'number')+'" '+(i===0?'inputmode="numeric" maxlength="4"':'min="0" max="50"')+' required></td>').join('');rows.appendChild(tr)}
+document.getElementById('fillRacers').addEventListener('click',async()=>{
+ const status=document.getElementById('fillStatus');
+ status.textContent='公式出走表を確認中…';
+ const date=document.getElementById('date').value.trim(),venue=document.getElementById('venue').value.trim(),race=document.getElementById('race').value.trim();
+ if(!/^20[0-9]{6}$/.test(date)||!/^([1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^([1-9]|1[0-2])$/.test(race)){status.textContent='日付・競艇場・レース番号を確認してください';return}
+ try{
+  const params=new URLSearchParams({date,venue,race});
+  const response=await fetch('/api/official/racers?'+params);
+  const payload=await response.json();
+  const racers=payload.racersByBoat;
+  if(!response.ok||payload.racersByBoatVerified!==true||!Array.isArray(racers)||racers.length!==6||
+    racers.some((r,i)=>r.boat!==i+1||!/^[0-9]{4}$/.test(r.racerId))){
+    status.textContent='公式選手番号を確認できませんでした。手入力で確認してください';return
+  }
+  racers.forEach((r,i)=>{rows.querySelector('input[data-boat="'+(i+1)+'"][data-index="0"]').value=r.racerId});
+  status.textContent='公式の6艇分の登録番号を入力しました。画像と照合してください';
+ }catch{status.textContent='通信に失敗しました。後で再試行してください'}
+});
 let zoom=1;
 const zoomPreview=document.getElementById('zoomPreview');
 const viewport=document.getElementById('imageViewport');
