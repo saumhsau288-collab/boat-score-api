@@ -387,8 +387,15 @@ if (u.pathname === '/api/official/race-data') {
     exhibition.rows.every((row,i)=>row.boat===official.racers[i].boat&&normalize(row.name)===normalize(official.racers[i].name));
   const startMatches=official.verified&&start.verified&&start.rows.every(row=>official.racers.some(r=>r.boat===row.boat)) && new Set(start.rows.map(row=>row.course)).size===6;
   const complete=official.verified&&official.statsVerified&&exhibitionMatches&&startMatches&&weather.verified;
+  const missingInputs=[];
+  if(!official.verified)missingInputs.push('racers');
+  if(official.statsVerified!==true)missingInputs.push('stats');
+  if(!exhibitionMatches)missingInputs.push('exhibition');
+  if(!startMatches)missingInputs.push('start');
+  if(weather.verified!==true)missingInputs.push('weather');
+  if(weather.windDirectionVerified!==true)missingInputs.push('windDirection');
   return reply(request,{
-    status:complete?'official_sources_verified':'partial',
+    status:complete?'official_sources_verified':'partial',missingInputs,
     racersVerified:official.verified,statsVerified:official.statsVerified===true,
     exhibitionVerified:exhibitionMatches,startVerified:startMatches,weatherVerified:weather.verified===true,
     racersByBoat:official.verified?official.racers:[],
