@@ -73,6 +73,16 @@ for (const [label,url] of targets) {
       const parsed=vm.runInContext('extractOfficialBoatRows',ctx)(body);
       summary.officialParser={verified:parsed.verified,candidateCount:parsed.candidateCount,boatCount:parsed.racers?.length||0};
     }
+    if(label==='official' && response.ok && !summary.hasNoDataNotice){
+      const rows=[...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
+      summary.officialMarkup={
+        rowCount:rows.length,
+        rowCellCounts:rows.slice(0,12).map(m=>(m[1].match(/<td\b/gi)||[]).length),
+        rowProfileCounts:rows.slice(0,12).map(m=>(m[1].match(/racersearch\/profile/gi)||[]).length),
+        rowClassNames:rows.slice(0,12).map(m=>(m[0].match(/^<tr\b[^>]*class=["']([^"']*)/i)?.[1]||'').slice(0,70)),
+        profileParentTags:[...body.matchAll(/<a\b[^>]*racersearch\/profile[^>]*>/gi)].slice(0,4).map(m=>body.slice(Math.max(0,m.index-250),m.index).match(/<([a-z][\w-]*)\b[^>]*>\s*$/i)?.[1]||'unknown')
+      };
+    }
     console.log(JSON.stringify(summary));
   } catch (e) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
