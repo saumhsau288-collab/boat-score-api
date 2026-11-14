@@ -272,6 +272,14 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      const rankingLine=document.createElement('p');
      rankingLine.textContent='暫定比較順位：'+totals.map(row=>String(1+totals.filter(other=>other.total>row.total).length)+'位 '+String(row.boat)+'号艇 '+String(row.total)+'点').join(' ／ ');
      comparison.appendChild(rankingLine);
+     const movedCourses=rows.filter(row=>row.boat!==row.course).sort((a,b)=>a.boat-b.boat);
+     const courseNotice=document.createElement('p');
+     courseNotice.textContent=movedCourses.length?'展示進入の枠なり変更：'+movedCourses.map(row=>String(row.boat)+'号艇→'+String(row.course)+'コース').join('、')+'。展示進入と本番進入は異なる可能性があります。':'展示進入は枠なり（1〜6コース）。本番進入は未確認です。';
+     comparison.appendChild(courseNotice);
+     const sampleNotice=document.createElement('p');
+     const shortSamples=rows.filter(row=>row.sampleRuns<50).sort((a,b)=>a.boat-b.boat);
+     sampleNotice.textContent=shortSamples.length?'直近50走に満たない艇：'+shortSamples.map(row=>String(row.boat)+'号艇 '+String(row.sampleRuns)+'走').join('、')+'。走数が少ない成績の解釈には注意が必要です。':'直近走数：全艇50走を確認。';
+     comparison.appendChild(sampleNotice);
      const heading=document.createElement('h3');heading.textContent='実験的な5指標比較（予想ではありません）';comparison.appendChild(heading);
      const note=document.createElement('p');note.textContent='暫定比較順位は同点なら同順位です（表示順のみ艇番順）。着順予測・買い目ではありません。全国勝率・モーター2連率・展示タイム・展示ST・直近3連対率を各6〜1点の順位点で合計（最大30点）。同値は同点順位の平均点を付与。展示進入と直近走数は参考表示のみで加点しません。枠有利、進入変動、風、波、オッズ、相手関係は未反映。的中率や回収率の検証前につき買い目には使わないでください。';comparison.appendChild(note);
      const scoreScroll=document.createElement('div');scoreScroll.style.cssText='max-width:100%;overflow-x:auto';
