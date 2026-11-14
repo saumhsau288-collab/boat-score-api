@@ -56,6 +56,35 @@ if (u.pathname === '/api/official/active-venues') {
     note:'Unverified venues may be closed, not yet published, or inaccessible. Do not label them as non-running.'});
 }
 
+if (u.pathname === '/api/daily/verified-venue-screen') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'';
+  const venue=Number(u.searchParams.get('venue'));
+  if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24)
+    return reply(request,{error:'Invalid YYYYMMDD date or venue 1-24'},400);
+  const first=await fetchOfficialRacers(date,venue,1);
+  if(first.verified!==true)return reply(request,{date,venue,verified:false,eligible:0,
+    categories:{main:[],upset:[],chaos:[]},records:[],
+    reason:'official_race1_unverified',scheduleVerified:false});
+  const records=[];
+  for(let start=1;start<=12;start+=3){
+    const batch=await Promise.all([start,start+1,start+2].map(async race=>{
+      const official=race===1?first:await fetchOfficialRacers(date,venue,race);
+      return buildMorningRaceInputs(date,venue,race,official);
+    }));
+    records.push(...batch);
+  }
+  const eligible=records.filter(x=>x.ready===true);
+  const categories=classifyDailyRaceCandidates(eligible);
+  return reply(request,{date,venue,verified:true,verification:'official_1R_six_boat_entry',
+    scanned:12,eligible:eligible.length,held:12-eligible.length,categories,
+    records:records.map((x,i)=>({race:i+1,ready:x.ready,
+      reason:x.reason||null,missingInputs:x.missingInputs||[],
+      picks:x.ready?rankTrifectaCandidates(x.rankedScores):null})),
+    scheduleVerified:false,asOf:'request_time_not_0800_snapshot',
+    note:'One venue only. Provisional heuristic; missing data is not fabricated. No scheduled run or historical validation.'});
+}
+
 if (u.pathname === '/api/daily/national-screen') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'';
