@@ -371,7 +371,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      batchStatus.textContent='未照合（通信が発生します）';
      batchButton.addEventListener('click',async()=>{
       batchButton.disabled=true;
-      let checked=0,matched=0,unmatched=0,held=0,outerChecked=0,outerMatched=0;
+      let checked=0,matched=0,unmatched=0,held=0,outerChecked=0,outerMatched=0,tiedChecked=0,tiedMatched=0;
       const detailRows=[];
       try{
        const records=[];
@@ -389,22 +389,23 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
        for(const row of selected){
         batchStatus.textContent='参考照合中：'+String(checked+held+1)+'／'+selected.length+'件';
         const scores=row.rankedScores;
-        if(!Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x.boat)).size!==6||!scores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))){held++;continue}
+        if(!Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x.boat)).size!==6||!scores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))){held++;detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：保留（保存点数が不正）');continue}
         try{
          const response=await fetch('/api/official/result?'+new URLSearchParams({date:row.date,venue:row.venue,race:row.race}),{signal:AbortSignal.timeout(12000)});
-         if(!response.ok){held++;continue}
+         if(!response.ok){held++;detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：保留（公式取得失敗）');continue}
          const result=await response.json();
-         if(result.verified!==true||!Array.isArray(result.finishOrder)||result.finishOrder.length!==6||new Set(result.finishOrder).size!==6||!result.finishOrder.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){held++;continue}
+         if(result.verified!==true||!Array.isArray(result.finishOrder)||result.finishOrder.length!==6||new Set(result.finishOrder).size!==6||!result.finishOrder.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){held++;detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：保留（公式着順未確認）');continue}
          const best=Math.max(...scores.map(x=>x.score));
          const leaders=scores.filter(x=>x.score===best).map(x=>x.boat);
          const hit=leaders.includes(result.finishOrder[0]);
          checked++;
          if(hit)matched++;else unmatched++;
+         if(leaders.length>1){tiedChecked++;if(hit)tiedMatched++}
          detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：'+(hit?'一致':'不一致')+'／首位'+leaders.join(',')+'号艇／確定'+result.finishOrder.join('-'));
          if(leaders.length===1&&leaders[0]>=4){outerChecked++;if(hit)outerMatched++}
-        }catch{held++}
+        }catch{held++;detailRows.push(String(row.date)+' 場'+String(row.venue)+' '+String(row.race)+'R：保留（通信エラー）')}
        }
-       batchStatus.textContent='参考照合：対象'+selected.length+'件／判定'+checked+'件／一致'+matched+'件／不一致'+unmatched+'件／保留'+held+'件。首位艇1着一致率 '+(checked?(matched/checked*100).toFixed(1)+'%':'算出不可')+'（同点首位を含む）。外枠単独首位 '+outerChecked+'件／一致'+outerMatched+'件'+(outerChecked?'／'+(outerMatched/outerChecked*100).toFixed(1)+'%':'')+'。端末時計・保存時刻は第三者未検証のため、正式な事前予想的中率ではありません。 判定できたレース：'+(detailRows.length?detailRows.join(' ｜ '):'なし');
+       batchStatus.textContent='参考照合：対象'+selected.length+'件／判定'+checked+'件／一致'+matched+'件／不一致'+unmatched+'件／保留'+held+'件。首位艇1着一致率 '+(checked?(matched/checked*100).toFixed(1)+'%':'算出不可')+'（同点首位を含む）。同点首位 '+tiedChecked+'件／一致'+tiedMatched+'件。外枠単独首位 '+outerChecked+'件／一致'+outerMatched+'件'+(outerChecked?'／'+(outerMatched/outerChecked*100).toFixed(1)+'%':'')+'。端末時計・保存時刻は第三者未検証のため、正式な事前予想的中率ではありません。 レース別結果：'+(detailRows.length?detailRows.join(' ｜ '):'なし');
       }catch{batchStatus.textContent='端末の保存記録を読み取れませんでした。'}
       finally{batchButton.disabled=false}
      });
