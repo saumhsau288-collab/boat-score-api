@@ -9,6 +9,24 @@ function cors(request) {
 function reply(request, data, status=200) {
   return new Response(JSON.stringify(data), {status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...cors(request)}});
 }
+// Short-lived per-isolate deduplication reduces repeated official-site traffic.
+// Failures and unverified data are never persisted across requests.
+const verifiedListCache = new Map();
+async function getVerifiedList(key, producer) {
+  const now=Date.now(), prior=verifiedListCache.get(key);
+  if(prior && prior.expires>now)return prior.promise;
+  if(verifiedListCache.size>80)verifiedListCache.clear();
+  const entry={expires:now+90000,promise:null};
+  entry.promise=Promise.resolve().then(producer).then(result=>{
+    // Recheck soon if upstream verification was incomplete.
+    if(!result.checks?.every(c=>c.verified===true || c.status==='race1_entry_verified'))
+      entry.expires=Date.now()+15000;
+    return result;
+  }).catch(error=>{if(verifiedListCache.get(key)===entry)verifiedListCache.delete(key);throw error;});
+  verifiedListCache.set(key,entry);
+  return entry.promise;
+}
+
 export default {
   async fetch(request) {
     const u = new URL(request.url);
@@ -90,7 +108,7 @@ if (u.pathname === '/api/official/active-venues') {
   if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
   // Run independent official 1R checks concurrently rather than waiting for
   // six sequential timeout batches. A failed check is UNKNOWN, not closed.
-  const checks=await Promise.all(Array.from({length:24},(_,i)=>i+1).map(async venue=>{
+  return reply(request,await getVerifiedList('venues:'+date,async()=>{const checks=await Promise.all(Array.from({length:24},(_,i)=>i+1).map(async venue=>{
     try{
       const official=await fetchOfficialRacers(date,venue,1);
       return {venue,status:official.verified===true?'race1_entry_verified':'unverified',
@@ -101,9 +119,9 @@ if (u.pathname === '/api/official/active-venues') {
     }
   }));
   const verifiedVenues=checks.filter(x=>x.status==='race1_entry_verified').map(x=>x.venue);
-  return reply(request,{date,verifiedVenues,checks,
+  return {date,verifiedVenues,checks,
     coverage:'official_race1_entry_only',completeScheduleVerified:false,
-    note:'Unverified venues may be closed, not yet published, or inaccessible. Do not label them as non-running.'});
+    note:'Unverified venues may be closed, not yet published, or inaccessible. Do not label them as non-running.'};}));
 }
 
 if (u.pathname === '/api/official/verified-races') {
@@ -111,15 +129,15 @@ if (u.pathname === '/api/official/verified-races') {
   const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue'));
   if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24)
     return reply(request,{error:'Invalid date or venue'},400);
-  const checks=await Promise.all(Array.from({length:12},(_,i)=>i+1).map(async race=>{
+  return reply(request,await getVerifiedList('races:'+date+':'+venue,async()=>{const checks=await Promise.all(Array.from({length:12},(_,i)=>i+1).map(async race=>{
     try{
       const official=await fetchOfficialRacers(date,venue,race);
       return {race,verified:official.verified===true};
     }catch{return {race,verified:false};}
   }));
-  return reply(request,{date,venue,verifiedRaces:checks.filter(x=>x.verified).map(x=>x.race),
+  return {date,venue,verifiedRaces:checks.filter(x=>x.verified).map(x=>x.race),
     checks,completeScheduleVerified:false,
-    note:'Only verified six-boat official entry lists are selectable. Unverified does not mean cancelled.'});
+    note:'Only verified six-boat official entry lists are selectable. Unverified does not mean cancelled.'};}));
 }
 
 if (u.pathname === '/api/daily/verified-venue-screen') {
