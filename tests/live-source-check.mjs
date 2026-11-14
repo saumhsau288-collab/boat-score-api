@@ -79,9 +79,9 @@ for (const [label,url] of targets) {
           const assetResponse=await fetch(assetUrl,{signal:AbortSignal.timeout(10000)});
           if(!assetResponse.ok)return {path,status:assetResponse.status};
           const js=await assetResponse.text();
-          const keywords=[...js.matchAll(/heatmap|last50|直近50|ヒートマップ|\/api\/|graphql/gi)];
-          const contexts=[...new Set(keywords.slice(0,16).map(m=>js.slice(Math.max(0,m.index-85),Math.min(js.length,m.index+115))
-            .replace(/https?:\/\/[^\s"'`]+/g,'[URL]').slice(0,200)))].slice(0,5);
+          const keywords=[...js.matchAll(/heatmap|last50|直近50|ヒートマップ|\/api\/|graphql|racelist|race\.racers|recentRuns/gi)];
+          const contexts=[...new Set(keywords.filter(m=>/racelist|heatmap|last50|直近50|recentRuns/i.test(m[0])).slice(0,20).map(m=>js.slice(Math.max(0,m.index-85),Math.min(js.length,m.index+115))
+            .replace(/https?:\/\/[^\s"'`]+/g,'[URL]').slice(0,200)))].slice(0,8);
           return {path,status:assetResponse.status,bytes:js.length,keywordCount:keywords.length,contexts};
         }catch(e){return {path,error:String(e).slice(0,110)}}
       }));
