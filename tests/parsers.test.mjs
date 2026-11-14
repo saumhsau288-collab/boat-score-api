@@ -257,7 +257,7 @@ const combinedRacelist='<table>'+Array.from({length:6},(_,i)=>
 const combinedBefore=beforeTable+beforeStart+
   '<div>水面気象情報 16:03現在 気温 9.0℃ 風速 1m 水温 13.0℃ 波高 1cm</div>';
 const combinedFetch=async url=>{
-  if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
+  if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200,headers:{'content-type':'text/html'}});
   if(String(url)===beforeUrl)return new Response(combinedBefore,{status:200});
   throw Error('Unexpected combined URL: '+url);
 };
@@ -280,7 +280,7 @@ assert.equal(combinedPayload.weather.windDirection,null);
 assert.equal(combinedPayload.dataReadyForPrediction,false);
 const directionalCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
   fetch:async url=>{
-    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
+    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200,headers:{'content-type':'text/html'}});
     if(String(url)===beforeUrl)return new Response(combinedBefore.replace('風速 1m','風向 北東 風速 1m'),{status:200});
     throw Error('Unexpected directional URL: '+url);
   }});
@@ -296,7 +296,7 @@ assert.equal(directionalPayload.weather.windDirection,'北東');
 assert.equal(directionalPayload.dataReadyForPrediction,false);
 const mismatchCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
   fetch:async url=>{
-    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
+    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200,headers:{'content-type':'text/html'}});
     if(String(url)===beforeUrl)return new Response(combinedBefore.replace('選手1','別人'),{status:200});
     throw Error('Unexpected mismatch URL: '+url);
   }});
@@ -309,7 +309,7 @@ assert.equal(mismatchPayload.exhibitionByBoat.length,0);
 assert.equal(mismatchPayload.dataReadyForPrediction,false);
 const missingStartCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
   fetch:async url=>{
-    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
+    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200,headers:{'content-type':'text/html'}});
     if(String(url)===beforeUrl)return new Response(combinedBefore.replace('<td colspan="3">6 .06</td>','<td colspan="3">5 .06</td>'),{status:200});
     throw Error('Unexpected start URL: '+url);
   }});
