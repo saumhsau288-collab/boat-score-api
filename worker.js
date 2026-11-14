@@ -14,6 +14,27 @@ export default {
     const u = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, {status:204,headers:{...cors(request),'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600'}});
     
+if (u.pathname === '/' || u.pathname === '/index.html') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boat Score 2</title>
+<style>body{font-family:system-ui,sans-serif;background:#f4f7fb;color:#14253b;margin:0}main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.65rem}section{background:white;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 9px #172a4212}label{display:block;margin:12px 0 4px;font-weight:600}input,select,button{font:inherit;padding:11px;border:1px solid #b6c4d3;border-radius:8px;max-width:100%;box-sizing:border-box}button{background:#1459b5;color:white;border:0;margin:12px 0;cursor:pointer}button:disabled{opacity:.5}a{color:#1459b5}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}small{color:#536478}.warn{color:#a64a00}</style></head>
+<body><main><h1>Boat Score 2</h1><p>公式情報の取得状況と分析候補を確認する開発プレビューです。</p>
+<section><h2>レースを選択</h2><label for="day">開催日</label><input type="date" id="day"><label for="venue">競艇場</label><select id="venue"></select><label for="race">レース</label><select id="race"></select><button id="load">公式データを確認</button><p id="status" role="status"></p><pre id="output"></pre></section>
+<section><h2>まくらぼ直近50走</h2><p>スクリーンショットを参考にした入力画面へ進みます。未確認の数字は予想に反映しません。</p><a href="/tools/makulabo-screenshot">まくらぼ取り込み画面を開く</a></section>
+<section><h2>本命・穴・大荒れランキング</h2><p class="warn">朝8時の自動集計は未実装です。全国ランキングは未確認データを埋めず、準備中と表示します。</p><button id="screen">選択場の暫定分析を確認</button><p id="screenStatus" role="status"></p><pre id="screenOutput"></pre><small>選択場のみ・オンデマンド分析。検証済みの的中確率ではありません。</small></section>
+</main><script>
+const names=['桐生','戸田','江戸川','平和島','多摩川','浜名湖','蒲郡','常滑','津','三国','びわこ','住之江','尼崎','鳴門','丸亀','児島','宮島','徳山','下関','若松','芦屋','福岡','唐津','大村'];
+const day=document.getElementById('day'),venue=document.getElementById('venue'),race=document.getElementById('race');
+const today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);day.value=today;
+names.forEach((n,i)=>venue.add(new Option(n,String(i+1))));for(let i=1;i<=12;i++)race.add(new Option(i+'R',String(i)));
+const dateCode=()=>day.value.replaceAll('-','');
+async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
+document.getElementById('load').onclick=function(){if(!day.value)return;show('/api/official/race-data?date='+dateCode()+'&venue='+venue.value+'&race='+race.value,'status','output',this)};
+document.getElementById('screen').onclick=function(){if(!day.value)return;show('/api/daily/verified-venue-screen?date='+dateCode()+'&venue='+venue.value,'screenStatus','screenOutput',this)};
+</script></body></html>`;
+  return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+}
+
 if (u.pathname === '/api/official/schedule') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'';
