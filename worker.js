@@ -1420,13 +1420,25 @@ async function fetchOfficialRacers(date, venue, race) {
   url.searchParams.set("hd", String(date));
 
   try {
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {
+      headers: {Accept: 'text/html'},
+      signal: AbortSignal.timeout(10000)
+    });
 
     if (!response.ok) {
-      return { verified: false, racers: [] };
+      return { verified: false, statsVerified: false, statsByBoat: [], racers: [],
+        reason: 'official_http_'+response.status };
     }
 
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType && !/text\/html|application\/xhtml\+xml/i.test(contentType))
+      return {verified:false,statsVerified:false,statsByBoat:[],racers:[],reason:'official_unexpected_content_type'};
+    const declaredSize = Number(response.headers.get('content-length'));
+    if(Number.isFinite(declaredSize)&&declaredSize>1000000)
+      return {verified:false,statsVerified:false,statsByBoat:[],racers:[],reason:'official_response_too_large'};
     const html = await response.text();
+    if(html.length>1000000)
+      return {verified:false,statsVerified:false,statsByBoat:[],racers:[],reason:'official_response_too_large'};
 const officialRows = extractOfficialBoatRows(html);
 const officialStats = extractOfficialBoatStats(html);
 const statsMatch = officialRows.verified && officialStats.verified && officialStats.rows.every((stat,i)=>stat.boat===officialRows.racers[i].boat && stat.racerId===officialRows.racers[i].racerId);
@@ -1474,9 +1486,9 @@ racerLinkSamples: racerLinks.slice(0, 6).map(m => m[1]),
     };
   } catch (error) {
     return {
-      verified: false,
-      racers: [],
-      error: String(error)
+      verified: false, statsVerified: false, statsByBoat: [], racers: [],
+      reason: error?.name === 'TimeoutError' || error?.name === 'AbortError'
+        ? 'official_timeout' : 'official_fetch_failed'
     };
   }
 }
