@@ -71,6 +71,22 @@ for (const [label,url] of targets) {
         scriptTextMentionsHeatmap:scripts.filter(m=>/heatmap|ヒートマップ/i.test(m[2])).length
       };
     }
+    if(label==='makulabo'&&summary.clientDataClues){
+      const paths=summary.clientDataClues.scriptPaths;
+      const inspected=await Promise.all(paths.slice(0,16).map(async path=>{
+        try{
+          const assetUrl=new URL(path,response.url);
+          const assetResponse=await fetch(assetUrl,{signal:AbortSignal.timeout(10000)});
+          if(!assetResponse.ok)return {path,status:assetResponse.status};
+          const js=await assetResponse.text();
+          const keywords=[...js.matchAll(/heatmap|last50|直近50|ヒートマップ|\/api\/|graphql/gi)];
+          const contexts=[...new Set(keywords.slice(0,16).map(m=>js.slice(Math.max(0,m.index-85),Math.min(js.length,m.index+115))
+            .replace(/https?:\/\/[^\s"'`]+/g,'[URL]').slice(0,200)))].slice(0,5);
+          return {path,status:assetResponse.status,bytes:js.length,keywordCount:keywords.length,contexts};
+        }catch(e){return {path,error:String(e).slice(0,110)}}
+      }));
+      summary.clientBundleInspection=inspected.filter(x=>x.keywordCount||x.error||x.status!==200);
+    }
     summary.visibleRaceDataIndicators={
       racerNumberMatches:(text.match(/\b[0-9]{4}\b/g)||[]).length,
       heatmapDataRows:(body.match(/heatmap[-_]?row|heatmap[-_]?data/gi)||[]).length
