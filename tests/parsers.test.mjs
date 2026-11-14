@@ -195,6 +195,11 @@ assert.ok(screenshotHtml.includes('参考比較（直近走数ベース）'));
 assert.ok(screenshotHtml.includes('枠・相手関係・展示・風などを反映した予想順位ではありません'));
 assert.ok(screenshotHtml.includes('const sortedByFirst='));
 assert.ok(screenshotHtml.includes('const sortedByTop3='));
+assert.ok(screenshotHtml.includes('実験的な5指標比較（予想ではありません）'));
+assert.ok(screenshotHtml.includes('data.statsVerified===true&&data.exhibitionVerified===true&&data.startVerified===true'));
+assert.ok(screenshotHtml.includes('買い目には使わないでください'));
+assert.ok(screenshotHtml.includes("['win',false],['motor',false],['time',true],['st',true],['top3',false]"));
+
 assert.ok(screenshotHtml.includes('Number.isInteger(row.runs)&&row.runs>0'));
 assert.ok(screenshotHtml.includes('row.counts.reduce((sum,n)=>sum+n,0)===row.runs'));
 assert.ok(screenshotHtml.includes('new Set(makulabo.last50ByBoat.map(row=>row.boat)).size===6'));
