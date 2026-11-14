@@ -134,7 +134,24 @@ assert.equal(combinedPayload.statsVerified,true);
 assert.equal(combinedPayload.exhibitionVerified,true);
 assert.equal(combinedPayload.startVerified,true);
 assert.equal(combinedPayload.weatherVerified,true);
+assert.equal(combinedPayload.windDirectionVerified,false);
+assert.equal(combinedPayload.weather.windDirection,null);
 assert.equal(combinedPayload.dataReadyForPrediction,false);
+const directionalCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
+  fetch:async url=>{
+    if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
+    if(String(url)===beforeUrl)return new Response(combinedBefore.replace('風速 1m','風向 北東 風速 1m'),{status:200});
+    throw Error('Unexpected directional URL: '+url);
+  }});
+vm.runInContext(source,directionalCtx,{filename:'worker.js'});
+const directionalWorker=vm.runInContext('workerExport',directionalCtx);
+const directionalResponse=await directionalWorker.fetch(new Request('https://example.com/api/official/race-data?date=20261113&venue=1&race=1'));
+assert.equal(directionalResponse.status,200);
+const directionalPayload=await directionalResponse.json();
+assert.equal(directionalPayload.weatherVerified,true);
+assert.equal(directionalPayload.windDirectionVerified,true);
+assert.equal(directionalPayload.weather.windDirection,'北東');
+assert.equal(directionalPayload.dataReadyForPrediction,false);
 const mismatchCtx=vm.createContext({URL,Response,Request,Headers,AbortSignal,
   fetch:async url=>{
     if(String(url)===officialUrl)return new Response(combinedRacelist,{status:200});
