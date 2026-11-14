@@ -197,7 +197,7 @@ assert.match(screenshotHtml,/公式選手番号：6艇一致/);
 const inlineScripts=[...screenshotHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(m=>m[1]);
 assert.equal(inlineScripts.length,1,'Screenshot page should have one inline script');
 for(const script of inlineScripts)new vm.Script(script,{filename:'screenshot-review-inline.js'});
-const venueOptions=[...screenshotHtml.matchAll(/<option value="(\\d+)">([^<]+)<\\/option>/g)];
+const venueOptions=[...screenshotHtml.matchAll(/<option value="(\d+)">([^<]+)<\/option>/g)];
 assert.equal(venueOptions.length,24);
 assert.deepEqual(venueOptions.map(m=>Number(m[1])),Array.from({length:24},(_,i)=>i+1));
 assert.equal(venueOptions[0][2],'桐生');
