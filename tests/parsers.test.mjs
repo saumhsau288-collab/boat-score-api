@@ -339,7 +339,7 @@ assert.ok(screenshotHtml.includes('過去レース照合用記録：日付 '));
 assert.ok(screenshotHtml.includes('確定着順 未照合'));
 assert.ok(screenshotHtml.includes('この記録は画面表示のみで保存されません'));
 assert.ok(screenshotHtml.includes('このレースの公式確定着順と照合'));
-assert.ok(screenshotHtml.includes("result.verified!==true"));
+assert.ok(screenshotHtml.includes("result.podiumVerified!==true"));
 assert.ok(screenshotHtml.includes('5指標首位艇の1着一致：'));
 assert.ok(screenshotHtml.includes('保存済み分析がないため一致判定は保留'));
 assert.ok(screenshotHtml.includes('現在の再計算値を過去の予想として扱いません'));
@@ -356,7 +356,7 @@ assert.ok(screenshotHtml.includes('同点首位 '));
 assert.ok(screenshotHtml.includes('tiedChecked++'));
 assert.ok(screenshotHtml.includes('保留（公式着順未確認）'));
 assert.ok(screenshotHtml.includes('保留（保存点数が不正）'));
-assert.ok(screenshotHtml.includes('result.finishOrder.join'))
+assert.ok(screenshotHtml.includes('result.podium.join'))
 assert.ok(screenshotHtml.includes('正式な事前予想的中率ではありません'));
 assert.ok(screenshotHtml.includes('判定保留') || screenshotHtml.includes('／保留'));
 assert.ok(screenshotHtml.includes('保存済みの有効な分析記録はありません'));
