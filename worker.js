@@ -21,6 +21,44 @@ if (u.pathname === '/api/racers/test') {
   });
 }
 
+if (u.pathname === '/api/official/race-data') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'',venue=u.searchParams.get('venue')||'',race=u.searchParams.get('race')||'';
+  if(!/^20\d{6}$/.test(date)||!/^\d{1,2}$/.test(venue)||!/^\d{1,2}$/.test(race)||
+    Number(venue)<1||Number(venue)>24||Number(race)<1||Number(race)>12)
+    return reply(request,{error:'Invalid parameters'},400);
+  const beforeUrl=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
+  beforeUrl.searchParams.set('rno',String(Number(race)));
+  beforeUrl.searchParams.set('jcd',String(venue).padStart(2,'0'));
+  beforeUrl.searchParams.set('hd',date);
+  const [official,before]=await Promise.all([
+    fetchOfficialRacers(date,venue,race),
+    (async()=>{try{
+      const res=await fetch(beforeUrl.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(10000)});
+      if(!res.ok)return null;
+      const html=await res.text();
+      return html.length<=1000000?html:null;
+    }catch{return null}})()
+  ]);
+  const exhibition=before?extractOfficialExhibition(before):{verified:false,rows:[]};
+  const start=before?extractOfficialStartExhibition(before):{verified:false,rows:[]};
+  const weather=before?extractOfficialWeather(before):{verified:false,reason:'beforeinfo_unavailable'};
+  const normalize=name=>String(name||'').replace(/\s/g,'');
+  const exhibitionMatches=official.verified&&exhibition.verified&&
+    exhibition.rows.every((row,i)=>row.boat===official.racers[i].boat&&normalize(row.name)===normalize(official.racers[i].name));
+  const complete=official.verified&&official.statsVerified&&exhibitionMatches&&start.verified&&weather.verified;
+  return reply(request,{
+    status:complete?'official_sources_verified':'partial',
+    racersVerified:official.verified,statsVerified:official.statsVerified===true,
+    exhibitionVerified:exhibitionMatches,startVerified:start.verified,weatherVerified:weather.verified===true,
+    racersByBoat:official.verified?official.racers:[],
+    statsByBoat:official.statsVerified?official.statsByBoat:[],
+    exhibitionByBoat:exhibitionMatches?exhibition.rows:[],
+    startByCourse:start.rows,weather,
+    makulaboLast50Verified:false,windDirectionVerified:false,
+    dataReadyForPrediction:false
+  });
+}
 if (u.pathname === '/api/official/beforeinfo') {
   if (request.method !== 'GET') return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'',venue=u.searchParams.get('venue')||'',race=u.searchParams.get('race')||'';
