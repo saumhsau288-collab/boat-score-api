@@ -94,6 +94,18 @@ for (const [label,url] of targets) {
         };
       });
     }
+    if(label==='official' && response.ok && !summary.hasNoDataNotice){
+      const racerRow=[...body.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].find(m=>/racersearch\/profile/.test(m[1]));
+      if(racerRow){
+        const cells=[...racerRow[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)];
+        summary.officialStatLayout=cells.map((m,i)=>({
+          index:i,
+          text:m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,95)
+        }));
+      }
+      summary.officialHeaderLabels=[...body.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)]
+        .slice(0,50).map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,60));
+    }
     console.log(JSON.stringify(summary));
   } catch (e) {
     console.log(JSON.stringify({source:label,error:String(e?.message||e)}));
