@@ -51,9 +51,14 @@ racerNameCandidates: extractRacerNames(html),
 
 racersByBoat: allSixVerified ? verifiedRows : [],
 racersByBoatVerified: allSixVerified,
-dataReadyForPrediction: allSixVerified,
-dataQualityReason: allSixVerified ? null : 'Six uniquely matched, verified boat rows are required; no unverified heatmap data is used',
+dataReadyForPrediction: false,
+heatmapReadyForAnalysis: allSixVerified,
+dataQualityReason: allSixVerified ? 'Heatmap verified, but last-50 and other required prediction inputs remain unverified' : 'Six uniquely matched, verified boat rows are required; no unverified heatmap data is used',
 last50Inspection: inspectLast50(html),
+last50ByBoat: [],
+last50Verified: false,
+last50Status: 'not_verified',
+last50Reason: 'No reliable six-racer, 50-race structured extraction is implemented; missing data must not be estimated',
 
 
 embeddedDataInspection: inspectEmbeddedData(html),
