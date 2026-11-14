@@ -23,6 +23,23 @@ async function mapOfficialLimited(items, limit, mapper) {
   }));
   return results;
 }
+async function officialScheduleVenueCandidates(date) {
+  try {
+    const res=await fetch('https://www.boatrace.jp/owpc/pc/race/index?hd='+date,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(9000)});
+    if(!res.ok)return null;
+    const html=await res.text();if(html.length>1000000)return null;
+    const codes=new Set();
+    for(const match of html.matchAll(/href=["']([^"']*racelist[^"']*)["']/gi)){
+      try {
+        const link=new URL(match[1].replace(/&amp;/g,'&'),'https://www.boatrace.jp');
+        if(!link.pathname.includes('/owpc/pc/race/racelist'))continue;
+        const code=Number(link.searchParams.get('jcd')),hd=link.searchParams.get('hd');
+        if(Number.isInteger(code)&&code>=1&&code<=24&&(!hd||hd===date))codes.add(code);
+      }catch{}
+    }
+    return codes.size?[...codes].sort((a,b)=>a-b):null;
+  }catch{return null;}
+}
 const verifiedListCache = new Map();
 async function getVerifiedList(key, producer) {
   const now=Date.now(), prior=verifiedListCache.get(key);
@@ -120,7 +137,7 @@ if (u.pathname === '/api/official/active-venues') {
   if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
   // Run independent official 1R checks concurrently rather than waiting for
   // six sequential timeout batches. A failed check is UNKNOWN, not closed.
-  return reply(request,await getVerifiedList('venues:'+date,async()=>{const checks=await mapOfficialLimited(Array.from({length:24},(_,i)=>i+1),8,async venue=>{
+  return reply(request,await getVerifiedList('venues:'+date,async()=>{const candidates=await officialScheduleVenueCandidates(date);const checks=await mapOfficialLimited(candidates||Array.from({length:24},(_,i)=>i+1),5,async venue=>{
     try{
       const official=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});
       return {venue,status:official.verified===true?'race1_entry_verified':'unverified',
@@ -131,7 +148,7 @@ if (u.pathname === '/api/official/active-venues') {
     }
   });
   const verifiedVenues=checks.filter(x=>x.status==='race1_entry_verified').map(x=>x.venue);
-  return {date,verifiedVenues,checks,
+  return {date,verifiedVenues,checks,discovery:candidates?'official_schedule_link_candidates':'all_24_venues_fallback',
     coverage:'official_race1_entry_only',completeScheduleVerified:false,
     note:'Unverified venues may be closed, not yet published, or inaccessible. Do not label them as non-running.'};}));
 }
@@ -1525,7 +1542,7 @@ async function fetchOfficialRacers(date, venue, race, options={}) {
     // never treat a timeout or an unverified response as valid racer data.
     let response;
     let lastTransportError;
-    for (const timeoutMs of (options.verificationOnly ? [4000] : [10000, 18000])) {
+    for (const timeoutMs of (options.verificationOnly ? [10000] : [10000, 18000])) {
       try {
         response = await fetch(url.toString(), {
           headers: {Accept: 'text/html,application/xhtml+xml'},
