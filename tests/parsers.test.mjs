@@ -200,6 +200,11 @@ assert.ok(screenshotHtml.includes('5指標比較は未表示：公式データ�
 assert.ok(screenshotHtml.includes('scroll.appendChild(table);comparison.appendChild(scroll)'));
 
 assert.ok(screenshotHtml.includes('同値は同点順位の平均点を付与'));
+assert.ok(screenshotHtml.includes('全国勝率点'));
+assert.ok(screenshotHtml.includes('展示ST点'));
+assert.ok(screenshotHtml.includes('直近3連対点'));
+assert.ok(screenshotHtml.includes('scoreScroll.appendChild(table);comparison.appendChild(scoreScroll)'));
+
 assert.ok(screenshotHtml.includes('ordered[end][key]===ordered[i][key]'));
 assert.ok(screenshotHtml.includes('points.set(ordered[j].boat,averagePoints)'));
 
