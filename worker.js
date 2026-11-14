@@ -392,7 +392,7 @@ if (u.pathname === '/api/official/race-data') {
     statsByBoat:official.statsVerified?official.statsByBoat:[],
     exhibitionByBoat:exhibitionMatches?exhibition.rows:[],
     startByCourse:startMatches?start.rows:[],weather,
-    makulaboLast50Verified:false,windDirectionVerified:false,
+    makulaboLast50Verified:false,windDirectionVerified:weather.windDirectionVerified===true,
     dataReadyForPrediction:false
   });
 }
@@ -850,12 +850,14 @@ function extractOfficialWeather(html) {
   };
   const windSpeed=number('風速','m'),waveHeight=number('波高','cm');
   const airTemperature=number('気温','℃'),waterTemperature=number('水温','℃');
+  const directionMatch=text.match(/風向\s*(北北東|東北東|東南東|南南東|南南西|西南西|西北西|北北西|北東|南東|南西|北西|北|東|南|西|無風)(?=\s|風速|波高|$)/);
+  const windDirection=directionMatch?directionMatch[1]:null;
   const verified=windSpeed!==null&&windSpeed>=0&&windSpeed<=60&&
     waveHeight!==null&&waveHeight>=0&&waveHeight<=500;
   return {verified,windSpeed:verified?windSpeed:null,waveHeight:verified?waveHeight:null,
     airTemperature:airTemperature!==null&&airTemperature>=-30&&airTemperature<=50?airTemperature:null,
     waterTemperature:waterTemperature!==null&&waterTemperature>=-5&&waterTemperature<=45?waterTemperature:null,
-    windDirection:null,windDirectionVerified:false};
+    windDirection:windDirection,windDirectionVerified:verified&&windDirection!==null};
 }
 
 function extractOfficialStartExhibition(html) {
