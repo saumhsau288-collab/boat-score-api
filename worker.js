@@ -61,13 +61,13 @@ const day=document.getElementById('day'),venue=document.getElementById('venue'),
 const today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);day.value=today;
 venue.add(new Option('開催場を確認中…',''));venue.disabled=true;race.add(new Option('開催場を選択してください',''));race.disabled=true;
 const dateCode=()=>day.value.replaceAll('-','');
-let scheduleRequest=0,raceListRequest=0;
+let scheduleRequest=0,raceListRequest=0,scheduleController=null,raceListController=null;
 async function refreshRunningVenues(){
- const token=++scheduleRequest,st=document.getElementById('scheduleStatus'),out=document.getElementById('scheduleOutput');
- raceListRequest++;clearRaceDisplay();venue.disabled=true;race.disabled=true;race.replaceChildren(new Option('開催場を選択してください',''));venue.replaceChildren(new Option('開催場を確認中…',''));
+ const token=++scheduleRequest,st=document.getElementById('scheduleStatus'),out=document.getElementById('scheduleOutput');if(scheduleController)scheduleController.abort();scheduleController=new AbortController();const controller=scheduleController;
+ raceListRequest++;if(raceListController){raceListController.abort();raceListController=null;}clearRaceDisplay();venue.disabled=true;race.disabled=true;race.replaceChildren(new Option('開催場を選択してください',''));venue.replaceChildren(new Option('開催場を確認中…',''));
  st.textContent='公式1R出走表で開催場を照合中…';out.textContent='';
  try{
-  const res=await fetch('/api/official/active-venues?date='+dateCode());
+  const res=await fetch('/api/official/active-venues?date='+dateCode(),{signal:controller.signal});
   const data=await res.json();if(token!==scheduleRequest)return;
   if(!res.ok)throw Error('HTTP '+res.status);
   const confirmed=Array.isArray(data.verifiedVenues)?data.verifiedVenues.filter(v=>Number.isInteger(v)&&v>=1&&v<=24):[];
@@ -83,7 +83,7 @@ function clearRaceDisplay(){raceDataRequest++;if(raceDataController){raceDataCon
 day.addEventListener('change',()=>{clearRaceDisplay();refreshRunningVenues()});
 race.addEventListener('change',clearRaceDisplay);
 refreshRunningVenues();
-async function refreshVerifiedRaces(){const token=++raceListRequest;clearRaceDisplay();race.disabled=true;race.replaceChildren(new Option('レースを確認中…',''));if(!venue.value)return;const selectedVenue=venue.value,selectedDate=dateCode();try{const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue);const data=await res.json();if(token!==raceListRequest||selectedDate!==dateCode()||selectedVenue!==venue.value)return;if(!res.ok)throw Error('HTTP '+res.status);const confirmed=Array.isArray(data.verifiedRaces)?data.verifiedRaces.filter(v=>Number.isInteger(v)&&v>=1&&v<=12):[];race.replaceChildren(new Option(confirmed.length?'レースを選択':'確認できるレースなし',''));confirmed.forEach(v=>race.add(new Option(v+'R',String(v))));race.disabled=confirmed.length===0;document.getElementById('status').textContent=confirmed.length?'公式出走表で確認済み：'+confirmed.length+'レース':'公式出走表を確認できません。休止とは断定しません。'}catch(e){if(token!==raceListRequest)return;race.replaceChildren(new Option('レース情報を取得できません',''));race.disabled=true;document.getElementById('status').textContent='レース確認に失敗: '+e.message;}}
+async function refreshVerifiedRaces(){const token=++raceListRequest;if(raceListController)raceListController.abort();raceListController=new AbortController();const controller=raceListController;clearRaceDisplay();race.disabled=true;race.replaceChildren(new Option('レースを確認中…',''));if(!venue.value)return;const selectedVenue=venue.value,selectedDate=dateCode();try{const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue,{signal:controller.signal});const data=await res.json();if(token!==raceListRequest||selectedDate!==dateCode()||selectedVenue!==venue.value)return;if(!res.ok)throw Error('HTTP '+res.status);const confirmed=Array.isArray(data.verifiedRaces)?data.verifiedRaces.filter(v=>Number.isInteger(v)&&v>=1&&v<=12):[];race.replaceChildren(new Option(confirmed.length?'レースを選択':'確認できるレースなし',''));confirmed.forEach(v=>race.add(new Option(v+'R',String(v))));race.disabled=confirmed.length===0;document.getElementById('status').textContent=confirmed.length?'公式出走表で確認済み：'+confirmed.length+'レース':'公式出走表を確認できません。休止とは断定しません。'}catch(e){if(token!==raceListRequest)return;race.replaceChildren(new Option('レース情報を取得できません',''));race.disabled=true;document.getElementById('status').textContent='レース確認に失敗: '+e.message;}}
 venue.addEventListener('change',refreshVerifiedRaces);
 async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
 document.getElementById('schedule').onclick=refreshRunningVenues;
