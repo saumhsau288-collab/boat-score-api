@@ -84,25 +84,36 @@ async function refreshRunningVenues(){
  raceListRequest++;if(raceListController){raceListController.abort();raceListController=null;}clearRaceDisplay();venue.disabled=true;race.disabled=true;race.replaceChildren(new Option('開催場を選択してください',''));venue.replaceChildren(new Option('開催場を確認中…',''));
  st.textContent='公式1R出走表で開催場を照合中…';out.textContent='';
  try{
-  const confirmedSet=new Set();let offset=0,completed=false;
+  const confirmedSet=new Set(),errors=[];let offset=0,completed=false;
   for(let page=0;page<5;page++){
-    const res=await fetch('/api/official/active-venues?date='+dateCode()+'&offset='+offset,{signal:controller.signal});
-    const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw Error('開催情報APIがJSONを返しませんでした（HTTP '+res.status+'）')}
+    let data;
+    try{
+      const res=await fetch('/api/official/active-venues?date='+dateCode()+'&offset='+offset,{signal:controller.signal});
+      const raw=await res.text();
+      try{data=JSON.parse(raw)}catch{throw Error('HTTP '+res.status+'：JSON以外の応答')}
+      if(!res.ok||data.status==='unavailable')throw Error(data.message||'HTTP '+res.status);
+    }catch(error){
+      if(token!==scheduleRequest||controller.signal.aborted)return;
+      errors.push('区間'+(page+1)+': '+String(error.message||error));
+      offset+=5;
+      continue;
+    }
     if(token!==scheduleRequest)return;
-    if(!res.ok||data.status==='unavailable')throw Error(data.message||'HTTP '+res.status);
     for(const v of data.verifiedVenues||[])if(Number.isInteger(v)&&v>=1&&v<=24)confirmedSet.add(v);
     const confirmed=[...confirmedSet].sort((x,y)=>x-y);
     venue.replaceChildren(new Option(confirmed.length?'開催場を選択':'確認済みの開催場なし',''));
     confirmed.forEach(v=>venue.add(new Option(names[v-1],String(v))));
     venue.disabled=confirmed.length===0;race.disabled=true;
     completed=data.scanComplete===true||data.nextOffset==null;
-    st.textContent='公式出走表で確認済み：'+confirmed.length+'場（'+(offset+Number(data.scannedCount||0))+'/'+(data.candidateCount||24)+'候補を照合）'+(completed?'':'・確認続行中');
+    st.textContent='公式出走表で確認済み：'+confirmed.length+'場（照合中・一部未確認の可能性あり）';
     out.textContent=confirmed.map(v=>names[v-1]).join('、');
     if(completed)break;
     offset=data.nextOffset;
   }
-  if(!completed)st.textContent+='・一部未確認';
- }catch(e){if(token!==scheduleRequest)return;venue.replaceChildren(new Option('開催情報を取得できません',''));venue.disabled=true;race.disabled=true;st.textContent='公式開催情報の取得に失敗しました。未確認の場は選択できません。';out.textContent=String(e.message)}
+  const count=confirmedSet.size;
+  st.textContent=count?'公式出走表で確認済み：'+count+'場'+(errors.length?'（一部の照合に失敗）':''):'開催場を確認できません。未確認を休場とは判定しません。';
+  if(errors.length)out.textContent+=(out.textContent?'\n':'')+'未確認の区間：'+errors.join(' / ');
+ }catch(e){if(token!==scheduleRequest)return;st.textContent='開催情報の確認を中断しました。確認済みの場は保持します。';out.textContent+=' '+String(e.message)}
 }
 let raceDataRequest=0,raceDataController=null;
 function clearRaceDisplay(){raceDataRequest++;if(raceDataController){raceDataController.abort();raceDataController=null;}document.getElementById('load').disabled=false;document.getElementById('comparisonBody').replaceChildren();document.getElementById('finishRateSummary').textContent='選択中のレースの公式データは未確認です';document.getElementById('racerPoints').textContent='レースを選んで公式データを確認してください';document.getElementById('output').textContent='';document.getElementById('status').textContent='';}
