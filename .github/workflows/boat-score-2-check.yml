@@ -46,5 +46,21 @@ jobs:
           ]) assert.ok(code.includes(marker), 'Missing safety check: ' + marker);
           assert.equal((code.match(/async function scanVenueMorning\(/g) || []).length, 1,
             'Expected exactly one shared venue scanner');
-          console.log('Static endpoint and safety checks passed');
+          for (const ui of [
+            '開催情報（公式照会）',
+            '選手の入賞率比較（公式照合済みのみ）',
+            '全国2連対率',
+            '全国3連対率',
+            '当地2連対率',
+            '当地3連対率',
+            'raceDataRequest',
+            'clearRaceDisplay()',
+            '/api/version',
+            'verifiedVenues'
+          ]) assert.ok(code.includes(ui), 'Missing Boat Score 2 UI/data guard: ' + ui);
+          assert.ok(!code.includes("for(let i=1;i<=24;i++)venue.add("),
+            'Old 24-venue unfiltered selector unexpectedly restored');
+          assert.ok(code.includes("race.disabled||!race.value"),
+            'Race fetch must require a verified venue and selected race');
+          console.log('Static endpoint, Boat Score 2 UI and safety checks passed');
           NODE
