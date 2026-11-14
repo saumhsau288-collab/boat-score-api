@@ -326,6 +326,31 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      const auditNote=document.createElement('p');
      auditNote.textContent='この記録は画面表示のみで保存されません。確定着順・取得時刻・オッズとの照合は未実施です。';
      comparison.appendChild(auditNote);
+     const resultButton=document.createElement('button');
+     resultButton.type='button';
+     resultButton.textContent='このレースの公式確定着順と照合';
+     const resultStatus=document.createElement('p');
+     resultStatus.textContent='未照合（ボタンを押すまで確定着順は取得しません）';
+     resultButton.addEventListener('click',async()=>{
+      resultButton.disabled=true;
+      resultStatus.textContent='公式確定着順を取得中…';
+      try{
+       const response=await fetch('/api/official/result?'+new URLSearchParams({date,venue,race}),{signal:AbortSignal.timeout(12000)});
+       const result=await response.json();
+       if(!response.ok||result.verified!==true||!Array.isArray(result.finishOrder)||result.finishOrder.length!==6){
+        resultStatus.textContent='確定着順を照合できません：'+String(result.reason||result.error||'取得失敗')+'。未確認結果を採用しません。';
+        return;
+       }
+       const winner=result.finishOrder[0];
+       const topScore=totals[0].total;
+       const topBoats=totals.filter(row=>row.total===topScore).map(row=>row.boat);
+       const matched=topBoats.includes(winner);
+       resultStatus.textContent='公式確定着順：'+result.finishOrder.join('-')+' ／ 5指標首位艇の1着一致：'+(matched?'一致':'不一致')+'（首位同点 '+topBoats.length+'艇）。これは単一レースの事後照合であり、的中率ではありません。';
+      }catch{resultStatus.textContent='通信エラー：確定着順は未照合です。'}
+      finally{resultButton.disabled=false}
+     });
+     comparison.appendChild(resultButton);
+     comparison.appendChild(resultStatus);
      const heading=document.createElement('h3');heading.textContent='実験的な5指標比較（予想ではありません）';comparison.appendChild(heading);
      const note=document.createElement('p');note.textContent='暫定比較順位は同点なら同順位です（表示順のみ艇番順）。着順予測・買い目ではありません。全国勝率・モーター2連率・展示タイム・展示ST・直近3連対率を各6〜1点の順位点で合計（最大30点）。同値は同点順位の平均点を付与。展示進入と直近走数は参考表示のみで加点しません。枠有利、進入変動、風、波、オッズ、相手関係は未反映。的中率や回収率の検証前につき買い目には使わないでください。';comparison.appendChild(note);
      const scoreScroll=document.createElement('div');scoreScroll.style.cssText='max-width:100%;overflow-x:auto';
