@@ -17,6 +17,10 @@ const weatherWithDirection=weatherParser('<div>水面気象情報 風向 北北�
 assert.equal(weatherWithDirection.verified,true);
 assert.equal(weatherWithDirection.windDirection,'北北東');
 assert.equal(weatherWithDirection.windDirectionVerified,true);
+const colonDirection=weatherParser('<div>水面気象情報 風向：南南西、風速 4m 波高 3cm</div>');
+assert.equal(colonDirection.verified,true);
+assert.equal(colonDirection.windDirection,'南南西');
+assert.equal(colonDirection.windDirectionVerified,true);
 assert.equal(weatherParser('<div>水面気象情報 風向 不明 風速 3m 波高 2cm</div>').windDirectionVerified,false);
 assert.equal(weatherParser('<div>水面気象情報 風向 北北東 風速 100m 波高 2cm</div>').windDirectionVerified,false);
 assert.equal(weatherParser('<div>水面気象情報 風速 100m 波高 1cm</div>').verified,false);
