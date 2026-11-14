@@ -215,6 +215,9 @@ assert.ok(screenshotHtml.includes('String(stat.racerId)===String(racer.racerId)'
 assert.ok(screenshotHtml.includes('new Set(data.startByCourse.map(row=>row.course)).size===6'));
 
 assert.ok(screenshotHtml.includes('5指標比較は未表示：公式データの数値'));
+assert.ok(screenshotHtml.includes('まくらぼ直近50走が未確認のため'));
+assert.ok(screenshotHtml.includes('まくらぼ直近50走の集計が不整合です'));
+
 assert.ok(screenshotHtml.includes('scroll.appendChild(table);comparison.appendChild(scroll)'));
 
 assert.ok(screenshotHtml.includes('同値は同点順位の平均点を付与'));
