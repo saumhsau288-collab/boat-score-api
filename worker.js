@@ -339,7 +339,10 @@ document.getElementById('loadCsvCard').addEventListener('click',async()=>{
   const table=document.createElement('table');table.style.cssText='border-collapse:collapse;width:100%;min-width:360px;font-size:13px';
   const head=document.createElement('tr');['艇','選手名',...metrics.map(x=>x[0])].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border-bottom:1px solid #94a3b8;padding:8px 4px;text-align:left';head.appendChild(th)});table.appendChild(head);
   for(const b of data.boats){const tr=document.createElement('tr');const cells=[b.boat,b.name||'未取得',...metrics.map(x=>b[x[1]]||'—')];cells.forEach((value,i)=>{const td=document.createElement('td');td.textContent=String(value);td.style.cssText='border-bottom:1px solid #e2e8f0;padding:8px 4px';if(i>=2){const nums=data.boats.map(row=>validNumber(row[metrics[i-2][1]])).filter(x=>x!==null);if(nums.length===6&&validNumber(value)===Math.max(...nums))td.style.fontWeight='bold'}tr.appendChild(td)});table.appendChild(tr)}
-  const note=document.createElement('p');note.textContent='太字は各項目の最大値（同率を含む）。非公式CSVの単純比較であり、本命・穴の判定や的中確率ではありません。展示・ST・風・直近50走は未反映。';note.style.cssText='font-size:13px;color:#475569';comparison.append(table,note);
+  const status=document.createElement('p');status.style.cssText='font-size:13px;line-height:1.6';
+  const coverage=metrics.map(([label,key])=>label+' '+data.boats.filter(b=>validNumber(b[key])!==null).length+'/6艇').join(' / ');
+  status.textContent='データ確認：'+(data.officialVerified?'選手登録番号6艇一致':'選手登録番号の公式照合未完了')+'。取得状況：'+coverage+'。不足：展示タイム、展示ST、進入、風向・風速、波高、まくらぼ直近50走。CSV数値は公式未照合。';
+  const note=document.createElement('p');note.textContent='太字は各項目の最大値（同率を含む）。非公式CSVの単純比較であり、本命・穴の判定や的中確率ではありません。展示・ST・風・直近50走は未反映。';note.style.cssText='font-size:13px;color:#475569';comparison.append(status,table,note);
   const headings=['艇','選手名','全国勝率','当地勝率','モーター2連対率'];
   out.textContent='非公式CSV（予想点に未反映）\n'+
    '取得項目：'+data.populatedFields+'/'+data.totalFields+'（空欄は未取得）\n'+
