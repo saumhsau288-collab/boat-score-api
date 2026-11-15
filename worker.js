@@ -382,7 +382,7 @@ document.getElementById('fetchOfficialFinish').addEventListener('click',async()=
   const d=await res.json();if(version!==finishFetchVersion)return;
   diagnostics.textContent='API応答：HTTP '+res.status+'\\n照合：'+(d.verified===true?'成功':'未確認')+'\\n理由：'+String(d.reason||'なし')+'\\n公式ページHTTP：'+String(d.diagnostics?.upstreamStatus??d.upstreamStatus??'不明')+'\\nHTML文字数：'+String(d.diagnostics?.htmlBytes??'不明')+'\\nテーブル数：'+String(d.diagnostics?.tableCount??'不明')+'\\n結果見出し検出：'+String(d.diagnostics?.hasResultHeading??'不明')+'\\n候補テーブル：'+String(d.parserDiagnostics?.candidateTables??'不明')+' / 読取行数：'+String(d.parserDiagnostics?.parsedRows??'不明')+' / 数字以外の着順：'+String(d.parserDiagnostics?.nonNumericRanks??'不明')+'\\n※公式ページの構造変更・未公開・通信失敗を区別するための診断です。';
   const order=Array.isArray(d.finishOrder)?d.finishOrder.map(x=>Number(x)):[];
-  if(!res.ok||d.verified!==true||order.length<3||order.slice(0,3).some(x=>!Number.isInteger(x)||x<1||x>6)||new Set(order.slice(0,3)).size!==3){status.textContent='公式確定着順を照合できません：'+String(d.reason||'未確認');return}
+  if(!res.ok||d.verified!==true||order.length!==6||order.some(x=>!Number.isInteger(x)||x<1||x>6)||new Set(order).size!==6){status.textContent='公式確定着順を照合できません：'+String(d.reason||'未確認');return}
   ['finish1','finish2','finish3'].forEach((id,i)=>{document.getElementById(id).value=String(order[i])});
   verifiedFinish={key:currentReviewKey(),places:order.slice(0,3)};
   pendingReview=null;document.getElementById('saveReview').disabled=true;
@@ -450,7 +450,10 @@ document.getElementById('reviewResult').addEventListener('click',()=>{
  const boats=priorSnapshot.boats,ex=officialSnapshot.exhibitionByBoat,starts=officialSnapshot.startByCourse,keys=['nationalWinRate','localWinRate','motorPlaceRate'];
  const num=v=>v===null||v===undefined||String(v).trim()===''?null:Number(v);
  if(boats.length!==6||ex.length!==6||starts.length!==6||!boats.every(b=>keys.every(k=>num(b[k])!==null&&Number.isFinite(num(b[k]))))){out.textContent='比較指標が不足しています。';return}
- const max=keys.map(k=>Math.max(...boats.map(b=>num(b[k]))));const min=Math.min(...ex.map(e=>Number(e.exhibitionTime)));
+ const boatNumbers=boats.map(b=>Number(b.boat)),exNumbers=ex.map(e=>Number(e.boat)),startNumbers=starts.map(t=>Number(t.boat)),courses=starts.map(t=>Number(t.course)),times=ex.map(e=>Number(e.exhibitionTime));
+ const six=[1,2,3,4,5,6];
+ if(![boatNumbers,exNumbers,startNumbers,courses].every(a=>a.length===6&&new Set(a).size===6&&six.every(n=>a.includes(n)))||!times.every(t=>Number.isFinite(t)&&t>0)){out.textContent='6艇の艇番・展示進入コース・展示タイムが完全に照合できないため、検証を保留します。';return}
+ const max=keys.map(k=>Math.max(...boats.map(b=>num(b[k]))));const min=Math.min(...times);
  const observations=boats.map(b=>{const e=ex.find(x=>Number(x.boat)===Number(b.boat)),t=starts.find(x=>Number(x.boat)===Number(b.boat));return {boat:Number(b.boat),leaderCount:keys.filter((k,i)=>num(b[k])===max[i]).length,fastest:e?Number(e.exhibitionTime)===min:false,courseChange:t?Number(t.course)!==Number(b.boat):false}});
  const key=currentReviewKey();const officialResultVerified=verifiedFinish?.key===key&&verifiedFinish.places.every((x,i)=>x===places[i]);
  pendingReview={key,places,observations,officialResultVerified};document.getElementById('saveReview').disabled=!officialResultVerified;
