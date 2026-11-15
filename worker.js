@@ -216,6 +216,16 @@ document.getElementById('morningVenue').onclick=async function(){const st=docume
 document.getElementById('morningCheck').onclick=async function(){const st=document.getElementById('morningStatus'),out=document.getElementById('morningOutput');st.textContent='公式日程を照合中…';out.textContent='';this.disabled=true;try{const res=await fetch('/api/morning/venues?date='+dateCode(),{signal:AbortSignal.timeout(15000)});const data=await res.json();if(!res.ok)throw Error(data.message||data.error||'HTTP '+res.status);st.textContent='開催候補 '+data.venueCount+'場／予想は未作成';out.textContent='場コード: '+data.venues.join('、')+'\n'+data.message;}catch(e){st.textContent='開催場を確認できません: '+e.message;}finally{this.disabled=false}};
 document.getElementById('schedule').onclick=refreshRunningVenues;
 let selectedPredictionController=null;
+function clearSelectedPrediction(){
+ if(selectedPredictionController){selectedPredictionController.abort();selectedPredictionController=null;}
+ const button=document.getElementById('predictSelected');
+ button.disabled=false;
+ document.getElementById('predictOutput').textContent='';
+ document.getElementById('predictStatus').textContent='選択内容が変更されました。新しいレースで予想を実行してください。';
+}
+day.addEventListener('change',clearSelectedPrediction);
+venue.addEventListener('change',clearSelectedPrediction);
+race.addEventListener('change',clearSelectedPrediction);
 document.getElementById('predictSelected').onclick=async function(){
  const st=document.getElementById('predictStatus'),out=document.getElementById('predictOutput');
  if(!day.value||!venue.value||!race.value){st.textContent='開催日・競艇場・レースを選択してください';return;}
