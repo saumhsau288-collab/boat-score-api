@@ -115,20 +115,20 @@ if (u.pathname === '/api/morning/venues') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'';
   if(!/^20\d{6}$/.test(date))return reply(request,{error:'Invalid date; use YYYYMMDD'},400);
-  const venues=await officialScheduleVenueCandidates(date);
-  if(!venues){
-    // Schedule-page link parsing can fail even when individual official entry lists work.
-    // Recover only venues whose 1R six-boat entries can be independently verified.
-    const offset=Math.max(0,Math.min(20,Number(u.searchParams.get('offset')||0)||0));
-    const checks=await mapOfficialLimited(Array.from({length:Math.min(4,24-offset)},(_,i)=>offset+i+1),2,async venue=>{
-      try{const data=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});return {venue,verified:data?.verified===true};}
-      catch{return {venue,verified:false};}
-    });
-    const verified=checks.filter(x=>x.verified).map(x=>x.venue);
-    if(!verified.length)return reply(request,{date,status:'partial_verified_race1_fallback',venues:[],nextOffset:offset+4<24?offset+4:null,message:'この4場の公式1R出走表は未確認。開催なしとは断定できません。'});
-    return reply(request,{date,status:'partial_verified_race1_fallback',venues:verified,nextOffset:offset+4<24?offset+4:null,venueCount:verified.length,possibleRaceSlots:verified.length*12,completeScheduleVerified:false,forecastStatus:'not_generated',message:'公式日程の取得に失敗したため、公式1R出走表で確認できた競艇場のみ表示。未確認の場も開催している可能性があります。'});
-  }
-  return reply(request,{date,status:'verified_schedule_links',venues,venueCount:venues.length,possibleRaceSlots:venues.length*12,forecastStatus:'not_generated',message:'公式日程のリンクから候補場を抽出。各レースの出走表確認と予想は未実装。'});
+  // Each request verifies one venue only, so a slow official site cannot block all 24.
+  const offset=Math.max(0,Math.min(23,Number(u.searchParams.get('offset')||0)||0));
+  const venue=offset+1;
+  let verified=false;
+  try {
+    const data=await fetchOfficialRacers(date,venue,1,{verificationOnly:true,fastVerification:true});
+    verified=data?.verified===true;
+  }catch{}
+  return reply(request,{date,status:'partial_verified_race1_fallback',
+    venues:verified?[venue]:[],venueCount:verified?1:0,
+    nextOffset:offset<23?offset+1:null,checkedVenue:venue,
+    completeScheduleVerified:false,forecastStatus:'not_generated',
+    message:'公式1R出走表による逐次確認。未確認は非開催を意味しません。'});
+
 }
 
 if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261115-auto-preview-check',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
@@ -207,12 +207,12 @@ document.getElementById('morningNational').onclick=async function(){
  try{
  const found=new Set();let offset=0,partial=false;
  do{
-  const response=await fetch('/api/morning/venues?date='+dateCode()+'&offset='+offset,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(20000)])});
+  const response=await fetch('/api/morning/venues?date='+dateCode()+'&offset='+offset,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(13000)])});
   const schedule=await response.json();if(!response.ok)throw Error(schedule.message||'開催場候補を確認できません');
   for(const v of schedule.venues||[])found.add(v);
   partial=schedule.status==='partial_verified_race1_fallback';
   offset=partial&&schedule.nextOffset!=null?schedule.nextOffset:null;
-  st.textContent='開催場の公式確認中… '+found.size+'場を確認';
+  st.textContent='公式1R確認 '+(offset==null?24:offset)+'/24場／確認済み '+found.size+'場';
  }while(offset!=null&&!controller.signal.aborted);
  const venues=[...found];if(!venues.length)throw Error('確認できた開催場はありません。未確認の場が非開催とは限りません。');
  let next=0,done=0;
@@ -2166,7 +2166,7 @@ async function fetchOfficialRacers(date, venue, race, options={}) {
     // never treat a timeout or an unverified response as valid racer data.
     let response;
     let lastTransportError;
-    for (const timeoutMs of (options.verificationOnly ? [10000, 18000] : [10000, 18000])) {
+    for (const timeoutMs of (options.fastVerification ? [8500] : [10000, 18000])) {
       try {
         response = await fetch(url.toString(), {
           headers: {Accept: 'text/html,application/xhtml+xml'},
