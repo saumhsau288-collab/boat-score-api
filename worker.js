@@ -365,8 +365,8 @@ function updateReviewAggregate(){
  const out=document.getElementById('reviewAggregate'),records=[...reviewRecords.values()].filter(r=>r.officialResultVerified===true);
  if(!records.length){out.textContent='公式結果照合済みの集計0レース（この画面を閉じると消えます）';return}
  const groups=[['事前3指標の最高値が2項目以上',x=>x.leaderCount>=2],['展示タイム最短',x=>x.fastest],['展示進入変動',x=>x.courseChange]];
- const lines=groups.map(([label,test])=>{let total=0,top3=0,first=0;for(const r of records)for(const x of r.observations)if(test(x)){total++;if(r.places.includes(x.boat))top3++;if(r.places[0]===x.boat)first++}return label+'：該当艇 '+total+'件 / 1着 '+first+'件 / 3着以内 '+top3+'件'});
- out.textContent='公式確定着順を取得済みの一時集計：'+records.length+'レース（重複レースは上書き）\\n'+lines.join('\\n')+'\\n※公式結果APIで照合した着順のみ集計。該当艇の件数であり的中率・予測精度ではありません。';
+ const lines=groups.map(([label,test])=>{let total=0,top3=0,first=0,raceCount=0,raceFirst=0,raceTop3=0;for(const r of records){const eligible=r.observations.filter(test);if(eligible.length){raceCount++;if(eligible.some(x=>r.places[0]===x.boat))raceFirst++;if(eligible.some(x=>r.places.includes(x.boat)))raceTop3++}for(const x of eligible){total++;if(r.places.includes(x.boat))top3++;if(r.places[0]===x.boat)first++}}return label+'：該当 '+raceCount+'レース / 1着該当 '+raceFirst+'レース / 3着以内該当 '+raceTop3+'レース（艇別：'+total+'艇、1着'+first+'艇、3着以内'+top3+'艇）'});
+ out.textContent='公式確定着順を取得済みの一時集計：'+records.length+'レース / 30レース目標まで残り '+Math.max(0,30-records.length)+'レース（重複レースは上書き）\\n'+lines.join('\\n')+'\\n※公式結果APIで照合した着順のみ集計。該当艇の件数であり的中率・予測精度ではありません。';
 }
 document.getElementById('saveReview').addEventListener('click',()=>{
  if(!pendingReview||pendingReview.officialResultVerified!==true)return;
@@ -405,8 +405,8 @@ document.getElementById('importReviews').addEventListener('change',async()=>{
   }
   if([...records.values()].some(r=>r.observations.length!==6||new Set(r.observations.map(x=>x.boat)).size!==6))throw Error('6艇分揃っていないレースがあります');
   const groups=[['事前3項目で2項目以上最高',x=>x.leaderCount>=2],['展示最短',x=>x.fastest],['展示進入変動',x=>x.courseChange]];
-  const linesOut=groups.map(([label,test])=>{let hits=0,first=0,top3=0;for(const r of records.values())for(const x of r.observations)if(test(x)){hits++;if(r.places[0]===x.boat)first++;if(r.places.includes(x.boat))top3++}return label+'：該当 '+hits+'艇 / 1着 '+first+'艇 / 3着以内 '+top3+'艇'});
-  out.textContent='CSV参考集計：'+records.size+'レース\\n'+linesOut.join('\\n')+'\\n※CSV内の公式照合済みフラグは自己申告値です。今回の読み込みで公式サイトへの再照合は行っていません。現行の公式確認済み集計には混ぜません。';
+  const linesOut=groups.map(([label,test])=>{let hits=0,first=0,top3=0,raceCount=0,raceFirst=0,raceTop3=0;for(const r of records.values()){const eligible=r.observations.filter(test);if(eligible.length){raceCount++;if(eligible.some(x=>r.places[0]===x.boat))raceFirst++;if(eligible.some(x=>r.places.includes(x.boat)))raceTop3++}for(const x of eligible){hits++;if(r.places[0]===x.boat)first++;if(r.places.includes(x.boat))top3++}}return label+'：該当 '+raceCount+'レース / 1着該当 '+raceFirst+'レース / 3着以内該当 '+raceTop3+'レース（艇別 '+hits+'艇）'});
+  out.textContent='CSV参考集計：'+records.size+'レース / 30レース目標まで残り '+Math.max(0,30-records.size)+'レース\\n'+linesOut.join('\\n')+'\\n※CSV内の公式照合済みフラグは自己申告値です。今回の読み込みで公式サイトへの再照合は行っていません。現行の公式確認済み集計には混ぜません。';
  }catch(e){out.textContent='CSV読込失敗：'+String(e.message||e)}finally{input.value=''}
 });
 document.getElementById('clearReviews').addEventListener('click',()=>{reviewRecords.clear();pendingReview=null;document.getElementById('saveReview').disabled=true;updateReviewAggregate()});
