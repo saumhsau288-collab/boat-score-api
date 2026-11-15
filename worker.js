@@ -46,11 +46,63 @@ async function getVerifiedList(_key, producer) {
   return await producer();
 }
 
+// UTC 23:00 is 08:00 JST the following calendar day.
+// This handler requires a Cloudflare Cron Trigger and a KV binding named MORNING_KV.
+// Without both, no unattended morning report is created.
+function jstDateFromUtc(date) {
+  return new Date(date.getTime()+9*3600000).toISOString().slice(0,10).replace(/-/g,'');
+}
+async function runScheduledMorning(env,scheduledTime) {
+  const date=jstDateFromUtc(new Date(scheduledTime));
+  if(!env?.MORNING_KV)throw Error('MORNING_KV binding is required');
+  const venues=await officialScheduleVenueCandidates(date);
+  if(!venues?.length){
+    await env.MORNING_KV.put('morning:'+date,JSON.stringify({date,status:'schedule_unverified',updatedAt:new Date().toISOString(),categories:{main:[],upset:[],chaos:[]}}),{expirationTtl:172800});
+    return;
+  }
+  // A single cron run is deliberately bounded to avoid unbounded official-site traffic.
+  // Store partial progress so later cron invocations can resume safely.
+  const key='morning:'+date;
+  let state;
+  try{state=JSON.parse(await env.MORNING_KV.get(key)||'null')}catch{}
+  if(!state||!Array.isArray(state.completedVenues))state={date,status:'running',venues,completedVenues:[],failedVenues:[],records:[],updatedAt:null};
+  state.venues=venues;
+  const remaining=venues.filter(v=>!state.completedVenues.includes(v)&&!state.failedVenues.includes(v)).slice(0,2);
+  for(const venue of remaining){
+    try{
+      const rows=await scanVenueMorning(date,venue);
+      state.records.push(...rows.filter(x=>x.ready===true));
+      state.completedVenues.push(venue);
+    }catch(e){state.failedVenues.push(venue);}
+    state.updatedAt=new Date().toISOString();
+    const ranking=classifyDailyRaceCandidates(state.records);
+    state.categories={main:ranking.main,upset:ranking.upset,chaos:ranking.chaos};
+    state.status=state.completedVenues.length+state.failedVenues.length>=venues.length?'completed':'partial';
+    await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:172800});
+  }
+}
 export default {
-  async fetch(request) {
+  async scheduled(event,env,ctx) {
+    ctx.waitUntil(runScheduledMorning(env,event.scheduledTime));
+  },
+  async fetch(request,env) {
     const u = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, {status:204,headers:{...cors(request),'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600'}});
     
+if (u.pathname === '/api/morning/snapshot') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'';
+  if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
+  if(!env?.MORNING_KV)return reply(request,{date,status:'not_configured',message:'Scheduled storage is not configured'},503);
+  const saved=await env.MORNING_KV.get('morning:'+date);
+  if(!saved)return reply(request,{date,status:'not_available',message:'No saved morning snapshot'},404);
+  const state=JSON.parse(saved);
+  return reply(request,{date,status:state.status,updatedAt:state.updatedAt||null,venues:state.venues||[],
+    completedVenues:state.completedVenues||[],failedVenues:state.failedVenues||[],
+    categories:state.categories||{main:[],upset:[],chaos:[]},eligible:(state.records||[]).length,
+    provisional:true,method:'two_factor_morning_screening_unvalidated'});
+}
+
 if (u.pathname === '/api/morning/venues') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'';
