@@ -310,6 +310,9 @@ for(const id of ['date','venue','race'])document.getElementById(id).addEventList
 updateOfficialRaceLink();
 let coverageCsv=null,coverageBefore=null;
 let priorSnapshot=null,officialSnapshot=null;
+let priorSnapshotKey=null,officialSnapshotKey=null;
+function invalidatePendingReview(){pendingReview=null;const save=document.getElementById('saveReview');if(save)save.disabled=true}
+function currentDataKey(){return document.getElementById('date').value.trim()+'-'+document.getElementById('venue').value+'-'+document.getElementById('race').value}
 let scanVersion=0;
 function resetResultScan(){scanVersion++;document.getElementById('scanOfficialResults').disabled=false;document.getElementById('scanOfficialOutput').textContent='レース・日付・場の変更により診断をリセットしました。'}
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',resetResultScan);
@@ -376,7 +379,7 @@ document.getElementById('reviewResult').addEventListener('click',()=>{
  pendingReview=null;document.getElementById('saveReview').disabled=true;
  const out=document.getElementById('reviewOutput');const places=['finish1','finish2','finish3'].map(id=>{const v=document.getElementById(id).value.trim();return v===''?NaN:Number(v)});
  if(places.some(n=>!Number.isInteger(n)||n<1||n>6)||new Set(places).size!==3){out.textContent='1〜3着に異なる艇番（1〜6）を入力してください。';return}
- if(!priorSnapshot||!officialSnapshot||priorSnapshot.officialVerified!==true||officialSnapshot.exhibitionVerified!==true||officialSnapshot.startVerified!==true){out.textContent='事前CSVの登録番号照合と公式展示・進入の6艇確認が必要です。';return}
+ if(!priorSnapshot||!officialSnapshot||priorSnapshotKey!==currentDataKey()||officialSnapshotKey!==currentDataKey()||priorSnapshot.officialVerified!==true||officialSnapshot.exhibitionVerified!==true||officialSnapshot.startVerified!==true){out.textContent='同一レースの事前CSV登録番号照合と公式展示・進入の6艇確認が必要です。';return}
  if(!verifiedFinish||verifiedFinish.key!==currentReviewKey()||!verifiedFinish.places.every((x,i)=>x===places[i])){out.textContent='公式結果の着順を取得・照合してください。手入力結果は一時集計に追加できません。';return}
  const boats=priorSnapshot.boats,ex=officialSnapshot.exhibitionByBoat,starts=officialSnapshot.startByCourse,keys=['nationalWinRate','localWinRate','motorPlaceRate'];
  const num=v=>v===null||v===undefined||String(v).trim()===''?null:Number(v);
@@ -389,7 +392,7 @@ document.getElementById('reviewResult').addEventListener('click',()=>{
 });
 function renderEvidenceMatrix(){
  const host=document.getElementById('evidenceMatrix');if(!host)return;host.replaceChildren();
- if(!priorSnapshot||!officialSnapshot||priorSnapshot.officialVerified!==true||officialSnapshot.exhibitionVerified!==true||officialSnapshot.startVerified!==true)return;
+ if(!priorSnapshot||!officialSnapshot||priorSnapshotKey!==currentDataKey()||officialSnapshotKey!==currentDataKey()||priorSnapshot.officialVerified!==true||officialSnapshot.exhibitionVerified!==true||officialSnapshot.startVerified!==true)return;
  const boats=priorSnapshot.boats,ex=officialSnapshot.exhibitionByBoat,starts=officialSnapshot.startByCourse;
  if(!Array.isArray(boats)||boats.length!==6||!Array.isArray(ex)||ex.length!==6||!Array.isArray(starts)||starts.length!==6)return;
  const keys=['nationalWinRate','localWinRate','motorPlaceRate'];
@@ -410,7 +413,7 @@ function renderEvidenceMatrix(){
 function updateRaceChange(){
  renderEvidenceMatrix();
  const box=document.getElementById('evaluationChange');if(!box)return;
- if(!priorSnapshot||!officialSnapshot){box.textContent='事前CSVと公式直前情報を両方取得すると、項目別の変化を確認できます。';return}
+ if(!priorSnapshot||!officialSnapshot||priorSnapshotKey!==currentDataKey()||officialSnapshotKey!==currentDataKey()){box.textContent='同じ日付・競艇場・レースの事前CSVと公式直前情報を両方取得してください。';return}
  if(priorSnapshot.officialVerified!==true){box.textContent='CSVの6艇登録番号が公式と一致していないため、事前数値と直前情報の艇別照合を保留します。';return}
  const ex=officialSnapshot.exhibitionVerified?officialSnapshot.exhibitionByBoat:[];
  const st=officialSnapshot.startVerified?officialSnapshot.startByCourse:[];
@@ -457,11 +460,11 @@ function updateCoverageSummary(){
  document.getElementById('dataCoverageSummary').textContent='事前データ：'+csv+' / 直前データ：'+before+'。直近50走は別途確認が必要です。';
 }
 let beforeInfoVersion=0;
-function resetBeforeInfo(){officialSnapshot=null;updateRaceChange();coverageBefore=null;updateCoverageSummary();beforeInfoVersion++;document.getElementById('beforeInfoTable').replaceChildren();document.getElementById('beforeInfoResult').textContent='レース変更後は直前情報を再取得してください。'}
+function resetBeforeInfo(){invalidatePendingReview();officialSnapshotKey=null;officialSnapshot=null;updateRaceChange();coverageBefore=null;updateCoverageSummary();beforeInfoVersion++;document.getElementById('beforeInfoTable').replaceChildren();document.getElementById('beforeInfoResult').textContent='レース変更後は直前情報を再取得してください。'}
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',resetBeforeInfo);
 document.getElementById('loadBeforeInfo').addEventListener('click',async()=>{
  const version=++beforeInfoVersion,out=document.getElementById('beforeInfoResult');
- officialSnapshot=null;coverageBefore=null;updateRaceChange();updateCoverageSummary();document.getElementById('beforeInfoTable').replaceChildren();
+ invalidatePendingReview();officialSnapshotKey=null;officialSnapshot=null;coverageBefore=null;updateRaceChange();updateCoverageSummary();document.getElementById('beforeInfoTable').replaceChildren();
  const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
  if(!/^20[0-9]{6}$/.test(date)||venue<1||venue>24||race<1||race>12){out.textContent='日付・競艇場・レース番号を指定してください';return}
  out.textContent='公式直前情報を確認中…（公式サイトが遅い場合があります）';
@@ -469,7 +472,7 @@ document.getElementById('loadBeforeInfo').addEventListener('click',async()=>{
   const res=await fetch('/api/official/race-data?date='+date+'&venue='+venue+'&race='+race);
   const d=await res.json();if(version!==beforeInfoVersion)return;
   if(!res.ok){out.textContent='取得失敗：'+String(d.error||res.status);return}
-  officialSnapshot=d;updateRaceChange();
+  officialSnapshot=d;officialSnapshotKey=currentDataKey();updateRaceChange();
   coverageBefore={exhibitionVerified:d.exhibitionVerified===true,startVerified:d.startVerified===true,weatherVerified:d.weatherVerified===true};updateCoverageSummary();
   const holder=document.getElementById('beforeInfoTable');holder.replaceChildren();
   const exhibition=d.exhibitionVerified&&Array.isArray(d.exhibitionByBoat)?d.exhibitionByBoat:[];
@@ -503,9 +506,10 @@ document.getElementById('fillCsvRacerIds').addEventListener('click',()=>{
  targets.forEach((x,i)=>{x.value=verifiedCsvIds.ids[i];x.dispatchEvent(new Event('input',{bubbles:true}))});
  document.getElementById('csvFillStatus').textContent='公式と一致した登録番号6艇分を入力しました。50走の着順回数は未入力です。';
 });
-function clearCsvCard(){priorSnapshot=null;updateRaceChange();coverageCsv=null;updateCoverageSummary();document.getElementById('csvComparison').replaceChildren();csvCardVersion++;verifiedCsvIds=null;document.getElementById('fillCsvRacerIds').disabled=true;document.getElementById('csvFillStatus').textContent='レース変更後は再照合が必要です。';document.getElementById('csvCardResult').textContent='レース条件が変わりました。CSVを再取得してください。'}
+function clearCsvCard(){invalidatePendingReview();priorSnapshotKey=null;priorSnapshot=null;updateRaceChange();coverageCsv=null;updateCoverageSummary();document.getElementById('csvComparison').replaceChildren();csvCardVersion++;verifiedCsvIds=null;document.getElementById('fillCsvRacerIds').disabled=true;document.getElementById('csvFillStatus').textContent='レース変更後は再照合が必要です。';document.getElementById('csvCardResult').textContent='レース条件が変わりました。CSVを再取得してください。'}
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',clearCsvCard);
 document.getElementById('loadCsvCard').addEventListener('click',async()=>{
+ invalidatePendingReview();priorSnapshotKey=null;priorSnapshot=null;updateRaceChange();
  const version=++csvCardVersion,out=document.getElementById('csvCardResult');
  const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
  if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12){out.textContent='日付・競艇場・レース番号を選択してください';return}
@@ -518,7 +522,7 @@ document.getElementById('loadCsvCard').addEventListener('click',async()=>{
   const ids=data.boats.map(b=>String(b.racerId||'').trim());
   if(data.officialVerified===true&&ids.every(x=>/^[0-9]{4}$/.test(x))&&new Set(ids).size===6){verifiedCsvIds={ids,version};document.getElementById('fillCsvRacerIds').disabled=false;document.getElementById('csvFillStatus').textContent='公式と一致した登録番号を入力できます。'}
   else document.getElementById('csvFillStatus').textContent='公式照合が未完了のため登録番号は自動入力しません。';
-  priorSnapshot=data;updateRaceChange();
+  priorSnapshot=data;priorSnapshotKey=currentDataKey();updateRaceChange();
   coverageCsv={populatedFields:data.populatedFields,totalFields:data.totalFields,officialVerified:data.officialVerified===true};updateCoverageSummary();
   const comparison=document.getElementById('csvComparison');comparison.replaceChildren();
   const validNumber=x=>{const n=Number(x);return String(x??'').trim()!==''&&Number.isFinite(n)?n:null};
