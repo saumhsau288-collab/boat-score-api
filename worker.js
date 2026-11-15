@@ -155,22 +155,28 @@ async function refreshRunningVenues(){
  if(scheduleController)scheduleController.abort();scheduleController=new AbortController();const controller=scheduleController;
  const selected=venue.value;st.textContent='公式開催場を照合中（競艇場の切り替えはいつでも可能）…';out.textContent='';
  const verified=new Set(),errors=[];let offset=0;
- for(let page=0;page<5;page++){
+ for(let page=0;page<24;page++){
+  if(token!==scheduleRequest||controller.signal.aborted)return;
   try{
-   const response=await fetch('/api/official/active-venues?date='+dateCode()+'&offset='+offset,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(18000)])});
-   if(!response.ok)throw Error('開催場照合 HTTP '+response.status);const data=await response.json();if(data.status==='unavailable')throw Error(data.message||'照合不可');
+   const response=await fetch('/api/official/active-venues?date='+dateCode()+'&offset='+offset,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(13000)])});
+   if(!response.ok)throw Error('HTTP '+response.status);
+   const data=await response.json();
    if(token!==scheduleRequest)return;
-   (data.verifiedVenues||[]).forEach(v=>{if(Number.isInteger(v)&&v>=1&&v<=24)verified.add(v)});
-   out.textContent='公式1R照合済み：'+([...verified].sort((a,b)=>a-b).map(v=>names[v-1]).join('、')||'まだありません')+'\n未確認の競艇場も手動選択できます。';
-   if(data.scanComplete||data.nextOffset==null)break;offset=data.nextOffset;
-  }catch(e){if(token!==scheduleRequest||controller.signal.aborted)return;errors.push(String(e.message||e));offset+=5;}
+   for(const v of data.verifiedVenues||[])if(Number.isInteger(v)&&v>=1&&v<=24)verified.add(v);
+   for(const check of data.checks||[])if(check.status!=='race1_entry_verified')errors.push(names[check.venue-1]+': '+(check.reason||'未確認'));
+   offset=data.nextOffset;
+  }catch(e){if(token!==scheduleRequest||controller.signal.aborted)return;errors.push(names[offset]+': '+String(e.message||e));offset++;}
+  st.textContent='公式1R照合 '+Math.min(offset??24,24)+'/24場／確認済み '+verified.size+'場';
+  out.textContent='確認済み：'+([...verified].sort((a,b)=>a-b).map(v=>names[v-1]).join('、')||'なし')+'\\n未確認：'+errors.slice(-6).join('／');
+  if(offset==null)break;
  }
+
  if(token!==scheduleRequest)return;
  // Official 1R checks are not proof that every other venue is closed.
  // Highlight verified venues without removing unverified choices.
  for(const option of venue.options){if(!option.value)continue;const code=Number(option.value);option.textContent=names[code-1]+(verified.has(code)?' ✓':'');}
  st.textContent='公式1R照合済み '+verified.size+'場'+(errors.length?'／一部取得失敗':'')+'。✓は確認済み、無印は未確認（非開催とは限りません）。';
- if(!verified.size)out.textContent='開催場の一括確認はできませんでした。競艇場は手動で選択できます。';
+ if(!verified.size)out.textContent+='\\n開催場の一括確認はできませんでした。競艇場は手動で選択できます。';
 }
 let raceDataRequest=0,raceDataController=null;
 function clearRaceDisplay(){raceDataRequest++;if(raceDataController){raceDataController.abort();raceDataController=null;}document.getElementById('load').disabled=false;document.getElementById('comparisonBody').replaceChildren();document.getElementById('finishRateSummary').textContent='選択中のレースの公式データは未確認です';document.getElementById('racerPoints').textContent='レースを選んで公式データを確認してください';document.getElementById('output').textContent='';document.getElementById('status').textContent='';}
@@ -307,25 +313,19 @@ if (u.pathname === '/api/official/active-venues') {
   const date=u.searchParams.get('date')||'';
   if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid YYYYMMDD date'},400);
   const offset=Number(u.searchParams.get('offset')||0);
-  if(!Number.isInteger(offset)||offset<0||offset>24||offset%5!==0)return reply(request,{error:'Invalid offset; use 0,5,10,15,20'},400);
-  // Run independent official 1R checks concurrently rather than waiting for
-  // six sequential timeout batches. A failed check is UNKNOWN, not closed.
-  let result;try{result=await getVerifiedList('venues:'+date+':'+offset,async()=>{const candidates=await officialScheduleVenueCandidates(date);const all=candidates||Array.from({length:24},(_,i)=>i+1);const limited=all.slice(offset,offset+5);const checks=await mapOfficialLimited(limited,2,async venue=>{
-    try{
-      const official=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});
-      return {venue,status:official.verified===true?'race1_entry_verified':'unverified',
-        statsVerified:official.statsVerified===true,
-        reason:official.verified===true?null:(official.reason||'official_rows_unverified')};
-    }catch{
-      return {venue,status:'unverified',statsVerified:false,reason:'official_request_failed'};
-    }
-  });
-  const verifiedVenues=checks.filter(x=>x.status==='race1_entry_verified').map(x=>x.venue);
-  return {date,verifiedVenues,checks,discovery:candidates?'official_schedule_link_candidates':'all_24_venues_fallback',
-    coverage:'official_race1_entry_only',completeScheduleVerified:false,
-    note:'This is a bounded diagnostic scan, not a complete schedule. Unverified venues are not necessarily closed.',
-    scannedCount:checks.length,scanLimit:5,offset,nextOffset:offset+5<all.length?offset+5:null,scanComplete:offset+5>=all.length,
-    candidateCount:candidates?candidates.length:null};});}catch(error){return reply(request,{date,verifiedVenues:[],checks:[],status:'unavailable',reason:'venue_scan_failed',message:String(error?.message||error).slice(0,180),completeScheduleVerified:false},200)}return reply(request,result);
+  if(!Number.isInteger(offset)||offset<0||offset>=24)return reply(request,{error:'Invalid offset; use 0..23'},400);
+  const venue=offset+1;
+  let check;
+  try{
+    const official=await fetchOfficialRacers(date,venue,1,{verificationOnly:true,fastVerification:true});
+    check={venue,status:official.verified===true?'race1_entry_verified':'unverified',reason:official.verified===true?null:(official.reason||'official_rows_unverified')};
+  }catch(error){
+    check={venue,status:'unverified',reason:error?.name==='TimeoutError'?'official_timeout':String(error?.message||'official_request_failed').slice(0,100)};
+  }
+  return reply(request,{date,verifiedVenues:check.status==='race1_entry_verified'?[venue]:[],checks:[check],offset,
+    nextOffset:offset<23?offset+1:null,scanComplete:offset===23,completeScheduleVerified:false,
+    note:'Unverified is not proof of non-operation.'});
+
 }
 
 if (u.pathname === '/api/official/verified-races') {
