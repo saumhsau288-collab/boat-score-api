@@ -85,7 +85,10 @@ async function refreshRunningVenues(){
   }catch(e){if(token!==scheduleRequest||controller.signal.aborted)return;errors.push(String(e.message||e));offset+=5;}
  }
  if(token!==scheduleRequest)return;
- st.textContent='照合済み '+verified.size+'場'+(errors.length?'／一部取得失敗':'')+'。選択欄は利用できます。';
+ // Official 1R checks are not proof that every other venue is closed.
+ // Highlight verified venues without removing unverified choices.
+ for(const option of venue.options){if(!option.value)continue;const code=Number(option.value);option.textContent=names[code-1]+(verified.has(code)?' ✓':'');}
+ st.textContent='公式1R照合済み '+verified.size+'場'+(errors.length?'／一部取得失敗':'')+'。✓は確認済み、無印は未確認（非開催とは限りません）。';
  if(!verified.size)out.textContent='開催場の一括確認はできませんでした。競艇場は手動で選択できます。';
 }
 let raceDataRequest=0,raceDataController=null;
