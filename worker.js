@@ -341,7 +341,7 @@ document.getElementById('loadSelectedRaceEvidence').addEventListener('click',asy
    }
    out.textContent=(i+1)+'/3 '+name+'の取得を実行しました。\\n'+(last||'応答待ち・取得状況は各欄を確認してください。')+'\\n※データが揃わない場合は分析を保留します。';
   }
-  if(version===evidenceLoadVersion)out.textContent+='\\n3種類の取得操作を終了しました。各欄の照合状態を確認してください。';
+  if(version===evidenceLoadVersion){const key=currentDataKey(),csvOk=priorSnapshotKey===key&&priorSnapshot?.officialVerified===true,exOk=officialSnapshotKey===key&&officialSnapshot?.exhibitionVerified===true,stOk=officialSnapshotKey===key&&officialSnapshot?.startVerified===true,resultOk=verifiedFinish?.key===key&&Array.isArray(verifiedFinish.places)&&verifiedFinish.places.length===3;const complete=csvOk&&exOk&&stOk&&resultOk;out.textContent+='\\n【取得後の照合判定】\\nCSV登録番号：'+(csvOk?'公式6艇一致':'未確認')+'\\n展示6艇：'+(exOk?'確認済':'未確認')+'\\n進入6艇：'+(stOk?'確認済':'未確認')+'\\n公式確定着順：'+(resultOk?'確認済':'未確認')+'\\n'+(complete?'4条件が揃いました。「条件と着順を照合」を押して検証を進めてください。':'不足データがあるため、検証登録は保留してください。')+'\\n※まくらぼ直近50走は別途未確認です。';}
  }finally{if(version===evidenceLoadVersion)button.disabled=false}
 });
 document.getElementById('scanOfficialResults').addEventListener('click',async()=>{
