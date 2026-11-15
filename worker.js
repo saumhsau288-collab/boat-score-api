@@ -311,22 +311,28 @@ updateOfficialRaceLink();
 let coverageCsv=null,coverageBefore=null;
 let priorSnapshot=null,officialSnapshot=null;
 let scanVersion=0;
-function resetResultScan(){scanVersion++;document.getElementById('scanOfficialOutput').textContent='レース・日付・場の変更により診断をリセットしました。'}
+function resetResultScan(){scanVersion++;document.getElementById('scanOfficialResults').disabled=false;document.getElementById('scanOfficialOutput').textContent='レース・日付・場の変更により診断をリセットしました。'}
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',resetResultScan);
 document.getElementById('scanOfficialResults').addEventListener('click',async()=>{
  const version=++scanVersion,button=document.getElementById('scanOfficialResults'),out=document.getElementById('scanOfficialOutput');
  const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value);
  if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24){out.textContent='日付・競艇場を確認してください。';return}
- button.disabled=true;const rows=[];out.textContent='公式結果の取得診断中（0/12）';
+ button.disabled=true;const rows=[],reasons={};let verified=0,failed=0;out.textContent='公式結果の取得診断中（0/12）';
  try{
   for(let race=1;race<=12;race++){
    if(version!==scanVersion)return;
-   try{const response=await fetch('/api/official/result?date='+date+'&venue='+venue+'&race='+race);const data=await response.json();if(version!==scanVersion)return;
-    rows.push(race+'R：'+(response.ok&&data.verified===true?'確認済 '+data.finishOrder.slice(0,3).join('-'):'未確認 '+String(data.reason||'HTTP '+response.status)));
-   }catch(err){if(version!==scanVersion)return;rows.push(race+'R：取得失敗 '+String(err.message||err))}
-   out.textContent='選択日・同場の結果取得診断 '+race+'/12（予想検証・保存は未実施）\\n'+rows.join('\\n');
+   try{
+    const response=await fetch('/api/official/result?date='+date+'&venue='+venue+'&race='+race);
+    const data=await response.json();if(version!==scanVersion)return;
+    const order=Array.isArray(data.finishOrder)?data.finishOrder.map(Number):[];
+    const valid=response.ok&&data.verified===true&&order.length===6&&new Set(order).size===6&&order.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
+    if(valid){verified++;rows.push(race+'R：確認済 '+order.slice(0,3).join('-'))}
+    else{failed++;const reason=String(data.reason||'HTTP '+response.status);reasons[reason]=(reasons[reason]||0)+1;rows.push(race+'R：未確認 '+reason)}
+   }catch(err){if(version!==scanVersion)return;failed++;reasons.fetch_or_parse_error=(reasons.fetch_or_parse_error||0)+1;rows.push(race+'R：取得失敗 '+String(err.message||err))}
+   out.textContent='選択日・同場の結果取得診断 '+race+'/12\\n確認済：'+verified+' / 未確認：'+failed+'\\n'+rows.join('\\n');
   }
- }finally{button.disabled=false}
+  if(version===scanVersion)out.textContent+='\\n【診断集計】\\n確認済：'+verified+'/12\\n未確認：'+failed+'/12\\n失敗理由：'+(Object.entries(reasons).map(([k,v])=>k+' '+v+'件').join('、')||'なし')+'\\n※取得状況の診断です。予想データとの照合や的中率の検証ではありません。';
+ }finally{if(version===scanVersion)button.disabled=false}
 });
 let finishFetchVersion=0;let verifiedFinish=null;
 function currentReviewKey(){return document.getElementById('date').value.trim()+'-'+document.getElementById('venue').value+'-'+document.getElementById('race').value}
