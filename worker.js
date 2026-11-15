@@ -763,7 +763,15 @@ document.getElementById('check').addEventListener('click',async()=>{
  const response=await fetch('/api/makulabo/screenshot-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,venue,race,rows:data})});
  const result=await response.json();
  if(currentReview!==screenshotReviewVersion||date!==document.getElementById('date').value.trim()||venue!==Number(document.getElementById('venue').value)||race!==Number(document.getElementById('race').value))return;
- out.textContent=result.identityVerified?'公式選手番号：6艇一致。画像から入力した着順回数は未検証です。予想用の確認済みデータにはなりません。':(result.error||'公式選手番号との一致を確認できませんでした。データは採用されません。');
+ if(result.identityVerified===true&&Array.isArray(result.rows)&&result.rows.length===6){
+  out.textContent='公式選手番号：6艇一致。以下は画像を見て手入力した未検証の集計です。予想点には反映しません。\\n'+
+    '艇  走数  1着  2着  3着  4着  5着  6着  1着率  3連対率\\n'+
+    result.rows.map(row=>{
+      const first=(row.finishCounts[0]/row.sampleSize*100).toFixed(1)+'%';
+      const top3=(row.finishCounts.slice(0,3).reduce((a,b)=>a+b,0)/row.sampleSize*100).toFixed(1)+'%';
+      return [row.boat+'号艇',row.sampleSize,...row.finishCounts,first,top3].join('  ');
+    }).join('\\n');
+ }else out.textContent=result.error||'公式選手番号との一致を確認できませんでした。データは採用されません。';
  }catch(error){if(currentReview===screenshotReviewVersion)out.textContent=String(error.message||error)}
 });
 </script></body></html>`;
