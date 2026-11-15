@@ -748,7 +748,10 @@ document.getElementById('zoomOut').addEventListener('click',()=>{zoom=Math.max(1
 document.getElementById('zoomReset').addEventListener('click',()=>{zoom=1;applyZoom();viewport.scrollTo(0,0)});
 let objectUrl;
 document.getElementById('photo').addEventListener('change',e=>{if(objectUrl)URL.revokeObjectURL(objectUrl);const file=e.target.files?.[0];if(file&&file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);zoomPreview.src=objectUrl;zoomPreview.hidden=false;zoom=1;applyZoom()}else{zoomPreview.hidden=true;zoomPreview.removeAttribute('src')}});
+let screenshotReviewVersion=0;
+for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',()=>{screenshotReviewVersion++;});
 document.getElementById('check').addEventListener('click',async()=>{
+ const currentReview=++screenshotReviewVersion;
  const out=document.getElementById('result');out.textContent='照合中…';
  try{
  const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
@@ -756,8 +759,10 @@ document.getElementById('check').addEventListener('click',async()=>{
  if(!/^[0-9]{8}$/.test(date)||data.some(r=>!/^[0-9]{4}$/.test(r.racerId))||[...rows.querySelectorAll('input')].some(x=>!x.value.trim()))throw Error('入力漏れがあります');
  if(data.some(r=>r.sampleSize<1||r.sampleSize>50||r.finishCounts.some(n=>!Number.isInteger(n)||n<0||n>50)||r.finishCounts.reduce((a,b)=>a+b,0)!==r.sampleSize))throw Error('着順回数の合計と走数が一致しません。各艇の入力を確認してください');
  const response=await fetch('/api/makulabo/screenshot-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,venue,race,rows:data})});
- const result=await response.json();out.textContent=result.identityVerified?'公式選手番号：6艇一致。画像から入力した着順回数は未検証です。予想用の確認済みデータにはなりません。':(result.error||'公式選手番号との一致を確認できませんでした。データは採用されません。');
- }catch(error){out.textContent=String(error.message||error)}
+ const result=await response.json();
+ if(currentReview!==screenshotReviewVersion||date!==document.getElementById('date').value.trim()||venue!==Number(document.getElementById('venue').value)||race!==Number(document.getElementById('race').value))return;
+ out.textContent=result.identityVerified?'公式選手番号：6艇一致。画像から入力した着順回数は未検証です。予想用の確認済みデータにはなりません。':(result.error||'公式選手番号との一致を確認できませんでした。データは採用されません。');
+ }catch(error){if(currentReview===screenshotReviewVersion)out.textContent=String(error.message||error)}
 });
 </script></body></html>`;
   return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; img-src blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'"}});
