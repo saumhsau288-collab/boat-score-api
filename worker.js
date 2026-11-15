@@ -158,7 +158,10 @@ async function refreshRunningVenues(){
  for(let page=0;page<24;page++){
   if(token!==scheduleRequest||controller.signal.aborted)return;
   try{
-   const response=await fetch('/api/official/active-venues?date='+dateCode()+'&offset='+offset,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(13000)])});
+   const response=await Promise.race([
+    fetch('/api/official/active-venues?date='+dateCode()+'&offset='+offset,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(9000)])}),
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('client_watchdog_timeout')),10500))
+   ]);
    if(!response.ok)throw Error('HTTP '+response.status);
    const data=await response.json();
    if(token!==scheduleRequest)return;
@@ -166,7 +169,7 @@ async function refreshRunningVenues(){
    for(const check of data.checks||[])if(check.status!=='race1_entry_verified')errors.push(names[check.venue-1]+': '+(check.reason||'未確認'));
    offset=data.nextOffset;
   }catch(e){if(token!==scheduleRequest||controller.signal.aborted)return;errors.push(names[offset]+': '+String(e.message||e));offset++;}
-  st.textContent='公式1R照合 '+Math.min(offset??24,24)+'/24場／確認済み '+verified.size+'場';
+  st.textContent='公式1R照合 '+Math.min(offset??24,24)+'/24場／確認済み '+verified.size+'場（未確認 '+errors.length+'場）';
   out.textContent='確認済み：'+([...verified].sort((a,b)=>a-b).map(v=>names[v-1]).join('、')||'なし')+'\\n未確認：'+errors.slice(-6).join('／');
   if(offset==null)break;
  }
