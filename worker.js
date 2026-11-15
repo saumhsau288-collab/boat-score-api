@@ -324,7 +324,7 @@ document.getElementById('fetchOfficialFinish').addEventListener('click',async()=
  try{
   const res=await fetch('/api/official/result?date='+date+'&venue='+venue+'&race='+race);
   const d=await res.json();if(version!==finishFetchVersion)return;
-  diagnostics.textContent='API応答：HTTP '+res.status+'\\n照合：'+(d.verified===true?'成功':'未確認')+'\\n理由：'+String(d.reason||'なし')+'\\n公式ページHTTP：'+String(d.diagnostics?.upstreamStatus??d.upstreamStatus??'不明')+'\\nHTML文字数：'+String(d.diagnostics?.htmlBytes??'不明')+'\\nテーブル数：'+String(d.diagnostics?.tableCount??'不明')+'\\n結果見出し検出：'+String(d.diagnostics?.hasResultHeading??'不明')+'\\n※公式ページの構造変更・未公開・通信失敗を区別するための診断です。';
+  diagnostics.textContent='API応答：HTTP '+res.status+'\\n照合：'+(d.verified===true?'成功':'未確認')+'\\n理由：'+String(d.reason||'なし')+'\\n公式ページHTTP：'+String(d.diagnostics?.upstreamStatus??d.upstreamStatus??'不明')+'\\nHTML文字数：'+String(d.diagnostics?.htmlBytes??'不明')+'\\nテーブル数：'+String(d.diagnostics?.tableCount??'不明')+'\\n結果見出し検出：'+String(d.diagnostics?.hasResultHeading??'不明')+'\\n候補テーブル：'+String(d.parserDiagnostics?.candidateTables??'不明')+' / 読取行数：'+String(d.parserDiagnostics?.parsedRows??'不明')+' / 数字以外の着順：'+String(d.parserDiagnostics?.nonNumericRanks??'不明')+'\\n※公式ページの構造変更・未公開・通信失敗を区別するための診断です。';
   const order=Array.isArray(d.finishOrder)?d.finishOrder.map(x=>Number(x)):[];
   if(!res.ok||d.verified!==true||order.length<3||order.slice(0,3).some(x=>!Number.isInteger(x)||x<1||x>6)||new Set(order.slice(0,3)).size!==3){status.textContent='公式確定着順を照合できません：'+String(d.reason||'未確認');return}
   ['finish1','finish2','finish3'].forEach((id,i)=>{document.getElementById(id).value=String(order[i])});
@@ -1648,24 +1648,26 @@ function rankTrifectaCandidates(rankedScores) {
 }
 
 function parseOfficialFinishOrder(html) {
-  const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(match=>match[0]);
-  const candidate=tables.find(table=>{const headers=[...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim());return headers.some(h=>h==='着'||h==='着順')&&headers.some(h=>h==='枠'||h==='艇番');});
-  if(!candidate)return {verified:false,finishOrder:[],podiumVerified:false,podium:[],reason:'result_table_missing'};
-  const rows=[...candidate.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(match=>{
-    const cells=[...match[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
-      .map(cell=>cell[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim().normalize('NFKC'));
-    const rank=cells[0],boat=cells[1];
-    return /^[1-6]$/.test(boat)?{rank,boat:Number(boat)}:null;
-  }).filter(Boolean);
-  const numeric=rows.filter(row=>/^[1-6]$/.test(row.rank)).map(row=>({rank:Number(row.rank),boat:row.boat}));
-  const uniqueRanks=new Set(numeric.map(row=>row.rank));
-  const uniqueBoats=new Set(rows.map(row=>row.boat));
-  const podium=[1,2,3].map(rank=>numeric.find(row=>row.rank===rank)?.boat);
-  const podiumVerified=rows.length===6&&uniqueBoats.size===6&&podium.every(Boolean)&&new Set(podium).size===3&&uniqueRanks.size===numeric.length;
-  const fullVerified=rows.length===6&&numeric.length===6&&uniqueRanks.size===6&&uniqueBoats.size===6;
-  if(!fullVerified)return {verified:false,finishOrder:[],podiumVerified,podium:podiumVerified?podium:[],reason:'result_rows_incomplete_or_nonstandard'};
-  numeric.sort((a,b)=>a.rank-b.rank);
-  return {verified:true,finishOrder:numeric.map(row=>row.boat),podiumVerified:true,podium:numeric.slice(0,3).map(row=>row.boat),reason:null};
+  const tables=[...html.matchAll(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/gi)].map(m=>m[0]);
+  const clean=v=>String(v).replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').replace(/\\s+/g,' ').trim().normalize('NFKC');
+  const diagnostics={candidateTables:0,parsedRows:0,nonNumericRanks:0};
+  for(const table of tables){
+    const trs=[...table.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)].map(m=>m[1]);
+    const rows=trs.map(tr=>[...tr.matchAll(/<t[dh]\\b[^>]*>([\\s\\S]*?)<\\/t[dh]>/gi)].map(m=>clean(m[1]))).filter(c=>c.length>=2);
+    const headers=rows.find(c=>c.some(x=>x==='着'||x==='着順')&&c.some(x=>x==='枠'||x==='艇番'));
+    if(!headers)continue;
+    diagnostics.candidateTables++;
+    const rankIndex=headers.findIndex(x=>x==='着'||x==='着順'),boatIndex=headers.findIndex(x=>x==='枠'||x==='艇番');
+    const found=rows.slice(rows.indexOf(headers)+1).map(c=>({rank:c[rankIndex],boat:c[boatIndex]})).filter(x=>/^[1-6]$/.test(x.boat));
+    diagnostics.parsedRows=Math.max(diagnostics.parsedRows,found.length);
+    diagnostics.nonNumericRanks=Math.max(diagnostics.nonNumericRanks,found.filter(x=>!/^[1-6]$/.test(x.rank)).length);
+    const numeric=found.filter(x=>/^[1-6]$/.test(x.rank)).map(x=>({rank:Number(x.rank),boat:Number(x.boat)}));
+    const ranks=new Set(numeric.map(x=>x.rank)),boats=new Set(numeric.map(x=>x.boat));
+    if(found.length!==6||numeric.length!==6||ranks.size!==6||boats.size!==6)continue;
+    numeric.sort((x,y)=>x.rank-y.rank);
+    return {verified:true,finishOrder:numeric.map(x=>x.boat),podiumVerified:true,podium:numeric.slice(0,3).map(x=>x.boat),reason:null,parserDiagnostics:diagnostics};
+  }
+  return {verified:false,finishOrder:[],podiumVerified:false,podium:[],reason:diagnostics.candidateTables?'result_rows_incomplete_or_nonstandard':'result_table_missing',parserDiagnostics:diagnostics};
 }
 
 function parseLast50Heatmap(html) {
