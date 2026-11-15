@@ -1220,15 +1220,25 @@ if (u.pathname === '/api/official/race-data') {
   let beforeFailureReason=null;
   const [official,before]=await Promise.all([
     fetchOfficialRacers(date,venue,race).catch(e=>({verified:false,statsVerified:false,racers:[],statsByBoat:[],reason:'official_fetch_error:'+String(e?.message||e).slice(0,100)})),
-    (async()=>{try{
-      const res=await fetch(beforeUrl.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(10000)});
-      if(!res.ok){beforeFailureReason='official_beforeinfo_http_'+res.status;return null;}
-      const contentType=res.headers.get('content-type')||'';
-      if(contentType&&!/text\/html|application\/xhtml\+xml/i.test(contentType)){beforeFailureReason='official_beforeinfo_content_type';return null;}
-      const html=await res.text();
-      if(html.length>1000000){beforeFailureReason='official_beforeinfo_too_large';return null;}
-      return html;
-    }catch(e){beforeFailureReason=e?.name==='TimeoutError'||e?.name==='AbortError'?'official_beforeinfo_timeout':'official_beforeinfo_fetch_failed';return null;}})()
+    (async()=>{
+      for(let attempt=1;attempt<=2;attempt++){
+        try{
+          const res=await fetch(beforeUrl.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(attempt===1?10000:15000)});
+          if(!res.ok){beforeFailureReason='official_beforeinfo_http_'+res.status;return null;}
+          const contentType=res.headers.get('content-type')||'';
+          if(contentType&&!/text\/html|application\/xhtml\+xml/i.test(contentType)){beforeFailureReason='official_beforeinfo_content_type';return null;}
+          const html=await res.text();
+          if(html.length>1000000){beforeFailureReason='official_beforeinfo_too_large';return null;}
+          beforeFailureReason=null;
+          return html;
+        }catch(e){
+          const timeout=e?.name==='TimeoutError'||e?.name==='AbortError';
+          beforeFailureReason=(timeout?'official_beforeinfo_timeout':'official_beforeinfo_fetch_failed')+'_attempt_'+attempt;
+          if(!timeout||attempt===2)return null;
+        }
+      }
+      return null;
+    })()
   ]);
   const exhibition=before?extractOfficialExhibition(before):{verified:false,rows:[]};
   const start=before?extractOfficialStartExhibition(before):{verified:false,rows:[]};
