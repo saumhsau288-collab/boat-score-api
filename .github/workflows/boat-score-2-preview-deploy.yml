@@ -73,3 +73,18 @@ jobs:
           done
           echo "::error::Preview version endpoint does not match expected Boat Score 2 development build"
           exit 1
+      - name: Smoke-test screenshot tool HTML and controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://boat-score-2-preview.saumh-sau-288.workers.dev/tools/makulabo-screenshot"
+          curl --fail --silent --show-error --max-time 25 "$URL" -o screenshot-tool.html
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('screenshot-tool.html', 'utf8');
+          const ids = ['loadCsvCard','loadBeforeInfo','fetchOfficialFinish','reviewResult','scanOfficialResults','loadSelectedRaceEvidence','reviewSelectedEvidence','exportReviews','importReviews'];
+          const missing = ids.filter(id => !html.includes('id="' + id + '"'));
+          if (missing.length) throw new Error('Missing deployed screenshot tool controls: ' + missing.join(', '));
+          console.log('Deployed screenshot tool includes all expected controls');
+          NODE
+
