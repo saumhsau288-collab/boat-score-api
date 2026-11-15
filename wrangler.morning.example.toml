@@ -1,0 +1,15 @@
+# Boat Score 2 preview — sample only, not deployed.
+# Copy the relevant fields into the preview Worker's actual Wrangler config.
+# Cloudflare Cron uses UTC: 23:00 UTC = 08:00 JST the next day.
+# Subsequent 10-minute triggers resume batches; not a guarantee of completion.
+name = "boat-score-2-preview"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[triggers]
+crons = ["0,10,20,30,40,50 23 * * *", "0,10,20,30,40,50 0 * * *"]
+
+# Create a Cloudflare KV namespace and replace the placeholder before deploying.
+# [[kv_namespaces]]
+# binding = "MORNING_KV"
+# id = "REPLACE_WITH_REAL_KV_NAMESPACE_ID"
