@@ -119,13 +119,14 @@ if (u.pathname === '/api/morning/venues') {
   if(!venues){
     // Schedule-page link parsing can fail even when individual official entry lists work.
     // Recover only venues whose 1R six-boat entries can be independently verified.
-    const checks=await mapOfficialLimited(Array.from({length:24},(_,i)=>i+1),4,async venue=>{
+    const offset=Math.max(0,Math.min(20,Number(u.searchParams.get('offset')||0)||0));
+    const checks=await mapOfficialLimited(Array.from({length:Math.min(4,24-offset)},(_,i)=>offset+i+1),2,async venue=>{
       try{const data=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});return {venue,verified:data?.verified===true};}
       catch{return {venue,verified:false};}
     });
     const verified=checks.filter(x=>x.verified).map(x=>x.venue);
-    if(!verified.length)return reply(request,{date,status:'unverified',venues:[],message:'公式日程と各場1R出走表を確認できません。開催なしとは断定できません。'},503);
-    return reply(request,{date,status:'partial_verified_race1_fallback',venues:verified,venueCount:verified.length,possibleRaceSlots:verified.length*12,completeScheduleVerified:false,forecastStatus:'not_generated',message:'公式日程の取得に失敗したため、公式1R出走表で確認できた競艇場のみ表示。未確認の場も開催している可能性があります。'});
+    if(!verified.length)return reply(request,{date,status:'partial_verified_race1_fallback',venues:[],nextOffset:offset+4<24?offset+4:null,message:'この4場の公式1R出走表は未確認。開催なしとは断定できません。'});
+    return reply(request,{date,status:'partial_verified_race1_fallback',venues:verified,nextOffset:offset+4<24?offset+4:null,venueCount:verified.length,possibleRaceSlots:verified.length*12,completeScheduleVerified:false,forecastStatus:'not_generated',message:'公式日程の取得に失敗したため、公式1R出走表で確認できた競艇場のみ表示。未確認の場も開催している可能性があります。'});
   }
   return reply(request,{date,status:'verified_schedule_links',venues,venueCount:venues.length,possibleRaceSlots:venues.length*12,forecastStatus:'not_generated',message:'公式日程のリンクから候補場を抽出。各レースの出走表確認と予想は未実装。'});
 }
@@ -204,9 +205,17 @@ document.getElementById('morningNational').onclick=async function(){
  lines.push(labels[key]+' TOP '+top.length+'：'+(top.length?top.map((x,j)=>(j+1)+'. '+x.venue+'場 '+x.race+'R').join(' / '):'確認できた候補なし'));}
  if(failures.length)lines.push('未取得: '+failures.join('、'));out.textContent=lines.join('\n');try{localStorage.setItem(morningCacheKey(dateCode()),JSON.stringify({date:dateCode(),savedAt:new Date().toISOString(),complete:false,text:out.textContent}));}catch(e){} };
  try{
- const response=await fetch('/api/morning/venues?date='+dateCode(),{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});
- const schedule=await response.json();if(!response.ok||!Array.isArray(schedule.venues)||!schedule.venues.length)throw Error(schedule.message||'開催場候補を確認できません');
- const venues=schedule.venues;let next=0,done=0;
+ const found=new Set();let offset=0,partial=false;
+ do{
+  const response=await fetch('/api/morning/venues?date='+dateCode()+'&offset='+offset,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(20000)])});
+  const schedule=await response.json();if(!response.ok)throw Error(schedule.message||'開催場候補を確認できません');
+  for(const v of schedule.venues||[])found.add(v);
+  partial=schedule.status==='partial_verified_race1_fallback';
+  offset=partial&&schedule.nextOffset!=null?schedule.nextOffset:null;
+  st.textContent='開催場の公式確認中… '+found.size+'場を確認';
+ }while(offset!=null&&!controller.signal.aborted);
+ const venues=[...found];if(!venues.length)throw Error('確認できた開催場はありません。未確認の場が非開催とは限りません。');
+ let next=0,done=0;
  const worker=async()=>{while(next<venues.length&&!controller.signal.aborted){
  const v=venues[next++];
  try{const res=await fetch('/api/daily/verified-venue-screen?date='+dateCode()+'&venue='+v,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(90000)])});
