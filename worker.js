@@ -2073,19 +2073,6 @@ racerLinkSamples: racerLinks.slice(0, 6).map(m => m[1]),
   }
 }
 
-));
-    return match?[match[1]]:[];
-  });
-  const windDirection=directionMatch?directionMatch[1]:(new Set(imageDirections).size===1?imageDirections[0]:null);
-  const directionNearby=text.match(/風向[\s\S]{0,75}/);
-  const directionDiagnostic=windDirection?null:(directionNearby?'wind_direction_label_without_cardinal_text':'wind_direction_label_absent_or_icon_only');
-  const verified=windSpeed!==null&&windSpeed>=0&&windSpeed<=60&&
-    waveHeight!==null&&waveHeight>=0&&waveHeight<=500;
-  return {verified,windSpeed:verified?windSpeed:null,waveHeight:verified?waveHeight:null,
-    airTemperature:airTemperature!==null&&airTemperature>=-30&&airTemperature<=50?airTemperature:null,
-    waterTemperature:waterTemperature!==null&&waterTemperature>=-5&&waterTemperature<=45?waterTemperature:null,
-    windDirection:verified?windDirection:null,windDirectionVerified:verified&&windDirection!==null,reason:directionDiagnostic};
-}
 
 function extractOfficialStartExhibition(html) {
   const table=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)]
