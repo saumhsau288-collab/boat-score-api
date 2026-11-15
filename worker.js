@@ -758,7 +758,9 @@ document.getElementById('check').addEventListener('click',async()=>{
  try{
  const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
  const data=Array.from({length:6},(_,i)=>{const fields=[...rows.querySelectorAll('input[data-boat="'+(i+1)+'"]')];return {boat:i+1,racerId:fields[0].value.trim(),sampleSize:Number(fields[1].value),finishCounts:fields.slice(2).map(x=>Number(x.value))}});
- if(!/^[0-9]{8}$/.test(date)||data.some(r=>!/^[0-9]{4}$/.test(r.racerId))||[...rows.querySelectorAll('input')].some(x=>!x.value.trim()))throw Error('入力漏れがあります');
+ if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)throw Error('日付・競艇場・レース番号を確認してください');
+ if(data.some(r=>!/^[0-9]{4}$/.test(r.racerId))||[...rows.querySelectorAll('input')].some(x=>!x.value.trim()))throw Error('入力漏れがあります');
+ if(new Set(data.map(r=>r.racerId)).size!==6)throw Error('選手登録番号が重複しています。6艇を確認してください');
  if(data.some(r=>r.sampleSize<1||r.sampleSize>50||r.finishCounts.some(n=>!Number.isInteger(n)||n<0||n>50)||r.finishCounts.reduce((a,b)=>a+b,0)!==r.sampleSize))throw Error('着順回数の合計と走数が一致しません。各艇の入力を確認してください');
  const response=await fetch('/api/makulabo/screenshot-review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,venue,race,rows:data})});
  const result=await response.json();
@@ -766,10 +768,13 @@ document.getElementById('check').addEventListener('click',async()=>{
  if(result.identityVerified===true&&Array.isArray(result.rows)&&result.rows.length===6){
   const complete50=result.rows.filter(row=>row.sampleSize===50).length;
   const firstOrder=result.rows.slice().sort((a,b)=>(b.finishCounts[0]/b.sampleSize)-(a.finishCounts[0]/a.sampleSize)).map(row=>row.boat+'号艇').join(' → ');
+  const rates=result.rows.map(row=>row.finishCounts[0]/row.sampleSize*100);
+  const spread=(Math.max(...rates)-Math.min(...rates)).toFixed(1);
   out.textContent='対象：'+date+' / '+venue+'場 / '+race+'R\\n'+
     '公式選手番号：6艇一致。画像を見て手入力した未検証の集計です。予想点には反映しません。\\n'+
     '50走分入力：'+complete50+'/6艇（50走未満はその走数を分母に計算）\\n'+
     '参考・1着率順：'+firstOrder+'（サンプル数が異なる場合は単純比較に注意）\\n'+
+    '参考・1着率の最大差：'+spread+'ポイント（的中確率や予想優位性を示す値ではありません）\\n'+
     '艇  走数  1着  2着  3着  4着  5着  6着  1着率  3連対率\\n'+
     result.rows.map(row=>{
       const first=(row.finishCounts[0]/row.sampleSize*100).toFixed(1)+'%';
