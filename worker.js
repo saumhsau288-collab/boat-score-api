@@ -325,6 +325,10 @@ function clearOfficialRacerAutofill(){
  raceDataCheckVersion++;
  document.getElementById('raceDataStatus').textContent='レース条件が変わりました。再確認してください';
  document.getElementById('last50Comparison').replaceChildren();
+ // Never carry prior race's manually entered finish counts into another race.
+ for(const input of rows.querySelectorAll('input[data-index]:not([data-index="0"])'))input.value='';
+ document.getElementById('countStatus').textContent='レース条件が変わったため、前レースの走数・着順回数を消去しました。';
+ document.getElementById('result').textContent='前レースの照合結果は無効です。新しいレースで再照合してください。';
  racerFillVersion++;
  for(let boat=1;boat<=6;boat++){
   const input=rows.querySelector('input[data-boat="'+boat+'"][data-index="0"]');
