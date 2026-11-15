@@ -65,10 +65,15 @@ async function runScheduledMorning(env,scheduledTime) {
   const key='morning:'+date;
   let state;
   try{state=JSON.parse(await env.MORNING_KV.get(key)||'null')}catch{}
-  if(!state||!Array.isArray(state.completedVenues))state={date,status:'running',venues,completedVenues:[],failedVenues:[],records:[],updatedAt:null};
+  if(!state||!Array.isArray(state.completedVenues))state={date,status:'running',venues,completedVenues:[],failedVenues:[],attempts:{},records:[],updatedAt:null};
+  if(!state.attempts||typeof state.attempts!=='object')state.attempts={};
+  if(!Array.isArray(state.failedVenues))state.failedVenues=[];
+  if(!Array.isArray(state.records))state.records=[];
   state.venues=venues;
-  const remaining=venues.filter(v=>!state.completedVenues.includes(v)).slice(0,2);
+  const remaining=venues.filter(v=>!state.completedVenues.includes(v)&&(state.attempts[v]||0)<3).slice(0,2);
+  if(!remaining.length)return;
   for(const venue of remaining){
+    state.attempts[venue]=(state.attempts[venue]||0)+1;
     try{
       const rows=await scanVenueMorning(date,venue);
       state.records.push(...rows.filter(x=>x.ready===true));
@@ -78,7 +83,9 @@ async function runScheduledMorning(env,scheduledTime) {
     state.updatedAt=new Date().toISOString();
     const ranking=classifyDailyRaceCandidates(state.records);
     state.categories={main:ranking.main,upset:ranking.upset,chaos:ranking.chaos};
-    state.status=state.completedVenues.length>=venues.length?'completed':'partial';
+    const exhausted=venues.filter(v=>!state.completedVenues.includes(v)&&(state.attempts[v]||0)>=3);
+    state.status=state.completedVenues.length>=venues.length?'completed':exhausted.length+state.completedVenues.length>=venues.length?'incomplete':'partial';
+    state.exhaustedVenues=exhausted;
     await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:172800});
   }
 }
@@ -99,7 +106,7 @@ if (u.pathname === '/api/morning/snapshot') {
   if(!saved)return reply(request,{date,status:'not_available',message:'No saved morning snapshot'},404);
   const state=JSON.parse(saved);
   return reply(request,{date,status:state.status,updatedAt:state.updatedAt||null,venues:state.venues||[],
-    completedVenues:state.completedVenues||[],failedVenues:state.failedVenues||[],
+    completedVenues:state.completedVenues||[],failedVenues:state.failedVenues||[],exhaustedVenues:state.exhaustedVenues||[],
     categories:state.categories||{main:[],upset:[],chaos:[]},eligible:(state.records||[]).length,
     provisional:true,method:'two_factor_morning_screening_unvalidated'});
 }
