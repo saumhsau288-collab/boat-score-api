@@ -282,7 +282,7 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <label>競艇場 <select id="venue" style="font-size:16px;padding:10px;max-width:100%"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select></label>
 <label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
 <button id="checkSchedule" type="button">公式開催一覧の候補を確認</button><p id="scheduleStatus" role="status">開催一覧は未照合です</p><button id="checkAllVenues" type="button">全国24場の公式1R出走表を確認</button><label style="display:block"><input id="showConfirmedOnly" type="checkbox"> 公式1R確認済みの場だけ表示（未確認の場は非開催とは限りません）</label><p id="allVenuesStatus" role="status">未確認</p><button id="checkVenue" type="button">選択した競艇場の開催情報を確認</button><p id="venueStatus" role="status">未確認（開催・非開催は未判定）</p><button id="checkRaceData" type="button">選択レースの公式データ充足状況を確認</button><p id="raceDataStatus" role="status">未確認</p><div id="last50Comparison" aria-live="polite"></div><button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
-<a id="officialRaceLink" href="https://www.boatrace.jp/owpc/pc/race/racelist" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 0">公式出走表を直接開く</a><div><button id="loadCsvCard" type="button">7.7方式：出走表CSVを取得・比較</button></div><button id="fillCsvRacerIds" type="button" disabled>照合済み登録番号を6艇に入力</button><p id="csvFillStatus" role="status">CSV取得・公式照合後に利用できます。</p><pre id="csvCardResult" style="white-space:pre-wrap;overflow-wrap:anywhere" role="status">CSV未取得（非公式データ）</pre><div id="csvComparison" aria-label="6艇の事前比較" style="overflow-x:auto"></div><div id="rows" style="display:grid;gap:14px"></div>
+<a id="officialRaceLink" href="https://www.boatrace.jp/owpc/pc/race/racelist" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 0">公式出走表を直接開く</a><div><button id="loadCsvCard" type="button">7.7方式：出走表CSVを取得・比較</button></div><button id="fillCsvRacerIds" type="button" disabled>照合済み登録番号を6艇に入力</button><p id="csvFillStatus" role="status">CSV取得・公式照合後に利用できます。</p><pre id="csvCardResult" style="white-space:pre-wrap;overflow-wrap:anywhere" role="status">CSV未取得（非公式データ）</pre><div id="csvComparison" aria-label="6艇の事前比較" style="overflow-x:auto"></div><button id="loadBeforeInfo" type="button">公式直前情報を取得</button><pre id="beforeInfoResult" style="white-space:pre-wrap;overflow-wrap:anywhere" role="status">直前情報は未取得です。</pre><div id="rows" style="display:grid;gap:14px"></div>
 <button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
 <details id="dailyRanking" style="margin:24px 0;padding:12px;border:1px solid #cbd5e1;border-radius:12px" aria-label="朝8時の全国レース分析"><summary style="font-weight:700;cursor:pointer;padding:8px">朝8:00 全国レース分析（未実装・開く）</summary>
@@ -308,6 +308,26 @@ function updateOfficialRaceLink(){
 }
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',updateOfficialRaceLink);
 updateOfficialRaceLink();
+let beforeInfoVersion=0;
+function resetBeforeInfo(){beforeInfoVersion++;document.getElementById('beforeInfoResult').textContent='レース変更後は直前情報を再取得してください。'}
+for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',resetBeforeInfo);
+document.getElementById('loadBeforeInfo').addEventListener('click',async()=>{
+ const version=++beforeInfoVersion,out=document.getElementById('beforeInfoResult');
+ const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
+ if(!/^20[0-9]{6}$/.test(date)||venue<1||venue>24||race<1||race>12){out.textContent='日付・競艇場・レース番号を指定してください';return}
+ out.textContent='公式直前情報を確認中…（公式サイトが遅い場合があります）';
+ try{
+  const res=await fetch('/api/official/race-data?date='+date+'&venue='+venue+'&race='+race);
+  const d=await res.json();if(version!==beforeInfoVersion)return;
+  if(!res.ok){out.textContent='取得失敗：'+String(d.error||res.status);return}
+  const missing=Array.isArray(d.missingInputs)?d.missingInputs.join('、'):'詳細不明';
+  out.textContent='公式直前情報の取得状況\\n'+
+   '出走表：'+(d.racersVerified?'確認済み':'未確認')+'\\n'+
+   '展示・ST・気象など：'+(d.dataReadyForPrediction?'全条件確認済み':'不足あり')+'\\n'+
+   '不足項目：'+missing+'\\n'+
+   '公式照合が完了しない項目は評価に採用しません。';
+ }catch(e){if(version===beforeInfoVersion)out.textContent='公式直前情報の取得失敗：'+String(e.message||e)}
+});
 let csvCardVersion=0;
 let verifiedCsvIds=null;
 document.getElementById('fillCsvRacerIds').addEventListener('click',()=>{
