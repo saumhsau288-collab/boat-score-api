@@ -116,7 +116,17 @@ if (u.pathname === '/api/morning/venues') {
   const date=u.searchParams.get('date')||'';
   if(!/^20\d{6}$/.test(date))return reply(request,{error:'Invalid date; use YYYYMMDD'},400);
   const venues=await officialScheduleVenueCandidates(date);
-  if(!venues)return reply(request,{date,status:'unverified',venues:[],message:'公式日程を確認できません。開催なしとは断定できません。'},503);
+  if(!venues){
+    // Schedule-page link parsing can fail even when individual official entry lists work.
+    // Recover only venues whose 1R six-boat entries can be independently verified.
+    const checks=await mapOfficialLimited(Array.from({length:24},(_,i)=>i+1),4,async venue=>{
+      try{const data=await fetchOfficialRacers(date,venue,1,{verificationOnly:true});return {venue,verified:data?.verified===true};}
+      catch{return {venue,verified:false};}
+    });
+    const verified=checks.filter(x=>x.verified).map(x=>x.venue);
+    if(!verified.length)return reply(request,{date,status:'unverified',venues:[],message:'公式日程と各場1R出走表を確認できません。開催なしとは断定できません。'},503);
+    return reply(request,{date,status:'partial_verified_race1_fallback',venues:verified,venueCount:verified.length,possibleRaceSlots:verified.length*12,completeScheduleVerified:false,forecastStatus:'not_generated',message:'公式日程の取得に失敗したため、公式1R出走表で確認できた競艇場のみ表示。未確認の場も開催している可能性があります。'});
+  }
   return reply(request,{date,status:'verified_schedule_links',venues,venueCount:venues.length,possibleRaceSlots:venues.length*12,forecastStatus:'not_generated',message:'公式日程のリンクから候補場を抽出。各レースの出走表確認と予想は未実装。'});
 }
 
