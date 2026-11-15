@@ -116,7 +116,37 @@ function resetRaceChoices(){
 }
 venue.addEventListener('change',resetRaceChoices);
 async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
-document.getElementById('morningNational').onclick=async function(){const st=document.getElementById('morningStatus'),out=document.getElementById('morningOutput');this.disabled=true;out.textContent='';st.textContent='開催場候補を確認中…';try{const response=await fetch('/api/morning/venues?date='+dateCode(),{signal:AbortSignal.timeout(15000)});const schedule=await response.json();if(!response.ok||!Array.isArray(schedule.venues)||!schedule.venues.length)throw Error(schedule.message||'開催場候補を確認できません');const candidates=schedule.venues;const results=[];const failures=[];for(let i=0;i<candidates.length;i++){const v=candidates[i];st.textContent='公式照合中 '+(i+1)+'/'+candidates.length+'場（時間がかかります）';try{const res=await fetch('/api/daily/verified-venue-screen?date='+dateCode()+'&venue='+v,{signal:AbortSignal.timeout(110000)});const d=await res.json();if(!res.ok)throw Error(d.error||'HTTP '+res.status);results.push(d);}catch(e){failures.push(v+'場: '+e.message);}const grouped={main:[],upset:[],chaos:[]};for(const d of results)for(const key of Object.keys(grouped))for(const item of d.categories?.[key]||[])grouped[key].push(item);const lines=['全国事前評価（暫定・未検証）','公式日程候補 '+candidates.length+'場／評価済み '+results.length+'場／取得失敗 '+failures.length+'場'];for(const [key,label] of [['main','本命'],['upset','穴'],['chaos','大荒れ']]){const top=grouped[key].sort((a,b)=>b.score-a.score||a.venue-b.venue||a.race-b.race).slice(0,20);lines.push(label+' TOP '+top.length+'：'+(top.length?top.map((x,j)=>(j+1)+'. '+x.venue+'場 '+x.race+'R').join(' / '):'確認できた候補なし'));}if(failures.length)lines.push('未取得: '+failures.join('、'));out.textContent=lines.join('\n');}st.textContent='全国候補の集計終了。朝8時の自動実行・保存は未実装';}catch(e){st.textContent='全国集計できません: '+e.message;}finally{this.disabled=false;}};
+let nationalMorningController=null;
+document.getElementById('morningNational').onclick=async function(){
+ const button=this,st=document.getElementById('morningStatus'),out=document.getElementById('morningOutput');
+ if(nationalMorningController){nationalMorningController.abort();return;}
+ const controller=new AbortController();nationalMorningController=controller;
+ button.textContent='全国集計を中止';out.textContent='';st.textContent='開催場候補を確認中…';
+ const grouped={main:[],upset:[],chaos:[]},failures=[],results=[];
+ const labels={main:'本命',upset:'穴',chaos:'大荒れ'};
+ const render=()=>{const lines=['全国事前評価（暫定・未検証）','取得成功 '+results.length+'場／取得失敗 '+failures.length+'場'];
+ for(const key of ['main','upset','chaos']){const top=grouped[key].slice().sort((a,b)=>b.score-a.score||a.venue-b.venue||a.race-b.race).slice(0,20);
+ lines.push(labels[key]+' TOP '+top.length+'：'+(top.length?top.map((x,j)=>(j+1)+'. '+x.venue+'場 '+x.race+'R').join(' / '):'確認できた候補なし'));}
+ if(failures.length)lines.push('未取得: '+failures.join('、'));out.textContent=lines.join('\n');};
+ try{
+ const response=await fetch('/api/morning/venues?date='+dateCode(),{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});
+ const schedule=await response.json();if(!response.ok||!Array.isArray(schedule.venues)||!schedule.venues.length)throw Error(schedule.message||'開催場候補を確認できません');
+ const venues=schedule.venues;let next=0,done=0;
+ const worker=async()=>{while(next<venues.length&&!controller.signal.aborted){
+ const v=venues[next++];
+ try{const res=await fetch('/api/daily/verified-venue-screen?date='+dateCode()+'&venue='+v,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(90000)])});
+ const d=await res.json();if(!res.ok)throw Error(d.error||'HTTP '+res.status);
+ results.push(d);for(const key of ['main','upset','chaos'])for(const item of d.categories?.[key]||[])grouped[key].push(item);
+ }catch(e){if(controller.signal.aborted)return;failures.push(v+'場: '+e.message);}
+ done++;st.textContent='全国照合 '+done+'/'+venues.length+'場（成功 '+results.length+'場）';render();
+ }};
+ await Promise.all(Array.from({length:Math.min(3,venues.length)},()=>worker()));
+ if(controller.signal.aborted){st.textContent='集計を中止しました。取得済みの結果のみ表示';}
+ else st.textContent='全国候補の集計終了（朝8時の自動実行・保存は未実装）';
+ render();
+ }catch(e){st.textContent=controller.signal.aborted?'集計を中止しました':'全国集計できません: '+e.message;}
+ finally{if(nationalMorningController===controller)nationalMorningController=null;button.textContent='全国の開催候補を集計';}
+};
 document.getElementById('morningVenue').onclick=async function(){const st=document.getElementById('morningStatus'),out=document.getElementById('morningOutput');if(!venue.value){st.textContent='先に競艇場を選択してください';return;}this.disabled=true;st.textContent='選択場の12レースを公式照合中（時間がかかる場合があります）…';out.textContent='';try{const res=await fetch('/api/daily/verified-venue-screen?date='+dateCode()+'&venue='+encodeURIComponent(venue.value),{signal:AbortSignal.timeout(110000)});const d=await res.json();if(!res.ok)throw Error(d.error||'HTTP '+res.status);st.textContent='照合 '+(d.scanned||0)+'R／評価可能 '+(d.eligible||0)+'R／未確認 '+(d.held||0)+'R';const labels={main:'本命候補',upset:'穴候補',chaos:'大荒れ候補'};let lines=['事前評価（未検証の暫定方式・朝8時の保存結果ではありません）'];for(const key of ['main','upset','chaos']){const rows=d.categories?.[key]||[];lines.push(labels[key]+': '+(rows.length?rows.map(x=>x.race+'R').join('、'):'評価可能な候補なし'));}for(const rec of d.records||[]){if(!rec.ready)continue;const picks=rec.picks||{};lines.push(rec.race+'R 買い目候補（検証前） '+JSON.stringify(picks));}out.textContent=lines.join('\n');}catch(e){st.textContent='事前評価できません: '+e.message;}finally{this.disabled=false;}};
 document.getElementById('morningCheck').onclick=async function(){const st=document.getElementById('morningStatus'),out=document.getElementById('morningOutput');st.textContent='公式日程を照合中…';out.textContent='';this.disabled=true;try{const res=await fetch('/api/morning/venues?date='+dateCode(),{signal:AbortSignal.timeout(15000)});const data=await res.json();if(!res.ok)throw Error(data.message||data.error||'HTTP '+res.status);st.textContent='開催候補 '+data.venueCount+'場／予想は未作成';out.textContent='場コード: '+data.venues.join('、')+'\n'+data.message;}catch(e){st.textContent='開催場を確認できません: '+e.message;}finally{this.disabled=false}};
 document.getElementById('schedule').onclick=refreshRunningVenues;
