@@ -3,7 +3,7 @@ name: Boat Score 2 syntax check
 on:
   push:
     branches:
-      - boat-score-2-data-fix-20261114
+      - fix-boat-score-2-syntax-20261115
   workflow_dispatch:
 
 permissions:
