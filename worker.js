@@ -76,8 +76,8 @@ async function refreshRunningVenues(){
  const verified=new Set(),errors=[];let offset=0;
  for(let page=0;page<5;page++){
   try{
-   const response=await fetch('/api/official/active-venues?date='+dateCode()+'&offset='+offset,{signal:controller.signal});
-   const data=await response.json();if(!response.ok||data.status==='unavailable')throw Error(data.message||'照合不可');
+   const response=await fetch('/api/official/active-venues?date='+dateCode()+'&offset='+offset,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(18000)])});
+   if(!response.ok)throw Error('開催場照合 HTTP '+response.status);const data=await response.json();if(data.status==='unavailable')throw Error(data.message||'照合不可');
    if(token!==scheduleRequest)return;
    (data.verifiedVenues||[]).forEach(v=>{if(Number.isInteger(v)&&v>=1&&v<=24)verified.add(v)});
    out.textContent='公式1R照合済み：'+([...verified].sort((a,b)=>a-b).map(v=>names[v-1]).join('、')||'まだありません')+'\n未確認の競艇場も手動選択できます。';
