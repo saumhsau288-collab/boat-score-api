@@ -320,7 +320,17 @@ function updateRaceChange(){
   const e=ex.find(x=>Number(x.boat)===Number(b.boat));const t=st.find(x=>Number(x.boat)===Number(b.boat));
   return b.boat+'号艇：全国勝率 '+(b.nationalWinRate||'未取得')+' / 当地勝率 '+(b.localWinRate||'未取得')+' / モーター2連対率 '+(b.motorPlaceRate||'未取得')+' → 展示 '+(e?.exhibitionTime??'未確認')+' / 進入 '+(t?.course??'未確認')+' / ST '+(t?.startTiming??'未確認');
  });
- box.textContent='事前→直前の項目別照合（優劣や買い目は未判定）\n'+parts.join('\n')+'\n※事前CSV数値は非公式。公式直前情報は照合済み項目のみ表示。';
+ const observations=[];
+ if(ex.length===6){
+  const valid=ex.every(x=>Number.isFinite(Number(x.exhibitionTime))&&Number(x.exhibitionTime)>0);
+  if(valid){const min=Math.min(...ex.map(x=>Number(x.exhibitionTime)));observations.push('展示タイム最短：'+ex.filter(x=>Number(x.exhibitionTime)===min).map(x=>x.boat+'号艇').join('・')+'（'+min+'秒）。最短でも1着を保証しません。')}
+ }
+ if(st.length===6){
+  const changes=st.filter(x=>Number(x.boat)!==Number(x.course));
+  observations.push(changes.length?'枠番と展示進入コースが異なる艇：'+changes.map(x=>x.boat+'号艇→'+x.course+'コース').join('、'):'展示進入は全艇が枠番と同じです。');
+  observations.push('展示STは本番のSTとは異なります。');
+ }
+ box.textContent='事前→直前の項目別照合（優劣や買い目は未判定）\\n'+parts.join('\\n')+'\\n【直前の観察】\\n'+(observations.length?observations.join('\\n'):'照合できた観察項目なし')+'\\n※事前CSV数値は非公式。展示進入は本番進入の確定情報ではありません。まくらぼ50走・オッズは未反映。';
 }
 
 function updateCoverageSummary(){
@@ -333,6 +343,7 @@ function resetBeforeInfo(){officialSnapshot=null;updateRaceChange();coverageBefo
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',resetBeforeInfo);
 document.getElementById('loadBeforeInfo').addEventListener('click',async()=>{
  const version=++beforeInfoVersion,out=document.getElementById('beforeInfoResult');
+ officialSnapshot=null;coverageBefore=null;updateRaceChange();updateCoverageSummary();document.getElementById('beforeInfoTable').replaceChildren();
  const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
  if(!/^20[0-9]{6}$/.test(date)||venue<1||venue>24||race<1||race>12){out.textContent='日付・競艇場・レース番号を指定してください';return}
  out.textContent='公式直前情報を確認中…（公式サイトが遅い場合があります）';
