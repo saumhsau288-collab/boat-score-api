@@ -310,10 +310,13 @@ for(const id of ['date','venue','race'])document.getElementById(id).addEventList
 updateOfficialRaceLink();
 let coverageCsv=null,coverageBefore=null;
 let priorSnapshot=null,officialSnapshot=null;
-let finishFetchVersion=0;
-function resetFinishFetch(){finishFetchVersion++;document.getElementById('finishFetchStatus').textContent='未取得'}
+let finishFetchVersion=0;let verifiedFinish=null;
+function currentReviewKey(){return document.getElementById('date').value.trim()+'-'+document.getElementById('venue').value+'-'+document.getElementById('race').value}
+for(const id of ['finish1','finish2','finish3'])document.getElementById(id).addEventListener('input',()=>{verifiedFinish=null;pendingReview=null;document.getElementById('saveReview').disabled=true;document.getElementById('finishFetchStatus').textContent='着順が編集されたため公式照合状態を解除しました。'});
+function resetFinishFetch(){verifiedFinish=null;finishFetchVersion++;document.getElementById('finishFetchStatus').textContent='未取得'}
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',resetFinishFetch);
 document.getElementById('fetchOfficialFinish').addEventListener('click',async()=>{
+ verifiedFinish=null;pendingReview=null;document.getElementById('saveReview').disabled=true;
  const version=++finishFetchVersion,status=document.getElementById('finishFetchStatus');
  const date=document.getElementById('date').value.trim(),venue=Number(document.getElementById('venue').value),race=Number(document.getElementById('race').value);
  if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12){status.textContent='日付・場・レース番号を確認してください';return}
@@ -324,20 +327,21 @@ document.getElementById('fetchOfficialFinish').addEventListener('click',async()=
   const order=Array.isArray(d.finishOrder)?d.finishOrder.map(x=>Number(x)):[];
   if(!res.ok||d.verified!==true||order.length<3||order.slice(0,3).some(x=>!Number.isInteger(x)||x<1||x>6)||new Set(order.slice(0,3)).size!==3){status.textContent='公式確定着順を照合できません：'+String(d.reason||'未確認');return}
   ['finish1','finish2','finish3'].forEach((id,i)=>{document.getElementById(id).value=String(order[i])});
+  verifiedFinish={key:currentReviewKey(),places:order.slice(0,3)};
   pendingReview=null;document.getElementById('saveReview').disabled=true;
   status.textContent='公式結果の着順 '+order.slice(0,3).join('-')+' を入力しました。「条件と着順を照合」で確認してください。';
  }catch(e){if(version===finishFetchVersion)status.textContent='公式結果の取得失敗：'+String(e.message||e)}
 });
 const reviewRecords=new Map();let pendingReview=null;
 function updateReviewAggregate(){
- const out=document.getElementById('reviewAggregate'),records=[...reviewRecords.values()];
- if(!records.length){out.textContent='集計0レース（この画面を閉じると消えます）';return}
+ const out=document.getElementById('reviewAggregate'),records=[...reviewRecords.values()].filter(r=>r.officialResultVerified===true);
+ if(!records.length){out.textContent='公式結果照合済みの集計0レース（この画面を閉じると消えます）';return}
  const groups=[['事前3指標の最高値が2項目以上',x=>x.leaderCount>=2],['展示タイム最短',x=>x.fastest],['展示進入変動',x=>x.courseChange]];
  const lines=groups.map(([label,test])=>{let total=0,top3=0,first=0;for(const r of records)for(const x of r.observations)if(test(x)){total++;if(r.places.includes(x.boat))top3++;if(r.places[0]===x.boat)first++}return label+'：該当艇 '+total+'件 / 1着 '+first+'件 / 3着以内 '+top3+'件'});
- out.textContent='一時集計：'+records.length+'レース（重複レースは上書き）\\n'+lines.join('\\n')+'\\n※手入力の着順は公式照合されていません。該当艇の件数であり的中率・予測精度ではありません。';
+ out.textContent='公式確定着順を取得済みの一時集計：'+records.length+'レース（重複レースは上書き）\\n'+lines.join('\\n')+'\\n※公式結果APIで照合した着順のみ集計。該当艇の件数であり的中率・予測精度ではありません。';
 }
 document.getElementById('saveReview').addEventListener('click',()=>{
- if(!pendingReview)return;
+ if(!pendingReview||pendingReview.officialResultVerified!==true)return;
  reviewRecords.set(pendingReview.key,pendingReview);pendingReview=null;document.getElementById('saveReview').disabled=true;updateReviewAggregate();
 });
 document.getElementById('clearReviews').addEventListener('click',()=>{reviewRecords.clear();pendingReview=null;document.getElementById('saveReview').disabled=true;updateReviewAggregate()});
@@ -353,8 +357,9 @@ document.getElementById('reviewResult').addEventListener('click',()=>{
  if(boats.length!==6||ex.length!==6||starts.length!==6||!boats.every(b=>keys.every(k=>num(b[k])!==null&&Number.isFinite(num(b[k]))))){out.textContent='比較指標が不足しています。';return}
  const max=keys.map(k=>Math.max(...boats.map(b=>num(b[k]))));const min=Math.min(...ex.map(e=>Number(e.exhibitionTime)));
  const observations=boats.map(b=>{const e=ex.find(x=>Number(x.boat)===Number(b.boat)),t=starts.find(x=>Number(x.boat)===Number(b.boat));return {boat:Number(b.boat),leaderCount:keys.filter((k,i)=>num(b[k])===max[i]).length,fastest:e?Number(e.exhibitionTime)===min:false,courseChange:t?Number(t.course)!==Number(b.boat):false}});
- pendingReview={key:document.getElementById('date').value+'-'+document.getElementById('venue').value+'-'+document.getElementById('race').value,places,observations};document.getElementById('saveReview').disabled=false;
- out.textContent='入力された着順（公式結果との自動照合なし）：'+places.join('-')+'\\n'+observations.map(x=>x.boat+'号艇：'+(places.includes(x.boat)?places.indexOf(x.boat)+1+'着':'3着以内なし')+' / 事前最高値 '+x.leaderCount+'/3 / 展示最短 '+(x.fastest?'該当':'非該当')+' / 進入変動 '+(x.courseChange?'該当':'非該当')).join('\\n')+'\\n※単一レースの観察です。予測精度や的中率を示すものではありません。';
+ const key=currentReviewKey();const officialResultVerified=verifiedFinish?.key===key&&verifiedFinish.places.every((x,i)=>x===places[i]);
+ pendingReview={key,places,observations,officialResultVerified};document.getElementById('saveReview').disabled=!officialResultVerified;
+ out.textContent=(officialResultVerified?'公式結果取得済みの着順：':'手入力の着順（公式未照合・集計不可）：')+places.join('-')+'\\n'+observations.map(x=>x.boat+'号艇：'+(places.includes(x.boat)?places.indexOf(x.boat)+1+'着':'3着以内なし')+' / 事前最高値 '+x.leaderCount+'/3 / 展示最短 '+(x.fastest?'該当':'非該当')+' / 進入変動 '+(x.courseChange?'該当':'非該当')).join('\\n')+'\\n※単一レースの観察です。予測精度や的中率を示すものではありません。';
 });
 function renderEvidenceMatrix(){
  const host=document.getElementById('evidenceMatrix');if(!host)return;host.replaceChildren();
