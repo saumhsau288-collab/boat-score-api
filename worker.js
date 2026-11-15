@@ -770,17 +770,17 @@ document.getElementById('check').addEventListener('click',async()=>{
   const firstOrder=result.rows.slice().sort((a,b)=>(b.finishCounts[0]/b.sampleSize)-(a.finishCounts[0]/a.sampleSize)).map(row=>row.boat+'号艇').join(' → ');
   const rates=result.rows.map(row=>row.finishCounts[0]/row.sampleSize*100);
   const spread=(Math.max(...rates)-Math.min(...rates)).toFixed(1);
-  out.textContent='対象：'+date+' / '+venue+'場 / '+race+'R\\n'+
-    '公式選手番号：6艇一致。画像を見て手入力した未検証の集計です。予想点には反映しません。\\n'+
-    '50走分入力：'+complete50+'/6艇（50走未満はその走数を分母に計算）\\n'+
-    '参考・1着率順：'+firstOrder+'（サンプル数が異なる場合は単純比較に注意）\\n'+
-    '参考・1着率の最大差：'+spread+'ポイント（的中確率や予想優位性を示す値ではありません）\\n'+
-    '艇  走数  1着  2着  3着  4着  5着  6着  1着率  3連対率\\n'+
+  out.textContent='対象：'+date+' / '+venue+'場 / '+race+'R\n'+
+    '公式選手番号：6艇一致。画像を見て手入力した未検証の集計です。予想点には反映しません。\n'+
+    '50走分入力：'+complete50+'/6艇（50走未満はその走数を分母に計算）\n'+
+    '参考・1着率順：'+firstOrder+'（サンプル数が異なる場合は単純比較に注意）\n'+
+    '参考・1着率の最大差：'+spread+'ポイント（的中確率や予想優位性を示す値ではありません）\n'+
+    '艇  走数  1着  2着  3着  4着  5着  6着  1着率  3連対率\n'+
     result.rows.map(row=>{
       const first=(row.finishCounts[0]/row.sampleSize*100).toFixed(1)+'%';
       const top3=(row.finishCounts.slice(0,3).reduce((a,b)=>a+b,0)/row.sampleSize*100).toFixed(1)+'%';
       return [row.boat+'号艇',row.sampleSize,...row.finishCounts,first,top3].join('  ');
-    }).join('\\n');
+    }).join('\n');
  }else out.textContent=result.error||'公式選手番号との一致を確認できませんでした。データは採用されません。';
  }catch(error){if(currentReview===screenshotReviewVersion)out.textContent=String(error.message||error)}
 });
