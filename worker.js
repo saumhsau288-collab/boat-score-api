@@ -25,8 +25,19 @@ async function mapOfficialLimited(items, limit, mapper) {
 }
 async function officialScheduleVenueCandidates(date) {
   try {
-    const res=await fetch('https://www.boatrace.jp/owpc/pc/race/index?hd='+date,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(9000)});
-    if(!res.ok)return null;
+    let res=null;
+    // Retry transport timeouts once; never mark venues as closed on failure.
+    for(const timeoutMs of [9000,15000]){
+      try{
+        res=await fetch('https://www.boatrace.jp/owpc/pc/race/index?hd='+date,{
+          headers:{Accept:'text/html'},signal:AbortSignal.timeout(timeoutMs)
+        });
+        break;
+      }catch(error){
+        if(error?.name!=='TimeoutError'&&error?.name!=='AbortError')throw error;
+      }
+    }
+    if(!res?.ok)return null;
     const html=await res.text();if(html.length>1000000)return null;
     const codes=new Set();
     for(const match of html.matchAll(/href=["']([^"']*racelist[^"']*)["']/gi)){
