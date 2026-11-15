@@ -565,11 +565,12 @@ document.getElementById('loadBeforeInfo').addEventListener('click',async()=>{
   if(d.weatherVerified&&d.weather){const p=document.createElement('p');p.style.fontSize='13px';p.textContent='公式水面気象：風速 '+(d.weather.windSpeed??'未確認')+'m / 風向 '+(d.windDirectionVerified?d.weather.windDirection:'未確認')+' / 波高 '+(d.weather.waveHeight??'未確認')+'cm';holder.appendChild(p)}
   if(!holder.children.length){const p=document.createElement('p');p.textContent='表示可能な公式直前データはありません。未確認値を補完しません。';holder.appendChild(p)}
   const missing=Array.isArray(d.missingInputs)?d.missingInputs.join('、'):'詳細不明';
-  out.textContent='公式直前情報の取得状況\\n'+
-   '出走表：'+(d.racersVerified?'確認済み':'未確認')+'\\n'+
-   '展示・ST・気象など：'+(d.dataReadyForPrediction?'全条件確認済み':'不足あり')+'\\n'+
-   '不足項目：'+missing+'\\n'+
-   '公式照合が完了しない項目は評価に採用しません。';
+  out.textContent='公式直前情報の取得状況\n'+
+   '出走表：'+(d.racersVerified?'確認済み':'未確認')+'\n'+
+   '展示・ST・気象など：'+(d.dataReadyForPrediction?'全条件確認済み':'不足あり')+'\n'+
+   '不足項目：'+missing+'\n'+
+   '公式照合が完了しない項目は評価に採用しません。'+'\n'+
+   '診断：直前HTML='+String(d.diagnostics?.beforeinfoResponseLength??'未取得')+'文字 / 展示候補='+String(d.diagnostics?.exhibitionCandidateCount??0)+'艇 / ST候補='+String(d.diagnostics?.startCandidateCount??0)+'艇 / 取得理由='+String(d.diagnostics?.beforeinfoReason??'不明')+' / 気象='+String(d.diagnostics?.weatherParserReason??'未特定');
  }catch(e){if(version===beforeInfoVersion)out.textContent='公式直前情報の取得失敗：'+String(e.message||e)}
 });
 let csvCardVersion=0;
