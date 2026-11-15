@@ -313,8 +313,9 @@ document.getElementById('loadCsvCard').addEventListener('click',async()=>{
   const data=await response.json();if(version!==csvCardVersion)return;
   if(!response.ok||!data.verified||!Array.isArray(data.boats)||data.boats.length!==6){out.textContent='CSV照合できませんでした：'+String(data.reason||data.error||response.status);return}
   const headings=['艇','選手名','全国勝率','当地勝率','モーター2連対率'];
-  out.textContent='非公式CSV（予想点に未反映）\\n'+
-   '公式登録番号照合：'+(data.officialVerified?'6艇一致':data.verificationStatus==='csv_racer_ids_missing'?'CSVに登録番号が不足':data.verificationStatus==='official_unavailable'?'公式情報を取得できません':data.verificationStatus==='racer_ids_mismatch'?'登録番号が一致しません':'未確認')+'\\n'+headings.join(' / ')+'\\n'+data.boats.map(b=>[b.boat,b.name||'未取得',b.nationalWinRate||'未取得',b.localWinRate||'未取得',b.motorPlaceRate||'未取得'].join(' / ')).join('\\n');
+  out.textContent='非公式CSV（予想点に未反映）\n'+
+   '取得項目：'+data.populatedFields+'/'+data.totalFields+'（空欄は未取得）\n'+
+   '公式登録番号照合：'+(data.officialVerified?'6艇一致':data.verificationStatus==='csv_racer_ids_missing'?'CSVに登録番号が不足':data.verificationStatus==='official_unavailable'?'公式情報を取得できません':data.verificationStatus==='racer_ids_mismatch'?'登録番号が一致しません':'未確認')+'\n'+headings.join(' / ')+'\n'+data.boats.map(b=>[b.boat,b.name||'未取得',b.nationalWinRate||'未取得',b.localWinRate||'未取得',b.motorPlaceRate||'未取得'].join(' / ')).join('\n');
  }catch(e){if(version===csvCardVersion)out.textContent='CSV取得エラー：'+String(e.message||e)}
 });
 const japanDateParts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(part=>part.type!=='literal').map(part=>[part.type,part.value]));
@@ -812,7 +813,7 @@ if (u.pathname === '/api/csv/race-card') {
   try{
     const response=await fetch(source,{signal:AbortSignal.timeout(12000)});
     if(!response.ok)return reply(request,{verified:false,sourceType:'unofficial_csv',reason:'csv_http_'+response.status},502);
-    const raw=await response.text();if(raw.length>2500000)return reply(request,{verified:false,reason:'csv_too_large'},502);
+    const raw=(await response.text()).replace(/^\uFEFF/,'');if(raw.length>2500000)return reply(request,{verified:false,reason:'csv_too_large'},502);
     const lines=[];let row=[],cell='',quoted=false;
     for(let i=0;i<raw.length;i++){const c=raw[i];if(c==='"'){if(quoted&&raw[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===','&&!quoted){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&raw[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v!==''))lines.push(row);row=[];cell=''}else cell+=c}
     if(cell||row.length){row.push(cell);lines.push(row)}
@@ -827,11 +828,13 @@ if (u.pathname === '/api/csv/race-card') {
     });
     if(!record)return reply(request,{verified:false,sourceType:'unofficial_csv',source,reason:'race_not_matched',dataReadyForPrediction:false});
     const boats=Array.from({length:6},(_,i)=>{const n=i+1;const field=names=>pick(record,names.flatMap(k=>['艇'+n+'_'+k,n+'号艇_'+k,'艇'+n+k]));return {boat:n,racerId:field(['登録番号','選手登録番号','登番']),name:field(['選手名','氏名']),nationalWinRate:field(['全国勝率']),localWinRate:field(['当地勝率']),motorPlaceRate:field(['モーター2連対率','モーター２連対率'])}});
-    const official=await fetchOfficialRacers(date,venue,race,{verificationOnly:true});
-    const csvIdsComplete=boats.every(b=>/^\\d{4}$/.test(b.racerId))&&new Set(boats.map(b=>b.racerId)).size===6;
+
+    const csvIdsComplete=boats.every(b=>/^\d{4}$/.test(b.racerId))&&new Set(boats.map(b=>b.racerId)).size===6;
+    const official=csvIdsComplete?await fetchOfficialRacers(date,venue,race,{verificationOnly:true}):{verified:false,racers:[]};
     const officialVerified=csvIdsComplete&&official.verified===true&&boats.every((b,i)=>Number(b.boat)===Number(official.racers[i]?.boat)&&b.racerId===official.racers[i]?.racerId);
     const verificationStatus=!csvIdsComplete?'csv_racer_ids_missing':!official.verified?'official_unavailable':officialVerified?'racer_ids_matched':'racer_ids_mismatch';
-    return reply(request,{verified:true,sourceType:'unofficial_csv',officialVerified,verificationStatus,dataReadyForPrediction:false,date,venue,race,source,boats});
+    const populatedFields=boats.reduce((sum,b)=>sum+['name','nationalWinRate','localWinRate','motorPlaceRate'].filter(k=>String(b[k]||'').trim()!=='').length,0);
+    return reply(request,{verified:true,sourceType:'unofficial_csv',officialVerified,verificationStatus,dataReadyForPrediction:false,date,venue,race,source,boats,populatedFields,totalFields:24,missingFields:24-populatedFields});
   }catch(error){return reply(request,{verified:false,sourceType:'unofficial_csv',reason:'csv_fetch_error',detail:String(error?.message||error).slice(0,120)},502)}
 }
 if (u.pathname === '/api/makulabo/screenshot-review') {
