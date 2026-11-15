@@ -98,18 +98,22 @@ async function runScheduledMorning(env,scheduledTime) {
   for(const venue of remaining){
     state.attempts[venue]=(state.attempts[venue]||0)+1;
     try{
-      const rows=await scanVenueMorning(date,venue);
-      const verifiedRows=rows.filter(x=>x.ready===true);
-      // A completed scan is not a verified venue if every official fetch failed.
-      // Preserve the venue for a later bounded retry instead of falsely marking it done.
-      if(!verifiedRows.length)throw new Error('venue_no_verified_races');
+      // Retry only missing races; never mark a venue complete after a partial scan.
+      const completedRaces=new Set(state.records.filter(x=>x.date===date&&x.venue===venue&&x.ready===true).map(x=>x.race));
+      const missingRaces=Array.from({length:12},(_,i)=>i+1).filter(r=>!completedRaces.has(r));
+      const rows=await mapOfficialLimited(missingRaces,3,async race=>
+        buildMorningRaceInputs(date,venue,race,await fetchOfficialRacers(date,venue,race)));
       const existing=new Set(state.records.map(x=>x.date+':'+x.venue+':'+x.race));
-      for(const row of verifiedRows){
+      for(const row of rows.filter(x=>x.ready===true)){
         const id=row.date+':'+row.venue+':'+row.race;
-        if(!existing.has(id)){state.records.push(row);existing.add(id);}
+        if(!existing.has(id)){state.records.push(row);existing.add(id);completedRaces.add(row.race);}
       }
-      state.completedVenues.push(venue);
-      state.failedVenues=state.failedVenues.filter(v=>v!==venue);
+      if(completedRaces.size===12){
+        if(!state.completedVenues.includes(venue))state.completedVenues.push(venue);
+        state.failedVenues=state.failedVenues.filter(v=>v!==venue);
+      }else if(!state.failedVenues.includes(venue)){
+        state.failedVenues.push(venue);
+      }
     }catch(e){if(!state.failedVenues.includes(venue))state.failedVenues.push(venue);}
     state.updatedAt=new Date().toISOString();
     const ranking=classifyDailyRaceCandidates(state.records);
