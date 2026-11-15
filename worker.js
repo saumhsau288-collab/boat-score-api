@@ -66,17 +66,29 @@ function jstDateFromUtc(date) {
 async function runScheduledMorning(env,scheduledTime) {
   const date=jstDateFromUtc(new Date(scheduledTime));
   if(!env?.MORNING_KV)throw Error('MORNING_KV binding is required');
-  const venues=await officialScheduleVenueCandidates(date);
-  if(!venues?.length){
-    await env.MORNING_KV.put('morning:'+date,JSON.stringify({date,status:'schedule_unverified',updatedAt:new Date().toISOString(),categories:{main:[],upset:[],chaos:[]}}),{expirationTtl:172800});
-    return;
-  }
-  // A single cron run is deliberately bounded to avoid unbounded official-site traffic.
-  // Store partial progress so later cron invocations can resume safely.
   const key='morning:'+date;
   let state;
   try{state=JSON.parse(await env.MORNING_KV.get(key)||'null')}catch{}
-  if(!state||!Array.isArray(state.completedVenues))state={date,status:'running',venues,completedVenues:[],failedVenues:[],attempts:{},records:[],updatedAt:null};
+  // Preserve verified progress when the official schedule is temporarily unavailable.
+  // Only use venues from an earlier schedule verified for this same date.
+  const freshVenues=await officialScheduleVenueCandidates(date);
+  const venues=freshVenues?.length?freshVenues:
+    (state?.date===date&&Array.isArray(state.venues)&&state.venues.length?state.venues:null);
+  if(!venues?.length){
+    if(state&&Array.isArray(state.completedVenues)){
+      state.scheduleLastCheck='unverified';
+      state.updatedAt=new Date().toISOString();
+      await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:172800});
+    }else{
+      await env.MORNING_KV.put(key,JSON.stringify({date,status:'schedule_unverified',
+        updatedAt:new Date().toISOString(),venues:[],completedVenues:[],failedVenues:[],
+        categories:{main:[],upset:[],chaos:[]}}),{expirationTtl:172800});
+    }
+    return;
+  }
+  if(!state||state.date!==date||!Array.isArray(state.completedVenues))
+    state={date,status:'running',venues,completedVenues:[],failedVenues:[],attempts:{},records:[],updatedAt:null};
+  state.scheduleLastCheck=freshVenues?.length?'verified':'reused_previous_verified_schedule';
   if(!state.attempts||typeof state.attempts!=='object')state.attempts={};
   if(!Array.isArray(state.failedVenues))state.failedVenues=[];
   if(!Array.isArray(state.records))state.records=[];
