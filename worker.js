@@ -116,6 +116,10 @@ function resetRaceChoices(){
 }
 venue.addEventListener('change',resetRaceChoices);
 async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
+const morningCacheKey=date=>'boat-score-morning-'+date;
+function restoreMorningSnapshot(){const out=document.getElementById('morningOutput'),st=document.getElementById('morningStatus');try{const raw=localStorage.getItem(morningCacheKey(dateCode()));if(!raw){out.textContent='';st.textContent='この日の保存済み集計はありません';return;}const data=JSON.parse(raw);if(data.date!==dateCode()||typeof data.text!=='string')throw Error('invalid');out.textContent=data.text;st.textContent='端末保存の事前評価：'+new Date(data.savedAt).toLocaleString('ja-JP')+'（'+(data.complete?'完了':'途中')+'・最新データではありません）';}catch(e){out.textContent='';st.textContent='保存結果を読み込めません';}}
+document.getElementById('day').addEventListener('change',restoreMorningSnapshot);
+restoreMorningSnapshot();
 let nationalMorningController=null;
 document.getElementById('morningNational').onclick=async function(){
  const button=this,st=document.getElementById('morningStatus'),out=document.getElementById('morningOutput');
@@ -127,7 +131,7 @@ document.getElementById('morningNational').onclick=async function(){
  const render=()=>{const lines=['全国事前評価（暫定・未検証）','取得成功 '+results.length+'場／取得失敗 '+failures.length+'場'];
  for(const key of ['main','upset','chaos']){const top=grouped[key].slice().sort((a,b)=>b.score-a.score||a.venue-b.venue||a.race-b.race).slice(0,20);
  lines.push(labels[key]+' TOP '+top.length+'：'+(top.length?top.map((x,j)=>(j+1)+'. '+x.venue+'場 '+x.race+'R').join(' / '):'確認できた候補なし'));}
- if(failures.length)lines.push('未取得: '+failures.join('、'));out.textContent=lines.join('\n');};
+ if(failures.length)lines.push('未取得: '+failures.join('、'));out.textContent=lines.join('\n');try{localStorage.setItem(morningCacheKey(dateCode()),JSON.stringify({date:dateCode(),savedAt:new Date().toISOString(),complete:false,text:out.textContent}));}catch(e){} };
  try{
  const response=await fetch('/api/morning/venues?date='+dateCode(),{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});
  const schedule=await response.json();if(!response.ok||!Array.isArray(schedule.venues)||!schedule.venues.length)throw Error(schedule.message||'開催場候補を確認できません');
@@ -142,8 +146,8 @@ document.getElementById('morningNational').onclick=async function(){
  }};
  await Promise.all(Array.from({length:Math.min(3,venues.length)},()=>worker()));
  if(controller.signal.aborted){st.textContent='集計を中止しました。取得済みの結果のみ表示';}
- else st.textContent='全国候補の集計終了（朝8時の自動実行・保存は未実装）';
- render();
+ else st.textContent='全国候補の集計終了（端末に保存・朝8時の自動実行は未実装）';
+ render();try{localStorage.setItem(morningCacheKey(dateCode()),JSON.stringify({date:dateCode(),savedAt:new Date().toISOString(),complete:!controller.signal.aborted&&failures.length===0,text:out.textContent}));}catch(e){}
  }catch(e){st.textContent=controller.signal.aborted?'集計を中止しました':'全国集計できません: '+e.message;}
  finally{if(nationalMorningController===controller)nationalMorningController=null;button.textContent='全国の開催候補を集計';}
 };
