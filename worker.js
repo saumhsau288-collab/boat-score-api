@@ -750,6 +750,8 @@ let objectUrl;
 document.getElementById('photo').addEventListener('change',e=>{if(objectUrl)URL.revokeObjectURL(objectUrl);const file=e.target.files?.[0];if(file&&file.type.startsWith('image/')){objectUrl=URL.createObjectURL(file);zoomPreview.src=objectUrl;zoomPreview.hidden=false;zoom=1;applyZoom()}else{zoomPreview.hidden=true;zoomPreview.removeAttribute('src')}});
 let screenshotReviewVersion=0;
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',()=>{screenshotReviewVersion++;});
+rows.addEventListener('input',()=>{screenshotReviewVersion++;document.getElementById('result').textContent='入力値が変更されました。再照合してください。';});
+document.getElementById('photo').addEventListener('change',()=>{screenshotReviewVersion++;document.getElementById('result').textContent='画像が変更されました。入力値を確認して再照合してください。';});
 document.getElementById('check').addEventListener('click',async()=>{
  const currentReview=++screenshotReviewVersion;
  const out=document.getElementById('result');out.textContent='照合中…';
