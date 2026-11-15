@@ -330,7 +330,26 @@ function updateRaceChange(){
   observations.push(changes.length?'枠番と展示進入コースが異なる艇：'+changes.map(x=>x.boat+'号艇→'+x.course+'コース').join('、'):'展示進入は全艇が枠番と同じです。');
   observations.push('展示STは本番のSTとは異なります。');
  }
+
+ const evidence=[];
+ if(priorSnapshot.officialVerified===true&&ex.length===6&&st.length===6){
+  const keys=['nationalWinRate','localWinRate','motorPlaceRate'];
+  const number=v=>v===null||v===undefined||String(v).trim()===''?null:Number(v);
+  if(priorSnapshot.boats.every(b=>keys.every(k=>number(b[k])!==null&&Number.isFinite(number(b[k]))))){
+   const maxima=keys.map(k=>Math.max(...priorSnapshot.boats.map(b=>number(b[k]))));
+   const shortest=Math.min(...ex.map(e=>Number(e.exhibitionTime)));
+   for(const b of priorSnapshot.boats){
+    const e=ex.find(x=>Number(x.boat)===Number(b.boat)),t=st.find(x=>Number(x.boat)===Number(b.boat));if(!e||!t)continue;
+    const count=keys.filter((k,i)=>number(b[k])===maxima[i]).length,flags=[];
+    if(count>=2)flags.push('事前3指標のうち'+count+'項目で最高値');
+    if(Number(e.exhibitionTime)===shortest)flags.push('展示最短');
+    if(Number(t.course)!==Number(b.boat))flags.push('展示進入変動');
+    if(flags.length)evidence.push(b.boat+'号艇：'+flags.join('、'));
+   }
+  }else evidence.push('事前指標不足：比較保留');
+ }else evidence.push('公式登録番号・展示・進入の照合不足：比較保留');
  box.textContent='事前→直前の項目別照合（優劣や買い目は未判定）\\n'+parts.join('\\n')+'\\n【直前の観察】\\n'+(observations.length?observations.join('\\n'):'照合できた観察項目なし')+'\\n※事前CSV数値は非公式。展示進入は本番進入の確定情報ではありません。まくらぼ50走・オッズは未反映。';
+ box.textContent+='\\n【候補検討材料（未採点）】\\n'+(evidence.length?evidence.join('、'):'該当なし')+'\\n本命・逆転・穴の判定は保留。';
 }
 
 function updateCoverageSummary(){
