@@ -384,7 +384,16 @@ document.getElementById('loadCsvCard').addEventListener('click',async()=>{
   const status=document.createElement('p');status.style.cssText='font-size:13px;line-height:1.6';
   const coverage=metrics.map(([label,key])=>label+' '+data.boats.filter(b=>validNumber(b[key])!==null).length+'/6艇').join(' / ');
   status.textContent='データ確認：'+(data.officialVerified?'選手登録番号6艇一致':'選手登録番号の公式照合未完了')+'。取得状況：'+coverage+'。不足：展示タイム、展示ST、進入、風向・風速、波高、まくらぼ直近50走。CSV数値は公式未照合。';
-  const note=document.createElement('p');note.textContent='太字は各項目の最大値（同率を含む）。非公式CSVの単純比較であり、本命・穴の判定や的中確率ではありません。展示・ST・風・直近50走は未反映。';note.style.cssText='font-size:13px;color:#475569';comparison.append(status,table,note);
+  const provisional=document.createElement('section');provisional.style.cssText='border-top:1px solid #cbd5e1;padding:10px 0';
+  const title=document.createElement('strong');title.textContent='事前評価（試作・判定保留）';provisional.appendChild(title);
+  const info=document.createElement('p');info.style.cssText='font-size:13px;line-height:1.6';
+  const rates=data.boats.map(b=>({boat:b.boat,rate:validNumber(b.nationalWinRate)}));
+  if(rates.every(b=>b.rate!==null)&&rates.length===6){
+   const sorted=rates.slice().sort((a,b)=>b.rate-a.rate);
+   info.textContent='全国勝率の単純順位：'+sorted.map(x=>x.boat+'号艇 '+x.rate.toFixed(2)).join(' / ')+'。本命・逆転・穴の判定は保留。枠順、進入、展示、直近50走、オッズの確認が必要です。';
+  }else info.textContent='全国勝率の不足により参考順位も表示できません。';
+  provisional.appendChild(info);
+  const note=document.createElement('p');note.textContent='太字は各項目の最大値（同率を含む）。非公式CSVの単純比較であり、本命・穴の判定や的中確率ではありません。展示・ST・風・直近50走は未反映。';note.style.cssText='font-size:13px;color:#475569';comparison.append(status,table,provisional,note);
   const headings=['艇','選手名','全国勝率','当地勝率','モーター2連対率'];
   out.textContent='非公式CSV（予想点に未反映）\n'+
    '取得項目：'+data.populatedFields+'/'+data.totalFields+'（空欄は未取得）\n'+
