@@ -377,6 +377,7 @@ document.getElementById('reviewResult').addEventListener('click',()=>{
  const out=document.getElementById('reviewOutput');const places=['finish1','finish2','finish3'].map(id=>{const v=document.getElementById(id).value.trim();return v===''?NaN:Number(v)});
  if(places.some(n=>!Number.isInteger(n)||n<1||n>6)||new Set(places).size!==3){out.textContent='1〜3着に異なる艇番（1〜6）を入力してください。';return}
  if(!priorSnapshot||!officialSnapshot||priorSnapshot.officialVerified!==true||officialSnapshot.exhibitionVerified!==true||officialSnapshot.startVerified!==true){out.textContent='事前CSVの登録番号照合と公式展示・進入の6艇確認が必要です。';return}
+ if(!verifiedFinish||verifiedFinish.key!==currentReviewKey()||!verifiedFinish.places.every((x,i)=>x===places[i])){out.textContent='公式結果の着順を取得・照合してください。手入力結果は一時集計に追加できません。';return}
  const boats=priorSnapshot.boats,ex=officialSnapshot.exhibitionByBoat,starts=officialSnapshot.startByCourse,keys=['nationalWinRate','localWinRate','motorPlaceRate'];
  const num=v=>v===null||v===undefined||String(v).trim()===''?null:Number(v);
  if(boats.length!==6||ex.length!==6||starts.length!==6||!boats.every(b=>keys.every(k=>num(b[k])!==null&&Number.isFinite(num(b[k]))))){out.textContent='比較指標が不足しています。';return}
@@ -410,9 +411,10 @@ function updateRaceChange(){
  renderEvidenceMatrix();
  const box=document.getElementById('evaluationChange');if(!box)return;
  if(!priorSnapshot||!officialSnapshot){box.textContent='事前CSVと公式直前情報を両方取得すると、項目別の変化を確認できます。';return}
+ if(priorSnapshot.officialVerified!==true){box.textContent='CSVの6艇登録番号が公式と一致していないため、事前数値と直前情報の艇別照合を保留します。';return}
  const ex=officialSnapshot.exhibitionVerified?officialSnapshot.exhibitionByBoat:[];
  const st=officialSnapshot.startVerified?officialSnapshot.startByCourse:[];
- if(ex.length!==6&&st.length!==6){box.textContent='公式直前情報の6艇照合が未完了のため、比較を保留します。';return}
+ if(ex.length!==6||st.length!==6){box.textContent='公式直前情報の6艇照合が未完了のため、比較を保留します。';return}
  const parts=priorSnapshot.boats.map(b=>{
   const e=ex.find(x=>Number(x.boat)===Number(b.boat));const t=st.find(x=>Number(x.boat)===Number(b.boat));
   return b.boat+'号艇：全国勝率 '+(b.nationalWinRate||'未取得')+' / 当地勝率 '+(b.localWinRate||'未取得')+' / モーター2連対率 '+(b.motorPlaceRate||'未取得')+' → 展示 '+(e?.exhibitionTime??'未確認')+' / 進入 '+(t?.course??'未確認')+' / ST '+(t?.startTiming??'未確認');
