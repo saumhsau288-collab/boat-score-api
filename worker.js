@@ -806,14 +806,14 @@ document.getElementById('check').addEventListener('click',async()=>{
 if (u.pathname === '/api/csv/race-card') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
-  if(!/^20\\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply(request,{error:'Invalid race selection'},400);
+  if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply(request,{error:'Invalid race selection'},400);
   const source='https://boatracecsv.github.io/data/programs/race_cards/'+date.slice(0,4)+'/'+date.slice(4,6)+'/'+date.slice(6,8)+'.csv';
   try{
     const response=await fetch(source,{signal:AbortSignal.timeout(12000)});
     if(!response.ok)return reply(request,{verified:false,sourceType:'unofficial_csv',reason:'csv_http_'+response.status},502);
     const raw=await response.text();if(raw.length>2500000)return reply(request,{verified:false,reason:'csv_too_large'},502);
     const lines=[];let row=[],cell='',quoted=false;
-    for(let i=0;i<raw.length;i++){const c=raw[i];if(c==='"'){if(quoted&&raw[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===','&&!quoted){row.push(cell);cell=''}else if((c==='\\n'||c==='\\r')&&!quoted){if(c==='\\r'&&raw[i+1]==='\\n')i++;row.push(cell);if(row.some(v=>v!==''))lines.push(row);row=[];cell=''}else cell+=c}
+    for(let i=0;i<raw.length;i++){const c=raw[i];if(c==='"'){if(quoted&&raw[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===','&&!quoted){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&raw[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v!==''))lines.push(row);row=[];cell=''}else cell+=c}
     if(cell||row.length){row.push(cell);lines.push(row)}
     const headers=(lines.shift()||[]).map(x=>x.trim());
     const pick=(obj,keys)=>{for(const k of keys)if(obj[k]!==undefined&&String(obj[k]).trim()!=='')return String(obj[k]).trim();return ''};
