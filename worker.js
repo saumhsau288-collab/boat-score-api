@@ -1660,7 +1660,7 @@ async function fetchOfficialRacers(date, venue, race, options={}) {
     // never treat a timeout or an unverified response as valid racer data.
     let response;
     let lastTransportError;
-    for (const timeoutMs of (options.verificationOnly ? [10000] : [10000, 18000])) {
+    for (const timeoutMs of (options.verificationOnly ? [10000, 18000] : [10000, 18000])) {
       try {
         response = await fetch(url.toString(), {
           headers: {Accept: 'text/html,application/xhtml+xml'},
