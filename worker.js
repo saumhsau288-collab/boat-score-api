@@ -1859,7 +1859,10 @@ function extractOfficialWeather(html) {
   const imageLabels=[...weatherHtml.matchAll(/<(?:img|span)\\b[^>]*>/gi)]
     .flatMap(m=>[...m[0].matchAll(/(?:alt|title|aria-label)\\s*=\\s*["']([^"']+)["']/gi)].map(a=>a[1]));
   const imageDirections=imageLabels.flatMap(label=>{
-    const match=label.match(new RegExp('(?:風向\\\\s*[:：]?\\\\s*)?('+cardinal+')(?:の風|風向)?
+    const match=label.match(new RegExp('(?:風向\\s*[:：]?\\s*)?('+cardinal+')(?:の風|風向)?$'));
+    return match?[match[1]]:[];
+  });
+  const windDirection=directionMatch?directionMatch[1]:(new Set(imageDirections).size===1?imageDirections[0]:null);
   const directionNearby=text.match(/風向[\s\S]{0,75}/);
   const directionDiagnostic=windDirection?null:(directionNearby?'wind_direction_label_without_cardinal_text':'wind_direction_label_absent_or_icon_only');
   const verified=windSpeed!==null&&windSpeed>=0&&windSpeed<=60&&
