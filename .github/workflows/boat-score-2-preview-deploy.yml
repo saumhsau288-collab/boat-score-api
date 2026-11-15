@@ -1,9 +1,6 @@
 name: Deploy Boat Score 2 isolated preview
 
 on:
-  push:
-    branches:
-      - boat-score-2-data-fix-20261114
   workflow_dispatch:
 
 permissions:
@@ -30,11 +27,11 @@ jobs:
       - name: Checkout Boat Score 2 development branch only
         uses: actions/checkout@v4
         with:
-          ref: boat-score-2-data-fix-20261114
+          ref: fix-boat-score-2-syntax-20261115
           persist-credentials: false
       - name: Confirm isolated source branch
         run: |
-          test "$(git branch --show-current)" = "boat-score-2-data-fix-20261114"
+          test "$(git branch --show-current)" = "fix-boat-score-2-syntax-20261115"
           echo "Deploying Boat Score 2 development branch only"
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -65,7 +62,7 @@ jobs:
           URL="https://boat-score-2-preview.saumh-sau-288.workers.dev/api/version"
           for attempt in 1 2 3 4 5; do
             if curl --fail --silent --show-error --max-time 15 "$URL" -o version.json &&
-              node -e "const fs=require('fs');const d=require('./version.json');const src=fs.readFileSync('worker.js','utf8');const match=src.match(/build:'([^']+)'/);if(!match||d.app!=='Boat Score 2 preview'||d.build!==match[1]||d.sourceBranch!=='boat-score-2-data-fix-20261114')process.exit(1)"; then
+              node -e "const fs=require('fs');const d=require('./version.json');const src=fs.readFileSync('worker.js','utf8');const match=src.match(/build:'([^']+)'/);if(!match||d.app!=='Boat Score 2 preview'||d.build!==match[1]||d.sourceBranch!=='fix-boat-score-2-syntax-20261115')process.exit(1)"; then
               echo "Verified isolated preview build and source branch"
               exit 0
             fi
