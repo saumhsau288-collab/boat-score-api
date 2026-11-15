@@ -764,7 +764,12 @@ document.getElementById('check').addEventListener('click',async()=>{
  const result=await response.json();
  if(currentReview!==screenshotReviewVersion||date!==document.getElementById('date').value.trim()||venue!==Number(document.getElementById('venue').value)||race!==Number(document.getElementById('race').value))return;
  if(result.identityVerified===true&&Array.isArray(result.rows)&&result.rows.length===6){
-  out.textContent='公式選手番号：6艇一致。以下は画像を見て手入力した未検証の集計です。予想点には反映しません。\\n'+
+  const complete50=result.rows.filter(row=>row.sampleSize===50).length;
+  const firstOrder=result.rows.slice().sort((a,b)=>(b.finishCounts[0]/b.sampleSize)-(a.finishCounts[0]/a.sampleSize)).map(row=>row.boat+'号艇').join(' → ');
+  out.textContent='対象：'+date+' / '+venue+'場 / '+race+'R\\n'+
+    '公式選手番号：6艇一致。画像を見て手入力した未検証の集計です。予想点には反映しません。\\n'+
+    '50走分入力：'+complete50+'/6艇（50走未満はその走数を分母に計算）\\n'+
+    '参考・1着率順：'+firstOrder+'（サンプル数が異なる場合は単純比較に注意）\\n'+
     '艇  走数  1着  2着  3着  4着  5着  6着  1着率  3連対率\\n'+
     result.rows.map(row=>{
       const first=(row.finishCounts[0]/row.sampleSize*100).toFixed(1)+'%';
