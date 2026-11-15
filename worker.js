@@ -87,7 +87,15 @@ async function runScheduledMorning(env,scheduledTime) {
     state.attempts[venue]=(state.attempts[venue]||0)+1;
     try{
       const rows=await scanVenueMorning(date,venue);
-      state.records.push(...rows.filter(x=>x.ready===true));
+      const verifiedRows=rows.filter(x=>x.ready===true);
+      // A completed scan is not a verified venue if every official fetch failed.
+      // Preserve the venue for a later bounded retry instead of falsely marking it done.
+      if(!verifiedRows.length)throw new Error('venue_no_verified_races');
+      const existing=new Set(state.records.map(x=>x.date+':'+x.venue+':'+x.race));
+      for(const row of verifiedRows){
+        const id=row.date+':'+row.venue+':'+row.race;
+        if(!existing.has(id)){state.records.push(row);existing.add(id);}
+      }
       state.completedVenues.push(venue);
       state.failedVenues=state.failedVenues.filter(v=>v!==venue);
     }catch(e){if(!state.failedVenues.includes(venue))state.failedVenues.push(venue);}
