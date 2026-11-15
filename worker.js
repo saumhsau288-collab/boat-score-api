@@ -348,7 +348,8 @@ document.getElementById('reviewSelectedEvidence').addEventListener('click',()=>{
  const key=currentDataKey(),out=document.getElementById('loadSelectedRaceEvidenceStatus');
  if(priorSnapshotKey!==key||officialSnapshotKey!==key||priorSnapshot?.officialVerified!==true||officialSnapshot?.exhibitionVerified!==true||officialSnapshot?.startVerified!==true||verifiedFinish?.key!==key){out.textContent='検証保留：同一レースの公式登録番号6艇、展示6艇、進入6艇、公式確定着順を確認してください。';return}
  document.getElementById('reviewResult').click();
- out.textContent='条件別の照合を実行しました。下の検証結果を確認し、問題なければ「この検証を一時集計に追加」を押してください。';
+ const ready=pendingReview?.key===key&&pendingReview.officialResultVerified===true;
+ out.textContent=ready?'条件別の照合が成立しました。下の検証結果を確認し、問題なければ「この検証を一時集計に追加」を押してください。':'条件別の照合を実行しましたが、検証は未成立です。下の検証結果に表示された不足・不整合を確認してください。';
 });
 document.getElementById('scanOfficialResults').addEventListener('click',async()=>{
  const version=++scanVersion,button=document.getElementById('scanOfficialResults'),out=document.getElementById('scanOfficialOutput');
@@ -474,7 +475,7 @@ function renderEvidenceMatrix(){
  const numeric=v=>v===null||v===undefined||String(v).trim()===''?null:Number(v);
  if(!boats.every(b=>keys.every(k=>numeric(b[k])!==null&&Number.isFinite(numeric(b[k])))))return;
  const maxima=keys.map(k=>Math.max(...boats.map(b=>numeric(b[k]))));
- const times=ex.map(e=>Number(e.exhibitionTime));if(!times.every(Number.isFinite))return;
+ const times=ex.map(e=>Number(e.exhibitionTime));if(!times.every(t=>Number.isFinite(t)&&t>0))return;
  const shortest=Math.min(...times);
  const title=document.createElement('p');title.textContent='6艇の条件照合表（参考情報・予想判定ではありません）';host.appendChild(title);
  const table=document.createElement('table');table.style.cssText='border-collapse:collapse;min-width:410px;width:100%;font-size:12px';
