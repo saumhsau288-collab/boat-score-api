@@ -787,6 +787,32 @@ document.getElementById('check').addEventListener('click',async()=>{
 </script></body></html>`;
   return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; img-src blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'"}});
 }
+if (u.pathname === '/api/csv/race-card') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
+  if(!/^20\\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply(request,{error:'Invalid race selection'},400);
+  const source='https://boatracecsv.github.io/data/programs/race_cards/'+date.slice(0,4)+'/'+date.slice(4,6)+'/'+date.slice(6,8)+'.csv';
+  try{
+    const response=await fetch(source,{signal:AbortSignal.timeout(12000)});
+    if(!response.ok)return reply(request,{verified:false,sourceType:'unofficial_csv',reason:'csv_http_'+response.status},502);
+    const raw=await response.text();if(raw.length>2500000)return reply(request,{verified:false,reason:'csv_too_large'},502);
+    const lines=[];let row=[],cell='',quoted=false;
+    for(let i=0;i<raw.length;i++){const c=raw[i];if(c==='"'){if(quoted&&raw[i+1]==='"'){cell+='"';i++}else quoted=!quoted}else if(c===','&&!quoted){row.push(cell);cell=''}else if((c==='\\n'||c==='\\r')&&!quoted){if(c==='\\r'&&raw[i+1]==='\\n')i++;row.push(cell);if(row.some(v=>v!==''))lines.push(row);row=[];cell=''}else cell+=c}
+    if(cell||row.length){row.push(cell);lines.push(row)}
+    const headers=(lines.shift()||[]).map(x=>x.trim());
+    const pick=(obj,keys)=>{for(const k of keys)if(obj[k]!==undefined&&String(obj[k]).trim()!=='')return String(obj[k]).trim();return ''};
+    const digits=x=>String(x).replace(/[^0-9]/g,'');
+    const record=lines.slice(0,3000).map(values=>Object.fromEntries(headers.map((h,i)=>[h,values[i]||'']))).find(obj=>{
+      const day=digits(pick(obj,['レース日','開催日','日付','年月日','date','race_date']));
+      const place=digits(pick(obj,['レース場コード','レース場','場コード','場','venue']));
+      const round=digits(pick(obj,['レース回','レース番号','race','rno']));
+      return (day===date||(day.length===6&&'20'+day===date))&&Number(place)===venue&&Number(round)===race;
+    });
+    if(!record)return reply(request,{verified:false,sourceType:'unofficial_csv',source,reason:'race_not_matched',dataReadyForPrediction:false});
+    const boats=Array.from({length:6},(_,i)=>{const n=i+1;const field=names=>pick(record,names.flatMap(k=>['艇'+n+'_'+k,n+'号艇_'+k,'艇'+n+k]));return {boat:n,name:field(['選手名','氏名']),nationalWinRate:field(['全国勝率']),localWinRate:field(['当地勝率']),motorPlaceRate:field(['モーター2連対率','モーター２連対率'])}});
+    return reply(request,{verified:true,sourceType:'unofficial_csv',officialVerified:false,dataReadyForPrediction:false,date,venue,race,source,boats});
+  }catch(error){return reply(request,{verified:false,sourceType:'unofficial_csv',reason:'csv_fetch_error',detail:String(error?.message||error).slice(0,120)},502)}
+}
 if (u.pathname === '/api/makulabo/screenshot-review') {
   if(request.method!=='POST')return reply(request,{error:'Method not allowed'},405);
   const type=request.headers.get('content-type')||'';
