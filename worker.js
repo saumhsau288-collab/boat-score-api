@@ -1843,12 +1843,14 @@ function extractOfficialWeather(html) {
   const airTemperature=number('気温','℃'),waterTemperature=number('水温','℃');
   const directionMatch=text.match(/風向\s*[:：]?\s*(北北東|東北東|東南東|南南東|南南西|西南西|西北西|北北西|北東|南東|南西|北西|北|東|南|西|無風)(?=\s|風速|波高|[、,。]|$)/);
   const windDirection=directionMatch?directionMatch[1]:null;
+  const directionNearby=text.match(/風向[\s\S]{0,75}/);
+  const directionDiagnostic=windDirection?null:(directionNearby?'wind_direction_label_without_cardinal_text':'wind_direction_label_absent_or_icon_only');
   const verified=windSpeed!==null&&windSpeed>=0&&windSpeed<=60&&
     waveHeight!==null&&waveHeight>=0&&waveHeight<=500;
   return {verified,windSpeed:verified?windSpeed:null,waveHeight:verified?waveHeight:null,
     airTemperature:airTemperature!==null&&airTemperature>=-30&&airTemperature<=50?airTemperature:null,
     waterTemperature:waterTemperature!==null&&waterTemperature>=-5&&waterTemperature<=45?waterTemperature:null,
-    windDirection:verified?windDirection:null,windDirectionVerified:verified&&windDirection!==null};
+    windDirection:verified?windDirection:null,windDirectionVerified:verified&&windDirection!==null,reason:directionDiagnostic};
 }
 
 function extractOfficialStartExhibition(html) {
