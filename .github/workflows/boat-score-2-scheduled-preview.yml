@@ -42,7 +42,7 @@ jobs:
           compatibility_date = "2026-11-01"
 
           [triggers]
-          crons = ["0,10,20,30,40,50 23 * * *", "0,10,20,30,40,50 0 * * *"]
+          crons = ["*/10 23,0,1,2 * * *"]
 
           [[kv_namespaces]]
           binding = "MORNING_KV"
