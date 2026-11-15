@@ -1754,12 +1754,12 @@ function rankTrifectaCandidates(rankedScores) {
 }
 
 function parseOfficialFinishOrder(html) {
-  const tables=[...html.matchAll(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/gi)].map(m=>m[0]);
-  const clean=v=>String(v).replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').replace(/\\s+/g,' ').trim().normalize('NFKC');
+  const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(m=>m[0]);
+  const clean=v=>String(v).replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').replace(/\s+/g,' ').trim().normalize('NFKC');
   const diagnostics={candidateTables:0,parsedRows:0,nonNumericRanks:0};
   for(const table of tables){
-    const trs=[...table.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)].map(m=>m[1]);
-    const rows=trs.map(tr=>[...tr.matchAll(/<t[dh]\\b[^>]*>([\\s\\S]*?)<\\/t[dh]>/gi)].map(m=>clean(m[1]))).filter(c=>c.length>=2);
+    const trs=[...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>m[1]);
+    const rows=trs.map(tr=>[...tr.matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(m=>clean(m[1]))).filter(c=>c.length>=2);
     const headers=rows.find(c=>c.some(x=>x==='着'||x==='着順')&&c.some(x=>x==='枠'||x==='艇番'));
     if(!headers)continue;
     diagnostics.candidateTables++;
