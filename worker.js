@@ -393,6 +393,17 @@ document.getElementById('loadCsvCard').addEventListener('click',async()=>{
    info.textContent='全国勝率の単純順位：'+sorted.map(x=>x.boat+'号艇 '+x.rate.toFixed(2)).join(' / ')+'。本命・逆転・穴の判定は保留。枠順、進入、展示、直近50走、オッズの確認が必要です。';
   }else info.textContent='全国勝率の不足により参考順位も表示できません。';
   provisional.appendChild(info);
+  const multi=document.createElement('p');multi.style.cssText='font-size:13px;line-height:1.6';
+  const keys=[['全国勝率','nationalWinRate'],['当地勝率','localWinRate'],['モーター2連対率','motorPlaceRate']];
+  const ranks=keys.map(([label,key])=>{
+   const values=data.boats.map(b=>({boat:b.boat,value:validNumber(b[key])}));
+   if(values.length!==6||values.some(x=>x.value===null))return label+'：未評価（不足）';
+   const max=Math.max(...values.map(x=>x.value));
+   return label+'の上位：'+values.filter(x=>x.value===max).map(x=>x.boat+'号艇').join('・')+'（'+max+'）';
+  });
+  multi.textContent='項目別比較（重み付けなし）：'+ranks.join(' / ')+'。異なる指標を合算して順位を決めることはしません。';
+  provisional.appendChild(multi);
+
   const note=document.createElement('p');note.textContent='太字は各項目の最大値（同率を含む）。非公式CSVの単純比較であり、本命・穴の判定や的中確率ではありません。展示・ST・風・直近50走は未反映。';note.style.cssText='font-size:13px;color:#475569';comparison.append(status,table,provisional,note);
   const headings=['艇','選手名','全国勝率','当地勝率','モーター2連対率'];
   out.textContent='非公式CSV（予想点に未反映）\n'+
