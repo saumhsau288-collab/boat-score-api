@@ -49,7 +49,7 @@ jobs:
           assert.equal((code.match(/async function scanVenueMorning\(/g) || []).length, 1,
             'Expected exactly one shared venue scanner');
           for (const ui of [
-            '開催情報（公式照会）',
+            '開催情報は公式データ取得時に確認します。',
             '選手の入賞率比較（公式照合済みのみ）',
             '全国2連対率',
             '全国3連対率',
