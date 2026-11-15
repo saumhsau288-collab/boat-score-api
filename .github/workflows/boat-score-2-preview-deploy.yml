@@ -17,11 +17,11 @@ jobs:
       - name: Checkout Boat Score 2 development branch only
         uses: actions/checkout@v4
         with:
-          ref: boat-score-2-data-fix-20261114
+          ref: fix-heatmap-recursion-20261115
           persist-credentials: false
       - name: Verify isolated branch
         run: |
-          test "$(git branch --show-current)" = "boat-score-2-data-fix-20261114"
+          test "$(git branch --show-current)" = "fix-heatmap-recursion-20261115"
           test -f worker.js
       - name: Validate Worker syntax
         run: node --input-type=module --check < worker.js
