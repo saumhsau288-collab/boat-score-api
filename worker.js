@@ -282,7 +282,7 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <label>競艇場 <select id="venue" style="font-size:16px;padding:10px;max-width:100%"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select></label>
 <label>レース番号（1〜12） <input id="race" type="number" min="1" max="12"></label>
 <button id="checkSchedule" type="button">公式開催一覧の候補を確認</button><p id="scheduleStatus" role="status">開催一覧は未照合です</p><button id="checkAllVenues" type="button">全国24場の公式1R出走表を確認</button><label style="display:block"><input id="showConfirmedOnly" type="checkbox"> 公式1R確認済みの場だけ表示（未確認の場は非開催とは限りません）</label><p id="allVenuesStatus" role="status">未確認</p><button id="checkVenue" type="button">選択した競艇場の開催情報を確認</button><p id="venueStatus" role="status">未確認（開催・非開催は未判定）</p><button id="checkRaceData" type="button">選択レースの公式データ充足状況を確認</button><p id="raceDataStatus" role="status">未確認</p><div id="last50Comparison" aria-live="polite"></div><button id="fillRacers" type="button">公式出走表から登録番号を入力</button><p id="fillStatus" role="status"></p><p>画像を見ながら走数・1〜6着回数を入力してください。6艇すべて必要です。</p><button id="set50" type="button">6艇の走数を50にする</button><p id="countStatus" role="status"></p>
-<button id="loadCsvCard" type="button">7.7方式：出走表CSVを取得・比較</button><pre id="csvCardResult" style="white-space:pre-wrap;overflow-wrap:anywhere" role="status">CSV未取得（非公式データ）</pre><div id="rows" style="display:grid;gap:14px"></div>
+<button id="loadCsvCard" type="button">7.7方式：出走表CSVを取得・比較</button><button id="fillCsvRacerIds" type="button" disabled>照合済み登録番号を6艇に入力</button><p id="csvFillStatus" role="status">CSV取得・公式照合後に利用できます。</p><pre id="csvCardResult" style="white-space:pre-wrap;overflow-wrap:anywhere" role="status">CSV未取得（非公式データ）</pre><div id="rows" style="display:grid;gap:14px"></div>
 <button id="check" type="button">公式出走表と照合する</button><pre id="result" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
 <small>選手番号が一致しても画像内の数字自体は未検証です。直近50走の取得成功や予想可能を意味しません。</small>
 <section id="dailyRanking" style="margin:30px 0;padding:16px;border:1px solid #cbd5e1;border-radius:12px" aria-label="朝8時の全国レース分析">
@@ -301,7 +301,16 @@ if (u.pathname === '/tools/makulabo-screenshot') {
 <script>
 const rows=document.getElementById('rows');
 let csvCardVersion=0;
-function clearCsvCard(){csvCardVersion++;document.getElementById('csvCardResult').textContent='レース条件が変わりました。CSVを再取得してください。'}
+let verifiedCsvIds=null;
+document.getElementById('fillCsvRacerIds').addEventListener('click',()=>{
+ if(!verifiedCsvIds||verifiedCsvIds.version!==csvCardVersion)return;
+ const targets=Array.from({length:6},(_,i)=>document.querySelector('#rows input[data-boat="'+(i+1)+'"][data-index="0"]'));
+ if(targets.some(x=>!x)){document.getElementById('csvFillStatus').textContent='入力欄が見つかりません';return}
+ if(targets.some((x,i)=>x.value.trim()&&x.value.trim()!==verifiedCsvIds.ids[i])){document.getElementById('csvFillStatus').textContent='既存の登録番号と異なります。上書きしません。';return}
+ targets.forEach((x,i)=>{x.value=verifiedCsvIds.ids[i];x.dispatchEvent(new Event('input',{bubbles:true}))});
+ document.getElementById('csvFillStatus').textContent='公式と一致した登録番号6艇分を入力しました。50走の着順回数は未入力です。';
+});
+function clearCsvCard(){csvCardVersion++;verifiedCsvIds=null;document.getElementById('fillCsvRacerIds').disabled=true;document.getElementById('csvFillStatus').textContent='レース変更後は再照合が必要です。';document.getElementById('csvCardResult').textContent='レース条件が変わりました。CSVを再取得してください。'}
 for(const id of ['date','venue','race'])document.getElementById(id).addEventListener('input',clearCsvCard);
 document.getElementById('loadCsvCard').addEventListener('click',async()=>{
  const version=++csvCardVersion,out=document.getElementById('csvCardResult');
@@ -312,6 +321,10 @@ document.getElementById('loadCsvCard').addEventListener('click',async()=>{
   const response=await fetch('/api/csv/race-card?date='+encodeURIComponent(date)+'&venue='+venue+'&race='+race);
   const data=await response.json();if(version!==csvCardVersion)return;
   if(!response.ok||!data.verified||!Array.isArray(data.boats)||data.boats.length!==6){out.textContent='CSV照合できませんでした：'+String(data.reason||data.error||response.status);return}
+  verifiedCsvIds=null;document.getElementById('fillCsvRacerIds').disabled=true;
+  const ids=data.boats.map(b=>String(b.racerId||'').trim());
+  if(data.officialVerified===true&&ids.every(x=>/^[0-9]{4}$/.test(x))&&new Set(ids).size===6){verifiedCsvIds={ids,version};document.getElementById('fillCsvRacerIds').disabled=false;document.getElementById('csvFillStatus').textContent='公式と一致した登録番号を入力できます。'}
+  else document.getElementById('csvFillStatus').textContent='公式照合が未完了のため登録番号は自動入力しません。';
   const headings=['艇','選手名','全国勝率','当地勝率','モーター2連対率'];
   out.textContent='非公式CSV（予想点に未反映）\n'+
    '取得項目：'+data.populatedFields+'/'+data.totalFields+'（空欄は未取得）\n'+
