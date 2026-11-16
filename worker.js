@@ -388,7 +388,7 @@ document.getElementById('predictSelected').onclick=async function(){
  if(selectedPredictionController)selectedPredictionController.abort();
  const controller=new AbortController();selectedPredictionController=controller;this.disabled=true;out.textContent='';st.textContent='選択レースの公式6艇・勝率・モーター成績を照合中…';
  const date=dateCode(),v=venue.value,r=race.value;
- try{const res=await fetch('/api/predict/selected-race?date='+date+'&venue='+v+'&race='+r,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(25000)])});
+ try{const res=await fetch('/api/predict/selected-race?date='+date+'&venue='+v+'&race='+r+'&mode=beforeinfo',{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(25000)])});
  const d=await res.json();if(controller.signal.aborted||date!==dateCode()||v!==venue.value||r!==race.value)return;
  if(!res.ok)throw Error(d.error||'HTTP '+res.status);
  if(!d.ready){st.textContent='データ不足のため予想を保留: '+(d.reason||'確認できません');out.textContent='未確認情報を推測で補いません。';return;}
@@ -397,7 +397,8 @@ document.getElementById('predictSelected').onclick=async function(){
  const fmt=rows=>Array.isArray(rows)?rows.map((x,i)=>(i+1)+'. '+(Array.isArray(x)?x.join('-'):'形式未確認')).join('\n'):'取得できません';
  const inputNames={local:'当地勝率',placeRates:'全国2連対率・3連対率',last50:'まくらぼ直近50走',course:'進入・コース',exhibition:'展示タイム',start:'展示ST',weather:'風・波'};
  const missing=Array.isArray(d.missingInputs)?d.missingInputs.map(x=>inputNames[x]||x):[];
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
+ const exhibitionNote=d.exhibitionAdjustmentApplied===true?'公式6艇の展示タイムを確認し、予想点数に小幅反映しました。':'展示タイムの予想反映なし（'+(d.exhibitionVerification||'未確認')+'）。';
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
@@ -519,11 +520,37 @@ if (u.pathname === '/api/predict/selected-race') {
   const inputs=buildMorningRaceInputs(date,venue,race,official);
   if(!inputs.ready)return reply(request,{date,venue,race,ready:false,main:[],upset:[],reason:inputs.reason||'verified_inputs_missing',
     missingInputs:inputs.missingInputs||[],officialVerified:official?.verified===true,statsVerified:official?.statsVerified===true});
-  const picks=rankTrifectaCandidates(inputs.rankedScores);
+  // Morning batch remains unchanged. Only an explicitly requested selected-race
+  // prediction checks beforeinfo; transport failure falls back to the base model.
+  const useBeforeinfo=u.searchParams.get('mode')==='beforeinfo';
+  let exhibition={verified:false,rows:[]},beforeinfoReason='not_requested';
+  if(useBeforeinfo){
+    const url=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
+    url.searchParams.set('rno',String(race));
+    url.searchParams.set('jcd',String(venue).padStart(2,'0'));
+    url.searchParams.set('hd',date);
+    try{
+      const response=await fetch(url.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(4500)});
+      if(response.ok){
+        const html=await response.text();
+        if(html.length<=1000000){
+          exhibition=extractOfficialExhibition(html);
+          beforeinfoReason=exhibition.verified?'six_boats_verified':'exhibition_unverified';
+        }else beforeinfoReason='beforeinfo_response_too_large';
+      }else beforeinfoReason='beforeinfo_http_'+response.status;
+    }catch(error){beforeinfoReason=error?.name==='TimeoutError'?'beforeinfo_timeout':'beforeinfo_fetch_failed';}
+  }
+  const adjustment=useBeforeinfo?applyVerifiedExhibitionAdjustment(inputs.rankedScores,exhibition):
+    {applied:false,rankedScores:inputs.rankedScores};
+  const picks=rankTrifectaCandidates(adjustment.rankedScores);
+  const missingInputs=inputs.missingInputs.filter(x=>x!=='exhibition'||!adjustment.applied);
   return reply(request,{date,venue,race,ready:picks.ready,main:picks.main,upset:picks.upset,
-    rankedScores:inputs.rankedScores,method:inputs.method,combinationMethod:picks.method,placeRateTieBreakVerified:inputs.placeRateTieBreakVerified===true,missingInputs:inputs.missingInputs,
+    rankedScores:adjustment.rankedScores,method:inputs.method,combinationMethod:picks.method,
+    predictionMode:adjustment.applied?'verified_exhibition_adjusted':'base_stats_only',
+    exhibitionAdjustmentApplied:adjustment.applied,exhibitionVerification:beforeinfoReason,
+    placeRateTieBreakVerified:inputs.placeRateTieBreakVerified===true,missingInputs,
     verified:'official_six_boat_entries_and_available_verified_metrics_only',
-    note:inputs.method==='weighted_national50_local20_motor30_unvalidated'?'Provisional national win-rate 50%, local win-rate 20%, motor top-2 rate 30% ranking. Not a calibrated probability; exhibition, ST, wind, course and last50 are excluded.':'Provisional national win-rate 70%, motor top-2 rate 30% ranking; local win-rate was not fully verified. Not a calibrated probability; exhibition, ST, wind, course and last50 are excluded.'});
+    note:adjustment.applied?'Provisional base model plus a small verified exhibition-time adjustment. ST, wind, course and last50 remain excluded. Not a calibrated probability.':'Provisional base statistics model only. Exhibition, ST, wind, course and last50 are not scored. Not a calibrated probability.'});
 }
 
 if (u.pathname === '/api/daily/verified-venue-screen') {
