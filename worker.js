@@ -1916,8 +1916,9 @@ function buildMorningRaceInputs(date,venue,race,official) {
   if(new Set(boats).size!==6||!boats.every(x=>Number.isInteger(x)&&x>=1&&x<=6))
     return {ready:false,reason:'invalid_boat_identity'};
   const scoreRows=stats.map(x=>{
-    const win=Number(x.nationwide?.winRate);
-    const motor=Number(x.motor?.secondPlaceRate);
+    const parseVerifiedMetric=value=>value===null||value===undefined||String(value).trim()===''?NaN:Number(value);
+    const win=parseVerifiedMetric(x.nationwide?.winRate);
+    const motor=parseVerifiedMetric(x.motor?.secondPlaceRate);
     return {boat:x.boat,win,motor};
   });
   if(!scoreRows.every(x=>Number.isFinite(x.win)&&x.win>=0&&x.win<=10&&Number.isFinite(x.motor)&&x.motor>=0&&x.motor<=100))
