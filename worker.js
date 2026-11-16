@@ -314,13 +314,14 @@ function syncVerifiedMakulaboComparison(){
  const tbody=document.getElementById('comparisonBody');
  if(!verifiedMakulabo||verifiedMakulabo.key!==dateCode()+':'+venue.value+':'+race.value)return 0;
  let updated=0;
- for(const tr of tbody.querySelectorAll('tr')){
+ const trs=Array.from(tbody.querySelectorAll('tr'));
+ for(const tr of trs){
   const boat=Number((tr.cells[0]?.textContent||'').match(/^[1-6]/)?.[0]);
   const row=verifiedMakulabo.rows.find(x=>Number(x.boat)===boat);
   if(!row||tr.cells.length!==18)continue;
-  const normalizeName=v=>String(v||'').replace(/[\\s\\u3000]/g,'');
-  const shownName=normalizeName(tr.cells[1]?.textContent);
-  if(shownName&&shownName!=='未確認'&&shownName!==normalizeName(row.name))continue;
+  // The API has already checked all six official racer identities. Match by boat here;
+  // presentation names can contain different spacing and glyph variants.
+  if(!Number.isFinite(row.runs)||row.runs<1||!Array.isArray(row.counts)||row.counts.length!==6)continue;
   tr.cells[17].textContent=row.runs+'走 / 1着 '+(row.counts[0]/row.runs*100).toFixed(1)+'% / 2連 '+((row.counts[0]+row.counts[1])/row.runs*100).toFixed(1)+'% / 3連 '+((row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100).toFixed(1)+'%';
   updated++;
  }
@@ -354,7 +355,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
   const heading=document.createElement('h3');heading.textContent='まくらぼ直近50走の入賞率';result.appendChild(heading);result.appendChild(rateTable);
   verifiedMakulabo={key:date+':'+v+':'+r,rows:data.last50ByBoat};
   const updated=syncVerifiedMakulaboComparison();
-  status.textContent='まくらぼ6艇の取得・照合成功。選手比較表への反映：'+updated+'/6艇。'+(updated===0?'先に「公式データを確認」を押すと比較表に反映できます。':'')+' 予想点数への反映は未実装です。';
+  status.textContent='まくらぼ6艇の取得・照合成功。選手比較表への反映：'+updated+'/6艇。'+(updated===0?'比較表の行数：'+document.getElementById('comparisonBody').querySelectorAll('tr').length+'。表示中の艇番と取得データの照合を確認してください。':'')+' 予想点数への反映は未実装です。';
  }catch(e){if(token===makulaboSearchToken)status.textContent='自動検索に失敗しました：'+(e.name==='TimeoutError'?'通信時間切れ':'通信エラー');}
  finally{if(token===makulaboSearchToken)this.disabled=false;}
 };
