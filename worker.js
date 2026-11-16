@@ -1926,8 +1926,8 @@ function buildMorningRaceInputs(date,venue,race,official) {
     .map((x,i)=>[x.boat,6-i]));
   const winRanks=ranks('win'),motorRanks=ranks('motor');
   return {ready:true,date,venue,race,officialVerified:true,statsVerified:true,
-    rankedScores:scoreRows.map(x=>({boat:x.boat,score:winRanks.get(x.boat)+motorRanks.get(x.boat)})),
-    method:'two_factor_morning_screening_unvalidated',missingInputs:['last50','course','exhibition','start','weather']};
+    rankedScores:scoreRows.map(x=>({boat:x.boat,score:7*winRanks.get(x.boat)+3*motorRanks.get(x.boat)})),
+    method:'weighted_racer70_motor30_screening_unvalidated',missingInputs:['last50','course','exhibition','start','weather']};
 }
 
 function classifyDailyRaceCandidates(races) {
