@@ -1705,6 +1705,15 @@ if (u.pathname === '/api/official/beforeinfo') {
   if(!/^20\d{6}$/.test(date)||!/^\d{1,2}$/.test(venue)||!/^\d{1,2}$/.test(race)||
      Number(venue)<1||Number(venue)>24||Number(race)<1||Number(race)>12)
     return reply(request,{error:'Invalid parameters'},400);
+  // Reuse the same race's recently verified exhibition and start data.
+  // Weather is not cached, so it remains unverified in this fast response.
+  const cached=getVerifiedBeforeinfo(date,venue,race);
+  if(cached?.exhibition?.verified===true&&cached?.start?.verified===true){
+    return reply(request,{status:'verified',source:'verified_recent_cache',
+      exhibitionVerified:true,startVerified:true,weatherVerified:false,windDirectionVerified:false,
+      exhibitionByBoat:cached.exhibition.rows,startByCourse:cached.start.rows,
+      weather:{verified:false},dataReadyForPrediction:false});
+  }
   const url=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
   url.searchParams.set('rno',String(Number(race)));
   url.searchParams.set('jcd',String(venue).padStart(2,'0'));
