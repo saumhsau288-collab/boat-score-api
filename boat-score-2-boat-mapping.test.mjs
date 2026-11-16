@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {parseOfficialBoatRows} from './boat-score-2-boat-mapping.js';
+const row=(boat,id)=>'<tr><td>'+boat+'</td><td><a href="/owpc/pc/data/racersearch/profile?toban='+id+'">選手'+boat+'</a></td></tr>';
+const html=Array.from({length:6},(_,i)=>row(i+1,4001+i)).join('');
+const result=parseOfficialBoatRows(html);
+assert.equal(result.verified,true);
+assert.deepEqual(result.racers.map(r=>r.boat),[1,2,3,4,5,6]);
+assert.equal(parseOfficialBoatRows(html+row(1,5000)).verified,false);
+assert.equal(parseOfficialBoatRows(html.replace('4002','4001')).verified,false);
+assert.equal(parseOfficialBoatRows('<a href="/owpc/pc/data/racersearch/profile?toban=4001">選手</a>').verified,false);
+console.log('Boat mapping tests passed');
