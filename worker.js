@@ -259,49 +259,24 @@ function clearRaceDisplay(){raceDataRequest++;if(raceDataController){raceDataCon
 day.addEventListener('change',()=>{scheduleRequest++;if(scheduleController){scheduleController.abort();scheduleController=null;}document.getElementById('scheduleOutput').textContent='';if(venue.value)refreshVerifiedRaces();else resetRaceChoices();document.getElementById('scheduleStatus').textContent='日付を変更しました。選択日の公式レース一覧を再確認します。';});
 race.addEventListener('change',clearRaceDisplay);
 
+// Race selection is independent of the official site's availability.
+// Prediction endpoints still require verified official six-racer data.
 async function refreshVerifiedRaces(){
- const token=++raceListRequest;
- if(raceListController)raceListController.abort();
- const controller=new AbortController();raceListController=controller;
- clearRaceDisplay();race.disabled=true;race.replaceChildren(new Option('レースを確認中…',''));
- if(!venue.value)return;
- const selectedVenue=venue.value,selectedDate=dateCode();
- const confirmed=new Set(),reasons=new Set();let finished=0;
- const update=()=>{
-  if(token!==raceListRequest||controller.signal.aborted)return;
-  const sorted=[...confirmed].sort((a,b)=>a-b);
-  race.replaceChildren(new Option(sorted.length?'レースを選択':'確認中 '+finished+'/12',''));
-  sorted.forEach(v=>race.add(new Option(v+'R',String(v))));
-  race.disabled=sorted.length===0;
-  document.getElementById('status').textContent='公式出走表の確認 '+finished+'/12件、確認済み '+sorted.length+'件'+(reasons.size?'（未確認理由: '+[...reasons].slice(0,2).join('、')+'）':'');
- };
- let next=1;
- const worker=async()=>{
-  while(next<=12&&!controller.signal.aborted){
-   const rno=next++;
-   try{
-    const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue+'&race='+rno,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(12500)])});
-    if(!res.ok)throw Error('HTTP '+res.status);
-    const data=await res.json();
-    if(Array.isArray(data.verifiedRaces)&&data.verifiedRaces.includes(rno))confirmed.add(rno);
-    else (data.checks||[]).forEach(x=>{if(x.reason)reasons.add(x.reason)});
-   }catch(e){if(!controller.signal.aborted)reasons.add(e.name==='TimeoutError'?'timeout':String(e.message).slice(0,60));}
-   finished++;update();
-  }
- };
- try{
-  await Promise.all([worker(),worker()]);
-  if(token===raceListRequest&&!controller.signal.aborted){
-   update();
-   if(!confirmed.size){race.replaceChildren(new Option('公式出走表を確認できません',''));race.disabled=true;const codes=[...reasons];const upstreamTimeout=codes.some(v=>v==='official_timeout'||v==='timeout');document.getElementById('status').textContent=upstreamTimeout?'公式サイトの応答が時間切れです。開催中止とは判断しません。公式サイトの出走表を確認し、時間をおいて再度競艇場を選択してください。':'12レースを確認しましたが、公式出走表を検証できませんでした（'+codes.slice(0,3).join('、')+'）。休止とは断定しません。';}
-  }
- }finally{if(raceListController===controller)raceListController=null;}
+ raceListRequest++;
+ if(raceListController){raceListController.abort();raceListController=null;}
+ clearRaceDisplay();
+ race.replaceChildren(new Option('レースを選択',''));
+ if(!venue.value){race.disabled=true;return;}
+ for(let n=1;n<=12;n++)race.add(new Option(n+'R',String(n)));
+ race.disabled=false;
+ document.getElementById('status').textContent='1〜12Rを選択できます。レース選択は開催・出走表の確認を意味しません。予想時に公式6艇の情報を照合し、未確認なら予想を保留します。';
 }
 function resetRaceChoices(){
- raceListRequest++;if(raceListController){raceListController.abort();raceListController=null;}
+ raceListRequest++;
+ if(raceListController){raceListController.abort();raceListController=null;}
  clearRaceDisplay();race.replaceChildren(new Option('レースを選択',''));
  race.disabled=true;
- document.getElementById('status').textContent=venue.value?'公式出走表で確認したレースのみ選択できます。':'';
+ document.getElementById('status').textContent='';
 }
 venue.addEventListener('change',()=>{if(!venue.value){resetRaceChoices();return;}refreshVerifiedRaces();});
 async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
