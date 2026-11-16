@@ -9,6 +9,22 @@ function cors(request) {
 function reply(request, data, status=200) {
   return new Response(JSON.stringify(data), {status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...cors(request)}});
 }
+// Verified beforeinfo only: short-lived per-isolate reuse for the same exact race.
+// A cache miss or worker restart simply falls back to the official fetch.
+const verifiedBeforeinfoCache=new Map();
+function beforeinfoCacheKey(date,venue,race){return date+':'+Number(venue)+':'+Number(race);}
+function getVerifiedBeforeinfo(date,venue,race){
+  const key=beforeinfoCacheKey(date,venue,race),item=verifiedBeforeinfoCache.get(key);
+  if(!item)return null;
+  if(Date.now()-item.savedAt>120000){verifiedBeforeinfoCache.delete(key);return null;}
+  return item;
+}
+function saveVerifiedBeforeinfo(date,venue,race,exhibition,start){
+  if(exhibition?.verified!==true||start?.verified!==true||
+     exhibition.rows?.length!==6||start.rows?.length!==6)return;
+  if(verifiedBeforeinfoCache.size>=30)verifiedBeforeinfoCache.delete(verifiedBeforeinfoCache.keys().next().value);
+  verifiedBeforeinfoCache.set(beforeinfoCacheKey(date,venue,race),{savedAt:Date.now(),exhibition,start});
+}
 // Short-lived per-isolate deduplication reduces repeated official-site traffic.
 // Failures and unverified data are never persisted across requests.
 // Limit upstream connections; preserve original venue/race order in results.
@@ -543,6 +559,9 @@ if (u.pathname === '/api/predict/selected-race') {
   const useBeforeinfo=u.searchParams.get('mode')==='beforeinfo';
   let exhibition={verified:false,rows:[]},startExhibition={verified:false,rows:[]},beforeinfoReason='not_requested';
   if(useBeforeinfo){
+    const cached=getVerifiedBeforeinfo(date,venue,race);
+    if(cached){exhibition=cached.exhibition;startExhibition=cached.start;beforeinfoReason='verified_recent_cache';}
+    else {
     const url=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
     url.searchParams.set('rno',String(race));
     url.searchParams.set('jcd',String(venue).padStart(2,'0'));
@@ -557,6 +576,7 @@ if (u.pathname === '/api/predict/selected-race') {
           if(html.length<=1000000){
             exhibition=extractOfficialExhibition(html);
             startExhibition=extractOfficialStartExhibition(html);
+            saveVerifiedBeforeinfo(date,venue,race,exhibition,startExhibition);
             beforeinfoReason=exhibition.verified?'six_boats_verified':'exhibition_unverified';
           }else beforeinfoReason='beforeinfo_response_too_large';
         }else beforeinfoReason='beforeinfo_http_'+response.status;
@@ -566,6 +586,7 @@ if (u.pathname === '/api/predict/selected-race') {
         beforeinfoReason=timedOut?'beforeinfo_timeout':'beforeinfo_fetch_failed';
         if(!timedOut)break;
       }
+    }
     }
   }
   const adjustment=useBeforeinfo?applyVerifiedExhibitionAdjustment(inputs.rankedScores,exhibition):
@@ -1689,6 +1710,7 @@ if (u.pathname === '/api/official/beforeinfo') {
     const exhibition=extractOfficialExhibition(html);
     const start=extractOfficialStartExhibition(html);
     const weather=extractOfficialWeather(html);
+    saveVerifiedBeforeinfo(date,venue,race,exhibition,start);
     return reply(request,{
       status:exhibition.verified&&start.verified?'verified':'partial',
       exhibitionVerified:exhibition.verified,startVerified:start.verified,
