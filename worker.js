@@ -303,8 +303,8 @@ document.getElementById('predictSelected').onclick=async function(){
  const d=await res.json();if(controller.signal.aborted||date!==dateCode()||v!==venue.value||r!==race.value)return;
  if(!res.ok)throw Error(d.error||'HTTP '+res.status);
  if(!d.ready){st.textContent='データ不足のため予想を保留: '+(d.reason||'確認できません');out.textContent='未確認情報を推測で補いません。';return;}
- const fmt=rows=>rows.map((x,i)=>(i+1)+'. '+x.join('-')).join(' / ');
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n本命6点：'+fmt(d.main)+'\n穴6点：'+fmt(d.upset)+'\n※全国勝率・モーター2連対率のみの暫定モデル。展示・ST・風・進入・直近50走は未反映。';
+ const fmt=rows=>Array.isArray(rows)?rows.map((x,i)=>(i+1)+'. '+(Array.isArray(x)?x.join('-'):'形式未確認')).join('\n'):'取得できません';
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+(d.main?.length||0)+'点\n'+fmt(d.main)+'\n\n【穴】'+(d.upset?.length||0)+'点\n'+fmt(d.upset)+'\n\n※全国勝率・モーター2連対率のみの暫定モデル。展示・ST・風・進入・直近50走は未反映。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
