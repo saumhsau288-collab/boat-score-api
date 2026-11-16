@@ -27,8 +27,10 @@ jobs:
           node --experimental-default-type=module --check boat-score-2-morning.js
           node --experimental-default-type=module --check boat-score-2-adapter.js
           node --experimental-default-type=module --check boat-score-2-official.js
+          node --experimental-default-type=module --check boat-score-2-boat-mapping.js
           node --experimental-default-type=module boat-score-2-scoring.test.mjs
           node --experimental-default-type=module boat-score-2-classification.test.mjs
           node --experimental-default-type=module boat-score-2-morning.test.mjs
           node --experimental-default-type=module boat-score-2-adapter.test.mjs
           node --experimental-default-type=module boat-score-2-official.test.mjs
+          node --experimental-default-type=module boat-score-2-boat-mapping.test.mjs
