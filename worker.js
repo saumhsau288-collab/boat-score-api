@@ -1805,7 +1805,7 @@ if (u.pathname === '/api/test') return reply(request,{status:'ok',message:'Boat 
     if (request.method !== 'GET') return reply(request,{error:'Method not allowed'},405);
     const date = u.searchParams.get('date')||'', venue=u.searchParams.get('venue')||'', race=u.searchParams.get('race')||'';
     if (!/^20\d{6}$/.test(date) || !/^\d{1,2}$/.test(venue) || !/^\d{1,2}$/.test(race) || Number(venue)<1 || Number(venue)>24 || Number(race)<1 || Number(race)>12) return reply(request,{error:'Invalid parameters'},400);
-    const source = `https://makulabo-jp.com/data/${venue.padStart(2,'0')}/${Number(race)}?hd=${date}`;
+    const source = `https://makulabo-jp.com/data/${venue.padStart(2,'0')}/${Number(race)}/heatmap?hd=${date}`;
     try {
       const res = await fetch(source,{headers:{Accept:'text/html,application/xhtml+xml'},redirect:'follow',signal:AbortSignal.timeout(9000)});
 if (!res.ok) return reply(request,{status:'unavailable',reason:'upstream_http_error',upstreamStatus:res.status,source,last50Verified:false,heatmapReadyForAnalysis:false,dataReadyForPrediction:false},502);
@@ -1822,9 +1822,15 @@ const htmlLength = html.length;
       if (html.length>1_000_000) return reply(request,{error:'Response too large'},502);
      const officialRacers = await fetchOfficialRacers(date, venue, race);
      const parsedLast50 = parseLast50Heatmap(html);
-     const verifiedRows = verifyHeatmapBoats(html, officialRacers);
+     const verifiedRows = parsedLast50.verified && officialRacers.verified
+       ? officialRacers.racers.map(racer=>{
+           const row=parsedLast50.rows.find(x=>x.boat===racer.boat&&x.name.replace(/\s/g,'')===racer.name.replace(/\s/g,''));
+           return {boat:racer.boat,name:racer.name,counts:row?.counts??null,runs:row?.runs??null,verified:!!row};
+         })
+       : verifyHeatmapBoats(html, officialRacers);
      const last50MatchesOfficial = parsedLast50.verified && officialRacers.verified &&
-       parsedLast50.rows.every(row => officialRacers.racers.some(r => r.boat === row.boat && r.name.replace(/\s/g,'') === row.name.replace(/\s/g,'')));
+       parsedLast50.rows.every(row => officialRacers.racers.some(r => r.boat === row.boat && r.name.replace(/\s/g,'') === row.name.replace(/\s/g,''))) &&
+       officialRacers.racers.every(r => parsedLast50.rows.some(row=>row.boat===r.boat&&row.name.replace(/\s/g,'')===r.name.replace(/\s/g,'')));
      const allSixVerified = verifiedRows.length === 6 &&
        verifiedRows.every(row => row.verified === true) &&
        new Set(verifiedRows.map(row => row.boat)).size === 6;
