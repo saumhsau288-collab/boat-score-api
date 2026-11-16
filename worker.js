@@ -564,7 +564,8 @@ if (u.pathname === '/api/predict/selected-race') {
   if(useBeforeinfo){
     const cached=getVerifiedBeforeinfo(date,venue,race);
     if(cached){exhibition=cached.exhibition;startExhibition=cached.start;beforeinfoReason='verified_recent_cache';}
-    else {
+    // A partial cache must not prevent fetching the missing official component.
+    if(!cached||exhibition.verified!==true||startExhibition.verified!==true){
     const url=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
     url.searchParams.set('rno',String(race));
     url.searchParams.set('jcd',String(venue).padStart(2,'0'));
@@ -577,10 +578,13 @@ if (u.pathname === '/api/predict/selected-race') {
         if(response.ok){
           const html=await response.text();
           if(html.length<=1000000){
-            exhibition=extractOfficialExhibition(html);
-            startExhibition=extractOfficialStartExhibition(html);
+            const fetchedExhibition=extractOfficialExhibition(html);
+            const fetchedStart=extractOfficialStartExhibition(html);
+            if(fetchedExhibition.verified===true)exhibition=fetchedExhibition;
+            if(fetchedStart.verified===true)startExhibition=fetchedStart;
             saveVerifiedBeforeinfo(date,venue,race,exhibition,startExhibition);
-            beforeinfoReason=exhibition.verified?'six_boats_verified':'exhibition_unverified';
+            beforeinfoReason=exhibition.verified===true&&startExhibition.verified===true?'six_boats_verified':
+              (exhibition.verified===true||startExhibition.verified===true?'partial_six_boats_verified':'beforeinfo_unverified');
           }else beforeinfoReason='beforeinfo_response_too_large';
         }else beforeinfoReason='beforeinfo_http_'+response.status;
         break;
