@@ -2093,6 +2093,26 @@ function summarizeHistoricalOuterFollow(results) {
     ready:eligibleRaces>=30,definition:'winner_lower_boat_number_than_second_or_third'};
 }
 
+// Conservative, bounded beforeinfo adjustment. Only complete, six-boat verified exhibition
+// records can affect the ranking; never infer unavailable measurements.
+function applyVerifiedExhibitionAdjustment(baseScores, exhibition) {
+  if(!Array.isArray(baseScores)||baseScores.length!==6||
+     !baseScores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))||
+     new Set(baseScores.map(x=>x.boat)).size!==6||
+     exhibition?.verified!==true||!Array.isArray(exhibition.rows)||exhibition.rows.length!==6)
+    return {applied:false,rankedScores:baseScores,reason:'six_verified_exhibition_rows_required'};
+  const rows=exhibition.rows;
+  if(new Set(rows.map(x=>x.boat)).size!==6||
+     !rows.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&
+       Number.isFinite(x.exhibitionTime)&&x.exhibitionTime>=5&&x.exhibitionTime<=9))
+    return {applied:false,rankedScores:baseScores,reason:'invalid_exhibition_metrics'};
+  const sorted=rows.slice().sort((a,b)=>a.exhibitionTime-b.exhibitionTime||a.boat-b.boat);
+  const ranks=new Map(sorted.map((x,i)=>[x.boat,6-i]));
+  // Maximum correction is 1.5 points versus base scores typically ranging 10-60.
+  return {applied:true,rankedScores:baseScores.map(x=>({...x,score:x.score+(ranks.get(x.boat)-3.5)*0.6})),
+    reason:null,method:'verified_exhibition_time_small_rank_adjustment_unvalidated'};
+}
+
 function rankTrifectaCandidates(rankedScores) {
   if(!Array.isArray(rankedScores)||rankedScores.length!==6||new Set(rankedScores.map(x=>x.boat)).size!==6||
     !rankedScores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)))
