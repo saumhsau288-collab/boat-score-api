@@ -212,7 +212,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <style>body{font-family:system-ui,sans-serif;background:#0b1424;color:#e5f0ff;margin:0}main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.65rem}section{background:#17253b;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 9px #172a4212}label{display:block;margin:12px 0 4px;font-weight:600}input,select,button{font:inherit;padding:11px;border:1px solid #b6c4d3;border-radius:8px;max-width:100%;box-sizing:border-box}button{background:#1768a6;color:white;border:0;margin:12px 0;cursor:pointer}button:disabled{opacity:.5}a{color:#72c8ff}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}small{color:#a9bdd5}.warn{color:#a64a00}.table-hint{font-size:.85rem;color:#a9bdd5;margin:10px 0 4px}.comparison-scroll{display:block;width:100%;max-width:100%;box-sizing:border-box;overflow-x:scroll;overflow-y:hidden;touch-action:pan-x pan-y;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;border:1px solid #354760;border-radius:8px}.comparison-scroll #comparison{width:1800px!important;min-width:1800px!important;table-layout:auto}.comparison-controls{display:flex;gap:8px}.comparison-controls button{flex:1;margin:4px 0 8px;padding:10px;font-size:.9rem}.comparison-scroll th,.comparison-scroll td{white-space:nowrap;padding:9px 11px;border-bottom:1px solid #354760;text-align:left}.comparison-scroll th:first-child,.comparison-scroll td:first-child{position:sticky;left:0;background:#17253b;z-index:1;box-shadow:2px 0 3px #0b1424}.comparison-scroll th:first-child{z-index:2}</style></head>
 <body><main><h1>Boat Score 2</h1><small>開発版 20261115-racers-retry-diagnostics · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><p>公式情報の取得状況と分析候補を確認する開発プレビューです。</p>
 <section><h2>朝8時の全国事前評価</h2><p>当日開催場の公式日程を先に確認します。予想・ランキングはデータ確認が完了するまで表示しません。</p><button id="morningSaved">朝8時のサーバー保存結果</button><details><summary>朝8時の手動確認・再集計（開発用）</summary><button id="morningCheck">選択日の開催場を確認</button><button id="morningVenue">選択場の12Rを事前評価</button><button id="morningNational">全国の開催候補を集計</button></details><p id="morningStatus" role="status">未確認</p><pre id="morningOutput"></pre><div id="morningLinks" aria-label="朝8時のランキングからレースを選択"></div><small>本命20R・穴20R・大荒れ20R／本命6点・穴6点は公式6艇と基礎成績が確認できた場合のみ暫定表示します。展示・ST・進入・風・直近50走は予想点数に未反映です。</small></section>
-<section><h2>開催場・レースをまとめて選択</h2><label for="day">開催日</label><input type="date" id="day"><label for="venue">競艇場</label><select id="venue"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select><label for="race">レース</label><select id="race"><option value="">レースを選択</option><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="load">選択したレースの公式データを取得</button><button id="predictSelected">このレースを予想（本命6点・穴6点）</button><details id="beforeinfoDetails"><summary>直前情報の公式照合（展示・ST・進入・風）</summary><p>公式照合できた値だけを表示します。未確認項目は予想に加点しません。</p><button type="button" id="checkBeforeinfo">選択レースの直前情報を確認</button><pre id="beforeinfoStatus" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere">未取得。開催場・レースを選び、上の確認ボタンを押してください。</pre></details><p id="predictStatus" role="status">競艇場とレースを選択してください。</p><p id="predictionInputNotice" role="status" style="font-size:.9rem;line-height:1.5;color:#cbd5e1">予想は公式6艇・勝率・モーター成績による暫定評価です。選択レースの予想では、公式確認済みの展示タイムと数値の展示STが6艇分そろった場合に限り、小幅な補正を行います。展示STのF・L表示がある場合、ST補正は行いません。進入・チルト・風・波・まくらぼ50走は予想点数に未反映です。取得状況は予想結果の「直前情報の反映」で確認してください。</p><pre id="predictOutput"></pre><details><summary>開催場の一括照合（任意・詳細）</summary><p><button id="schedule">開催場の一括照合（任意）</button></p><p id="scheduleStatus" role="status">公式出走表を確認できたレースだけ選択できます。</p><div id="scheduleOutput"></div><small>一括照合は参考情報です。開催の有無・出走表はレース取得時に公式確認し、未確認の情報は補いません。</small></details><p id="status" role="status"></p><p class="table-hint">選手比較表：横に指で動かすか、下の「右へ」「左へ」を押してください。</p><div class="comparison-controls"><button type="button" id="comparisonLeft">◀ 左へ</button><button type="button" id="comparisonRight">右へ ▶</button></div><div class="comparison-scroll" role="region" aria-label="出走選手の公式成績比較表（左右スクロール可能）" tabindex="0"><table id="comparison" style="border-collapse:collapse;width:max-content;min-width:100%;font-size:.84rem"><thead><tr><th>艇</th><th>選手名</th><th>登録番号</th><th>全国勝率</th><th>全国2連対率</th><th>全国3連対率</th><th>当地勝率</th><th>当地2連対率</th><th>当地3連対率</th><th>モーター</th><th>モーター2連対率</th><th>モーター3連対率</th><th>平均ST</th><th>展示タイム</th><th>展示ST</th><th>進入</th><th>チルト</th><th>まくらぼ50走</th></tr></thead><tbody id="comparisonBody"><tr><td colspan="18">レースを選んで「公式データを確認」を押してください</td></tr></tbody></table></div><small>選手の全国・当地2連対率／3連対率、モーター2連対率／3連対率を復元しました。公式照合できた場合のみ表示します。1着率・2着率・3着率の個別値はこの取得元からは未取得です。平均ST・まくらぼ50走も未確認です。</small><h3>選手の入賞率比較（公式照合済みのみ）</h3><div id="finishRateSummary" role="status">レースを選んで公式データを確認してください。</div><details><summary>公式データの取得結果・診断ログ</summary><pre id="output"></pre></details><h3>出走選手・診断ポイント</h3><div id="racerPoints" role="status">公式データ確認後に表示します。未確認項目は加点しません。</div></section>
+<section><h2>開催場・レースをまとめて選択</h2><label for="day">開催日</label><input type="date" id="day"><label for="venue">競艇場</label><select id="venue"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select><label for="race">レース</label><select id="race"><option value="">レースを選択</option><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="load">選択したレースの公式データを取得</button><button id="predictSelected">このレースを予想（本命6点・穴6点）</button><details id="beforeinfoDetails"><summary>直前情報の公式照合（展示・ST・進入・風）</summary><p>公式照合できた値だけを表示します。未確認項目は予想に加点しません。</p><button type="button" id="checkBeforeinfo">選択レースの直前情報を確認</button><pre id="beforeinfoStatus" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere">未取得。開催場・レースを選び、上の確認ボタンを押してください。</pre></details><p id="predictStatus" role="status">競艇場とレースを選択してください。</p><p id="predictionInputNotice" role="status" style="font-size:.9rem;line-height:1.5;color:#cbd5e1">予想は公式6艇・勝率・モーター成績による暫定評価です。選択レースの予想では、公式確認済みの展示タイムと数値の展示STが6艇分そろった場合に限り、小幅な補正を行います。展示STのF・L表示は、公式の選手平均STを照合できた場合だけ代用し、代用した艇を明示します。進入・チルト・風・波・まくらぼ50走は予想点数に未反映です。取得状況は予想結果の「直前情報の反映」で確認してください。</p><pre id="predictOutput"></pre><details><summary>開催場の一括照合（任意・詳細）</summary><p><button id="schedule">開催場の一括照合（任意）</button></p><p id="scheduleStatus" role="status">公式出走表を確認できたレースだけ選択できます。</p><div id="scheduleOutput"></div><small>一括照合は参考情報です。開催の有無・出走表はレース取得時に公式確認し、未確認の情報は補いません。</small></details><p id="status" role="status"></p><p class="table-hint">選手比較表：横に指で動かすか、下の「右へ」「左へ」を押してください。</p><div class="comparison-controls"><button type="button" id="comparisonLeft">◀ 左へ</button><button type="button" id="comparisonRight">右へ ▶</button></div><div class="comparison-scroll" role="region" aria-label="出走選手の公式成績比較表（左右スクロール可能）" tabindex="0"><table id="comparison" style="border-collapse:collapse;width:max-content;min-width:100%;font-size:.84rem"><thead><tr><th>艇</th><th>選手名</th><th>登録番号</th><th>全国勝率</th><th>全国2連対率</th><th>全国3連対率</th><th>当地勝率</th><th>当地2連対率</th><th>当地3連対率</th><th>モーター</th><th>モーター2連対率</th><th>モーター3連対率</th><th>平均ST</th><th>展示タイム</th><th>展示ST</th><th>進入</th><th>チルト</th><th>まくらぼ50走</th></tr></thead><tbody id="comparisonBody"><tr><td colspan="18">レースを選んで「公式データを確認」を押してください</td></tr></tbody></table></div><small>選手の全国・当地2連対率／3連対率、モーター2連対率／3連対率を復元しました。公式照合できた場合のみ表示します。1着率・2着率・3着率の個別値はこの取得元からは未取得です。平均ST・まくらぼ50走も未確認です。</small><h3>選手の入賞率比較（公式照合済みのみ）</h3><div id="finishRateSummary" role="status">レースを選んで公式データを確認してください。</div><details><summary>公式データの取得結果・診断ログ</summary><pre id="output"></pre></details><h3>出走選手・診断ポイント</h3><div id="racerPoints" role="status">公式データ確認後に表示します。未確認項目は加点しません。</div></section>
 <section><h2>まくらぼ直近50走</h2><p>スクリーンショットを参考にした入力画面へ進みます。未確認の数字は予想に反映しません。</p><a href="/tools/makulabo-screenshot">まくらぼ取り込み画面を開く</a></section>
 <section><h2>本命・穴・大荒れランキング</h2><p class="warn">朝8時のサーバー集計は開発版です。保存結果ボタンから取得状況を確認できます。未確認データは補完せず、評価は暫定・未検証として表示します。</p><button id="screen">選択場の暫定分析を確認</button><p id="screenStatus" role="status"></p><pre id="screenOutput"></pre><small>選択場のみ・オンデマンド分析。検証済みの的中確率ではありません。</small></section>
 </main><script>
@@ -398,11 +398,13 @@ document.getElementById('predictSelected').onclick=async function(){
  const inputNames={local:'当地勝率',placeRates:'全国2連対率・3連対率',last50:'まくらぼ直近50走',course:'進入・コース',exhibition:'展示タイム',start:'展示ST',weather:'風・波'};
  const missing=Array.isArray(d.missingInputs)?d.missingInputs.map(x=>inputNames[x]||x):[];
  const exhibitionNote=d.exhibitionAdjustmentApplied===true?'公式6艇の展示タイムを確認し、予想点数に小幅反映しました。':'展示タイムの予想反映なし（'+(d.exhibitionVerification||'未確認')+'）。';
- const startReason={non_numeric_start_timing:'展示STにF・Lなどが含まれるため、数値STの一括補正は行いません（本番の失格扱いではありません）。',six_verified_start_rows_required:'展示STを6艇分確認できないため補正なし。',invalid_start_course_rows:'展示ST・進入の艇番照合ができないため補正なし。',not_requested:'直前情報の取得は未実施。'};
+ const startReason={official_average_st_unverified:'展示STのF・Lに代用する公式平均STを確認できないため、ST補正は行いません。',non_numeric_start_timing:'展示STにF・Lなどが含まれるため、数値STの一括補正は行いません（本番の失格扱いではありません）。',six_verified_start_rows_required:'展示STを6艇分確認できないため補正なし。',invalid_start_course_rows:'展示ST・進入の艇番照合ができないため補正なし。',not_requested:'直前情報の取得は未実施。'};
  const startNote=d.startAdjustmentApplied===true?'公式6艇の展示STを確認し、数値STを予想点数に小幅反映しました。進入は確認のみで点数には未反映です。':(startReason[d.startVerification]||'展示STの予想反映なし（'+(d.startVerification||'未確認')+'）。');
+ const stSubstitutions=Array.isArray(d.averageSTSubstitutions)?d.averageSTSubstitutions:[];
+ const stSubstitutionNote=stSubstitutions.length?'\n公式平均STで代用：'+stSubstitutions.map(x=>x.boat+'号艇 '+x.original+' → '+x.averageST.toFixed(2)).join('、'):'';
  const base=d.basePrediction;
  const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+'\n\n'+comparison+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+stSubstitutionNote+'\n\n'+comparison+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
@@ -568,7 +570,7 @@ if (u.pathname === '/api/predict/selected-race') {
   }
   const adjustment=useBeforeinfo?applyVerifiedExhibitionAdjustment(inputs.rankedScores,exhibition):
     {applied:false,rankedScores:inputs.rankedScores};
-  const startAdjustment=useBeforeinfo?applyVerifiedStartAdjustment(adjustment.rankedScores,startExhibition):
+  const startAdjustment=useBeforeinfo?applyVerifiedStartAdjustment(adjustment.rankedScores,startExhibition,official.statsVerified===true?official.statsByBoat:[]):
     {applied:false,rankedScores:adjustment.rankedScores,reason:'not_requested'};
   const basePicks=rankTrifectaCandidates(inputs.rankedScores);
   const picks=rankTrifectaCandidates(startAdjustment.rankedScores);
@@ -580,6 +582,7 @@ if (u.pathname === '/api/predict/selected-race') {
     predictionChanged:JSON.stringify(basePicks.main)!==JSON.stringify(picks.main)||JSON.stringify(basePicks.upset)!==JSON.stringify(picks.upset),
     predictionMode:startAdjustment.applied?'verified_start_adjusted':(adjustment.applied?'verified_exhibition_adjusted':'base_stats_only'),
     startAdjustmentApplied:startAdjustment.applied,startVerification:startAdjustment.reason||'six_numeric_start_rows_verified',
+    averageSTSubstitutions:startAdjustment.averageSTSubstitutions||[],
     startCoursesVerified:startExhibition.verified===true,
     exhibitionAdjustmentApplied:adjustment.applied,exhibitionVerification:beforeinfoReason,
     placeRateTieBreakVerified:inputs.placeRateTieBreakVerified===true,missingInputs,
@@ -2177,25 +2180,38 @@ function applyVerifiedExhibitionAdjustment(baseScores, exhibition) {
 // Start-exhibition timing and course are applied only when all six boats are
 // uniquely verified. F/L starts are retained as observations, never scored as
 // numerical timing. No course advantage is assumed without backtesting.
-function applyVerifiedStartAdjustment(baseScores,start){
+function applyVerifiedStartAdjustment(baseScores,start,verifiedStats=[]){
   if(!Array.isArray(baseScores)||baseScores.length!==6||
      !baseScores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))||
      new Set(baseScores.map(x=>x.boat)).size!==6||
      start?.verified!==true||!Array.isArray(start.rows)||start.rows.length!==6)
-    return {applied:false,rankedScores:baseScores,reason:'six_verified_start_rows_required'};
+    return {applied:false,rankedScores:baseScores,reason:'six_verified_start_rows_required',averageSTSubstitutions:[]};
   const rows=start.rows;
   if(new Set(rows.map(x=>x.boat)).size!==6||
      new Set(rows.map(x=>x.course)).size!==6||
      !rows.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&
        Number.isInteger(x.course)&&x.course>=1&&x.course<=6))
-    return {applied:false,rankedScores:baseScores,reason:'invalid_start_course_rows'};
-  const timed=rows.filter(x=>typeof x.startTiming==='number'&&
-    Number.isFinite(x.startTiming)&&x.startTiming>=0&&x.startTiming<=1);
-  if(timed.length!==6)return {applied:false,rankedScores:baseScores,reason:'non_numeric_start_timing'};
-  const sorted=timed.slice().sort((a,b)=>a.startTiming-b.startTiming||a.boat-b.boat);
+    return {applied:false,rankedScores:baseScores,reason:'invalid_start_course_rows',averageSTSubstitutions:[]};
+  const stats=new Map(Array.isArray(verifiedStats)?verifiedStats.map(x=>[x.boat,x]):[]);
+  const substitutions=[];
+  const timed=[];
+  for(const row of rows){
+    let timing=row.startTiming;
+    if(typeof timing==='string'&&/^[FL]\.\d{1,2}$/i.test(timing)){
+      const avg=stats.get(row.boat)?.averageST;
+      if(typeof avg!=='number'||!Number.isFinite(avg)||avg<0||avg>0.5)
+        return {applied:false,rankedScores:baseScores,reason:'official_average_st_unverified',averageSTSubstitutions:[]};
+      timing=avg;
+      substitutions.push({boat:row.boat,original:row.startTiming,averageST:avg});
+    }
+    if(typeof timing!=='number'||!Number.isFinite(timing)||timing<0||timing>1)
+      return {applied:false,rankedScores:baseScores,reason:'non_numeric_start_timing',averageSTSubstitutions:[]};
+    timed.push({boat:row.boat,timing});
+  }
+  const sorted=timed.sort((a,b)=>a.timing-b.timing||a.boat-b.boat);
   const rank=new Map(sorted.map((x,i)=>[x.boat,6-i]));
   return {applied:true,rankedScores:baseScores.map(x=>({...x,score:x.score+(rank.get(x.boat)-3.5)*0.3})),
-    reason:null,method:'verified_start_timing_small_adjustment_unvalidated'};
+    reason:null,averageSTSubstitutions:substitutions,method:'verified_start_timing_or_official_average_st_small_adjustment_unvalidated'};
 }
 
 function rankTrifectaCandidates(rankedScores) {
@@ -2386,7 +2402,12 @@ function extractOfficialBoatStats(html) {
     };
     const nationwide=triple(cells[4]), local=triple(cells[5]), motor=equipment(cells[6]), hull=equipment(cells[7]);
     if (!nationwide || !local || !motor || !hull) continue;
-    results.push({boat,racerId:ids[0],nationwide,local,motor,hull});
+    // F/L and average ST share a cell in the official racelist.
+    // Accept only an explicitly labelled average ST, never an arbitrary number.
+    const averageSTMatches=[...cells[3].normalize('NFKC').matchAll(/平均\s*S\s*T\s*[:：]?\s*(0?\.\d{2})/gi)];
+    const averageST=averageSTMatches.length===1&&Number(averageSTMatches[0][1])>=0&&
+      Number(averageSTMatches[0][1])<=0.5?Number(averageSTMatches[0][1]):null;
+    results.push({boat,racerId:ids[0],nationwide,local,motor,hull,averageST});
   }
   const verified=results.length===6 && new Set(results.map(x=>x.boat)).size===6 &&
     new Set(results.map(x=>x.racerId)).size===6;
