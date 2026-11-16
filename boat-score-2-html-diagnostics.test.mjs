@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {inspectOfficialStructure} from './boat-score-2-html-diagnostics.js';
+const html='<table><tr><th>枠</th><th>全国勝率</th></tr><tr><td>1</td><td>6.2</td></tr></table>';
+const result=inspectOfficialStructure(html);
+assert.equal(result.tableCount,1);
+assert.deepEqual(result.tables[0].headers,['枠','全国勝率']);
+assert.equal(result.tables[0].rows,2);
+assert.equal(result.hasNationalWinRate,true);
+assert.equal(inspectOfficialStructure(null).status,'invalid_html');
+console.log('Official HTML diagnostics tests passed');
