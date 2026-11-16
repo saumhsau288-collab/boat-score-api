@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {evaluateRacer,evaluateRace} from './boat-score-2-scoring.js';
+const full={nationalWinRate:10,localWinRate:10,motorTwoWinRate:100,recent50WinRate:100,exhibitionScore:100};
+assert.equal(evaluateRacer(full).score,100);
+assert.equal(evaluateRacer(Object.fromEntries(Object.keys(full).map(k=>[k,0]))).score,0);
+assert.equal(evaluateRacer({...full,localWinRate:5}).score,87.5);
+assert.deepEqual(evaluateRacer({...full,exhibitionScore:undefined}).missing,['exhibitionScore']);
+assert.deepEqual(evaluateRacer({...full,nationalWinRate:11}).invalid,['nationalWinRate']);
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,...full}));
+assert.equal(evaluateRace(racers).status,'evaluated');
+assert.equal(evaluateRace([...racers.slice(0,5),racers[0]]).status,'invalid_race');
+console.log('Boat Score 2 scoring tests passed');
