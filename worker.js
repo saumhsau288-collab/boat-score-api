@@ -318,8 +318,9 @@ function syncVerifiedMakulaboComparison(){
   const boat=Number((tr.cells[0]?.textContent||'').match(/^[1-6]/)?.[0]);
   const row=verifiedMakulabo.rows.find(x=>Number(x.boat)===boat);
   if(!row||tr.cells.length!==18)continue;
-  const shownName=(tr.cells[1]?.textContent||'').replace(/\\s/g,'');
-  if(shownName&&shownName!=='未確認'&&shownName!==row.name.replace(/\\s/g,''))continue;
+  const normalizeName=v=>String(v||'').replace(/[\\s\\u3000]/g,'');
+  const shownName=normalizeName(tr.cells[1]?.textContent);
+  if(shownName&&shownName!=='未確認'&&shownName!==normalizeName(row.name))continue;
   tr.cells[17].textContent=row.runs+'走 / 1着 '+(row.counts[0]/row.runs*100).toFixed(1)+'% / 2連 '+((row.counts[0]+row.counts[1])/row.runs*100).toFixed(1)+'% / 3連 '+((row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100).toFixed(1)+'%';
   updated++;
  }
