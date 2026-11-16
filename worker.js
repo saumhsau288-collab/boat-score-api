@@ -20,10 +20,13 @@ function getVerifiedBeforeinfo(date,venue,race){
   return item;
 }
 function saveVerifiedBeforeinfo(date,venue,race,exhibition,start){
-  if(exhibition?.verified!==true||start?.verified!==true||
-     exhibition.rows?.length!==6||start.rows?.length!==6)return;
+  const exhibitionOK=exhibition?.verified===true&&exhibition.rows?.length===6;
+  const startOK=start?.verified===true&&start.rows?.length===6;
+  if(!exhibitionOK&&!startOK)return;
   if(verifiedBeforeinfoCache.size>=30)verifiedBeforeinfoCache.delete(verifiedBeforeinfoCache.keys().next().value);
-  verifiedBeforeinfoCache.set(beforeinfoCacheKey(date,venue,race),{savedAt:Date.now(),exhibition,start});
+  verifiedBeforeinfoCache.set(beforeinfoCacheKey(date,venue,race),{savedAt:Date.now(),
+    exhibition:exhibitionOK?exhibition:{verified:false,rows:[]},
+    start:startOK?start:{verified:false,rows:[]}});
 }
 // Short-lived per-isolate deduplication reduces repeated official-site traffic.
 // Failures and unverified data are never persisted across requests.
@@ -265,7 +268,7 @@ document.getElementById('checkBeforeinfo').onclick=async function(){
    lines.push('気象：風向 '+show(w.windDirection)+' / 風速 '+show(w.windSpeed)+' / 波高 '+show(w.waveHeight));
    lines.push('気象の詳細：'+JSON.stringify(w));
   }
-  lines.push('※現在の三連単12点は基礎成績モデルです。直前情報の加点は未実装で、表示値だけで予想が変わることはありません。');
+  lines.push('※この確認画面は直前情報の表示用です。予想ボタンを押すと、公式照合済みの展示タイム・展示STを6艇分確認できた場合に限り小幅補正します。F・Lは公式平均STが確認できた艇だけ代用します。進入・チルト・風・波は点数に未反映です。');
   lines.push('照合したレース: '+date+' / '+v+'場 / '+r+'R');
   output.textContent=lines.join('\n');
  }catch(e){output.textContent='直前情報を確認できません: '+e.message+'。未確認の値は使用しません。';}
