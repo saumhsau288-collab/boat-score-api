@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {validateRaceSelection,evaluateVerifiedPayload} from './boat-score-2-adapter.js';
+const racer=(boat,n)=>({boat,nationalWinRate:n,localWinRate:n,motorTwoWinRate:50,recent50WinRate:50,exhibitionScore:50});
+const base={venue:'01',date:'20261116',race:1,verified:true,racers:[9,5,4,4,3,2].map((n,i)=>racer(i+1,n))};
+assert.equal(validateRaceSelection(base).valid,true);
+assert.equal(validateRaceSelection({...base,date:'20260230'}).valid,false);
+assert.equal(validateRaceSelection({...base,venue:'25'}).valid,false);
+assert.equal(validateRaceSelection({...base,race:13}).valid,false);
+assert.equal(evaluateVerifiedPayload({...base,verified:false,phase:'morning'}).status,'unverified_source');
+assert.equal(evaluateVerifiedPayload({...base,phase:'morning'}).category,'favorite');
+assert.equal(evaluateVerifiedPayload({...base,phase:'prestart'}).category,'favorite');
+assert.equal(evaluateVerifiedPayload({...base,phase:'invalid'}).status,'invalid_phase');
+console.log('Boat Score 2 adapter tests passed');
