@@ -33,5 +33,7 @@ jobs:
           assert.ok(code.includes("app:'Boat Score 2 preview'"),'Preview identity missing');
           assert.ok(code.includes('MORNING_KV'),'Morning storage binding missing');
           assert.ok(code.includes('raceDataController.abort()'),'Race-change cancellation missing');
+          assert.ok(code.includes('AbortSignal.timeout(15000)'),'Verified race list timeout missing');
+          assert.ok(code.includes('raceListController.abort()'),'Previous race-list cancellation missing');
           console.log('Preview-only static checks passed');
           NODE
