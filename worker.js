@@ -519,7 +519,7 @@ document.getElementById('load').onclick=async function(){const notice=document.g
  const status=document.getElementById('beforeinfoStatus');
  status.textContent='公式直前情報を別経路で再確認中…';
  try{
-  const response=await fetch('/api/official/beforeinfo'+urlBase,{signal:AbortSignal.timeout(18000)});
+  const response=await fetch('/api/official/beforeinfo?date='+encodeURIComponent(selectedDate)+'&venue='+encodeURIComponent(selectedVenue)+'&race='+encodeURIComponent(selectedRace),{signal:AbortSignal.timeout(18000)});
   if(!response.ok){let detail='';try{const failure=await response.json();detail=failure.reason||failure.error||failure.diagnostics?.name||'';}catch{}throw Error('HTTP '+response.status+(detail?' / '+detail:''));}
   const fresh=await response.json();
   if(token!==raceDataRequest||selectedDate!==dateCode()||selectedVenue!==venue.value||selectedRace!==race.value)return;
