@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {evaluateMorningFromOfficialPage} from './boat-score-2-official-pipeline.js';
+const head='<tr><th>枠</th><th>選手</th><th>全国勝率</th><th>当地勝率</th><th>モーター2連対率</th></tr>';
+const row=i=>'<tr><td>'+i+'</td><td><a href="/owpc/pc/data/racersearch/profile?toban='+(4000+i)+'">選手'+i+'</a></td><td>'+(i===1?'9.00':'5.00')+'</td><td>'+(i===1?'9.00':'5.00')+'</td><td>50%</td></tr>';
+const html='<table>'+head+Array.from({length:6},(_,i)=>row(i+1)).join('')+'</table>';
+const selection={venue:'01',date:'20261116',race:1};
+const recent50=Array.from({length:6},(_,i)=>({racerId:String(4001+i),winRate:50,verified:true}));
+const mock=async()=>({ok:true,headers:new Headers({'content-type':'text/html'}),text:async()=>html});
+const result=await evaluateMorningFromOfficialPage(selection,recent50,mock);
+assert.equal(result.status,'evaluated');
+assert.equal(result.category,'favorite');
+assert.equal(result.race,1);
+assert.equal((await evaluateMorningFromOfficialPage(selection,[],mock)).status,'insufficient_data');
+assert.equal((await evaluateMorningFromOfficialPage(selection,recent50,async()=>({ok:false,status:503}))).status,'upstream_error');
+assert.equal((await evaluateMorningFromOfficialPage({...selection,race:13},recent50,mock)).status,'invalid_selection');
+console.log('Official-to-morning pipeline tests passed');
