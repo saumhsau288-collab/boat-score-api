@@ -306,7 +306,7 @@ document.getElementById('predictSelected').onclick=async function(){
  const validPicks=rows=>Array.isArray(rows)&&rows.length===6&&rows.every(x=>Array.isArray(x)&&x.length===3&&x.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(x).size===3)&&new Set(rows.map(x=>x.join('-'))).size===6;
  if(!validPicks(d.main)||!validPicks(d.upset)){st.textContent='買い目の形式を検証できないため表示を保留しました';out.textContent='三連単6点ずつの艇番・重複を確認できません。';return;}
  const fmt=rows=>Array.isArray(rows)?rows.map((x,i)=>(i+1)+'. '+(Array.isArray(x)?x.join('-'):'形式未確認')).join('\n'):'取得できません';
- const inputNames={local:'当地勝率',last50:'まくらぼ直近50走',course:'進入・コース',exhibition:'展示タイム',start:'展示ST',weather:'風・波'};
+ const inputNames={local:'当地勝率',placeRates:'全国2連対率・3連対率',last50:'まくらぼ直近50走',course:'進入・コース',exhibition:'展示タイム',start:'展示ST',weather:'風・波'};
  const missing=Array.isArray(d.missingInputs)?d.missingInputs.map(x=>inputNames[x]||x):[];
  out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
@@ -1920,7 +1920,9 @@ function buildMorningRaceInputs(date,venue,race,official) {
     const win=parseVerifiedMetric(x.nationwide?.winRate);
     const motor=parseVerifiedMetric(x.motor?.secondPlaceRate);
     const local=parseVerifiedMetric(x.local?.winRate);
-    return {boat:x.boat,win,motor,local};
+    const top2=parseVerifiedMetric(x.nationwide?.secondPlaceRate);
+    const top3=parseVerifiedMetric(x.nationwide?.thirdPlaceRate);
+    return {boat:x.boat,win,motor,local,top2,top3};
   });
   if(!scoreRows.every(x=>Number.isFinite(x.win)&&x.win>=0&&x.win<=10&&Number.isFinite(x.motor)&&x.motor>=0&&x.motor<=100))
     return {ready:false,reason:'invalid_or_missing_morning_metrics'};
@@ -1929,9 +1931,11 @@ function buildMorningRaceInputs(date,venue,race,official) {
   const winRanks=ranks('win'),motorRanks=ranks('motor');
   const localVerified=scoreRows.every(x=>Number.isFinite(x.local)&&x.local>=0&&x.local<=10);
   const localRanks=localVerified?ranks('local'):null;
+  const placesVerified=scoreRows.every(x=>Number.isFinite(x.top2)&&x.top2>=0&&x.top2<=100&&Number.isFinite(x.top3)&&x.top3>=x.top2&&x.top3<=100);
+  const top2Ranks=placesVerified?ranks('top2'):null,top3Ranks=placesVerified?ranks('top3'):null;
   return {ready:true,date,venue,race,officialVerified:true,statsVerified:true,
-    rankedScores:scoreRows.map(x=>({boat:x.boat,score:localVerified?5*winRanks.get(x.boat)+2*localRanks.get(x.boat)+3*motorRanks.get(x.boat):7*winRanks.get(x.boat)+3*motorRanks.get(x.boat)})),
-    method:localVerified?'weighted_national50_local20_motor30_unvalidated':'weighted_racer70_motor30_screening_unvalidated',missingInputs:[...(!localVerified?['local']:[]),'last50','course','exhibition','start','weather']};
+    rankedScores:scoreRows.map(x=>({boat:x.boat,score:(localVerified?5*winRanks.get(x.boat)+2*localRanks.get(x.boat)+3*motorRanks.get(x.boat):7*winRanks.get(x.boat)+3*motorRanks.get(x.boat))+(placesVerified?(top2Ranks.get(x.boat)+top3Ranks.get(x.boat))/100:0)})),
+    method:localVerified?'weighted_national50_local20_motor30_unvalidated':'weighted_racer70_motor30_screening_unvalidated',placeRateTieBreakVerified:placesVerified,missingInputs:[...(!localVerified?['local']:[]),...(!placesVerified?['placeRates']:[]),'last50','course','exhibition','start','weather']};
 }
 
 function classifyDailyRaceCandidates(races) {
