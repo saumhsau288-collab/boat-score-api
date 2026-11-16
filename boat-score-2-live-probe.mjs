@@ -15,10 +15,14 @@ else{
   const response=await fetch(target.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(15000)});
   const html=response.ok?await response.text():'';
   const parsed=extractOfficialMetrics(html);
+  const structure=inspectOfficialStructure(html);
   const output={date,venue,race,source:target.url,httpStatus:response.status,
    htmlLength:html.length,metricsVerified:parsed.verified,reason:parsed.reason??null,
    racerCount:parsed.racers.length,
-   structure:inspectOfficialStructure(html)};
+   finalUrl:response.url||null,
+   contentType:response.headers.get('content-type')||null,
+   pageKind:structure.tableCount===0&&structure.totalRacerProfileLinks===0?'non_racelist_html':'potential_racelist',
+   structure};
   console.log(JSON.stringify(output,null,2));
   if(!response.ok||!parsed.verified)process.exitCode=1;
  }catch(e){console.error('Probe failed:',String(e?.message||e));process.exitCode=1;}
