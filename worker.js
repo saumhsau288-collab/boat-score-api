@@ -231,7 +231,7 @@ function resetRaceChoices(){
  race.disabled=!venue.value;
  document.getElementById('status').textContent=venue.value?'レースを選び、公式データを取得してください。開催状況は取得時に確認します。':'';
 }
-venue.addEventListener('change',resetRaceChoices);
+venue.addEventListener('change',()=>{if(!venue.value){resetRaceChoices();return;}refreshVerifiedRaces();});
 async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
 const morningCacheKey=date=>'boat-score-morning-'+date;
 function restoreMorningSnapshot(){const out=document.getElementById('morningOutput'),st=document.getElementById('morningStatus');try{const raw=localStorage.getItem(morningCacheKey(dateCode()));if(!raw){out.textContent='';st.textContent='この日の保存済み集計はありません';return;}const data=JSON.parse(raw);if(data.date!==dateCode()||typeof data.text!=='string')throw Error('invalid');out.textContent=data.text;st.textContent='端末保存の事前評価：'+new Date(data.savedAt).toLocaleString('ja-JP')+'（'+(data.complete?'完了':'途中')+'・最新データではありません）';}catch(e){out.textContent='';st.textContent='保存結果を読み込めません';}}
