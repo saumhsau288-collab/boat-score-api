@@ -456,8 +456,9 @@ if (u.pathname === '/api/official/verified-races') {
   const races=requestedRace!==null?[Number(requestedRace)]:Array.from({length:12},(_,i)=>i+1);
   return reply(request,await getVerifiedList('races:'+date+':'+venue+':'+(requestedRace||'all'),async()=>{const checks=await mapOfficialLimited(races,requestedRace!==null?1:3,async race=>{
     try{
+      const started=Date.now();
       const official=await fetchOfficialRacers(date,venue,race,{verificationOnly:true,fastVerification:true});
-      return {race,verified:official.verified===true,reason:official.verified===true?null:(official.reason||'official_rows_unverified')};
+      return {race,verified:official.verified===true,reason:official.verified===true?null:(official.reason||'official_rows_unverified'),elapsedMs:Date.now()-started,diagnostic:official.diagnostic||null};
     }catch(error){return {race,verified:false,reason:error?.name==='TimeoutError'?'official_timeout':String(error?.message||'official_fetch_failed').slice(0,90)};}
   });
   return {date,venue,verifiedRaces:checks.filter(x=>x.verified).map(x=>x.race),
