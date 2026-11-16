@@ -29,6 +29,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check diagnostic modules syntax
+        run: |
+          node --experimental-default-type=module --check boat-score-2-html-diagnostics.js
+          node --experimental-default-type=module --check boat-score-2-live-probe.mjs
       - name: Fetch and validate official racelist (read-only)
         env:
           PROBE_DATE: ${{ inputs.date }}
