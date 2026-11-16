@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {extractOfficialMetrics} from './boat-score-2-metric-extractor.js';
+const header='<tr><th>枠</th><th>選手</th><th>全国勝率</th><th>当地勝率</th><th>モーター2連対率</th></tr>';
+const row=i=>'<tr><td>'+i+'</td><td><a href="/owpc/pc/data/racersearch/profile?toban='+(4000+i)+'">選手'+i+'</a></td><td>6.50</td><td>5.20</td><td>35.0%</td></tr>';
+const html='<table>'+header+Array.from({length:6},(_,i)=>row(i+1)).join('')+'</table>';
+const parsed=extractOfficialMetrics(html);
+assert.equal(parsed.verified,true);
+assert.equal(parsed.racers.length,6);
+assert.equal(parsed.racers[0].nationalWinRate,6.5);
+assert.equal(parsed.racers[0].motorTwoWinRate,35);
+assert.equal(extractOfficialMetrics(html.replace('35.0%','不明')).verified,false);
+assert.equal(extractOfficialMetrics(html.replace('全国勝率','総合指数')).verified,false);
+assert.equal(extractOfficialMetrics(html.replace('4002','4001')).verified,false);
+console.log('Official metric extraction tests passed');
