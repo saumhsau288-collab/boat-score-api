@@ -78,11 +78,11 @@ async function runScheduledMorning(env,scheduledTime) {
     if(state&&Array.isArray(state.completedVenues)){
       state.scheduleLastCheck='unverified';
       state.updatedAt=new Date().toISOString();
-      await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:172800});
+      await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:7776000});
     }else{
       await env.MORNING_KV.put(key,JSON.stringify({date,status:'schedule_unverified',
         updatedAt:new Date().toISOString(),venues:[],completedVenues:[],failedVenues:[],
-        categories:{main:[],upset:[],chaos:[]}}),{expirationTtl:172800});
+        categories:{main:[],upset:[],chaos:[]}}),{expirationTtl:7776000});
     }
     return;
   }
@@ -121,7 +121,7 @@ async function runScheduledMorning(env,scheduledTime) {
     const exhausted=venues.filter(v=>!state.completedVenues.includes(v)&&(state.attempts[v]||0)>=3);
     state.status=state.completedVenues.length>=venues.length?'completed':exhausted.length+state.completedVenues.length>=venues.length?'incomplete':'partial';
     state.exhaustedVenues=exhausted;
-    await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:172800});
+    await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:7776000});
   }
 }
 export default {
@@ -145,7 +145,7 @@ if (u.pathname === '/api/morning/snapshot') {
     scheduleLastCheck:state.scheduleLastCheck||'unknown',
     verifiedRacesByVenue:Object.fromEntries((state.venues||[]).map(v=>[v,(state.records||[]).filter(r=>r.venue===v&&r.ready===true).length])),
     categories:state.categories||{main:[],upset:[],chaos:[]},eligible:(state.records||[]).length,
-    provisional:true,method:'two_factor_morning_screening_unvalidated'});
+    provisional:true,method:'two_factor_morning_screening_unvalidated',modelVersion:'morning-rank-v1',retentionDays:90,calibrationStatus:'not_yet_calibrated',note:'Historical snapshots preserve baseline rankings; no automatic weight tuning until verified results are matched.'});
 }
 
 if (u.pathname === '/api/morning/venues') {
