@@ -404,7 +404,7 @@ document.getElementById('predictSelected').onclick=async function(){
  if(selectedPredictionController)selectedPredictionController.abort();
  const controller=new AbortController();selectedPredictionController=controller;this.disabled=true;out.textContent='';st.textContent='選択レースの公式6艇・勝率・モーター成績を照合中…';
  const date=dateCode(),v=venue.value,r=race.value;
- try{const res=await fetch('/api/predict/selected-race?date='+date+'&venue='+v+'&race='+r+'&mode=beforeinfo',{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(40000)])});
+ try{const res=await fetch('/api/predict/selected-race?date='+date+'&venue='+v+'&race='+r+'&mode=beforeinfo',{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(55000)])});
  const d=await res.json();if(controller.signal.aborted||date!==dateCode()||v!==venue.value||r!==race.value)return;
  if(!res.ok)throw Error(d.error||'HTTP '+res.status);
  if(!d.ready){st.textContent='データ不足のため予想を保留: '+(d.reason||'確認できません');out.textContent='未確認情報を推測で補いません。';return;}
@@ -566,9 +566,9 @@ if (u.pathname === '/api/predict/selected-race') {
     url.searchParams.set('rno',String(race));
     url.searchParams.set('jcd',String(venue).padStart(2,'0'));
     url.searchParams.set('hd',date);
-    // The official site may exceed 4.5s. Retry a transport timeout once,
+    // Allow slower official responses while retrying a transport timeout once,
     // but never retry invalid/partial race data or invent missing values.
-    for(const timeoutMs of [6500,6500]){
+    for(const timeoutMs of [9000,9000]){
       try{
         const response=await fetch(url.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(timeoutMs)});
         if(response.ok){
