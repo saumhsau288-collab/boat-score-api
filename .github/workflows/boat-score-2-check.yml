@@ -21,6 +21,8 @@ jobs:
         run: node --input-type=module --check < worker.js
       - name: Validate verified historical statistics
         run: node history-analysis.test.mjs
+      - name: Validate provisional ranking and missing-data handling
+        run: node ranking.test.mjs
       - name: Verify Boat Score 2 endpoints and isolation
         run: |
           node --input-type=module <<'NODE'
