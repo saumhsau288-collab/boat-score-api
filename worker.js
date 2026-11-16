@@ -520,7 +520,7 @@ document.getElementById('load').onclick=async function(){const notice=document.g
  status.textContent='公式直前情報を別経路で再確認中…';
  try{
   const response=await fetch('/api/official/beforeinfo'+urlBase,{signal:AbortSignal.timeout(18000)});
-  if(!response.ok)throw Error('HTTP '+response.status);
+  if(!response.ok){let detail='';try{const failure=await response.json();detail=failure.reason||failure.error||failure.diagnostics?.name||'';}catch{}throw Error('HTTP '+response.status+(detail?' / '+detail:''));}
   const fresh=await response.json();
   if(token!==raceDataRequest||selectedDate!==dateCode()||selectedVenue!==venue.value||selectedRace!==race.value)return;
   const exRows=fresh.exhibitionVerified===true&&Array.isArray(fresh.exhibitionByBoat)?fresh.exhibitionByBoat:[];
@@ -1828,10 +1828,10 @@ if (u.pathname === '/api/official/beforeinfo') {
     return reply(request,{error:'Invalid parameters'},400);
   // Reuse the same race's recently verified exhibition and start data.
   // Weather is not cached, so it remains unverified in this fast response.
-  const cached=getVerifiedBeforeinfo(date,venue,race);
-  if(cached?.exhibition?.verified===true&&cached?.start?.verified===true){
+  const cached=getVerifiedBeforeinfo(date,venue,race)||await readSharedVerifiedBeforeinfo(env,date,venue,race);
+  if(cached?.exhibition?.verified===true||cached?.start?.verified===true){
     return reply(request,{status:'verified',source:'verified_recent_cache',
-      exhibitionVerified:true,startVerified:true,weatherVerified:false,windDirectionVerified:false,
+      exhibitionVerified:cached.exhibition.verified===true,startVerified:cached.start.verified===true,weatherVerified:false,windDirectionVerified:false,
       exhibitionByBoat:cached.exhibition.rows,startByCourse:cached.start.rows,
       weather:{verified:false},dataReadyForPrediction:false});
   }
@@ -1857,7 +1857,7 @@ if (u.pathname === '/api/official/beforeinfo') {
       weather, dataReadyForPrediction:false
     });
   } catch(e) {
-    return reply(request,{status:'unavailable',reason:'upstream_fetch_failed',dataReadyForPrediction:false},502);
+    return reply(request,{status:'unavailable',reason:'upstream_fetch_failed',diagnostics:{message:String(e?.message||e).slice(0,160),name:String(e?.name||'unknown')},dataReadyForPrediction:false},502);
   }
 }
 if (u.pathname === '/api/official/racers') {
