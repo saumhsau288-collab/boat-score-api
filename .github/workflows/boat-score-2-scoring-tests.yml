@@ -1,0 +1,30 @@
+name: Validate Boat Score 2 scoring modules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'boat-score-2-*.js'
+      - 'boat-score-2-*.mjs'
+      - '.github/workflows/boat-score-2-scoring-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scoring-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax and run independent tests
+        run: |
+          node --experimental-default-type=module --check boat-score-2-scoring.js
+          node --experimental-default-type=module --check boat-score-2-classification.js
+          node --experimental-default-type=module --check boat-score-2-morning.js
+          node --experimental-default-type=module boat-score-2-scoring.test.mjs
+          node --experimental-default-type=module boat-score-2-classification.test.mjs
+          node --experimental-default-type=module boat-score-2-morning.test.mjs
