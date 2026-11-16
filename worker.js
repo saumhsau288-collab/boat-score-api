@@ -399,7 +399,9 @@ document.getElementById('predictSelected').onclick=async function(){
  const missing=Array.isArray(d.missingInputs)?d.missingInputs.map(x=>inputNames[x]||x):[];
  const exhibitionNote=d.exhibitionAdjustmentApplied===true?'公式6艇の展示タイムを確認し、予想点数に小幅反映しました。':'展示タイムの予想反映なし（'+(d.exhibitionVerification||'未確認')+'）。';
  const startNote=d.startAdjustmentApplied===true?'公式6艇の展示STを確認し、数値STを予想点数に小幅反映しました。進入は確認のみで点数には未反映です。':'展示STの予想反映なし（'+(d.startVerification||'未確認')+'）。';
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
+ const base=d.basePrediction;
+ const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+'\n\n'+comparison+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
@@ -546,11 +548,14 @@ if (u.pathname === '/api/predict/selected-race') {
     {applied:false,rankedScores:inputs.rankedScores};
   const startAdjustment=useBeforeinfo?applyVerifiedStartAdjustment(adjustment.rankedScores,startExhibition):
     {applied:false,rankedScores:adjustment.rankedScores,reason:'not_requested'};
+  const basePicks=rankTrifectaCandidates(inputs.rankedScores);
   const picks=rankTrifectaCandidates(startAdjustment.rankedScores);
   const missingInputs=inputs.missingInputs.filter(x=>
     !(x==='exhibition'&&adjustment.applied)&&!(x==='start'&&startAdjustment.applied));
   return reply(request,{date,venue,race,ready:picks.ready,main:picks.main,upset:picks.upset,
     rankedScores:startAdjustment.rankedScores,method:inputs.method,combinationMethod:picks.method,
+    basePrediction:{main:basePicks.main,upset:basePicks.upset},
+    predictionChanged:JSON.stringify(basePicks.main)!==JSON.stringify(picks.main)||JSON.stringify(basePicks.upset)!==JSON.stringify(picks.upset),
     predictionMode:startAdjustment.applied?'verified_start_adjusted':(adjustment.applied?'verified_exhibition_adjusted':'base_stats_only'),
     startAdjustmentApplied:startAdjustment.applied,startVerification:startAdjustment.reason||'six_numeric_start_rows_verified',
     startCoursesVerified:startExhibition.verified===true,
