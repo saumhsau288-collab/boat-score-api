@@ -308,7 +308,7 @@ document.getElementById('predictSelected').onclick=async function(){
  const fmt=rows=>Array.isArray(rows)?rows.map((x,i)=>(i+1)+'. '+(Array.isArray(x)?x.join('-'):'形式未確認')).join('\n'):'取得できません';
  const inputNames={local:'当地勝率',placeRates:'全国2連対率・3連対率',last50:'まくらぼ直近50走',course:'進入・コース',exhibition:'展示タイム',start:'展示ST',weather:'風・波'};
  const missing=Array.isArray(d.missingInputs)?d.missingInputs.map(x=>inputNames[x]||x):[];
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n※暫定モデル。的中確率ではありません。';
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
@@ -416,7 +416,7 @@ if (u.pathname === '/api/predict/selected-race') {
     missingInputs:inputs.missingInputs||[],officialVerified:official?.verified===true,statsVerified:official?.statsVerified===true});
   const picks=rankTrifectaCandidates(inputs.rankedScores);
   return reply(request,{date,venue,race,ready:picks.ready,main:picks.main,upset:picks.upset,
-    rankedScores:inputs.rankedScores,method:picks.method||inputs.method,missingInputs:inputs.missingInputs,
+    rankedScores:inputs.rankedScores,method:inputs.method,combinationMethod:picks.method,placeRateTieBreakVerified:inputs.placeRateTieBreakVerified===true,missingInputs:inputs.missingInputs,
     verified:'official_six_boat_entries_and_available_verified_metrics_only',
     note:inputs.method==='weighted_national50_local20_motor30_unvalidated'?'Provisional national win-rate 50%, local win-rate 20%, motor top-2 rate 30% ranking. Not a calibrated probability; exhibition, ST, wind, course and last50 are excluded.':'Provisional national win-rate 70%, motor top-2 rate 30% ranking; local win-rate was not fully verified. Not a calibrated probability; exhibition, ST, wind, course and last50 are excluded.'});
 }
