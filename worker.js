@@ -337,7 +337,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
   const data=await response.json();
   if(token!==makulaboSearchToken||date!==dateCode()||v!==venue.value||r!==race.value)return;
   if(!response.ok||data.last50Verified!==true||!Array.isArray(data.last50ByBoat)||data.last50ByBoat.length!==6){
-   status.textContent='自動取得・6艇照合は未完了（'+(data.last50ParseReason||data.reason||data.last50Reason||'データ不足')+'）。未取得値を0にはしません。';return;
+   status.textContent='自動取得・6艇照合は未完了（'+(data.last50ParseReason||data.reason||data.last50Reason||'データ不足')+'）。未取得の項目は画面上で未確認と表示し、評価への加点は0点です。実際の50走成績を0回とみなすものではありません。';return;
   }
   const table=document.createElement('table'),head=document.createElement('tr');
   ['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.appendChild(th);});table.appendChild(head);
@@ -1931,8 +1931,8 @@ last50Inspection: inspectLast50(html),
 last50ByBoat: last50MatchesOfficial ? parsedLast50.rows : [],
 last50Verified: last50MatchesOfficial,
 last50Status: last50MatchesOfficial ? 'officially_matched' : 'not_verified',
-last50ParseReason: parsedLast50.reason,
-last50Reason: last50MatchesOfficial ? null : 'Six official boat identities and consistent last-50 table data could not be confirmed',
+last50ParseReason: !officialRacers.verified ? 'official_six_boats_not_verified' : parsedLast50.verified ? 'last50_official_identity_mismatch' : parsedLast50.reason,
+last50Reason: last50MatchesOfficial ? null : !officialRacers.verified ? '公式6艇の照合に失敗' : !parsedLast50.verified ? 'まくらぼ50走表の解析に失敗' : '公式6艇とまくらぼの選手・艇番が不一致',
 
 
 embeddedDataInspection: inspectEmbeddedData(html),
