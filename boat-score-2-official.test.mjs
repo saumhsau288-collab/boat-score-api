@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {officialRacelistUrl,parseOfficialRacerIds,fetchOfficialRacelist} from './boat-score-2-official.js';
+const s={venue:'01',date:'20261116',race:1};
+assert.equal(officialRacelistUrl(s).status,'ok');
+assert.match(officialRacelistUrl(s).url,/jcd=01/);
+assert.equal(officialRacelistUrl({...s,race:13}).status,'invalid_selection');
+const sample='<a href="/owpc/pc/data/racersearch/profile?toban=1234">選手 一</a>';
+assert.equal(parseOfficialRacerIds(sample).uniqueRacerCount,1);
+assert.equal(parseOfficialRacerIds(sample).verified,false);
+assert.equal(parseOfficialRacerIds('').verified,false);
+const mock=async()=>({ok:true,headers:new Headers({'content-type':'text/html'}),text:async()=>sample});
+const result=await fetchOfficialRacelist(s,mock);
+assert.equal(result.status,'fetched');
+assert.equal(result.verified,false);
+console.log('Official racelist verification tests passed');
