@@ -47,6 +47,44 @@ jobs:
             print(json.dumps(result,ensure_ascii=False),flush=True)
           print("Connectivity-only probe; HTTP success does not verify six racer records.")
           PY
+      - name: Inspect official racelist HTML and six-boat candidates
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import urllib.request, urllib.parse, re, json, time, html
+          url="https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=15&hd=20261116"
+          started=time.monotonic()
+          try:
+            request=urllib.request.Request(url,headers={"Accept":"text/html","User-Agent":"Mozilla/5.0"})
+            with urllib.request.urlopen(request,timeout=22) as response:
+              raw=response.read(2_000_001)
+              charset=response.headers.get_content_charset() or "utf-8"
+              status=response.status
+            if len(raw)>2_000_000:
+              raise ValueError("HTML exceeds 2MB safety limit")
+            page=raw.decode(charset,errors="replace")
+            # Extract official racer registration numbers from links only.
+            links=re.findall(r'<a\\b[^>]*href\\s*=\\s*["\\x27]([^"\\x27]+)["\\x27]',page,re.I)
+            racer_ids=[]
+            for link in links:
+              link=html.unescape(link)
+              if "racer" not in link.lower():continue
+              params=urllib.parse.parse_qs(urllib.parse.urlsplit(link).query)
+              for value in params.get("toban",[]):
+                if re.fullmatch(r"[0-9]{4}",value):racer_ids.append(value)
+            unique=list(dict.fromkeys(racer_ids))
+            result={"source":"pc_racelist","httpStatus":status,"htmlBytes":len(raw),
+              "elapsedMs":round((time.monotonic()-started)*1000),
+              "racerLinkCount":len(racer_ids),"uniqueRacerIds":unique,
+              "exactlySixUniqueRacerIds":len(unique)==6,
+              "verified":False,
+              "note":"Candidate identifiers only. Six boats must be matched to official lane rows before use."}
+            print(json.dumps(result,ensure_ascii=False))
+          except Exception as error:
+            print(json.dumps({"source":"pc_racelist","errorType":type(error).__name__,
+              "error":str(error)[:150],"elapsedMs":round((time.monotonic()-started)*1000),
+              "verified":False},ensure_ascii=False))
+          PY
       - name: Verify isolated preview version metadata
         run: |
           grep -F "sourceBranch:'fix-boat-score-2-syntax-20261115'" worker.js
