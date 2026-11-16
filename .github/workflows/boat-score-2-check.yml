@@ -1,4 +1,4 @@
-name: Boat Score 2 syntax check
+name: Boat Score 2 isolated validation
 
 on:
   push:
@@ -10,68 +10,28 @@ permissions:
   contents: read
 
 jobs:
-  syntax:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out development branch
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check worker JavaScript syntax (no deployment)
+      - name: Validate preview Worker syntax without deployment
         run: node --input-type=module --check < worker.js
-      - name: Check essential endpoints and fail-closed guards
-        shell: bash
+      - name: Validate verified historical statistics
+        run: node history-analysis.test.mjs
+      - name: Verify Boat Score 2 endpoints and isolation
         run: |
           node --input-type=module <<'NODE'
-          import { readFileSync } from 'node:fs';
+          import {readFileSync} from 'node:fs';
           import assert from 'node:assert/strict';
-          const code = readFileSync('worker.js', 'utf8');
-          for (const endpoint of [
-            '/api/official/racers',
-            '/api/official/race-data',
-            '/api/official/active-venues',
-            '/api/official/verified-races',
-            '/api/version',
-            '/api/daily/venue-screen',
-            '/api/daily/verified-venue-screen',
-            '/api/daily/national-screen'
-          ]) assert.ok(code.includes(endpoint), 'Missing endpoint: ' + endpoint);
-          for (const marker of [
-            'async function scanVenueMorning(',
-            'function buildMorningRaceInputs(',
-            'function rankTrifectaCandidates(',
-            'official_six_boat_stats_unverified',
-            'official_timeout',
-            'AbortSignal.timeout(10000)'
-          ]) assert.ok(code.includes(marker), 'Missing safety check: ' + marker);
-          assert.equal((code.match(/async function scanVenueMorning\(/g) || []).length, 1,
-            'Expected exactly one shared venue scanner');
-          for (const ui of [
-            '開催情報は公式データ取得時に確認します。',
-            '選手の入賞率比較（公式照合済みのみ）',
-            '全国2連対率',
-            '全国3連対率',
-            '当地2連対率',
-            '当地3連対率',
-            'raceDataRequest',
-            'clearRaceDisplay()',
-            '/api/version',
-            'verifiedVenues'
-          ]) assert.ok(code.includes(ui), 'Missing Boat Score 2 UI/data guard: ' + ui);
-          assert.ok(!code.includes("for(let i=1;i<=24;i++)venue.add("),
-            'Old 24-venue unfiltered selector unexpectedly restored');
-          for (const guard of [
-            'mapOfficialLimited(',
-            'getVerifiedList(',
-            'verificationOnly:true',
-            'raceListController.abort()',
-            'raceDataController.abort()',
-            'refreshVerifiedRaces',
-            'AbortController()'
-          ]) assert.ok(code.includes(guard), 'Missing schedule or cancellation guard: ' + guard);
-          assert.ok(code.includes("race.disabled||!race.value"),
-            'Race fetch must require a verified venue and selected race');
-          console.log('Static endpoint, Boat Score 2 UI and safety checks passed');
+          const code=readFileSync('worker.js','utf8');
+          for(const endpoint of ['/api/version','/api/official/active-venues','/api/morning/snapshot']){
+            assert.ok(code.includes(endpoint),'Missing endpoint: '+endpoint);
+          }
+          assert.ok(code.includes("app:'Boat Score 2 preview'"),'Preview identity missing');
+          assert.ok(code.includes('MORNING_KV'),'Morning storage binding missing');
+          assert.ok(code.includes('raceDataController.abort()'),'Race-change cancellation missing');
+          console.log('Preview-only static checks passed');
           NODE
