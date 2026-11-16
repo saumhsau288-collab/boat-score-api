@@ -28,6 +28,30 @@ function saveVerifiedBeforeinfo(date,venue,race,exhibition,start){
     exhibition:exhibitionOK?exhibition:{verified:false,rows:[]},
     start:startOK?start:{verified:false,rows:[]}});
 }
+// Cross-isolate reuse where the existing MORNING_KV binding is available.
+// Never trust a KV entry without the exact race key, freshness and six-row checks.
+async function readSharedVerifiedBeforeinfo(env,date,venue,race){
+  if(!env?.MORNING_KV)return null;
+  try{
+    const item=JSON.parse(await env.MORNING_KV.get('verified-beforeinfo:'+beforeinfoCacheKey(date,venue,race))||'null');
+    if(item?.date!==date||item?.venue!==Number(venue)||item?.race!==Number(race)||
+       !Number.isFinite(item.savedAt)||Date.now()-item.savedAt>120000||Date.now()<item.savedAt)return null;
+    const valid=x=>x?.verified===true&&Array.isArray(x.rows)&&x.rows.length===6&&
+      new Set(x.rows.map(r=>r.boat)).size===6&&x.rows.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6);
+    if(!valid(item.exhibition)&&!valid(item.start))return null;
+    return {exhibition:valid(item.exhibition)?item.exhibition:{verified:false,rows:[]},
+      start:valid(item.start)?item.start:{verified:false,rows:[]}};
+  }catch{return null;}
+}
+async function writeSharedVerifiedBeforeinfo(env,date,venue,race,exhibition,start){
+  if(!env?.MORNING_KV)return;
+  const valid=x=>x?.verified===true&&Array.isArray(x.rows)&&x.rows.length===6&&
+    new Set(x.rows.map(r=>r.boat)).size===6&&x.rows.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6);
+  if(!valid(exhibition)&&!valid(start))return;
+  try{await env.MORNING_KV.put('verified-beforeinfo:'+beforeinfoCacheKey(date,venue,race),
+    JSON.stringify({date,venue:Number(venue),race:Number(race),savedAt:Date.now(),
+      exhibition:valid(exhibition)?exhibition:null,start:valid(start)?start:null}),{expirationTtl:180});}catch{}
+}
 // Short-lived per-isolate deduplication reduces repeated official-site traffic.
 // Failures and unverified data are never persisted across requests.
 // Limit upstream connections; preserve original venue/race order in results.
@@ -562,7 +586,7 @@ if (u.pathname === '/api/predict/selected-race') {
   const useBeforeinfo=u.searchParams.get('mode')==='beforeinfo';
   let exhibition={verified:false,rows:[]},startExhibition={verified:false,rows:[]},beforeinfoReason='not_requested';
   if(useBeforeinfo){
-    const cached=getVerifiedBeforeinfo(date,venue,race);
+    const cached=getVerifiedBeforeinfo(date,venue,race)||await readSharedVerifiedBeforeinfo(env,date,venue,race);
     if(cached){exhibition=cached.exhibition;startExhibition=cached.start;beforeinfoReason='verified_recent_cache';}
     // A partial cache must not prevent fetching the missing official component.
     if(!cached||exhibition.verified!==true||startExhibition.verified!==true){
@@ -583,6 +607,7 @@ if (u.pathname === '/api/predict/selected-race') {
             if(fetchedExhibition.verified===true)exhibition=fetchedExhibition;
             if(fetchedStart.verified===true)startExhibition=fetchedStart;
             saveVerifiedBeforeinfo(date,venue,race,exhibition,startExhibition);
+            await writeSharedVerifiedBeforeinfo(env,date,venue,race,exhibition,startExhibition);
             beforeinfoReason=exhibition.verified===true&&startExhibition.verified===true?'six_boats_verified':
               (exhibition.verified===true||startExhibition.verified===true?'partial_six_boats_verified':'beforeinfo_unverified');
           }else beforeinfoReason='beforeinfo_response_too_large';
@@ -1678,6 +1703,12 @@ if (u.pathname === '/api/official/race-data') {
   const exhibitionMatches=official.verified&&exhibition.verified&&
     exhibition.rows.every((row,i)=>row.boat===official.racers[i].boat&&normalize(row.name)===normalize(official.racers[i].name));
   const startMatches=official.verified&&start.verified&&start.rows.every(row=>official.racers.some(r=>r.boat===row.boat)) && new Set(start.rows.map(row=>row.course)).size===6;
+  if(exhibitionMatches||startMatches){
+    const verifiedExhibition=exhibitionMatches?exhibition:{verified:false,rows:[]};
+    const verifiedStart=startMatches?start:{verified:false,rows:[]};
+    saveVerifiedBeforeinfo(date,venue,race,verifiedExhibition,verifiedStart);
+    await writeSharedVerifiedBeforeinfo(env,date,venue,race,verifiedExhibition,verifiedStart);
+  }
   const complete=official.verified&&official.statsVerified&&exhibitionMatches&&startMatches&&weather.verified;
   const missingInputs=[];
   if(!official.verified)missingInputs.push('racers');
@@ -1727,6 +1758,7 @@ if (u.pathname === '/api/official/beforeinfo') {
     const start=extractOfficialStartExhibition(html);
     const weather=extractOfficialWeather(html);
     saveVerifiedBeforeinfo(date,venue,race,exhibition,start);
+    await writeSharedVerifiedBeforeinfo(env,date,venue,race,exhibition,start);
     return reply(request,{
       status:exhibition.verified&&start.verified?'verified':'partial',
       exhibitionVerified:exhibition.verified,startVerified:start.verified,
