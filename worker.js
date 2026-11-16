@@ -267,7 +267,7 @@ async function refreshVerifiedRaces(){
   await Promise.all([worker(),worker()]);
   if(token===raceListRequest&&!controller.signal.aborted){
    update();
-   if(!confirmed.size){race.replaceChildren(new Option('公式出走表を確認できません',''));race.disabled=true;document.getElementById('status').textContent='12レースを確認しましたが、公式出走表を検証できませんでした。'+[...reasons].slice(0,3).join('、')+'。休止とは断定しません。';}
+   if(!confirmed.size){race.replaceChildren(new Option('公式出走表を確認できません',''));race.disabled=true;const codes=[...reasons];const upstreamTimeout=codes.some(v=>v==='official_timeout'||v==='timeout');document.getElementById('status').textContent=upstreamTimeout?'公式サイトの応答が時間切れです。開催中止とは判断しません。公式サイトの出走表を確認し、時間をおいて再度競艇場を選択してください。':'12レースを確認しましたが、公式出走表を検証できませんでした（'+codes.slice(0,3).join('、')+'）。休止とは断定しません。';}
   }
  }finally{if(raceListController===controller)raceListController=null;}
 }
@@ -2372,7 +2372,8 @@ racerLinkSamples: racerLinks.slice(0, 6).map(m => m[1]),
     return {
       verified: false, statsVerified: false, statsByBoat: [], racers: [],
       reason: error?.name === 'TimeoutError' || error?.name === 'AbortError'
-        ? 'official_timeout' : 'official_fetch_failed'
+        ? 'official_timeout' : 'official_fetch_failed',
+      diagnostic: {stage:'official_racelist_fetch',errorName:String(error?.name||'unknown').slice(0,40)}
     };
   }
 }
