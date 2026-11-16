@@ -532,17 +532,26 @@ if (u.pathname === '/api/predict/selected-race') {
     url.searchParams.set('rno',String(race));
     url.searchParams.set('jcd',String(venue).padStart(2,'0'));
     url.searchParams.set('hd',date);
-    try{
-      const response=await fetch(url.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(4500)});
-      if(response.ok){
-        const html=await response.text();
-        if(html.length<=1000000){
-          exhibition=extractOfficialExhibition(html);
-          startExhibition=extractOfficialStartExhibition(html);
-          beforeinfoReason=exhibition.verified?'six_boats_verified':'exhibition_unverified';
-        }else beforeinfoReason='beforeinfo_response_too_large';
-      }else beforeinfoReason='beforeinfo_http_'+response.status;
-    }catch(error){beforeinfoReason=error?.name==='TimeoutError'?'beforeinfo_timeout':'beforeinfo_fetch_failed';}
+    // The official site may exceed 4.5s. Retry a transport timeout once,
+    // but never retry invalid/partial race data or invent missing values.
+    for(const timeoutMs of [6500,6500]){
+      try{
+        const response=await fetch(url.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(timeoutMs)});
+        if(response.ok){
+          const html=await response.text();
+          if(html.length<=1000000){
+            exhibition=extractOfficialExhibition(html);
+            startExhibition=extractOfficialStartExhibition(html);
+            beforeinfoReason=exhibition.verified?'six_boats_verified':'exhibition_unverified';
+          }else beforeinfoReason='beforeinfo_response_too_large';
+        }else beforeinfoReason='beforeinfo_http_'+response.status;
+        break;
+      }catch(error){
+        const timedOut=error?.name==='TimeoutError'||error?.name==='AbortError';
+        beforeinfoReason=timedOut?'beforeinfo_timeout':'beforeinfo_fetch_failed';
+        if(!timedOut)break;
+      }
+    }
   }
   const adjustment=useBeforeinfo?applyVerifiedExhibitionAdjustment(inputs.rankedScores,exhibition):
     {applied:false,rankedScores:inputs.rankedScores};
