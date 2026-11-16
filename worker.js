@@ -178,6 +178,32 @@ if (u.pathname === '/api/morning/venues') {
 
 }
 
+// Connectivity-only diagnostics: do not treat HTTP success as verified race data.
+if (u.pathname === '/api/official/source-diagnostics') {
+  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+  const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race')||1);
+  if(!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)
+    return reply(request,{error:'Invalid date, venue or race'},400);
+  const urls=[
+    ['pc_racelist','https://www.boatrace.jp/owpc/pc/race/racelist?rno='+race+'&jcd='+String(venue).padStart(2,'0')+'&hd='+date],
+    ['pc_schedule','https://www.boatrace.jp/owpc/pc/race/index?hd='+date],
+    ['sp_race','https://www.boatrace.jp/owsp/sp/race/index?hd='+date+'&jcd='+String(venue).padStart(2,'0')]
+  ];
+  const checks=[];
+  for(const [source,url] of urls){
+    const started=Date.now();
+    try{
+      const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(4000)});
+      const contentType=res.headers.get('content-type')||'';
+      // Do not read the body; this endpoint tests reachability only.
+      if(res.body)await res.body.cancel();
+      checks.push({source,status:res.status,ok:res.ok,contentType:contentType.slice(0,90),elapsedMs:Date.now()-started});
+    }catch(error){
+      checks.push({source,ok:false,errorName:String(error?.name||'Error').slice(0,50),elapsedMs:Date.now()-started});
+    }
+  }
+  return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
+}
 if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261115-auto-preview-check',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
