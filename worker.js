@@ -233,10 +233,23 @@ document.getElementById('checkBeforeinfo').onclick=async function(){
    '展示ST・進入: '+(d.startVerified?'公式確認済み':'未確認'),
    '風・波: '+(d.weatherVerified?'公式確認済み':'未確認'),
    '風向: '+(d.windDirectionVerified?'公式確認済み':'未確認')];
-  if(d.exhibitionVerified)for(const x of d.exhibitionByBoat||[])lines.push('艇'+x.boat+' 展示 '+JSON.stringify(x));
-  if(d.startVerified)for(const x of d.startByCourse||[])lines.push('進入 '+JSON.stringify(x));
-  if(d.weatherVerified)lines.push('気象 '+JSON.stringify(d.weather));
-  lines.push('※現時点の三連単12点は基礎成績モデルで、直前情報の加点は未実装です。');
+  const show=v=>v===null||v===undefined||v===''?'未確認':String(v);
+  if(d.exhibitionVerified){
+   const entries=Array.isArray(d.exhibitionByBoat)?d.exhibitionByBoat:[];
+   for(const x of entries)lines.push(x.boat+'号艇：展示タイム '+show(x.exhibitionTime)+' / チルト '+show(x.tilt));
+   if(entries.length!==6)lines.push('注意：展示データは6艇分そろっていません。');
+  }
+  if(d.startVerified){
+   const entries=Array.isArray(d.startByCourse)?d.startByCourse:[];
+   for(const x of entries)lines.push(show(x.boat)+'号艇：進入 '+show(x.course)+'コース / 展示ST '+show(x.startTiming));
+   if(entries.length!==6)lines.push('注意：展示進入データは6艇分そろっていません。');
+  }
+  if(d.weatherVerified){
+   const w=d.weather||{};
+   lines.push('気象：風向 '+show(w.windDirection)+' / 風速 '+show(w.windSpeed)+' / 波高 '+show(w.waveHeight));
+   lines.push('気象の詳細：'+JSON.stringify(w));
+  }
+  lines.push('※現在の三連単12点は基礎成績モデルです。直前情報の加点は未実装で、表示値だけで予想が変わることはありません。');
   lines.push('照合したレース: '+date+' / '+v+'場 / '+r+'R');
   output.textContent=lines.join('\n');
  }catch(e){output.textContent='直前情報を確認できません: '+e.message+'。未確認の値は使用しません。';}
