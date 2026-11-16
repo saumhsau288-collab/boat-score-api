@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {classifyRace,summarizeDay} from './boat-score-2-classification.js';
+const racer=(boat,nationalWinRate)=>({boat,nationalWinRate,localWinRate:nationalWinRate,motorTwoWinRate:50,recent50WinRate:50,exhibitionScore:50});
+const race=values=>values.map((v,i)=>racer(i+1,v));
+assert.equal(classifyRace(race([9,5,4,4,3,2])).category,'favorite');
+assert.equal(classifyRace(race([3,5,5,9,4,3])).category,'upset_candidate');
+assert.equal(classifyRace(race([6,6,6,6,6,6])).category,'uncertain');
+assert.equal(classifyRace(race([9,5,4,4,3,2]).slice(1)).category,'unrated');
+const summary=summarizeDay([{venue:'01',date:'20261116',race:1,racers:race([9,5,4,4,3,2])},{venue:'01',date:'20261116',race:2,racers:[]}]);
+assert.equal(summary.eligible,1);
+assert.equal(summary.excluded,1);
+assert.equal(summary.favorites.length,1);
+console.log('Boat Score 2 classification tests passed');
