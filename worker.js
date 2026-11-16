@@ -2402,11 +2402,16 @@ function extractOfficialBoatStats(html) {
     };
     const nationwide=triple(cells[4]), local=triple(cells[5]), motor=equipment(cells[6]), hull=equipment(cells[7]);
     if (!nationwide || !local || !motor || !hull) continue;
-    // F/L and average ST share a cell in the official racelist.
-    // Accept only an explicitly labelled average ST, never an arbitrary number.
-    const averageSTMatches=[...cells[3].normalize('NFKC').matchAll(/平均\s*S\s*T\s*[:：]?\s*(0?\.\d{2})/gi)];
-    const averageST=averageSTMatches.length===1&&Number(averageSTMatches[0][1])>=0&&
-      Number(averageSTMatches[0][1])<=0.5?Number(averageSTMatches[0][1]):null;
+    // Official racelist commonly shows F/L counts and average ST in one
+    // column without a repeated "平均ST" label on each racer row.
+    // Accept only an explicit label OR a tightly structured F/L + ST cell.
+    // Never take a free-floating decimal from the racer name or win-rate cells.
+    const stCell=cells[3].normalize('NFKC').replace(/\s+/g,' ').trim();
+    const labelled=[...stCell.matchAll(/平均\s*S\s*T\s*[:：]?\s*(0?\.\d{2})/gi)];
+    const structured=stCell.match(/^(?:F\s*\d+\s+L\s*\d+|L\s*\d+\s+F\s*\d+)\s+(0?\.\d{2})$/i);
+    const extracted=labelled.length===1?labelled[0][1]:(labelled.length===0&&structured?structured[1]:null);
+    const averageST=extracted!==null&&Number(extracted)>=0&&Number(extracted)<=0.5?
+      Number(extracted):null;
     results.push({boat,racerId:ids[0],nationwide,local,motor,hull,averageST});
   }
   const verified=results.length===6 && new Set(results.map(x=>x.boat)).size===6 &&
