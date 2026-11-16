@@ -233,7 +233,7 @@ function clearRaceDisplay(){raceDataRequest++;if(raceDataController){raceDataCon
 day.addEventListener('change',()=>{scheduleRequest++;if(scheduleController){scheduleController.abort();scheduleController=null;}document.getElementById('scheduleOutput').textContent='';if(venue.value)refreshVerifiedRaces();else resetRaceChoices();document.getElementById('scheduleStatus').textContent='日付を変更しました。選択日の公式レース一覧を再確認します。';});
 race.addEventListener('change',clearRaceDisplay);
 
-async function refreshVerifiedRaces(){const token=++raceListRequest;if(raceListController)raceListController.abort();raceListController=new AbortController();const controller=raceListController;clearRaceDisplay();race.disabled=true;race.replaceChildren(new Option('レースを確認中…',''));if(!venue.value)return;const selectedVenue=venue.value,selectedDate=dateCode();try{const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw Error('レース一覧APIがJSONを返しませんでした（HTTP '+res.status+'）')}if(token!==raceListRequest||selectedDate!==dateCode()||selectedVenue!==venue.value)return;if(!res.ok)throw Error('HTTP '+res.status);const confirmed=Array.isArray(data.verifiedRaces)?data.verifiedRaces.filter(v=>Number.isInteger(v)&&v>=1&&v<=12):[];race.replaceChildren(new Option(confirmed.length?'レースを選択':'確認できるレースなし',''));confirmed.forEach(v=>race.add(new Option(v+'R',String(v))));race.disabled=confirmed.length===0;document.getElementById('status').textContent=confirmed.length?'公式出走表で確認済み：'+confirmed.length+'レース':'公式出走表を確認できません。休止とは断定しません。'}catch(e){if(token!==raceListRequest||controller.signal.aborted)return;race.replaceChildren(new Option('レース情報を取得できません',''));race.disabled=true;document.getElementById('status').textContent='レース確認に失敗: '+e.message;}finally{if(raceListController===controller)raceListController=null;}}
+async function refreshVerifiedRaces(){const token=++raceListRequest;if(raceListController)raceListController.abort();raceListController=new AbortController();const controller=raceListController;clearRaceDisplay();race.disabled=true;race.replaceChildren(new Option('レースを確認中…',''));if(!venue.value)return;const selectedVenue=venue.value,selectedDate=dateCode();try{const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(22000)])});const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw Error('レース一覧APIがJSONを返しませんでした（HTTP '+res.status+'）')}if(token!==raceListRequest||selectedDate!==dateCode()||selectedVenue!==venue.value)return;if(!res.ok)throw Error('HTTP '+res.status);const confirmed=Array.isArray(data.verifiedRaces)?data.verifiedRaces.filter(v=>Number.isInteger(v)&&v>=1&&v<=12):[];race.replaceChildren(new Option(confirmed.length?'レースを選択':'確認できるレースなし',''));confirmed.forEach(v=>race.add(new Option(v+'R',String(v))));race.disabled=confirmed.length===0;document.getElementById('status').textContent=confirmed.length?'公式出走表で確認済み：'+confirmed.length+'レース':'公式出走表を確認できません。休止とは断定しません。'}catch(e){if(token!==raceListRequest||controller.signal.aborted)return;race.replaceChildren(new Option('レース情報を取得できません',''));race.disabled=true;document.getElementById('status').textContent='レース確認に失敗: '+e.message;}finally{if(raceListController===controller)raceListController=null;}}
 function resetRaceChoices(){
  raceListRequest++;if(raceListController){raceListController.abort();raceListController=null;}
  clearRaceDisplay();race.replaceChildren(new Option('レースを選択',''));
@@ -416,7 +416,7 @@ if (u.pathname === '/api/official/verified-races') {
     return reply(request,{error:'Invalid date or venue'},400);
   return reply(request,await getVerifiedList('races:'+date+':'+venue,async()=>{const checks=await mapOfficialLimited(Array.from({length:12},(_,i)=>i+1),6,async race=>{
     try{
-      const official=await fetchOfficialRacers(date,venue,race,{verificationOnly:true});
+      const official=await fetchOfficialRacers(date,venue,race,{verificationOnly:true,fastVerification:true});
       return {race,verified:official.verified===true};
     }catch{return {race,verified:false};}
   });
@@ -2255,7 +2255,7 @@ async function fetchOfficialRacers(date, venue, race, options={}) {
     // never treat a timeout or an unverified response as valid racer data.
     let response;
     let lastTransportError;
-    for (const timeoutMs of (options.fastVerification ? [8500] : [10000, 18000])) {
+    for (const timeoutMs of (options.fastVerification ? [6500] : [10000, 18000])) {
       try {
         response = await fetch(url.toString(), {
           headers: {Accept: 'text/html,application/xhtml+xml'},
