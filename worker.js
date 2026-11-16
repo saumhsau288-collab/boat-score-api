@@ -94,7 +94,17 @@ async function runScheduledMorning(env,scheduledTime) {
   if(!Array.isArray(state.records))state.records=[];
   state.venues=venues;
   const remaining=venues.filter(v=>!state.completedVenues.includes(v)&&(state.attempts[v]||0)<3).slice(0,2);
-  if(!remaining.length)return;
+  if(!remaining.length){
+    // A subsequent cron invocation must not leave a stale 'running' snapshot.
+    const exhausted=venues.filter(v=>!state.completedVenues.includes(v)&&(state.attempts[v]||0)>=3);
+    state.exhaustedVenues=exhausted;
+    state.status=state.completedVenues.length>=venues.length?'completed':'incomplete';
+    state.updatedAt=new Date().toISOString();
+    const ranking=classifyDailyRaceCandidates(state.records);
+    state.categories={main:ranking.main,upset:ranking.upset,chaos:ranking.chaos};
+    await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:7776000});
+    return;
+  }
   for(const venue of remaining){
     state.attempts[venue]=(state.attempts[venue]||0)+1;
     try{
