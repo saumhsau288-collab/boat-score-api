@@ -220,7 +220,7 @@ document.getElementById('checkBeforeinfo').onclick=async function(){
  const v=document.getElementById('venue').value,r=document.getElementById('race').value;
  const date=document.getElementById('day').value.replace(/-/g,'');
  const output=document.getElementById('beforeinfoStatus');
- if(!v||!r||!/^20\\d{6}$/.test(date)){output.textContent='開催日・競艇場・レースを選択してください。';return;}
+ if(!v||!r||!/^20\d{6}$/.test(date)){output.textContent='開催日・競艇場・レースを選択してください。';return;}
  this.disabled=true;output.textContent='公式の直前情報を照合中…';
  try{
   const response=await fetch('/api/official/beforeinfo?date='+date+'&venue='+v+'&race='+r,{signal:AbortSignal.timeout(18000)});
@@ -235,7 +235,7 @@ document.getElementById('checkBeforeinfo').onclick=async function(){
   if(d.startVerified)for(const x of d.startByCourse||[])lines.push('進入 '+JSON.stringify(x));
   if(d.weatherVerified)lines.push('気象 '+JSON.stringify(d.weather));
   lines.push('※現時点の三連単12点は基礎成績モデルで、直前情報の加点は未実装です。');
-  output.textContent=lines.join('\\n');
+  output.textContent=lines.join('\n');
  }catch(e){output.textContent='直前情報を確認できません: '+e.message+'。未確認の値は使用しません。';}
  finally{this.disabled=false;}
 };
