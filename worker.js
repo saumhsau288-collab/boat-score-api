@@ -404,7 +404,7 @@ document.getElementById('predictSelected').onclick=async function(){
  if(selectedPredictionController)selectedPredictionController.abort();
  const controller=new AbortController();selectedPredictionController=controller;this.disabled=true;out.textContent='';st.textContent='選択レースの公式6艇・勝率・モーター成績を照合中…';
  const date=dateCode(),v=venue.value,r=race.value;
- try{const res=await fetch('/api/predict/selected-race?date='+date+'&venue='+v+'&race='+r+'&mode=beforeinfo',{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(25000)])});
+ try{const res=await fetch('/api/predict/selected-race?date='+date+'&venue='+v+'&race='+r+'&mode=beforeinfo',{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(40000)])});
  const d=await res.json();if(controller.signal.aborted||date!==dateCode()||v!==venue.value||r!==race.value)return;
  if(!res.ok)throw Error(d.error||'HTTP '+res.status);
  if(!d.ready){st.textContent='データ不足のため予想を保留: '+(d.reason||'確認できません');out.textContent='未確認情報を推測で補いません。';return;}
@@ -2480,7 +2480,23 @@ function extractOfficialBoatRows(html) {
     candidateCount: candidates.length};
 }
 
+// Per-isolate cache: only fully verified official six-boat statistics.
+const verifiedRacersCache=new Map();
+function verifiedRacersCacheKey(date,venue,race){return String(date)+':'+Number(venue)+':'+Number(race);}
+function getCachedVerifiedRacers(date,venue,race){
+ const key=verifiedRacersCacheKey(date,venue,race),entry=verifiedRacersCache.get(key);
+ if(!entry)return null;
+ if(Date.now()-entry.savedAt>120000){verifiedRacersCache.delete(key);return null;}
+ return entry.data;
+}
+function saveCachedVerifiedRacers(date,venue,race,data){
+ if(data?.verified!==true||data?.statsVerified!==true||data.racers?.length!==6||data.statsByBoat?.length!==6)return;
+ if(verifiedRacersCache.size>=30)verifiedRacersCache.delete(verifiedRacersCache.keys().next().value);
+ verifiedRacersCache.set(verifiedRacersCacheKey(date,venue,race),{savedAt:Date.now(),data});
+}
 async function fetchOfficialRacers(date, venue, race, options={}) {
+  const cached=getCachedVerifiedRacers(date,venue,race);
+  if(cached)return cached;
   const url = new URL(
     "https://www.boatrace.jp/owpc/pc/race/racelist"
   );
@@ -2551,7 +2567,7 @@ const officialNames = officialRows.racers;
   
 
 
-    return {
+    const result={
       verified: officialRows.verified,
       statsVerified: statsMatch,
       statsByBoat: statsMatch ? officialStats.rows : [],
@@ -2568,6 +2584,8 @@ officialRacerIds: officialRacerIds,
 uniqueRacerLinkCount: uniqueRacerLinks.length,
 racerLinkSamples: racerLinks.slice(0, 6).map(m => m[1]),
     };
+    saveCachedVerifiedRacers(date,venue,race,result);
+    return result;
   } catch (error) {
     return {
       verified: false, statsVerified: false, statsByBoat: [], racers: [],
