@@ -13,7 +13,7 @@ export function inspectOfficialStructure(html){
    racerProfileLinks:(table.match(/racersearch\/profile/gi)||[]).length,
    tdCount:(table.match(/<td\b/gi)||[]).length};
  });
- const title=clean(html.match(/<title\\b[^>]*>([\\s\\S]*?)<\\/title>/i)?.[1]||'').slice(0,120);
+ const title=clean(html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)?.[1]||'').slice(0,120);
  const markers={accessDenied:/access denied|forbidden|アクセス拒否|403/i.test(html),captcha:/captcha|recaptcha|bot detection/i.test(html),javascriptRequired:/enable javascript|javascriptを有効|javascript is required/i.test(html),maintenance:/メンテナンス|maintenance/i.test(html)};
  return {status:'ok',pageTitle:title,markers,tableCount:tables.length,tables:summary,
   totalRacerProfileLinks:(html.match(/racersearch\/profile/gi)||[]).length,
