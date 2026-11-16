@@ -1,6 +1,7 @@
 // Isolated official BOATRACE racelist reader. Not yet deployed.
 // Extracts only source-proven racer identifiers; no guessed statistics.
 import {validateRaceSelection} from './boat-score-2-adapter.js';
+import {parseOfficialBoatRows} from './boat-score-2-boat-mapping.js';
 export function officialRacelistUrl(selection){
  const v=validateRaceSelection(selection);
  if(!v.valid)return {status:'invalid_selection',invalid:v.invalid};
@@ -34,6 +35,9 @@ export async function fetchOfficialRacelist(selection,fetcher=fetch){
    if(!/text\/html/i.test(type))return {status:'invalid_content_type',verified:false};
    const html=await response.text();
    const parsed=parseOfficialRacerIds(html);
-   return {status:'fetched',source:target.url,...parsed};
+   const mapped=parseOfficialBoatRows(html);
+   return {status:'fetched',source:target.url,verified:mapped.verified,
+     racers:mapped.verified?mapped.racers:[],mapping:mapped,
+     racerCandidates:parsed.racers,reason:mapped.reason};
  }catch(e){return {status:'fetch_failed',verified:false,error:String(e?.message||e)};}
 }
