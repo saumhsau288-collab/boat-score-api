@@ -1660,7 +1660,7 @@ if (u.pathname === '/api/official/race-data') {
   if(weather.windDirectionVerified!==true)missingInputs.push('windDirection');
   return reply(request,{
     status:complete?'official_sources_verified':'partial',missingInputs,
-    diagnostics:{officialRacersReason:official.verified?null:(official.reason||'official_racer_rows_not_verified'),officialRacerCandidateCount:official.officialBoatRowCandidates??null,officialResponseLength:official.htmlLength??null,officialStatsReason:official.statsVerified?null:'official_stats_not_verified',beforeinfoReason:beforeFailureReason||(before?(exhibition.verified&&start.verified&&weather.verified?'beforeinfo_verified':'beforeinfo_parsing_not_verified'):'beforeinfo_unavailable'),beforeinfoResponseLength:before?.length??null,exhibitionCandidateCount:exhibition.candidateCount??0,startCandidateCount:start.candidateCount??0,exhibitionParserVerified:exhibition.verified===true,startParserVerified:start.verified===true,weatherParserReason:weather.reason??null,selectedDate:date,selectedVenue:Number(venue),selectedRace:Number(race)},
+    diagnostics:{officialRacersReason:official.verified?null:(official.reason||'official_racer_rows_not_verified'),officialRacerCandidateCount:official.officialBoatRowCandidates??null,officialResponseLength:official.htmlLength??null,officialStatsReason:official.statsVerified?null:'official_stats_not_verified',averageSTParseDiagnostics:official.averageSTParseDiagnostics||[],beforeinfoReason:beforeFailureReason||(before?(exhibition.verified&&start.verified&&weather.verified?'beforeinfo_verified':'beforeinfo_parsing_not_verified'):'beforeinfo_unavailable'),beforeinfoResponseLength:before?.length??null,exhibitionCandidateCount:exhibition.candidateCount??0,startCandidateCount:start.candidateCount??0,exhibitionParserVerified:exhibition.verified===true,startParserVerified:start.verified===true,weatherParserReason:weather.reason??null,selectedDate:date,selectedVenue:Number(venue),selectedRace:Number(race)},
     racersVerified:official.verified,statsVerified:official.statsVerified===true,
     exhibitionVerified:exhibitionMatches,startVerified:startMatches,weatherVerified:weather.verified===true,
     racersByBoat:official.verified?official.racers:[],
@@ -2415,7 +2415,7 @@ function extractOfficialBoatStats(html) {
     const extracted=labelled.length===1?labelled[0][1]:(labelled.length===0&&structured?structured[1]:null);
     const averageST=extracted!==null&&Number(extracted)>=0&&Number(extracted)<=0.5?
       Number(extracted):null;
-    results.push({boat,racerId:ids[0],nationwide,local,motor,hull,averageST});
+    results.push({boat,racerId:ids[0],nationwide,local,motor,hull,averageST,averageSTParseDiagnostic:averageST===null?stCell.slice(0,100):null});
   }
   const verified=results.length===6 && new Set(results.map(x=>x.boat)).size===6 &&
     new Set(results.map(x=>x.racerId)).size===6;
@@ -2533,6 +2533,7 @@ const officialNames = officialRows.racers;
       verified: officialRows.verified,
       statsVerified: statsMatch,
       statsByBoat: statsMatch ? officialStats.rows : [],
+      averageSTParseDiagnostics:statsMatch?officialStats.rows.map(x=>({boat:x.boat,rawCell:x.averageSTParseDiagnostic,parsed:x.averageST})):[],
       officialBoatRowCandidates: officialRows.candidateCount,
       racers: officialNames,
 htmlLength: html.length,
