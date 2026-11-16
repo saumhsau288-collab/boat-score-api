@@ -306,7 +306,9 @@ document.getElementById('predictSelected').onclick=async function(){
  const validPicks=rows=>Array.isArray(rows)&&rows.length===6&&rows.every(x=>Array.isArray(x)&&x.length===3&&x.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(x).size===3)&&new Set(rows.map(x=>x.join('-'))).size===6;
  if(!validPicks(d.main)||!validPicks(d.upset)){st.textContent='買い目の形式を検証できないため表示を保留しました';out.textContent='三連単6点ずつの艇番・重複を確認できません。';return;}
  const fmt=rows=>Array.isArray(rows)?rows.map((x,i)=>(i+1)+'. '+(Array.isArray(x)?x.join('-'):'形式未確認')).join('\n'):'取得できません';
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+(d.main?.length||0)+'点\n'+fmt(d.main)+'\n\n【穴】'+(d.upset?.length||0)+'点\n'+fmt(d.upset)+'\n\n※全国勝率・モーター2連対率のみの暫定モデル。展示・ST・風・進入・直近50走は未反映。';
+ const inputNames={last50:'まくらぼ直近50走',course:'進入・コース',exhibition:'展示タイム',start:'展示ST',weather:'風・波'};
+ const missing=Array.isArray(d.missingInputs)?d.missingInputs.map(x=>inputNames[x]||x):[];
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
