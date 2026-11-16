@@ -398,7 +398,8 @@ document.getElementById('predictSelected').onclick=async function(){
  const inputNames={local:'当地勝率',placeRates:'全国2連対率・3連対率',last50:'まくらぼ直近50走',course:'進入・コース',exhibition:'展示タイム',start:'展示ST',weather:'風・波'};
  const missing=Array.isArray(d.missingInputs)?d.missingInputs.map(x=>inputNames[x]||x):[];
  const exhibitionNote=d.exhibitionAdjustmentApplied===true?'公式6艇の展示タイムを確認し、予想点数に小幅反映しました。':'展示タイムの予想反映なし（'+(d.exhibitionVerification||'未確認')+'）。';
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
+ const startNote=d.startAdjustmentApplied===true?'公式6艇の展示STを確認し、数値STを予想点数に小幅反映しました。進入は確認のみで点数には未反映です。':'展示STの予想反映なし（'+(d.startVerification||'未確認')+'）。';
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
@@ -523,7 +524,7 @@ if (u.pathname === '/api/predict/selected-race') {
   // Morning batch remains unchanged. Only an explicitly requested selected-race
   // prediction checks beforeinfo; transport failure falls back to the base model.
   const useBeforeinfo=u.searchParams.get('mode')==='beforeinfo';
-  let exhibition={verified:false,rows:[]},beforeinfoReason='not_requested';
+  let exhibition={verified:false,rows:[]},startExhibition={verified:false,rows:[]},beforeinfoReason='not_requested';
   if(useBeforeinfo){
     const url=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
     url.searchParams.set('rno',String(race));
@@ -535,6 +536,7 @@ if (u.pathname === '/api/predict/selected-race') {
         const html=await response.text();
         if(html.length<=1000000){
           exhibition=extractOfficialExhibition(html);
+          startExhibition=extractOfficialStartExhibition(html);
           beforeinfoReason=exhibition.verified?'six_boats_verified':'exhibition_unverified';
         }else beforeinfoReason='beforeinfo_response_too_large';
       }else beforeinfoReason='beforeinfo_http_'+response.status;
@@ -542,15 +544,20 @@ if (u.pathname === '/api/predict/selected-race') {
   }
   const adjustment=useBeforeinfo?applyVerifiedExhibitionAdjustment(inputs.rankedScores,exhibition):
     {applied:false,rankedScores:inputs.rankedScores};
-  const picks=rankTrifectaCandidates(adjustment.rankedScores);
-  const missingInputs=inputs.missingInputs.filter(x=>x!=='exhibition'||!adjustment.applied);
+  const startAdjustment=useBeforeinfo?applyVerifiedStartAdjustment(adjustment.rankedScores,startExhibition):
+    {applied:false,rankedScores:adjustment.rankedScores,reason:'not_requested'};
+  const picks=rankTrifectaCandidates(startAdjustment.rankedScores);
+  const missingInputs=inputs.missingInputs.filter(x=>
+    !(x==='exhibition'&&adjustment.applied)&&!(x==='start'&&startAdjustment.applied));
   return reply(request,{date,venue,race,ready:picks.ready,main:picks.main,upset:picks.upset,
-    rankedScores:adjustment.rankedScores,method:inputs.method,combinationMethod:picks.method,
-    predictionMode:adjustment.applied?'verified_exhibition_adjusted':'base_stats_only',
+    rankedScores:startAdjustment.rankedScores,method:inputs.method,combinationMethod:picks.method,
+    predictionMode:startAdjustment.applied?'verified_start_adjusted':(adjustment.applied?'verified_exhibition_adjusted':'base_stats_only'),
+    startAdjustmentApplied:startAdjustment.applied,startVerification:startAdjustment.reason||'six_numeric_start_rows_verified',
+    startCoursesVerified:startExhibition.verified===true,
     exhibitionAdjustmentApplied:adjustment.applied,exhibitionVerification:beforeinfoReason,
     placeRateTieBreakVerified:inputs.placeRateTieBreakVerified===true,missingInputs,
     verified:'official_six_boat_entries_and_available_verified_metrics_only',
-    note:adjustment.applied?'Provisional base model plus a small verified exhibition-time adjustment. ST, wind, course and last50 remain excluded. Not a calibrated probability.':'Provisional base statistics model only. Exhibition, ST, wind, course and last50 are not scored. Not a calibrated probability.'});
+    note:'Provisional base statistics model. Verified exhibition time and numeric start-exhibition timing receive small unvalidated adjustments only when all six rows are confirmed. Course is observed but not scored; wind and last50 are excluded. Not a calibrated probability.'});
 }
 
 if (u.pathname === '/api/daily/verified-venue-screen') {
@@ -2138,6 +2145,30 @@ function applyVerifiedExhibitionAdjustment(baseScores, exhibition) {
   // Maximum correction is 1.5 points versus base scores typically ranging 10-60.
   return {applied:true,rankedScores:baseScores.map(x=>({...x,score:x.score+(ranks.get(x.boat)-3.5)*0.6})),
     reason:null,method:'verified_exhibition_time_small_rank_adjustment_unvalidated'};
+}
+
+// Start-exhibition timing and course are applied only when all six boats are
+// uniquely verified. F/L starts are retained as observations, never scored as
+// numerical timing. No course advantage is assumed without backtesting.
+function applyVerifiedStartAdjustment(baseScores,start){
+  if(!Array.isArray(baseScores)||baseScores.length!==6||
+     !baseScores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))||
+     new Set(baseScores.map(x=>x.boat)).size!==6||
+     start?.verified!==true||!Array.isArray(start.rows)||start.rows.length!==6)
+    return {applied:false,rankedScores:baseScores,reason:'six_verified_start_rows_required'};
+  const rows=start.rows;
+  if(new Set(rows.map(x=>x.boat)).size!==6||
+     new Set(rows.map(x=>x.course)).size!==6||
+     !rows.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&
+       Number.isInteger(x.course)&&x.course>=1&&x.course<=6))
+    return {applied:false,rankedScores:baseScores,reason:'invalid_start_course_rows'};
+  const timed=rows.filter(x=>typeof x.startTiming==='number'&&
+    Number.isFinite(x.startTiming)&&x.startTiming>=0&&x.startTiming<=1);
+  if(timed.length!==6)return {applied:false,rankedScores:baseScores,reason:'non_numeric_start_timing'};
+  const sorted=timed.slice().sort((a,b)=>a.startTiming-b.startTiming||a.boat-b.boat);
+  const rank=new Map(sorted.map((x,i)=>[x.boat,6-i]));
+  return {applied:true,rankedScores:baseScores.map(x=>({...x,score:x.score+(rank.get(x.boat)-3.5)*0.3})),
+    reason:null,method:'verified_start_timing_small_adjustment_unvalidated'};
 }
 
 function rankTrifectaCandidates(rankedScores) {
