@@ -254,7 +254,7 @@ async function refreshVerifiedRaces(){
   while(next<=12&&!controller.signal.aborted){
    const rno=next++;
    try{
-    const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue+'&race='+rno,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(9500)])});
+    const res=await fetch('/api/official/verified-races?date='+selectedDate+'&venue='+selectedVenue+'&race='+rno,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(12500)])});
     if(!res.ok)throw Error('HTTP '+res.status);
     const data=await res.json();
     if(Array.isArray(data.verifiedRaces)&&data.verifiedRaces.includes(rno))confirmed.add(rno);
@@ -264,7 +264,7 @@ async function refreshVerifiedRaces(){
   }
  };
  try{
-  await Promise.all([worker(),worker(),worker()]);
+  await Promise.all([worker(),worker()]);
   if(token===raceListRequest&&!controller.signal.aborted){
    update();
    if(!confirmed.size){race.replaceChildren(new Option('公式出走表を確認できません',''));race.disabled=true;document.getElementById('status').textContent='12レースを確認しましたが、公式出走表を検証できませんでした。'+[...reasons].slice(0,3).join('、')+'。休止とは断定しません。';}
@@ -2295,7 +2295,7 @@ async function fetchOfficialRacers(date, venue, race, options={}) {
     // never treat a timeout or an unverified response as valid racer data.
     let response;
     let lastTransportError;
-    for (const timeoutMs of (options.fastVerification ? [6500] : [10000, 18000])) {
+    for (const timeoutMs of (options.fastVerification ? [4500, 4500] : [10000, 18000])) {
       try {
         response = await fetch(url.toString(), {
           headers: {Accept: 'text/html,application/xhtml+xml'},
