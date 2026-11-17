@@ -1,0 +1,42 @@
+name: Audit racer winning techniques from verified official results
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/analyze_racer_winning_methods.py'
+      - 'scripts/test_analyze_racer_winning_methods.py'
+      - '.github/workflows/boat-score-2-racer-method-audit.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test technique evidence aggregation
+        run: python3 -m unittest discover -s scripts -p 'test_analyze_racer_winning_methods.py'
+      - name: Retrieve independently verified historical join report
+        run: |
+          mkdir -p data reports
+          curl --fail --location --retry 3 --silent --show-error \
+            'https://raw.githubusercontent.com/saumhsau288-collab/boat-score-api/historical-inspection-output/reports/official-bk-joined-2026-11-16.json' \
+            -o data/official-bk-joined-2026-11-16.json
+      - name: Audit individual racer techniques (no live predictions)
+        run: |
+          python3 scripts/analyze_racer_winning_methods.py data/official-bk-joined-2026-11-16.json --output reports/racer-winning-method-evidence-2026-11-16.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('reports/racer-winning-method-evidence-2026-11-16.json'))
+          assert r['raceCount']==12,r
+          assert r['winningMethods']=={'逃げ':8,'差し':2,'まくり差し':2},r
+          assert r['unverifiedWinningMethods']==0,r
+          print('Verified 12 race methods and racer evidence:',r['uniqueRacers'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: racer-winning-method-evidence-2026-11-16
+          path: reports/racer-winning-method-evidence-2026-11-16.json
+          retention-days: 30
