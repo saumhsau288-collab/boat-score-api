@@ -10,7 +10,7 @@ on:
         required: true
         default: '2026-11-16'
       days:
-        description: 'Number of consecutive days (1 to 7)'
+        description: 'Number of consecutive days (1 to 28; scheduled runs use 7)'
         required: true
         default: '3'
   push:
@@ -52,13 +52,13 @@ jobs:
           # A scheduled run must never use incomplete current-day results.
           end=datetime.date.fromisoformat(os.environ['ARCHIVE_DATE']) if os.environ['ARCHIVE_DATE'] else today-datetime.timedelta(days=1)
           days=int(os.environ['DAYS'])
-          if not 1<=days<=7:raise SystemExit('days must be 1..7')
+          if not 1<=days<=28:raise SystemExit('days must be 1..28')
           if end>today:raise SystemExit('future date')
           start=end-datetime.timedelta(days=days-1)
           with open('archive-range.txt','w') as f:f.write(start.isoformat()+' '+end.isoformat()+'\n')
           PY
           read START END < archive-range.txt
-          python3 scripts/fetch_official_archives.py --start "$START" --end "$END" --out data/raw --max-days 7
+          python3 scripts/fetch_official_archives.py --start "$START" --end "$END" --out data/raw --max-days 28
           mkdir -p data/decoded/B data/decoded/K
           for KIND in B K; do
             for F in data/raw/"$KIND"/*.lzh; do
