@@ -9,7 +9,7 @@ export function validateHistoricalRow(row){
  if(!v.verified)return null;
  if(typeof row.asOf!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(row.asOf))return null;
  const ts=Date.parse(row.asOf);
- if(!Number.isFinite(ts)||new Date(ts).toISOString().slice(0,10)!==String(row.date).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3'))return null;
+ if(!Number.isFinite(ts)||row.asOf.slice(0,10)!==String(row.date).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3'))return null;
  // Explicitly require a proven pre-start capture, not a reconstructed current page.
  if(row.capturedBeforeStart!==true)return null;
  return {...row,racers:v.racers};
