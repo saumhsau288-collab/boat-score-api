@@ -1,0 +1,17 @@
+name: Boat Score 2 historical partial-weight study tests
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/historical-partial-weight-study.mjs'
+      - 'scripts/historical-partial-weight-study.test.mjs'
+      - '.github/workflows/boat-score-2-historical-weight-study.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/historical-partial-weight-study.test.mjs
