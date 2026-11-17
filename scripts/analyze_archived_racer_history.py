@@ -34,6 +34,27 @@ def load_unique_days(directory):
     return records, len(files)
 
 
+def archived_quality_summary(directory):
+    days = []
+    for file in sorted(Path(directory).glob('*.json')):
+        report = json.loads(file.read_text(encoding='utf-8'))
+        summaries = report.get('venueSummary')
+        if not isinstance(summaries, list) or not summaries:
+            raise ValueError('Missing venue quality summary: ' + file.name)
+        matched = sum(v['matchedRaces'] for v in summaries)
+        rejected = sum(len(v['rejectedRaces']) for v in summaries)
+        verified = sum(len(v['records']) for v in report['reports'])
+        if matched != verified:
+            raise ValueError('Verified race count mismatch: ' + file.name)
+        days.append({'date': file.stem, 'verifiedRaces': matched,
+                     'rejectedRaces': rejected,
+                     'venuesWithNoVerifiedRaces': [v['venue'] for v in summaries if v['matchedRaces'] == 0]})
+    return {'days': days,
+            'totalVerifiedRaces': sum(d['verifiedRaces'] for d in days),
+            'totalRejectedRaces': sum(d['rejectedRaces'] for d in days),
+            'warning': 'Rejected races are excluded, not treated as non-events; archived sample may be biased'}
+
+
 def archive_date_coverage(directory):
     dates = []
     for file in sorted(Path(directory).glob('*.json')):
@@ -67,11 +88,14 @@ def main():
     result = analyze([{'records': records}])
     result['archivedDayFiles'] = days
     result['archiveDateCoverage'] = archive_date_coverage(args.archive)
+    result['archiveDataQuality'] = archived_quality_summary(args.archive)
+    if result['archiveDataQuality']['totalVerifiedRaces'] != result['raceCount']:
+        raise ValueError('Archived quality and analyzed race counts differ')
     result['historicalArchiveWarning'] = 'Offline historical observations; no verified pre-race snapshots; never deploy live weights based on this report'
     destination = Path(args.output)
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print(json.dumps({'archivedDayFiles': days, 'raceCount': result['raceCount'], 'uniqueRacers': result['uniqueRacers'], 'racersMeetingTechniqueSampleThreshold': result['racersMeetingTechniqueSampleThreshold']}, ensure_ascii=False))
+    print(json.dumps({'archivedDayFiles': days, 'raceCount': result['raceCount'], 'uniqueRacers': result['uniqueRacers'], 'racersMeetingTechniqueSampleThreshold': result['racersMeetingTechniqueSampleThreshold'], 'archiveDateCoverage': result['archiveDateCoverage'], 'totalRejectedRaces': result['archiveDataQuality']['totalRejectedRaces']}, ensure_ascii=False))
 
 
 if __name__ == '__main__':
