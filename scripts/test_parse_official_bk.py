@@ -2,7 +2,7 @@ import unittest
 from parse_official_bk import parse_b,parse_k,join,venue_section
 class Tests(unittest.TestCase):
  def test_venue_isolation(self):
-  s='STARTB\\n24BBGN\\nOMURA\\n1R\\n23BBGN\\nKARATSU\\n1R'
+  s='STARTB\n24BBGN\nOMURA\n1R\n23BBGN\nKARATSU\n1R'
   self.assertIn('OMURA',venue_section(s,24,'B'))
   self.assertNotIn('KARATSU',venue_section(s,24,'B'))
   with self.assertRaises(ValueError):venue_section(s,22,'B')
