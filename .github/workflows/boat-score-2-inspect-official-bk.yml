@@ -10,6 +10,8 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/boat-score-2-inspect-official-bk.yml'
+      - 'scripts/parse_official_bk.py'
+      - 'scripts/test_parse_official_bk.py'
   pull_request:
     paths:
       - 'scripts/inspect_official_bk.py'
