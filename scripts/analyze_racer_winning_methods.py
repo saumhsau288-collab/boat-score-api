@@ -45,10 +45,13 @@ def analyze(reports):
           'observedPodiums':s['first']+s['second']+s['third'],'observedWinRatePercent':round(s['first']/starts*100,2),
           'winningMethods':dict(s['methods']),'entryCourses':{k:{**v,'winningMethods':dict(v['winningMethods'])} for k,v in sorted(s['entryCourses'].items())},
           'officialNationalWinRateSamples':s['nationalWinRates'],'officialLocalWinRateSamples':s['localWinRates'],
-          'sampleInsufficientForIndividualTechniquePreference':starts<20})
+          'sampleInsufficientForIndividualTechniquePreference':starts<20 or s['first']<5,
+          'winningMethodSharesOfWinsPercent':{m:round(n/s['first']*100,2) for m,n in s['methods'].items()} if s['first']>=5 and starts>=20 else None,
+          'winningMethodWinsPerStartPercent':{m:round(n/starts*100,2) for m,n in s['methods'].items()} if s['first']>=5 and starts>=20 else None})
     result.sort(key=lambda x:(-x['observedStarts'],x['racerId']))
-    return {'scope':'OFFLINE_HISTORICAL_OBSERVATION_NOT_PREDICTION','raceCount':race_count,'uniqueRacers':len(result),'winningMethods':dict(method_count),'unverifiedWinningMethods':unverified,
-      'racerEvidence':result,'warnings':['Official national/local win rates measure individual ability and are NOT course-specific rates','Observed winner methods count only actual wins; non-winning finishers have no winner method','Historical B archive capture time not independently verified before race; do not optimize or deploy weights','Small samples do not establish racer technique preference; no live score changes']}
+    eligible=sum(not r['sampleInsufficientForIndividualTechniquePreference'] for r in result)
+    return {'scope':'OFFLINE_HISTORICAL_OBSERVATION_NOT_PREDICTION','racerMethodSampleThreshold':{'minimumStarts':20,'minimumWins':5},'racersMeetingTechniqueSampleThreshold':eligible,'racersBelowTechniqueSampleThreshold':len(result)-eligible,'raceCount':race_count,'uniqueRacers':len(result),'winningMethods':dict(method_count),'unverifiedWinningMethods':unverified,
+      'racerEvidence':result,'warnings':['Official national/local win rates measure individual ability and are NOT course-specific rates','Observed winner methods count only actual wins; non-winning finishers have no winner method','Historical B archive capture time not independently verified before race; do not optimize or deploy weights','At least 20 starts and 5 wins are required to display descriptive method percentages; meeting this threshold does not prove predictive value','Small samples do not establish racer technique preference; no live score changes']}
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('inputs',nargs='+');p.add_argument('--output',required=True);a=p.parse_args()
     out=analyze([json.loads(Path(f).read_text(encoding='utf-8')) for f in a.inputs])
