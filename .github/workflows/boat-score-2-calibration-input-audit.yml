@@ -1,0 +1,17 @@
+name: Boat Score 2 calibration input audit tests
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/audit-calibration-inputs.mjs'
+      - 'scripts/audit-calibration-inputs.test.mjs'
+      - '.github/workflows/boat-score-2-calibration-input-audit.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/audit-calibration-inputs.test.mjs
