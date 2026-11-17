@@ -65,7 +65,7 @@ def join(b,k,date,venue):
         if r not in b or r not in k or any(k[r]['racerIds'].get(x['boat'])!=x['racerId'] for x in b[r]):
             rejected.append(r);continue
         out.append({'date':date,'venue':venue,'race':r,'racers':b[r],'finishOrder':k[r]['finishOrder'],
-          'entryCourseByBoat':k[r]['entryCourseByBoat'],'entryCourseVerified':k[r]['entryCourseVerified'],
+          'entryCourseByBoat':k[r].get('entryCourseByBoat'),'entryCourseVerified':k[r].get('entryCourseVerified',False),
           'resultVerified':True,'historicalProgramSource':'official_B_archive',
           'historicalResultSource':'official_K_archive','asOfVerified':False,
           'capturedBeforeStart':False,'eligibleForWeightCalibration':False})
