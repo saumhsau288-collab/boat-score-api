@@ -25,6 +25,8 @@ on:
       - 'scripts/test_join_official_all_venues.py'
       - 'scripts/analyze_racer_winning_methods.py'
       - 'scripts/test_analyze_racer_winning_methods.py'
+      - 'scripts/analyze_archived_racer_history.py'
+      - 'scripts/test_analyze_archived_racer_history.py'
       - '.github/workflows/boat-score-2-all-venue-methods.yml'
 concurrency:
   group: boat-score-2-daily-offline-research
