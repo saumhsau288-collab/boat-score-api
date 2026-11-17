@@ -44,7 +44,7 @@ jobs:
       - name: Download daily official B/K archives
         env:
           ARCHIVE_DATE: ${{ inputs.archive_date || '' }}
-          DAYS: ${{ inputs.days || '3' }}
+          DAYS: ${{ inputs.days || '7' }}
         run: |
           python3 - <<'PY'
           import datetime,os
@@ -100,6 +100,7 @@ jobs:
           if sum(r['winningMethods'].values())+r['unverifiedWinningMethods']!=r['raceCount']:raise SystemExit('method coverage mismatch')
           if r['racersMeetingTechniqueSampleThreshold']+r['racersBelowTechniqueSampleThreshold']!=r['uniqueRacers']:raise SystemExit('racer coverage mismatch')
           if any(x['sampleInsufficientForIndividualTechniquePreference'] and x['winningMethodSharesOfWinsPercent'] is not None for x in r['racerEvidence']):raise SystemExit('small-sample rates must be suppressed')
+          if r['racersMeetingTechniqueSampleThreshold']==0:print('NOTICE: No racers meet method sample threshold; do not use individual method percentages')
           summary={'raceCount':r['raceCount'],'uniqueRacers':r['uniqueRacers'],'verifiedWinningMethods':sum(r['winningMethods'].values()),'unverifiedWinningMethods':r['unverifiedWinningMethods'],'racerMethodThreshold':r['racerMethodSampleThreshold'],'racersMeetingThreshold':r['racersMeetingTechniqueSampleThreshold'],'racersBelowThreshold':r['racersBelowTechniqueSampleThreshold'],'methodCounts':r['winningMethods'],'warning':'Historical observations only, not verified pre-race forecasts; do not adjust live scoring weights'}
           Path('reports/all-venue-method-coverage.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
           print(json.dumps(summary,ensure_ascii=False))
