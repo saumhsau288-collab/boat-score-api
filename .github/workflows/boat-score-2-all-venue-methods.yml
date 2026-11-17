@@ -14,10 +14,10 @@ on:
         required: true
         default: '3'
       persist_history:
-        description: 'Also persist verified daily reports on isolated historical-research-data branch'
+        description: 'Persist verified daily reports to isolated historical-research-data branch (uncheck for dry run)'
         type: boolean
         required: false
-        default: false
+        default: true
   push:
     branches: [main]
     paths:
@@ -121,6 +121,11 @@ jobs:
           Path('reports/all-venue-method-coverage.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
           print(json.dumps(summary,ensure_ascii=False))
           PY
+      - name: Show history persistence decision
+        run: |
+          echo 'Event: ${{ github.event_name }}'
+          echo 'Manual persistence selected: ${{ inputs.persist_history }}'
+          echo 'Persistence runs on schedule or manual dispatch with persist_history=true'
       - name: Persist verified daily reports on isolated research branch
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.persist_history == true)
         env:
