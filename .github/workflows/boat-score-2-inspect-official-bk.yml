@@ -1,0 +1,61 @@
+name: Boat Score 2 inspect official B K text
+on:
+  workflow_dispatch:
+    inputs:
+      archive_date:
+        description: 'Archive date YYYY-MM-DD'
+        required: true
+        default: '2026-11-16'
+  pull_request:
+    paths:
+      - 'scripts/inspect_official_bk.py'
+      - 'scripts/test_inspect_official_bk.py'
+      - '.github/workflows/boat-score-2-inspect-official-bk.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test text inspector
+        run: python3 -m unittest discover -s scripts -p 'test_inspect_official_bk.py'
+      - name: Install LZH extractor
+        if: github.event_name == 'workflow_dispatch'
+        run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
+      - name: Download and inspect official archives
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          ARCHIVE_DATE: ${{ inputs.archive_date }}
+        run: |
+          python3 - <<'PY'
+          import datetime,os
+          d=datetime.date.fromisoformat(os.environ['ARCHIVE_DATE'])
+          if d>datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date():
+            raise SystemExit('future date')
+          open('archive-date.txt','w').write(d.isoformat())
+          PY
+          DAY="$(cat archive-date.txt)"
+          python3 scripts/fetch_official_archives.py --start "$DAY" --end "$DAY" --out data/raw
+          mkdir -p data/decoded/B data/decoded/K
+          for KIND in B K; do
+            for F in data/raw/"$KIND"/*.lzh; do
+              [ -f "$F" ] || continue
+              bsdtar -xf "$F" -C "data/decoded/$KIND"
+            done
+          done
+          find data/decoded -type f -print
+          python3 scripts/inspect_official_bk.py $(find data/decoded -type f) --output data/inspection.json
+      - name: Upload inspection summary only
+        if: always() && github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-bk-inspection
+          path: |
+            data/raw/manifest.json
+            data/inspection.json
+          if-no-files-found: warn
+          retention-days: 7
