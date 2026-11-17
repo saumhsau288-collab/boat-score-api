@@ -2,6 +2,7 @@
 """Combine archived per-day verified reports for offline long-term analysis."""
 import argparse
 import json
+from datetime import date, timedelta
 from pathlib import Path
 from analyze_racer_winning_methods import analyze
 
@@ -33,6 +34,30 @@ def load_unique_days(directory):
     return records, len(files)
 
 
+def archive_date_coverage(directory):
+    dates = []
+    for file in sorted(Path(directory).glob('*.json')):
+        try:
+            day = date.fromisoformat(file.stem[:4] + '-' + file.stem[4:6] + '-' + file.stem[6:])
+        except ValueError as exc:
+            raise ValueError('Invalid archive date: ' + file.name) from exc
+        dates.append(day)
+    if not dates:
+        raise ValueError('No archived days')
+    existing = set(dates)
+    missing = []
+    day = dates[0]
+    while day <= dates[-1]:
+        if day not in existing:
+            missing.append(day.isoformat())
+        day += timedelta(days=1)
+    return {'firstArchivedDate': dates[0].isoformat(),
+            'lastArchivedDate': dates[-1].isoformat(),
+            'archivedDayCount': len(dates),
+            'missingCalendarDates': missing,
+            'hasDateGaps': bool(missing)}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--archive', required=True)
@@ -41,6 +66,7 @@ def main():
     records, days = load_unique_days(args.archive)
     result = analyze([{'records': records}])
     result['archivedDayFiles'] = days
+    result['archiveDateCoverage'] = archive_date_coverage(args.archive)
     result['historicalArchiveWarning'] = 'Offline historical observations; no verified pre-race snapshots; never deploy live weights based on this report'
     destination = Path(args.output)
     destination.parent.mkdir(parents=True, exist_ok=True)
