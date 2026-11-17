@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Strict B/K race join; B program figures are historical but capture time is unverified."""
-import argparse,json,re
+import argparse,json,re,unicodedata
 from pathlib import Path
 VENUE=re.compile(r'ボートレース\s*([^\s　]+)')
-B_RACE=re.compile(r'^\s*([1-9]|1[0-2])Ｒ\s')
+B_RACE=re.compile(r'^\s*([０-９]{1,2})Ｒ\s')
 K_RACE=re.compile(r'^\s*([1-9]|1[0-2])R\s')
 B_BOAT=re.compile(r'^([1-6])\s+(\d{4})(.+?)\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+)\s+(\d+\.\d{2})\s+(\d+)\s+(\d+\.\d{2})(?:\s|$)')
 K_FINISH=re.compile(r'^\s*(0[1-6])\s+([1-6])\s+(\d{4})\s')
@@ -25,7 +25,7 @@ def parse_b(text):
     for line in text.splitlines():
         m=B_RACE.match(line)
         if m:
-            current=int(m.group(1));races[current]=[];continue
+            current=int(unicodedata.normalize('NFKC',m.group(1)));races[current]=[];continue
         if current is None:continue
         m=B_BOAT.match(line)
         if not m:continue
