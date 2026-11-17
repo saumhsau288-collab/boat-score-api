@@ -22,6 +22,14 @@ class Tests(unittest.TestCase):
   self.assertFalse(x['records'][0]['eligibleForWeightCalibration'])
   k[1]['racerIds'][1]='9999'
   self.assertEqual(join(b,k,'20261116',24)['matchedRaces'],0)
+ def test_rejection_reasons_do_not_assume_incidents(self):
+  b={1:[{'boat':i,'racerId':str(4000+i)} for i in range(1,7)],3:[{'boat':i,'racerId':str(4000+i)} for i in range(1,7)]}
+  k={2:{'racerIds':{},'finishOrder':[]},3:{'racerIds':{i:str(4000+i) for i in range(1,7)},'finishOrder':[1,2,3,4,5,6]}}
+  k[3]['racerIds'][1]='9999'
+  result=join(b,k,'20261116',1)
+  self.assertEqual(result['rejectedRaces'],[1,2,3])
+  self.assertEqual([x['reason'] for x in result['rejectionDetails']],['missing_valid_result','missing_valid_program','racer_id_mismatch'])
+  self.assertTrue(all(x['incidentStatus']=='unverified' for x in result['rejectionDetails']))
  def test_actual_omura_race_one(self):
   b="""24BBGN
 　１Ｒ  一般　　　　          Ｈ１８００ｍ  電話投票締切予定１５：１６
