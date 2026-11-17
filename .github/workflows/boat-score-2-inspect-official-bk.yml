@@ -19,7 +19,7 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -63,3 +63,23 @@ jobs:
             data/inspection.json
           if-no-files-found: warn
           retention-days: 7
+      - name: Publish inspection report to isolated branch
+        if: success() && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp data/inspection.json /tmp/boat-score-2-inspection.json
+          git fetch origin historical-inspection-output || true
+          if git show-ref --verify --quiet refs/remotes/origin/historical-inspection-output; then
+            git switch -C historical-inspection-output origin/historical-inspection-output
+          else
+            git switch --orphan historical-inspection-output
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+          mkdir -p reports
+          cp /tmp/boat-score-2-inspection.json reports/official-bk-2026-11-16.json
+          git add reports/official-bk-2026-11-16.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Record official B/K text inspection for 2026-11-16"
+            git push origin HEAD:historical-inspection-output
+          fi
