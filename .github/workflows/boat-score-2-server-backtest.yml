@@ -1,0 +1,30 @@
+name: Boat Score 2 server-only historical comparison
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix-boat-score-2-syntax-20261115
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compare yesterday using deployed Boat Score 2 predictions
+        env:
+          BACKTEST_DATE: '20261116'
+        run: node scripts/boat-score-2-server-backtest.mjs
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-backtest-20261116
+          path: backtest-results/
+          if-no-files-found: warn
