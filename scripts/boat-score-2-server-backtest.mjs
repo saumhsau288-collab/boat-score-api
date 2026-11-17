@@ -15,6 +15,12 @@ const venues=selectedVenue?[]:await pool(Array.from({length:24},(_,i)=>i+1),3,as
 const verifiedVenues=selectedVenue?[selectedVenue]:venues.filter(x=>x.verified).map(x=>x.venue);
 const targets=verifiedVenues.flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1})));
 console.log('Confirmed race-1 venue candidates:',verifiedVenues,'race targets:',targets.length);
+if (targets.length === 0) {
+  console.error('BACKTEST_BLOCKED: No venue was verified. This is an official-data verification failure, not a successful zero-race comparison.');
+  console.error('Unverified venue reasons:', JSON.stringify(venues));
+  process.exitCode = 1;
+}
+
 const records=await pool(targets,3,async({venue,race},i)=>{
  const query='?'+new URLSearchParams({date,venue,race});
  // The deployed Boat Score 2 predictor, NOT a duplicate model.
@@ -35,3 +41,8 @@ fs.mkdirSync('backtest-results',{recursive:true});
 fs.writeFileSync('backtest-results/'+date+'.json',JSON.stringify(summary,null,2));
 fs.writeFileSync('backtest-results/'+date+'.csv',['date,venue,race,status,actual,main,upset,mainHit,upsetHit,predictionReason,resultReason',...records.map(r=>[r.date,r.venue,r.race,r.status,r.actual||'',r.main.join('|'),r.upset.join('|'),r.mainHit??'',r.upsetHit??'',r.predictionReason||'',r.resultReason||''].map(x=>'"'+String(x).replaceAll('"','""')+'"').join(','))].join('\n'));
 console.log('SUMMARY',JSON.stringify({...summary,records:undefined}));
+if (compared.length === 0) {
+  console.error('BACKTEST_INCOMPLETE: No races were compared; inspect prediction/result reasons in the uploaded report.');
+  process.exitCode = 1;
+}
+
