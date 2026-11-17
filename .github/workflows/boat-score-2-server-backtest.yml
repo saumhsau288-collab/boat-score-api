@@ -23,8 +23,7 @@ jobs:
     timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: fix-boat-score-2-syntax-20261115
+       
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
