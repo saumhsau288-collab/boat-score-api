@@ -139,6 +139,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           mkdir -p /tmp/boat-score-history
           cp data/reports/*.json /tmp/boat-score-history/
+          cp scripts/analyze_archived_racer_history.py scripts/analyze_racer_winning_methods.py /tmp/boat-score-history/
           if git ls-remote --exit-code --heads origin historical-research-data >/dev/null; then
             git fetch origin historical-research-data
             git switch -c historical-research-data --track origin/historical-research-data
@@ -155,7 +156,12 @@ jobs:
             fi
             cp "$F" "verified-daily/$NAME"
           done
-          git add verified-daily
+          # Run the offline analyzer against every accumulated day, not just this week's window.
+          mkdir -p /tmp/boat-score-history/results
+          python3 /tmp/boat-score-history/analyze_archived_racer_history.py --archive verified-daily --output /tmp/boat-score-history/results/long-term-racer-methods.json
+          mkdir -p aggregate
+          cp /tmp/boat-score-history/results/long-term-racer-methods.json aggregate/long-term-racer-methods.json
+          git add verified-daily aggregate/long-term-racer-methods.json
           if git diff --cached --quiet; then
             echo 'Historical archive already current'
           else
