@@ -431,7 +431,26 @@ function resetRaceChoices(){
  document.getElementById('status').textContent='';
 }
 venue.addEventListener('change',()=>{if(!venue.value){resetRaceChoices();return;}refreshVerifiedRaces();});
-async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
+function formatVenueRanking(data){
+ if(!data||!data.categories||typeof data.categories!=='object')return null;
+ const labels={main:'本命候補',upset:'穴候補',chaos:'大荒れ候補'};
+ const lines=['【選択場の暫定分析】','対象日: '+String(data.date||'未確認')+' / 場コード: '+String(data.venue??'未確認'),
+ '照合: '+String(data.scanned??'未確認')+'R / 評価可能: '+String(data.eligible??'未確認')+'R / 保留: '+String(data.held??'未確認')+'R',
+ '※暫定スコアであり、的中確率ではありません。'];
+ for(const key of ['main','upset','chaos']){
+  const rows=Array.isArray(data.categories[key])?data.categories[key]:[];
+  lines.push('', '【'+labels[key]+'】');
+  if(!rows.length){lines.push('候補なし');continue;}
+  rows.slice(0,20).forEach((x,i)=>{
+   const n=Number(x.race);
+   const score=Number(x.score);
+   lines.push((i+1)+'位  '+(Number.isInteger(n)&&n>=1&&n<=12?n+'R':'レース未確認')+
+    ' / 暫定スコア '+(Number.isFinite(score)?score.toFixed(2):'未確認'));
+  });
+ }
+ return lines.join('\n');
+}
+async function show(url,statusId,outId,button){const status=document.getElementById(statusId),out=document.getElementById(outId);button.disabled=true;status.textContent='公式情報を確認中…';out.textContent='';try{const res=await fetch(url);const data=await res.json();if(!res.ok)throw Error(data.error||'HTTP '+res.status);status.textContent='取得完了（未確認項目は推測しません）';out.textContent=outId==='screenOutput'?(formatVenueRanking(data)||JSON.stringify(data,null,2)):JSON.stringify(data,null,2)}catch(e){status.textContent='取得できませんでした: '+e.message}finally{button.disabled=false}}
 const morningCacheKey=date=>'boat-score-morning-'+date;
 function restoreMorningSnapshot(){const out=document.getElementById('morningOutput'),st=document.getElementById('morningStatus');try{const raw=localStorage.getItem(morningCacheKey(dateCode()));if(!raw){out.textContent='';st.textContent='この日の保存済み集計はありません';return;}const data=JSON.parse(raw);if(data.date!==dateCode()||typeof data.text!=='string')throw Error('invalid');out.textContent=data.text;st.textContent='端末保存の事前評価：'+new Date(data.savedAt).toLocaleString('ja-JP')+'（'+(data.complete?'完了':'途中')+'・最新データではありません）';}catch(e){out.textContent='';st.textContent='保存結果を読み込めません';}}
 document.getElementById('day').addEventListener('change',restoreMorningSnapshot);
