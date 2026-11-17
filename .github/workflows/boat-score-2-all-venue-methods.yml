@@ -1,0 +1,71 @@
+name: Boat Score 2 all-venue racer method research
+on:
+  workflow_dispatch:
+    inputs:
+      archive_date:
+        description: 'Official archive date YYYY-MM-DD'
+        required: true
+        default: '2026-11-16'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/join_official_all_venues.py'
+      - 'scripts/test_join_official_all_venues.py'
+      - '.github/workflows/boat-score-2-all-venue-methods.yml'
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify parser and method analysis
+        run: |
+          python3 -m unittest discover -s scripts -p 'test_parse_official_bk.py'
+          python3 -m unittest discover -s scripts -p 'test_analyze_racer_winning_methods.py'
+          python3 -m unittest discover -s scripts -p 'test_join_official_all_venues.py'
+      - name: Install archive extractor
+        run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
+      - name: Download daily official B/K archives
+        env:
+          ARCHIVE_DATE: ${{ inputs.archive_date || '2026-11-16' }}
+        run: |
+          python3 - <<'PY'
+          import datetime,os
+          d=datetime.date.fromisoformat(os.environ['ARCHIVE_DATE'])
+          if d>datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date():raise SystemExit('future date')
+          open('archive-date.txt','w').write(d.isoformat())
+          PY
+          DAY="$(cat archive-date.txt)"
+          python3 scripts/fetch_official_archives.py --start "$DAY" --end "$DAY" --out data/raw
+          mkdir -p data/decoded/B data/decoded/K
+          for KIND in B K; do
+            for F in data/raw/"$KIND"/*.lzh; do
+              [ -f "$F" ] || continue
+              bsdtar -xf "$F" -C "data/decoded/$KIND"
+            done
+          done
+      - name: Join all active venues and aggregate racer evidence
+        run: |
+          DAY="$(cat archive-date.txt)"
+          DATE="${DAY//-/}"
+          BFILE="$(find data/decoded/B -type f -name '*.TXT' | head -n1)"
+          KFILE="$(find data/decoded/K -type f -name '*.TXT' | head -n1)"
+          python3 scripts/join_official_all_venues.py --b "$BFILE" --k "$KFILE" --date "$DATE" --output data/all-venues.json
+          python3 - <<'PY'
+          import json
+          d=json.load(open('data/all-venues.json'))
+          assert len(d['reports'])>0,'no verified venue results'
+          with open('data/all-venue-reports.json','w') as f:json.dump({'records':[r for x in d['reports'] for r in x['records']]},f,ensure_ascii=False)
+          PY
+          python3 scripts/analyze_racer_winning_methods.py data/all-venue-reports.json --output reports/all-venue-racer-winning-methods.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: official-all-venue-racer-methods
+          path: |
+            data/all-venues.json
+            reports/all-venue-racer-winning-methods.json
+          retention-days: 30
