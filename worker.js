@@ -376,9 +376,9 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
  const date=dateCode(),v=venue.value,r=race.value;
  const status=document.getElementById('makulaboSearchStatus'),result=document.getElementById('makulaboSearchResult');
  if(!/^20[0-9]{6}$/.test(date)||!v||!r){status.textContent='日付・競艇場・レースを選択してください。';return;}
- const token=++makulaboSearchToken;this.disabled=true;result.replaceChildren();status.textContent='まくらぼ直近50走を自動検索中…';
+ const token=++makulaboSearchToken;this.disabled=true;result.replaceChildren();status.textContent='まくらぼ50走を取得中…（まくらぼ取得後、公式6艇の照合に時間がかかる場合があります）';
  try{
-  const response=await fetch('/api/makulabo/heatmap?'+new URLSearchParams({date,venue:v,race:r}),{signal:AbortSignal.timeout(18000)});
+  const response=await fetch('/api/makulabo/heatmap?'+new URLSearchParams({date,venue:v,race:r}),{signal:AbortSignal.timeout(65000)});
   const data=await response.json();
   if(token!==makulaboSearchToken||date!==dateCode()||v!==venue.value||r!==race.value)return;
   if(!response.ok||data.last50Verified!==true||!Array.isArray(data.last50ByBoat)||data.last50ByBoat.length!==6){
@@ -402,7 +402,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
    updateRecent50Compare();
   const updated=syncVerifiedMakulaboComparison();
   status.textContent='まくらぼ6艇の取得・照合成功。選手比較表への反映：'+updated+'/6艇。参考加点は予想実行時に別表示します（買い目未反映）。'+(updated===0?'比較表の行数：'+document.getElementById('comparisonBody').querySelectorAll('tr').length+'。表示中の艇番と取得データの照合を確認してください。':'')+' 予想点数への反映は未実装です。';
- }catch(e){if(token===makulaboSearchToken)status.textContent='自動検索に失敗しました：'+(e.name==='TimeoutError'?'通信時間切れ':'通信エラー');}
+ }catch(e){if(token===makulaboSearchToken)status.textContent='自動検索に失敗しました：'+(e.name==='TimeoutError'?'65秒以内に取得・公式照合が完了しませんでした':'通信エラー（'+String(e.message||e).slice(0,80)+'）');}
  finally{if(token===makulaboSearchToken)this.disabled=false;}
 };
 for(const el of [day,venue,race])el.addEventListener('change',()=>{makulaboSearchToken++;verifiedMakulabo=null;document.getElementById('makulaboSearchResult').replaceChildren();document.getElementById('makulaboSearchStatus').textContent='';document.getElementById('searchMakulaboInBoatScore').disabled=false;});
