@@ -2,7 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from analyze_archived_racer_history import load_unique_days
+from analyze_archived_racer_history import load_unique_days, archive_date_coverage
 
 
 class ArchivedHistoryTests(unittest.TestCase):
@@ -54,6 +54,28 @@ class ArchivedHistoryTests(unittest.TestCase):
                 Path(d, day + '.json').write_text(json.dumps(payload))
             with self.assertRaises(ValueError):
                 load_unique_days(d)
+
+
+    def test_date_coverage_gap(self):
+        with tempfile.TemporaryDirectory() as d:
+            for day in ['20261115', '20261117']:
+                Path(d, day + '.json').write_text('{}')
+            coverage = archive_date_coverage(d)
+            self.assertEqual(coverage['missingCalendarDates'], ['2026-11-16'])
+            self.assertTrue(coverage['hasDateGaps'])
+            self.assertEqual(coverage['archivedDayCount'], 2)
+
+    def test_date_coverage_contiguous(self):
+        with tempfile.TemporaryDirectory() as d:
+            for day in ['20261116', '20261117']:
+                Path(d, day + '.json').write_text('{}')
+            self.assertFalse(archive_date_coverage(d)['hasDateGaps'])
+
+    def test_invalid_calendar_date_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, '20260230.json').write_text('{}')
+            with self.assertRaisesRegex(ValueError, 'Invalid archive date'):
+                archive_date_coverage(d)
 
 
 if __name__ == '__main__':
