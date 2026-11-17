@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {BASE_WEIGHTS,scoreRacer,evaluateSnapshot,calibrate} from './boat-score-2-calibration.js';
+const full={nationalWinRate:10,localWinRate:10,motorTwoWinRate:100,recent50WinRate:100,exhibitionScore:100};
+assert.equal(scoreRacer(full),100);
+assert.equal(scoreRacer({...full,recent50WinRate:undefined}),null);
+const row=(date,race)=>({date,venue:23,race,preRaceSnapshot:true,resultVerified:true,racers:Array.from({length:6},(_,i)=>({boat:i+1,...full,nationalWinRate:10-i})),finishOrder:[1,2,3,4,5,6]});
+assert.equal(evaluateSnapshot(row('20261115',1)).winnerHit,true);
+assert.equal(evaluateSnapshot({...row('20261115',1),preRaceSnapshot:false}),null);
+assert.equal(calibrate([row('20261115',1)]).status,'insufficient_history');
+const rows=[...Array.from({length:12},(_,i)=>row('20261114',i+1)),...Array.from({length:12},(_,i)=>row('20261115',i+1)),...Array.from({length:12},(_,i)=>row('20261116',i+1)),...Array.from({length:12},(_,i)=>row('20261117',i+1))];
+const result=calibrate(rows,{minTrain:24,minTest:12});
+assert.equal(result.status,'evaluated');assert.equal(result.testDates[0],'20261117');
+assert.deepEqual(result.baselineWeights,BASE_WEIGHTS);
+assert.equal(calibrate([...rows,rows[0]],{minTrain:24,minTest:12}).status,'duplicate_races');
+console.log('Offline calibration tests passed');
