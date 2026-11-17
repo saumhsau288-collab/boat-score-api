@@ -1,0 +1,55 @@
+{
+  "files": [
+    {
+      "file": "B261116.TXT",
+      "status": "decoded_text_preview",
+      "encoding": "cp932",
+      "bytes": 109766,
+      "sha256": "1aeb06263f73ecd6ced9dbde8f224511dfc8eb1118412f36bf0ab0781e77c86c",
+      "lineCount": 1562,
+      "firstLines": [
+        "STARTB",
+        "24BBGN",
+        "ボートレース大　村   １１月１６日  アサヒビールカップ　  第　６日",
+        "",
+        "                            ＊＊＊　番組表　＊＊＊",
+        "",
+        "          アサヒビールカップ　　　　　　　　　　　　　　　　",
+        "",
+        "   第　６日          ２０２６年１１月１６日                  ボートレース大　村",
+        "",
+        "               －内容については主催者発行のものと照合して下さい－",
+        ""
+      ],
+      "parsedRaces": 0,
+      "verifiedRacerMetrics": 0,
+      "warning": "Preview only: no field offsets or historical point-in-time verification"
+    },
+    {
+      "file": "K261116.TXT",
+      "status": "decoded_text_preview",
+      "encoding": "cp932",
+      "bytes": 140984,
+      "sha256": "6dbbe944231395e79bfb0d60da3df818f04028e00264b1a9436affa86e822710",
+      "lineCount": 2802,
+      "firstLines": [
+        "STARTK",
+        "24KBGN",
+        "大　村［成績］     11/16      アサヒビールカップ　  第 6日",
+        "",
+        "                            ＊＊＊　競走成績　＊＊＊",
+        "",
+        "          アサヒビールカップ　　　　　　　　　　　　　　　　",
+        "",
+        "   第 6日          2026/11/16                             ボートレース大　村",
+        "",
+        "               －内容については主催者発行のものと照合して下さい－",
+        ""
+      ],
+      "parsedRaces": 0,
+      "verifiedRacerMetrics": 0,
+      "warning": "Preview only: no field offsets or historical point-in-time verification"
+    }
+  ],
+  "calibrationReady": false
+}
