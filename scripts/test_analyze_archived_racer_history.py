@@ -2,7 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from analyze_archived_racer_history import load_unique_days, archive_date_coverage
+from analyze_archived_racer_history import load_unique_days, archive_date_coverage, archived_quality_summary
 
 
 class ArchivedHistoryTests(unittest.TestCase):
@@ -76,6 +76,26 @@ class ArchivedHistoryTests(unittest.TestCase):
             Path(d, '20260230.json').write_text('{}')
             with self.assertRaisesRegex(ValueError, 'Invalid archive date'):
                 archive_date_coverage(d)
+
+
+    def test_archive_quality_counts_rejections(self):
+        with tempfile.TemporaryDirectory() as d:
+            payload = {'reports': [{'records': [{'date': '20261117', 'venue': 1, 'race': 1}]}],
+                       'venueSummary': [{'venue': 1, 'matchedRaces': 1, 'rejectedRaces': [2, 3]},
+                                        {'venue': 2, 'matchedRaces': 0, 'rejectedRaces': [1]}]}
+            Path(d, '20261117.json').write_text(json.dumps(payload))
+            quality = archived_quality_summary(d)
+            self.assertEqual(quality['totalVerifiedRaces'], 1)
+            self.assertEqual(quality['totalRejectedRaces'], 3)
+            self.assertEqual(quality['days'][0]['venuesWithNoVerifiedRaces'], [2])
+
+    def test_archive_quality_mismatch_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            payload = {'reports': [{'records': []}],
+                       'venueSummary': [{'venue': 1, 'matchedRaces': 1, 'rejectedRaces': []}]}
+            Path(d, '20261117.json').write_text(json.dumps(payload))
+            with self.assertRaisesRegex(ValueError, 'count mismatch'):
+                archived_quality_summary(d)
 
 
 if __name__ == '__main__':
