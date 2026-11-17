@@ -1903,13 +1903,15 @@ const htmlLength = html.length;
      const parsedLast50 = parseLast50Heatmap(html);
      const verifiedRows = parsedLast50.verified && officialRacers.verified
        ? officialRacers.racers.map(racer=>{
-           const row=parsedLast50.rows.find(x=>x.boat===racer.boat&&x.name.replace(/\s/g,'')===racer.name.replace(/\s/g,''));
+           const row=parsedLast50.rows.find(x=>x.boat===racer.boat&&normalizeLast50RacerName(x.name)===normalizeLast50RacerName(racer.name));
            return {boat:racer.boat,name:racer.name,counts:row?.counts??null,runs:row?.runs??null,verified:!!row};
          })
        : verifyHeatmapBoats(html, officialRacers);
      const last50MatchesOfficial = parsedLast50.verified && officialRacers.verified &&
-       parsedLast50.rows.every(row => officialRacers.racers.some(r => r.boat === row.boat && r.name.replace(/\s/g,'') === row.name.replace(/\s/g,''))) &&
-       officialRacers.racers.every(r => parsedLast50.rows.some(row=>row.boat===r.boat&&row.name.replace(/\s/g,'')===r.name.replace(/\s/g,'')));
+       parsedLast50.rows.every(row => officialRacers.racers.some(r => r.boat === row.boat && normalizeLast50RacerName(r.name) === normalizeLast50RacerName(row.name))) &&
+       officialRacers.racers.every(r => parsedLast50.rows.some(row=>row.boat===r.boat&&normalizeLast50RacerName(row.name)===normalizeLast50RacerName(r.name))) &&
+       new Set(parsedLast50.rows.map(row=>normalizeLast50RacerName(row.name))).size===6 &&
+       new Set(officialRacers.racers.map(row=>normalizeLast50RacerName(row.name))).size===6;
      const allSixVerified = verifiedRows.length === 6 &&
        verifiedRows.every(row => row.verified === true) &&
        new Set(verifiedRows.map(row => row.boat)).size === 6;
@@ -2421,6 +2423,12 @@ function parseOfficialFinishOrder(html) {
   return {verified:false,finishOrder:[],podiumVerified:false,podium:[],reason:diagnostics.candidateTables?'result_rows_incomplete_or_nonstandard':'result_table_missing',parserDiagnostics:diagnostics};
 }
 
+// Normalize harmless typography differences only; never infer a racer from a partial name.
+function normalizeLast50RacerName(value) {
+  return String(value ?? '').normalize('NFKC')
+    .replace(/[\\s\\u00a0\\u200b-\\u200d\\u3000・･]/g, '')
+    .replace(/(?:&nbsp;|&#160;|&#xA0;)/gi, '');
+}
 function parseLast50Heatmap(html) {
   const section = html.split(/枠番別ヒートマップ/)[1];
   if (!section) return {verified:false,rows:[],reason:'heading_missing'};
@@ -2440,7 +2448,7 @@ function parseLast50Heatmap(html) {
     return {boat:Number(cells[0]),name:cells[1],counts,runs,average:avg};
   }).filter(Boolean);
   const verified = rows.length===6 && new Set(rows.map(r=>r.boat)).size===6 &&
-    new Set(rows.map(r=>r.name.replace(/\s/g,''))).size===6;
+    new Set(rows.map(r=>normalizeLast50RacerName(r.name))).size===6;
   return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table'};
 }
 
