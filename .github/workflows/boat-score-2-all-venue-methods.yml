@@ -13,6 +13,11 @@ on:
         description: 'Number of consecutive days (1 to 28; scheduled runs use 7)'
         required: true
         default: '3'
+      persist_history:
+        description: 'Also persist verified daily reports on isolated historical-research-data branch'
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [main]
     paths:
@@ -114,7 +119,7 @@ jobs:
           print(json.dumps(summary,ensure_ascii=False))
           PY
       - name: Persist verified daily reports on isolated research branch
-        if: github.event_name == 'schedule'
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.persist_history == true)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
