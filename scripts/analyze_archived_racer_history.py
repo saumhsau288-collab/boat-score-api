@@ -43,13 +43,32 @@ def archived_quality_summary(directory):
             raise ValueError('Missing venue quality summary: ' + file.name)
         matched = sum(v['matchedRaces'] for v in summaries)
         rejected = sum(len(v['rejectedRaces']) for v in summaries)
+        reason_counts = {}
+        for venue in summaries:
+            details = venue.get('rejectionDetails', [])
+            if details:
+                if len(details) != len(venue['rejectedRaces']):
+                    raise ValueError('Rejection detail count mismatch: ' + file.name)
+                if sorted(item['race'] for item in details) != sorted(venue['rejectedRaces']):
+                    raise ValueError('Rejection detail race mismatch: ' + file.name)
+                for item in details:
+                    reason = item['reason']
+                    if reason not in ('missing_valid_program', 'missing_valid_result', 'racer_id_mismatch'):
+                        raise ValueError('Unknown rejection reason: ' + str(reason))
+                    reason_counts[reason] = reason_counts.get(reason, 0) + 1
+            else:
+                reason_counts['legacy_unclassified'] = reason_counts.get('legacy_unclassified', 0) + len(venue['rejectedRaces'])
         verified = sum(len(v['records']) for v in report['reports'])
         if matched != verified:
             raise ValueError('Verified race count mismatch: ' + file.name)
         days.append({'date': file.stem, 'verifiedRaces': matched,
-                     'rejectedRaces': rejected,
+                     'rejectedRaces': rejected, 'rejectionReasons': reason_counts,
                      'venuesWithNoVerifiedRaces': [v['venue'] for v in summaries if v['matchedRaces'] == 0]})
-    return {'days': days,
+    totals = {}
+    for day in days:
+        for reason, count in day['rejectionReasons'].items():
+            totals[reason] = totals.get(reason, 0) + count
+    return {'days': days, 'rejectionReasons': totals,
             'totalVerifiedRaces': sum(d['verifiedRaces'] for d in days),
             'totalRejectedRaces': sum(d['rejectedRaces'] for d in days),
             'warning': 'Rejected races are excluded, not treated as non-events; archived sample may be biased'}
