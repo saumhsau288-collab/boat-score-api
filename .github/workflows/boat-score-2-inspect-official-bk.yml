@@ -27,6 +27,8 @@ jobs:
           python-version: '3.12'
       - name: Test text inspector
         run: python3 -m unittest discover -s scripts -p 'test_inspect_official_bk.py'
+      - name: Test B/K race join parser
+        run: python3 -m unittest discover -s scripts -p 'test_parse_official_bk.py'
       - name: Install LZH extractor
         if: github.event_name != 'pull_request'
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
@@ -53,6 +55,14 @@ jobs:
           done
           find data/decoded -type f -print
           python3 scripts/inspect_official_bk.py $(find data/decoded -type f) --output data/inspection.json
+      - name: Parse and cross-check historical race records
+        if: success() && github.event_name != 'pull_request'
+        run: |
+          DAY="$(cat archive-date.txt)"
+          DATE="${DAY//-/}"
+          BFILE="$(find data/decoded/B -type f -name '*.TXT' | head -n1)"
+          KFILE="$(find data/decoded/K -type f -name '*.TXT' | head -n1)"
+          python3 scripts/parse_official_bk.py --b "$BFILE" --k "$KFILE" --date "$DATE" --venue 24 --output data/bk-joined.json
       - name: Upload inspection summary only
         if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
@@ -61,6 +71,7 @@ jobs:
           path: |
             data/raw/manifest.json
             data/inspection.json
+            data/bk-joined.json
           if-no-files-found: warn
           retention-days: 7
       - name: Publish inspection report to isolated branch
@@ -69,6 +80,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           cp data/inspection.json /tmp/boat-score-2-inspection.json
+          cp data/bk-joined.json /tmp/boat-score-2-joined.json
           git fetch origin historical-inspection-output || true
           if git show-ref --verify --quiet refs/remotes/origin/historical-inspection-output; then
             git switch -C historical-inspection-output origin/historical-inspection-output
@@ -78,7 +90,8 @@ jobs:
           fi
           mkdir -p reports
           cp /tmp/boat-score-2-inspection.json reports/official-bk-2026-11-16.json
-          git add reports/official-bk-2026-11-16.json
+          cp /tmp/boat-score-2-joined.json reports/official-bk-joined-2026-11-16.json
+          git add reports/official-bk-2026-11-16.json reports/official-bk-joined-2026-11-16.json
           if ! git diff --cached --quiet; then
             git commit -m "Record official B/K text inspection for 2026-11-16"
             git push origin HEAD:historical-inspection-output
