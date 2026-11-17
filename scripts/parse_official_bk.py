@@ -7,6 +7,7 @@ B_RACE=re.compile(r'^\s*([０-９]{1,2})Ｒ\s')
 K_RACE=re.compile(r'^\s*([1-9]|1[0-2])R\s')
 B_BOAT=re.compile(r'^([1-6])\s+(\d{4})(.+?)\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+)\s+(\d+\.\d{2})\s+(\d+)\s+(\d+\.\d{2})(?:\s|$)')
 K_FINISH=re.compile(r'^\s*(0[1-6])\s+([1-6])\s+(\d{4})\s')
+K_COURSE=re.compile(r'^\s*(0[1-6])\s+([1-6])\s+(\d{4})\s+.*?\s+\d+\s+\d+\s+\d+\.\d{2}\s+([1-6])\s+')
 K_PAY=re.compile(r'^\s*([1-9]|1[0-2])R\s+([1-6])-([1-6])-([1-6])\s+\d+')
 def venue_section(text,venue,kind):
     """Isolate one official venue block; never mix races from different venues."""
@@ -35,22 +36,27 @@ def parse_b(text):
         races[current].append(racer)
     return {r:sorted(v,key=lambda x:x['boat']) for r,v in races.items() if len(v)==6 and {x['boat'] for x in v}==set(range(1,7)) and len({x['racerId'] for x in v})==6}
 def parse_k(text):
-    races={};current=None;pay={}
+    races={};current=None;pay={};courses={}
     for line in text.splitlines():
         m=K_PAY.match(line)
         if m and len({int(m.group(i)) for i in (2,3,4)})==3:pay[int(m.group(1))]=[int(m.group(i)) for i in (2,3,4)]
         m=K_RACE.match(line)
         if m:
-            current=int(m.group(1));races[current]=[];continue
+            current=int(m.group(1));races[current]=[];courses[current]=[];continue
         if current is None:continue
         m=K_FINISH.match(line)
-        if m:races[current].append((int(m.group(1)),int(m.group(2)),m.group(3)))
+        if m:
+            races[current].append((int(m.group(1)),int(m.group(2)),m.group(3)))
+            cm=K_COURSE.match(line)
+            if cm and cm.group(3)==m.group(3) and cm.group(2)==m.group(2) and cm.group(1)==m.group(1):courses[current].append((int(cm.group(2)),int(cm.group(4))))
     valid={}
     for r,v in races.items():
         if len(v)!=6 or [x[0] for x in v]!=list(range(1,7)) or len({x[1] for x in v})!=6:continue
         order=[x[1] for x in v]
         if pay.get(r)!=order[:3]:continue
-        valid[r]={'finishOrder':order,'racerIds':{boat:ident for _,boat,ident in v}}
+        course_pairs=courses.get(r,[])
+        verified_courses=len(course_pairs)==6 and len({boat for boat,_ in course_pairs})==6 and {course for _,course in course_pairs}==set(range(1,7))
+        valid[r]={'finishOrder':order,'racerIds':{boat:ident for _,boat,ident in v},'entryCourseByBoat':dict(course_pairs) if verified_courses else None,'entryCourseVerified':verified_courses}
     return valid
 def join(b,k,date,venue):
     if not re.fullmatch(r'20\d{6}',date) or not 1<=venue<=24:raise ValueError('invalid date/venue')
@@ -59,6 +65,7 @@ def join(b,k,date,venue):
         if r not in b or r not in k or any(k[r]['racerIds'].get(x['boat'])!=x['racerId'] for x in b[r]):
             rejected.append(r);continue
         out.append({'date':date,'venue':venue,'race':r,'racers':b[r],'finishOrder':k[r]['finishOrder'],
+          'entryCourseByBoat':k[r]['entryCourseByBoat'],'entryCourseVerified':k[r]['entryCourseVerified'],
           'resultVerified':True,'historicalProgramSource':'official_B_archive',
           'historicalResultSource':'official_K_archive','asOfVerified':False,
           'capturedBeforeStart':False,'eligibleForWeightCalibration':False})
