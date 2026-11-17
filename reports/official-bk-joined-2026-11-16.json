@@ -1250,6 +1250,7 @@
     }
   ],
   "rejectedRaces": [],
+  "rejectionDetails": [],
   "matchedRaces": 12,
   "warning": "B file program metrics are not yet independently verified as pre-race snapshots. Do not optimize/deploy weights."
 }
