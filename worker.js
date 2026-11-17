@@ -315,7 +315,7 @@ function recent50SupplementForSelection(){
  const rows=verifiedMakulabo.rows;
  if(!Array.isArray(rows)||rows.length!==6||new Set(rows.map(x=>Number(x.boat))).size!==6)return null;
  const values=rows.map(row=>{
-  const counts=row.counts,runs=row.runs;
+  const counts=Array.isArray(row.counts)?row.counts.map(Number):null,runs=Number(row.runs);
   if(!Number.isInteger(Number(row.boat))||Number(row.boat)<1||Number(row.boat)>6||
      !Number.isInteger(runs)||runs<1||runs>50||!Array.isArray(counts)||counts.length!==6||
      !counts.every(n=>Number.isInteger(n)&&n>=0)||counts.reduce((a,b)=>a+b,0)!==runs)return null;
@@ -542,7 +542,7 @@ document.getElementById('predictSelected').onclick=async function(){
    +'従来本命1点目の1着艇：'+(firstChoice?firstChoice+'号艇':'未確認')+'\n'
    +(firstChoice&&Number(firstChoice)!==sorted[0].boat?'※従来予想の軸と50走の首位が異なります。要検証。':'※50走は参考指標であり、コース別成績を確認するまで自動補正しません。')
    +'\n※50走の1着率はコース別の1着率ではありません。';
- })():'【直近50走との比較】\\n照合済み6艇がないため比較を保留します。';
+ })():'【直近50走との比較】\n照合済み6艇がないため比較を保留します。';
  const base=d.basePrediction;
  const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
  out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+stSubstitutionNote+'\n\n'+comparison+'\n\n'+recent50Note+'\n\n'+recent50Comparison+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
