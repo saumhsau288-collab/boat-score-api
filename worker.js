@@ -534,9 +534,18 @@ document.getElementById('predictSelected').onclick=async function(){
  const stSubstitutionNote=stSubstitutions.length?'\n公式平均STで代用：'+stSubstitutions.map(x=>x.boat+'号艇 '+x.original+' → '+x.averageST.toFixed(2)).join('、'):'';
  const recent50=recent50SupplementForSelection();
  const recent50Note=recent50?'【まくらぼ直近50走・参考加点（最大10点、買い目未反映）】\n'+recent50.map(x=>x.boat+'号艇 '+x.runs+'走 / 1着率 '+x.winRate.toFixed(1)+'% / '+x.points.toFixed(2)+'点').join('\n'):'【まくらぼ直近50走】\nこのレースの照合済みデータはありません。参考加点は未算出です。';
+ const recent50Comparison=recent50?(()=>{
+  const sorted=[...recent50].sort((a,b)=>b.points-a.points||a.boat-b.boat);
+  const firstChoice=Array.isArray(d.main)&&d.main.length?String(d.main[0]).split(/[^1-6]+/).filter(Boolean)[0]:null;
+  return '【従来予想と直近50走の比較（検証用・買い目変更なし）】\\n'
+   +'直近50走の1着率順位：'+sorted.map(x=>x.boat+'号艇('+x.winRate.toFixed(1)+'%)').join(' ＞ ')+'\n'
+   +'従来本命1点目の1着艇：'+(firstChoice?firstChoice+'号艇':'未確認')+'\n'
+   +(firstChoice&&Number(firstChoice)!==sorted[0].boat?'※従来予想の軸と50走の首位が異なります。要検証。':'※50走は参考指標であり、コース別成績を確認するまで自動補正しません。')
+   +'\n※50走の1着率はコース別の1着率ではありません。';
+ })():'【直近50走との比較】\\n照合済み6艇がないため比較を保留します。';
  const base=d.basePrediction;
  const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+stSubstitutionNote+'\n\n'+comparison+'\n\n'+recent50Note+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+stSubstitutionNote+'\n\n'+comparison+'\n\n'+recent50Note+'\n\n'+recent50Comparison+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
@@ -919,9 +928,9 @@ document.getElementById('loadSelectedRaceEvidence').addEventListener('click',asy
     if(id==='loadBeforeInfo'&&(/取得失敗|未取得|確認済|取得でき|エラー|失敗|展示|風/.test(last)&&!/確認中/.test(last)))break;
     if(id==='fetchOfficialFinish'&&(/確認済|未確認|取得失敗|エラー|失敗/.test(last)&&!/取得中/.test(last)))break;
    }
-   out.textContent=(i+1)+'/3 '+name+'の取得を実行しました。\\n'+(last||'応答待ち・取得状況は各欄を確認してください。')+'\\n※データが揃わない場合は分析を保留します。';
+   out.textContent=(i+1)+'/3 '+name+'の取得を実行しました。\\n'+(last||'応答待ち・取得状況は各欄を確認してください。')+'\n※データが揃わない場合は分析を保留します。';
   }
-  if(version===evidenceLoadVersion){const key=currentDataKey(),csvOk=priorSnapshotKey===key&&priorSnapshot?.officialVerified===true,exOk=officialSnapshotKey===key&&officialSnapshot?.exhibitionVerified===true,stOk=officialSnapshotKey===key&&officialSnapshot?.startVerified===true,resultOk=verifiedFinish?.key===key&&Array.isArray(verifiedFinish.places)&&verifiedFinish.places.length===3;const complete=csvOk&&exOk&&stOk&&resultOk;out.textContent+='\\n【取得後の照合判定】\\nCSV登録番号：'+(csvOk?'公式6艇一致':'未確認')+'\\n展示6艇：'+(exOk?'確認済':'未確認')+'\\n進入6艇：'+(stOk?'確認済':'未確認')+'\\n公式確定着順：'+(resultOk?'確認済':'未確認')+'\\n'+(complete?'4条件が揃いました。「条件と着順を照合」を押して検証を進めてください。':'不足データがあるため、検証登録は保留してください。')+'\\n※まくらぼ直近50走は別途未確認です。';}
+  if(version===evidenceLoadVersion){const key=currentDataKey(),csvOk=priorSnapshotKey===key&&priorSnapshot?.officialVerified===true,exOk=officialSnapshotKey===key&&officialSnapshot?.exhibitionVerified===true,stOk=officialSnapshotKey===key&&officialSnapshot?.startVerified===true,resultOk=verifiedFinish?.key===key&&Array.isArray(verifiedFinish.places)&&verifiedFinish.places.length===3;const complete=csvOk&&exOk&&stOk&&resultOk;out.textContent+='\\n【取得後の照合判定】\\nCSV登録番号：'+(csvOk?'公式6艇一致':'未確認')+'\\n展示6艇：'+(exOk?'確認済':'未確認')+'\\n進入6艇：'+(stOk?'確認済':'未確認')+'\\n公式確定着順：'+(resultOk?'確認済':'未確認')+'\n'+(complete?'4条件が揃いました。「条件と着順を照合」を押して検証を進めてください。':'不足データがあるため、検証登録は保留してください。')+'\n※まくらぼ直近50走は別途未確認です。';}
  }finally{if(version===evidenceLoadVersion)button.disabled=false}
 });
 document.getElementById('reviewSelectedEvidence').addEventListener('click',()=>{
@@ -947,10 +956,10 @@ document.getElementById('scanOfficialResults').addEventListener('click',async()=
     if(valid){verified++;confirmed.push({race,order:order.slice(0,3)});rows.push(race+'R：確認済 '+order.slice(0,3).join('-'))}
     else{failed++;const reason=String(data.reason||'HTTP '+response.status);reasons[reason]=(reasons[reason]||0)+1;rows.push(race+'R：未確認 '+reason)}
    }catch(err){if(version!==scanVersion)return;failed++;reasons.fetch_or_parse_error=(reasons.fetch_or_parse_error||0)+1;rows.push(race+'R：取得失敗 '+String(err.message||err))}
-   out.textContent='選択日・同場の結果取得診断 '+race+'/12\\n確認済：'+verified+' / 未確認：'+failed+'\\n'+rows.join('\\n');
+   out.textContent='選択日・同場の結果取得診断 '+race+'/12\\n確認済：'+verified+' / 未確認：'+failed+'\n'+rows.join('\\n');
   }
   if(version===scanVersion){choice.replaceChildren(new Option(confirmed.length?'確認済みレースを選択':'確認済みレースなし',''));for(const item of confirmed)choice.add(new Option(item.race+'R：'+item.order.join('-'),String(item.race)));open.disabled=confirmed.length===0;}
-  if(version===scanVersion)out.textContent+='\\n【診断集計】\\n確認済：'+verified+'/12\\n未確認：'+failed+'/12\\n失敗理由：'+(Object.entries(reasons).map(([k,v])=>k+' '+v+'件').join('、')||'なし')+'\\n※取得状況の診断です。予想データとの照合や的中率の検証ではありません。';
+  if(version===scanVersion)out.textContent+='\\n【診断集計】\\n確認済：'+verified+'/12\\n未確認：'+failed+'/12\\n失敗理由：'+(Object.entries(reasons).map(([k,v])=>k+' '+v+'件').join('、')||'なし')+'\n※取得状況の診断です。予想データとの照合や的中率の検証ではありません。';
  }finally{if(version===scanVersion)button.disabled=false}
 });
 let finishFetchVersion=0;let verifiedFinish=null;
@@ -967,7 +976,7 @@ document.getElementById('fetchOfficialFinish').addEventListener('click',async()=
  try{
   const res=await fetch('/api/official/result?date='+date+'&venue='+venue+'&race='+race);
   const d=await res.json();if(version!==finishFetchVersion)return;
-  diagnostics.textContent='API応答：HTTP '+res.status+'\\n照合：'+(d.verified===true?'成功':'未確認')+'\\n理由：'+String(d.reason||'なし')+'\\n公式ページHTTP：'+String(d.diagnostics?.upstreamStatus??d.upstreamStatus??'不明')+'\\nHTML文字数：'+String(d.diagnostics?.htmlBytes??'不明')+'\\nテーブル数：'+String(d.diagnostics?.tableCount??'不明')+'\\n結果見出し検出：'+String(d.diagnostics?.hasResultHeading??'不明')+'\\n候補テーブル：'+String(d.parserDiagnostics?.candidateTables??'不明')+' / 読取行数：'+String(d.parserDiagnostics?.parsedRows??'不明')+' / 数字以外の着順：'+String(d.parserDiagnostics?.nonNumericRanks??'不明')+'\\n※公式ページの構造変更・未公開・通信失敗を区別するための診断です。';
+  diagnostics.textContent='API応答：HTTP '+res.status+'\\n照合：'+(d.verified===true?'成功':'未確認')+'\\n理由：'+String(d.reason||'なし')+'\\n公式ページHTTP：'+String(d.diagnostics?.upstreamStatus??d.upstreamStatus??'不明')+'\\nHTML文字数：'+String(d.diagnostics?.htmlBytes??'不明')+'\\nテーブル数：'+String(d.diagnostics?.tableCount??'不明')+'\\n結果見出し検出：'+String(d.diagnostics?.hasResultHeading??'不明')+'\\n候補テーブル：'+String(d.parserDiagnostics?.candidateTables??'不明')+' / 読取行数：'+String(d.parserDiagnostics?.parsedRows??'不明')+' / 数字以外の着順：'+String(d.parserDiagnostics?.nonNumericRanks??'不明')+'\n※公式ページの構造変更・未公開・通信失敗を区別するための診断です。';
   const order=Array.isArray(d.finishOrder)?d.finishOrder.map(x=>Number(x)):[];
   if(!res.ok||d.verified!==true||order.length!==6||order.some(x=>!Number.isInteger(x)||x<1||x>6)||new Set(order).size!==6){status.textContent='公式確定着順を照合できません：'+String(d.reason||'未確認');return}
   ['finish1','finish2','finish3'].forEach((id,i)=>{document.getElementById(id).value=String(order[i])});
@@ -982,7 +991,7 @@ function updateReviewAggregate(){
  if(!records.length){out.textContent='公式結果照合済みの集計0レース（この画面を閉じると消えます）';return}
  const groups=[['事前3指標の最高値が2項目以上',x=>x.leaderCount>=2],['展示タイム最短',x=>x.fastest],['展示進入変動',x=>x.courseChange]];
  const lines=groups.map(([label,test])=>{let total=0,top3=0,first=0,raceCount=0,raceFirst=0,raceTop3=0;for(const r of records){const eligible=r.observations.filter(test);if(eligible.length){raceCount++;if(eligible.some(x=>r.places[0]===x.boat))raceFirst++;if(eligible.some(x=>r.places.includes(x.boat)))raceTop3++}for(const x of eligible){total++;if(r.places.includes(x.boat))top3++;if(r.places[0]===x.boat)first++}}return label+'：該当 '+raceCount+'レース / 1着該当 '+raceFirst+'レース / 3着以内該当 '+raceTop3+'レース（艇別：'+total+'艇、1着'+first+'艇、3着以内'+top3+'艇）'});
- out.textContent='公式確定着順を取得済みの一時集計：'+records.length+'レース / 30レース目標まで残り '+Math.max(0,30-records.length)+'レース（重複レースは上書き）\\n'+lines.join('\\n')+'\\n※公式結果APIで照合した着順のみ集計。該当艇の件数であり的中率・予測精度ではありません。';
+ out.textContent='公式確定着順を取得済みの一時集計：'+records.length+'レース / 30レース目標まで残り '+Math.max(0,30-records.length)+'レース（重複レースは上書き）\\n'+lines.join('\\n')+'\n※公式結果APIで照合した着順のみ集計。該当艇の件数であり的中率・予測精度ではありません。';
 }
 document.getElementById('saveReview').addEventListener('click',()=>{
  if(!pendingReview||pendingReview.officialResultVerified!==true)return;
@@ -1022,7 +1031,7 @@ document.getElementById('importReviews').addEventListener('change',async()=>{
   if([...records.values()].some(r=>r.observations.length!==6||new Set(r.observations.map(x=>x.boat)).size!==6))throw Error('6艇分揃っていないレースがあります');
   const groups=[['事前3項目で2項目以上最高',x=>x.leaderCount>=2],['展示最短',x=>x.fastest],['展示進入変動',x=>x.courseChange]];
   const linesOut=groups.map(([label,test])=>{let hits=0,first=0,top3=0,raceCount=0,raceFirst=0,raceTop3=0;for(const r of records.values()){const eligible=r.observations.filter(test);if(eligible.length){raceCount++;if(eligible.some(x=>r.places[0]===x.boat))raceFirst++;if(eligible.some(x=>r.places.includes(x.boat)))raceTop3++}for(const x of eligible){hits++;if(r.places[0]===x.boat)first++;if(r.places.includes(x.boat))top3++}}return label+'：該当 '+raceCount+'レース / 1着該当 '+raceFirst+'レース / 3着以内該当 '+raceTop3+'レース（艇別 '+hits+'艇）'});
-  out.textContent='CSV参考集計：'+records.size+'レース / 30レース目標まで残り '+Math.max(0,30-records.size)+'レース\\n'+linesOut.join('\\n')+'\\n※CSV内の公式照合済みフラグは自己申告値です。今回の読み込みで公式サイトへの再照合は行っていません。現行の公式確認済み集計には混ぜません。';
+  out.textContent='CSV参考集計：'+records.size+'レース / 30レース目標まで残り '+Math.max(0,30-records.size)+'レース\\n'+linesOut.join('\\n')+'\n※CSV内の公式照合済みフラグは自己申告値です。今回の読み込みで公式サイトへの再照合は行っていません。現行の公式確認済み集計には混ぜません。';
  }catch(e){out.textContent='CSV読込失敗：'+String(e.message||e)}finally{input.value=''}
 });
 document.getElementById('clearReviews').addEventListener('click',()=>{reviewRecords.clear();pendingReview=null;document.getElementById('saveReview').disabled=true;updateReviewAggregate()});
@@ -1044,7 +1053,7 @@ document.getElementById('reviewResult').addEventListener('click',()=>{
  const observations=boats.map(b=>{const e=ex.find(x=>Number(x.boat)===Number(b.boat)),t=starts.find(x=>Number(x.boat)===Number(b.boat));return {boat:Number(b.boat),leaderCount:keys.filter((k,i)=>num(b[k])===max[i]).length,fastest:e?Number(e.exhibitionTime)===min:false,courseChange:t?Number(t.course)!==Number(b.boat):false}});
  const key=currentReviewKey();const officialResultVerified=verifiedFinish?.key===key&&verifiedFinish.places.every((x,i)=>x===places[i]);
  pendingReview={key,places,observations,officialResultVerified};document.getElementById('saveReview').disabled=!officialResultVerified;
- out.textContent=(officialResultVerified?'公式結果取得済みの着順：':'手入力の着順（公式未照合・集計不可）：')+places.join('-')+'\\n'+observations.map(x=>x.boat+'号艇：'+(places.includes(x.boat)?places.indexOf(x.boat)+1+'着':'3着以内なし')+' / 事前最高値 '+x.leaderCount+'/3 / 展示最短 '+(x.fastest?'該当':'非該当')+' / 進入変動 '+(x.courseChange?'該当':'非該当')).join('\\n')+'\\n※単一レースの観察です。予測精度や的中率を示すものではありません。';
+ out.textContent=(officialResultVerified?'公式結果取得済みの着順：':'手入力の着順（公式未照合・集計不可）：')+places.join('-')+'\n'+observations.map(x=>x.boat+'号艇：'+(places.includes(x.boat)?places.indexOf(x.boat)+1+'着':'3着以内なし')+' / 事前最高値 '+x.leaderCount+'/3 / 展示最短 '+(x.fastest?'該当':'非該当')+' / 進入変動 '+(x.courseChange?'該当':'非該当')).join('\\n')+'\n※単一レースの観察です。予測精度や的中率を示すものではありません。';
 });
 function renderEvidenceMatrix(){
  const host=document.getElementById('evidenceMatrix');if(!host)return;host.replaceChildren();
@@ -1106,7 +1115,7 @@ function updateRaceChange(){
    }
   }else evidence.push('事前指標不足：比較保留');
  }else evidence.push('公式登録番号・展示・進入の照合不足：比較保留');
- box.textContent='事前→直前の項目別照合（優劣や買い目は未判定）\\n'+parts.join('\\n')+'\\n【直前の観察】\\n'+(observations.length?observations.join('\\n'):'照合できた観察項目なし')+'\\n※事前CSV数値は非公式。展示進入は本番進入の確定情報ではありません。まくらぼ50走・オッズは未反映。';
+ box.textContent='事前→直前の項目別照合（優劣や買い目は未判定）\\n'+parts.join('\\n')+'\\n【直前の観察】\\n'+(observations.length?observations.join('\\n'):'照合できた観察項目なし')+'\n※事前CSV数値は非公式。展示進入は本番進入の確定情報ではありません。まくらぼ50走・オッズは未反映。';
  box.textContent+='\\n【候補検討材料（未採点）】\\n'+(evidence.length?evidence.join('、'):'該当なし')+'\\n本命・逆転・穴の判定は保留。';
 }
 
