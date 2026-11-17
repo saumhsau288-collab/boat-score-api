@@ -45,7 +45,7 @@ jobs:
           if not 1<=days<=7:raise SystemExit('days must be 1..7')
           if end>datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date():raise SystemExit('future date')
           start=end-datetime.timedelta(days=days-1)
-          with open('archive-range.txt','w') as f:f.write(start.isoformat()+' '+end.isoformat())
+          with open('archive-range.txt','w') as f:f.write(start.isoformat()+' '+end.isoformat()+'\n')
           PY
           read START END < archive-range.txt
           python3 scripts/fetch_official_archives.py --start "$START" --end "$END" --out data/raw --max-days 7
