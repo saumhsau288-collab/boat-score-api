@@ -64,17 +64,21 @@ def parse_k(text):
     return valid
 def join(b,k,date,venue):
     if not re.fullmatch(r'20\d{6}',date) or not 1<=venue<=24:raise ValueError('invalid date/venue')
-    out=[];rejected=[]
+    out=[];rejected=[];rejection_details=[]
     for r in sorted(set(b)|set(k)):
         if r not in b or r not in k or any(k[r]['racerIds'].get(x['boat'])!=x['racerId'] for x in b[r]):
-            rejected.append(r);continue
+            reason = ('missing_valid_program' if r not in b else
+                      'missing_valid_result' if r not in k else 'racer_id_mismatch')
+            rejected.append(r)
+            rejection_details.append({'race':r,'reason':reason,'incidentStatus':'unverified'})
+            continue
         out.append({'date':date,'venue':venue,'race':r,'racers':b[r],'finishOrder':k[r]['finishOrder'],
           'entryCourseByBoat':k[r].get('entryCourseByBoat'),'entryCourseVerified':k[r].get('entryCourseVerified',False),
           'winningMethod':k[r].get('winningMethod'),'winningMethodVerified':k[r].get('winningMethodVerified',False),
           'resultVerified':True,'historicalProgramSource':'official_B_archive',
           'historicalResultSource':'official_K_archive','asOfVerified':False,
           'capturedBeforeStart':False,'eligibleForWeightCalibration':False})
-    return {'records':out,'rejectedRaces':rejected,'matchedRaces':len(out),'warning':'B file program metrics are not yet independently verified as pre-race snapshots. Do not optimize/deploy weights.'}
+    return {'records':out,'rejectedRaces':rejected,'rejectionDetails':rejection_details,'matchedRaces':len(out),'warning':'B file program metrics are not yet independently verified as pre-race snapshots. Do not optimize/deploy weights.'}
 def main():
     p=argparse.ArgumentParser();p.add_argument('--b',required=True);p.add_argument('--k',required=True);p.add_argument('--date',required=True);p.add_argument('--venue',type=int,required=True);p.add_argument('--output',required=True)
     a=p.parse_args()

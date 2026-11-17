@@ -9,7 +9,7 @@ def audit_all_venues(btext,ktext,date):
     reports=[]
     for venue in both:
         report=join(parse_b(venue_section(btext,venue,'B')),parse_k(venue_section(ktext,venue,'K')),date,venue)
-        reports.append({'venue':venue,'matchedRaces':report['matchedRaces'],'rejectedRaces':report['rejectedRaces']})
+        reports.append({'venue':venue,'matchedRaces':report['matchedRaces'],'rejectedRaces':report['rejectedRaces'],'rejectionDetails':report['rejectionDetails']})
     return {'date':date,'venueSummary':reports,'reports':[join(parse_b(venue_section(btext,v,'B')),parse_k(venue_section(ktext,v,'K')),date,v) for v in both]}
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--b',required=True);p.add_argument('--k',required=True);p.add_argument('--date',required=True);p.add_argument('--output',required=True);a=p.parse_args()
