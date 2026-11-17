@@ -1903,13 +1903,13 @@ const htmlLength = html.length;
      const parsedLast50 = parseLast50Heatmap(html);
      const verifiedRows = parsedLast50.verified && officialRacers.verified
        ? officialRacers.racers.map(racer=>{
-           const row=parsedLast50.rows.find(x=>x.boat===racer.boat&&normalizeLast50RacerName(x.name)===normalizeLast50RacerName(racer.name));
+           const row=parsedLast50.rows.find(x=>x.boat===racer.boat&&last50RacerNamesMatch(racer.name,x.name));
            return {boat:racer.boat,name:racer.name,counts:row?.counts??null,runs:row?.runs??null,verified:!!row};
          })
        : verifyHeatmapBoats(html, officialRacers);
      const last50MatchesOfficial = parsedLast50.verified && officialRacers.verified &&
-       parsedLast50.rows.every(row => officialRacers.racers.some(r => r.boat === row.boat && normalizeLast50RacerName(r.name) === normalizeLast50RacerName(row.name))) &&
-       officialRacers.racers.every(r => parsedLast50.rows.some(row=>row.boat===r.boat&&normalizeLast50RacerName(row.name)===normalizeLast50RacerName(r.name))) &&
+       parsedLast50.rows.every(row => officialRacers.racers.some(r => r.boat === row.boat && last50RacerNamesMatch(r.name,row.name))) &&
+       officialRacers.racers.every(r => parsedLast50.rows.some(row=>row.boat===r.boat&&last50RacerNamesMatch(r.name,row.name))) &&
        new Set(parsedLast50.rows.map(row=>normalizeLast50RacerName(row.name))).size===6 &&
        new Set(officialRacers.racers.map(row=>normalizeLast50RacerName(row.name))).size===6;
      const allSixVerified = verifiedRows.length === 6 &&
@@ -1934,7 +1934,7 @@ last50IdentityComparison: {
   parsedTableVerified: parsedLast50.verified === true,
   official: (officialRacers.racers || []).map(r=>({boat:r.boat,name:r.name})),
   parsed: (parsedLast50.rows || []).map(r=>({boat:r.boat,name:r.name,runs:r.runs})),
-  mismatches: (officialRacers.racers || []).filter(r=>!parsedLast50.rows.some(row=>row.boat===r.boat&&normalizeLast50RacerName(row.name)===normalizeLast50RacerName(r.name))).map(r=>({boat:r.boat,officialName:r.name,parsedName:parsedLast50.rows.find(row=>row.boat===r.boat)?.name??null}))
+  mismatches: (officialRacers.racers || []).filter(r=>!parsedLast50.rows.some(row=>row.boat===r.boat&&last50RacerNamesMatch(r.name,row.name))).map(r=>({boat:r.boat,officialName:r.name,parsedName:parsedLast50.rows.find(row=>row.boat===r.boat)?.name??null}))
 },
 last50Inspection: inspectLast50(html),
 last50ByBoat: last50MatchesOfficial ? parsedLast50.rows : [],
@@ -2435,6 +2435,13 @@ function normalizeLast50RacerName(value) {
   return String(value ?? '').normalize('NFKC')
     .replace(/[\s\u00a0\u200b-\u200d\u3000・･]/g, '')
     .replace(/(?:&nbsp;|&#160;|&#xA0;)/gi, '');
+}
+function last50RacerNamesMatch(officialName, heatmapName) {
+  const official = normalizeLast50RacerName(officialName);
+  const heatmap = normalizeLast50RacerName(heatmapName);
+  // Makulabo can shorten a given name by one character (e.g. 船岡洋一郎 -> 船岡洋一).
+  // Only accept a single-character truncation within the SAME numbered boat.
+  return official === heatmap || (heatmap.length >= 3 && official.length === heatmap.length + 1 && official.startsWith(heatmap));
 }
 function parseLast50Heatmap(html) {
   const section = html.split(/枠番別ヒートマップ/)[1];
