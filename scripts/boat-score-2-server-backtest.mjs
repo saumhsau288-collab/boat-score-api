@@ -25,7 +25,7 @@ const records=await pool(targets,3,async({venue,race},i)=>{
  const main=valid(prediction.main)?prediction.main.map(x=>x.join('-')):[];
  const upset=valid(prediction.upset)?prediction.upset.map(x=>x.join('-')):[];
  const record={date,venue,race,status:ready?'compared':'held',actual,main,upset,mainHit:ready?main.includes(actual):null,upsetHit:ready?upset.includes(actual):null,predictionReason:prediction.reason||prediction.error||null,resultReason:result.reason||result.error||null,missingInputs:prediction.missingInputs||[],predictionMode:'existing_Boat_Score_2_selected_race'};
- console.log((i+1)+'/'+targets.length,venue+'-'+race,record.status,actual||'-',ready?('main='+record.mainHit+' upset='+record.upsetHit):'');
+ console.log((i+1)+'/'+targets.length,venue+'-'+race,record.status,actual||'-',ready?('main='+record.mainHit+' upset='+record.upsetHit):'', 'predictionReason='+JSON.stringify(record.predictionReason), 'resultReason='+JSON.stringify(record.resultReason), 'missingInputs='+JSON.stringify(record.missingInputs), 'predictionReady='+JSON.stringify(prediction.ready), 'predictionKeys='+JSON.stringify(Object.keys(prediction)), 'resultKeys='+JSON.stringify(Object.keys(result)));
  return record;
 });
 const compared=records.filter(x=>x.status==='compared');
