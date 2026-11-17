@@ -310,6 +310,19 @@ function syncMakulaboLink(){const params=new URLSearchParams();if(/^20[0-9]{2}-[
 for(const el of [day,venue,race])el.addEventListener('change',syncMakulaboLink);
 syncMakulaboLink();
 let makulaboSearchToken=0,verifiedMakulabo=null;
+function recent50SupplementForSelection(){
+ if(!verifiedMakulabo||verifiedMakulabo.key!==dateCode()+':'+venue.value+':'+race.value)return null;
+ const rows=verifiedMakulabo.rows;
+ if(!Array.isArray(rows)||rows.length!==6||new Set(rows.map(x=>Number(x.boat))).size!==6)return null;
+ const values=rows.map(row=>{
+  const counts=row.counts,runs=row.runs;
+  if(!Number.isInteger(Number(row.boat))||Number(row.boat)<1||Number(row.boat)>6||
+     !Number.isInteger(runs)||runs<1||runs>50||!Array.isArray(counts)||counts.length!==6||
+     !counts.every(n=>Number.isInteger(n)&&n>=0)||counts.reduce((a,b)=>a+b,0)!==runs)return null;
+  return {boat:Number(row.boat),runs,winRate:counts[0]/runs*100,points:Math.round(counts[0]/runs*1000)/100};
+ });
+ return values.every(Boolean)?values.sort((a,b)=>a.boat-b.boat):null;
+}
 function syncVerifiedMakulaboComparison(){
  const tbody=document.getElementById('comparisonBody');
  if(!verifiedMakulabo||verifiedMakulabo.key!==dateCode()+':'+venue.value+':'+race.value)return 0;
@@ -355,7 +368,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
   const heading=document.createElement('h3');heading.textContent='まくらぼ直近50走の入賞率';result.appendChild(heading);result.appendChild(rateTable);
   verifiedMakulabo={key:date+':'+v+':'+r,rows:data.last50ByBoat};
   const updated=syncVerifiedMakulaboComparison();
-  status.textContent='まくらぼ6艇の取得・照合成功。選手比較表への反映：'+updated+'/6艇。'+(updated===0?'比較表の行数：'+document.getElementById('comparisonBody').querySelectorAll('tr').length+'。表示中の艇番と取得データの照合を確認してください。':'')+' 予想点数への反映は未実装です。';
+  status.textContent='まくらぼ6艇の取得・照合成功。選手比較表への反映：'+updated+'/6艇。参考加点は予想実行時に別表示します（買い目未反映）。'+(updated===0?'比較表の行数：'+document.getElementById('comparisonBody').querySelectorAll('tr').length+'。表示中の艇番と取得データの照合を確認してください。':'')+' 予想点数への反映は未実装です。';
  }catch(e){if(token===makulaboSearchToken)status.textContent='自動検索に失敗しました：'+(e.name==='TimeoutError'?'通信時間切れ':'通信エラー');}
  finally{if(token===makulaboSearchToken)this.disabled=false;}
 };
@@ -500,9 +513,11 @@ document.getElementById('predictSelected').onclick=async function(){
  const startNote=d.startAdjustmentApplied===true?'公式6艇の展示STを確認し、数値STを予想点数に小幅反映しました。進入は確認のみで点数には未反映です。':(startReason[d.startVerification]||'展示STの予想反映なし（'+(d.startVerification||'未確認')+'）。');
  const stSubstitutions=Array.isArray(d.averageSTSubstitutions)?d.averageSTSubstitutions:[];
  const stSubstitutionNote=stSubstitutions.length?'\n公式平均STで代用：'+stSubstitutions.map(x=>x.boat+'号艇 '+x.original+' → '+x.averageST.toFixed(2)).join('、'):'';
+ const recent50=recent50SupplementForSelection();
+ const recent50Note=recent50?'【まくらぼ直近50走・参考加点（最大10点、買い目未反映）】\\n'+recent50.map(x=>x.boat+'号艇 '+x.runs+'走 / 1着率 '+x.winRate.toFixed(1)+'% / '+x.points.toFixed(2)+'点').join('\\n'):'【まくらぼ直近50走】\\nこのレースの照合済みデータはありません。参考加点は未算出です。';
  const base=d.basePrediction;
  const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
- out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+stSubstitutionNote+'\n\n'+comparison+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
+ out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+stSubstitutionNote+'\n\n'+comparison+'\n\n'+recent50Note+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
