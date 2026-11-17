@@ -3,9 +3,13 @@ on:
   workflow_dispatch:
     inputs:
       archive_date:
-        description: 'Official archive date YYYY-MM-DD'
+        description: 'Final official archive date YYYY-MM-DD'
         required: true
         default: '2026-11-16'
+      days:
+        description: 'Number of consecutive days (1 to 7)'
+        required: true
+        default: '3'
   push:
     branches: [main]
     paths:
@@ -32,15 +36,19 @@ jobs:
       - name: Download daily official B/K archives
         env:
           ARCHIVE_DATE: ${{ inputs.archive_date || '2026-11-16' }}
+          DAYS: ${{ inputs.days || '3' }}
         run: |
           python3 - <<'PY'
           import datetime,os
-          d=datetime.date.fromisoformat(os.environ['ARCHIVE_DATE'])
-          if d>datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date():raise SystemExit('future date')
-          open('archive-date.txt','w').write(d.isoformat())
+          end=datetime.date.fromisoformat(os.environ['ARCHIVE_DATE'])
+          days=int(os.environ['DAYS'])
+          if not 1<=days<=7:raise SystemExit('days must be 1..7')
+          if end>datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date():raise SystemExit('future date')
+          start=end-datetime.timedelta(days=days-1)
+          with open('archive-range.txt','w') as f:f.write(start.isoformat()+' '+end.isoformat())
           PY
-          DAY="$(cat archive-date.txt)"
-          python3 scripts/fetch_official_archives.py --start "$DAY" --end "$DAY" --out data/raw
+          read START END < archive-range.txt
+          python3 scripts/fetch_official_archives.py --start "$START" --end "$END" --out data/raw --max-days 7
           mkdir -p data/decoded/B data/decoded/K
           for KIND in B K; do
             for F in data/raw/"$KIND"/*.lzh; do
@@ -50,22 +58,33 @@ jobs:
           done
       - name: Join all active venues and aggregate racer evidence
         run: |
-          DAY="$(cat archive-date.txt)"
-          DATE="${DAY//-/}"
-          BFILE="$(find data/decoded/B -type f -name '*.TXT' | head -n1)"
-          KFILE="$(find data/decoded/K -type f -name '*.TXT' | head -n1)"
-          python3 scripts/join_official_all_venues.py --b "$BFILE" --k "$KFILE" --date "$DATE" --output data/all-venues.json
+          mkdir -p data/reports
           python3 - <<'PY'
-          import json
-          d=json.load(open('data/all-venues.json'))
-          assert len(d['reports'])>0,'no verified venue results'
-          with open('data/all-venue-reports.json','w') as f:json.dump({'records':[r for x in d['reports'] for r in x['records']]},f,ensure_ascii=False)
+          import datetime,json,subprocess
+          from pathlib import Path
+          start,end=map(datetime.date.fromisoformat,Path('archive-range.txt').read_text().split())
+          reports=[]
+          for offset in range((end-start).days+1):
+            day=start+datetime.timedelta(days=offset)
+            date=day.strftime('%Y%m%d')
+            b=Path('data/decoded/B')/('B'+day.strftime('%y%m%d')+'.TXT')
+            k=Path('data/decoded/K')/('K'+day.strftime('%y%m%d')+'.TXT')
+            if not b.exists() or not k.exists():raise SystemExit('missing archive text '+date)
+            target=Path('data/reports')/(date+'.json')
+            subprocess.run(['python3','scripts/join_official_all_venues.py','--b',str(b),'--k',str(k),'--date',date,'--output',str(target)],check=True)
+            report=json.loads(target.read_text())
+            if not report['reports']:raise SystemExit('no matched venues '+date)
+            reports.extend(r['records'] for r in report['reports'])
+          rows=[r for day in reports for r in day]
+          if not rows:raise SystemExit('no verified race rows')
+          Path('data/all-venue-reports.json').write_text(json.dumps({'records':rows},ensure_ascii=False))
+          print('Verified race rows:',len(rows))
           PY
           python3 scripts/analyze_racer_winning_methods.py data/all-venue-reports.json --output reports/all-venue-racer-winning-methods.json
       - uses: actions/upload-artifact@v4
         with:
           name: official-all-venue-racer-methods
           path: |
-            data/all-venues.json
+            data/reports/
             reports/all-venue-racer-winning-methods.json
           retention-days: 30
