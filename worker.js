@@ -1929,6 +1929,13 @@ racersByBoatVerified: allSixVerified,
 dataReadyForPrediction: false,
 heatmapReadyForAnalysis: allSixVerified,
 dataQualityReason: !allSixVerified ? 'Six uniquely matched, verified boat rows are required' : !last50MatchesOfficial ? 'Heatmap matched, but last-50 table is not verified' : 'Heatmap and last-50 matched; exhibition, ST, wind, motor and other required prediction inputs remain unverified',
+last50IdentityComparison: {
+  officialVerified: officialRacers.verified === true,
+  parsedTableVerified: parsedLast50.verified === true,
+  official: (officialRacers.racers || []).map(r=>({boat:r.boat,name:r.name})),
+  parsed: (parsedLast50.rows || []).map(r=>({boat:r.boat,name:r.name,runs:r.runs})),
+  mismatches: (officialRacers.racers || []).filter(r=>!parsedLast50.rows.some(row=>row.boat===r.boat&&normalizeLast50RacerName(row.name)===normalizeLast50RacerName(r.name))).map(r=>({boat:r.boat,officialName:r.name,parsedName:parsedLast50.rows.find(row=>row.boat===r.boat)?.name??null}))
+},
 last50Inspection: inspectLast50(html),
 last50ByBoat: last50MatchesOfficial ? parsedLast50.rows : [],
 last50Verified: last50MatchesOfficial,
