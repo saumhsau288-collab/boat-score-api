@@ -68,7 +68,7 @@ jobs:
           done
       - name: Join all active venues and aggregate racer evidence
         run: |
-          mkdir -p data/reports
+          mkdir -p data/reports reports
           python3 - <<'PY'
           import datetime,json,subprocess
           from pathlib import Path
