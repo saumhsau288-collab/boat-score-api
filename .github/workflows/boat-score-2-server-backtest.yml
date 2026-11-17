@@ -9,9 +9,9 @@ on:
         default: '20261116'
         type: string
       venue:
-        description: 'Venue number 1-24 (0 for automatic discovery)'
+        description: 'Venue number 1-24 (0 = automatic discovery; recommended)'
         required: true
-        default: '1'
+        default: '0'
         type: string
 
 permissions:
