@@ -74,6 +74,7 @@ jobs:
           from pathlib import Path
           start,end=map(datetime.date.fromisoformat,Path('archive-range.txt').read_text().split())
           reports=[]
+          day_summaries=[]
           for offset in range((end-start).days+1):
             day=start+datetime.timedelta(days=offset)
             date=day.strftime('%Y%m%d')
@@ -84,10 +85,17 @@ jobs:
             subprocess.run(['python3','scripts/join_official_all_venues.py','--b',str(b),'--k',str(k),'--date',date,'--output',str(target)],check=True)
             report=json.loads(target.read_text())
             if not report['reports']:raise SystemExit('no matched venues '+date)
+            venue_summaries=report['venueSummary']
+            matched=sum(v['matchedRaces'] for v in venue_summaries)
+            rejected=sum(len(v['rejectedRaces']) for v in venue_summaries)
+            if matched!=sum(len(r['records']) for r in report['reports']):raise SystemExit('per-venue race count mismatch '+date)
+            day_summaries.append({'date':date,'activeVenues':len(venue_summaries),'verifiedRaces':matched,'rejectedRaces':rejected,'venuesWithNoVerifiedRaces':[v['venue'] for v in venue_summaries if v['matchedRaces']==0]})
             reports.extend(r['records'] for r in report['reports'])
           rows=[r for day in reports for r in day]
           if not rows:raise SystemExit('no verified race rows')
           Path('data/all-venue-reports.json').write_text(json.dumps({'records':rows},ensure_ascii=False))
+          Path('reports/daily-data-completeness.json').write_text(json.dumps({'days':day_summaries,'totalVerifiedRaces':len(rows),'totalRejectedRaces':sum(d['rejectedRaces'] for d in day_summaries),'warning':'Rejected races and venues with zero verified races are excluded, not assumed to have no racing'},ensure_ascii=False,indent=2)+'\n')
+          print('Daily data completeness:',json.dumps(day_summaries,ensure_ascii=False))
           print('Verified race rows:',len(rows))
           PY
           python3 scripts/analyze_racer_winning_methods.py data/all-venue-reports.json --output reports/all-venue-racer-winning-methods.json
@@ -112,4 +120,5 @@ jobs:
             data/reports/
             reports/all-venue-racer-winning-methods.json
             reports/all-venue-method-coverage.json
+            reports/daily-data-completeness.json
           retention-days: 90
