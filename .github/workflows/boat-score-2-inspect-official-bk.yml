@@ -1,4 +1,4 @@
-name: Boat Score 2 inspect official B K text
+name: Boat Score 2 inspect official B K text and field layout
 on:
   workflow_dispatch:
     inputs:
