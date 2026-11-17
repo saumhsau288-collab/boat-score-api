@@ -4,7 +4,7 @@ import argparse,json,re
 from pathlib import Path
 from parse_official_bk import venue_section,parse_b,parse_k,join
 def audit_all_venues(btext,ktext,date):
-    marker=lambda text,kind:{int(v) for v in re.findall(r'^([0-2][0-9])'+kind+r'BGN\\s*$',text,re.M) if 1<=int(v)<=24}
+    marker=lambda text,kind:{int(v) for v in re.findall(r'^([0-2][0-9])'+kind+r'BGN\s*$',text,re.M) if 1<=int(v)<=24}
     both=sorted(marker(btext,'B')&marker(ktext,'K'))
     reports=[]
     for venue in both:
