@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inspect decompressed official B/K text, without asserting a field layout."""
 import argparse, hashlib, json, pathlib, re
-def inspect(path,limit=12):
+def inspect(path,limit=100):
     p=pathlib.Path(path)
     raw=p.read_bytes()
     if not raw or len(raw)>5_000_000: raise ValueError("empty or oversized decoded archive")
