@@ -2426,7 +2426,7 @@ function parseOfficialFinishOrder(html) {
 // Normalize harmless typography differences only; never infer a racer from a partial name.
 function normalizeLast50RacerName(value) {
   return String(value ?? '').normalize('NFKC')
-    .replace(/[\\s\\u00a0\\u200b-\\u200d\\u3000・･]/g, '')
+    .replace(/[\s\u00a0\u200b-\u200d\u3000・･]/g, '')
     .replace(/(?:&nbsp;|&#160;|&#xA0;)/gi, '');
 }
 function parseLast50Heatmap(html) {
