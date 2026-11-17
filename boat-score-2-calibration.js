@@ -11,7 +11,7 @@ export function scoreRacer(r,w=BASE_WEIGHTS){
  return KEYS.reduce((s,k)=>s+r[k]/LIMITS[k]*w[k],0);
 }
 export function evaluateSnapshot(row,w=BASE_WEIGHTS){
- if(!row||!/^20\\d{6}$/.test(String(row.date))||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||row.preRaceSnapshot!==true||row.resultVerified!==true||!Array.isArray(row.racers)||row.racers.length!==6||!Array.isArray(row.finishOrder)||row.finishOrder.length!==6)return null;
+ if(!row||!/^20\d{6}$/.test(String(row.date))||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||row.preRaceSnapshot!==true||row.resultVerified!==true||!Array.isArray(row.racers)||row.racers.length!==6||!Array.isArray(row.finishOrder)||row.finishOrder.length!==6)return null;
  const boats=row.racers.map(r=>r.boat),finish=row.finishOrder;
  if(new Set(boats).size!==6||new Set(finish).size!==6||[...boats,...finish].some(n=>!Number.isInteger(n)||n<1||n>6))return null;
  const ranked=row.racers.map(r=>({boat:r.boat,score:scoreRacer(r,w)}));
