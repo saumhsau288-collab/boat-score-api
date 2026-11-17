@@ -2,6 +2,17 @@ name: Boat Score 2 server-only historical comparison
 
 on:
   workflow_dispatch:
+    inputs:
+      backtest_date:
+        description: 'Past race date (YYYYMMDD)'
+        required: true
+        default: '20261116'
+        type: string
+      venue:
+        description: 'Venue number 1-24 (0 for automatic discovery)'
+        required: true
+        default: '1'
+        type: string
 
 permissions:
   contents: read
@@ -19,12 +30,13 @@ jobs:
           node-version: '22'
       - name: Compare yesterday using deployed Boat Score 2 predictions
         env:
-          BACKTEST_DATE: '20261116'
+          BACKTEST_DATE: ${{ inputs.backtest_date }}
+          BACKTEST_VENUE: ${{ inputs.venue }}
         run: node scripts/boat-score-2-server-backtest.mjs
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: boat-score-2-backtest-20261116
+          name: boat-score-2-backtest-${{ inputs.backtest_date }}
           path: backtest-results/
           if-no-files-found: warn
