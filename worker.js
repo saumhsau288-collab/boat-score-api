@@ -890,6 +890,37 @@ if (u.pathname === '/api/daily/venue-screen') {
     notice:'This is an on-demand venue screening, not an 08:00 nationwide snapshot. No result is a validated probability.'});
 }
 
+if (u.pathname === '/api/backtest/retrospective') {
+ if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+ const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
+ if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)
+  return reply(request,{error:'Invalid parameters'},400);
+ const resultUrl='https://www.boatrace.jp/owpc/pc/race/raceresult?rno='+race+'&jcd='+String(venue).padStart(2,'0')+'&hd='+date;
+ // Historical official metrics may have changed since race time. Never label these as an archived 08:00 forecast.
+ const [official,resultResponse]=await Promise.all([
+  fetchOfficialRacers(date,venue,race),
+  fetch(resultUrl,{signal:AbortSignal.timeout(12000)}).catch(()=>null)
+ ]);
+ const model=buildMorningRaceInputs(date,venue,race,official);
+ const result=resultResponse?.ok?parseOfficialFinishOrder(await resultResponse.text()):{verified:false,reason:'result_fetch_failed',finishOrder:[]};
+ if(model.ready!==true||result.verified!==true)
+  return reply(request,{date,venue,race,status:'held',modelReady:model.ready===true,modelReason:model.reason||null,resultVerified:result.verified===true,resultReason:result.reason||null,method:'retrospective_non_point_in_time',notMorningSnapshot:true});
+ const ranked=model.rankedScores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
+ const combinations=[];
+ const byBoat=new Map(ranked.map(x=>[x.boat,x.score]));
+ for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++){
+  if(a===b||a===c||b===c)continue;
+  combinations.push({pick:a+'-'+b+'-'+c,score:byBoat.get(a)*.56+byBoat.get(b)*.29+byBoat.get(c)*.15,first:a});
+ }
+ combinations.sort((a,b)=>b.score-a.score||a.pick.localeCompare(b.pick));
+ const main=combinations.slice(0,6).map(x=>x.pick);
+ const upset=combinations.filter(x=>x.first>=4).slice(0,6).map(x=>x.pick);
+ const actual=result.finishOrder.slice(0,3).join('-');
+ return reply(request,{date,venue,race,status:'compared',method:'retrospective_non_point_in_time',notMorningSnapshot:true,
+  warning:'Official stats may not represent the pre-race historical snapshot. No Makulabo or exhibition input is used. This is a diagnostic reconstruction, not a validated hit rate.',
+  modelVersion:model.method,actual,main,upset,mainHit:main.includes(actual),upsetHit:upset.includes(actual),rankedScores:ranked,resultVerified:true});
+}
+
 if (u.pathname === '/api/official/result') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
   const date=u.searchParams.get('date')||'',venue=u.searchParams.get('venue')||'',race=u.searchParams.get('race')||'';
