@@ -7,6 +7,8 @@ B_RACE=re.compile(r'^\s*([０-９]{1,2})Ｒ\s')
 K_RACE=re.compile(r'^\s*([1-9]|1[0-2])R\s')
 B_BOAT=re.compile(r'^([1-6])\s+(\d{4})(.+?)\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+)\s+(\d+\.\d{2})\s+(\d+)\s+(\d+\.\d{2})(?:\s|$)')
 K_FINISH=re.compile(r'^\s*(0[1-6])\s+([1-6])\s+(\d{4})\s')
+K_METHODS=('逃げ','差し','まくり','まくり差し','抜き','恵まれ')
+K_METHOD=re.compile(r'ﾚｰｽﾀｲﾑ\s*(まくり差し|まくり|逃げ|差し|抜き|恵まれ)')
 K_COURSE=re.compile(r'^\s*(0[1-6])\s+([1-6])\s+(\d{4})\s+.*?\s+\d+\s+\d+\s+\d+\.\d{2}\s+([1-6])\s+')
 K_PAY=re.compile(r'^\s*([1-9]|1[0-2])R\s+([1-6])-([1-6])-([1-6])\s+\d+')
 def venue_section(text,venue,kind):
@@ -36,14 +38,16 @@ def parse_b(text):
         races[current].append(racer)
     return {r:sorted(v,key=lambda x:x['boat']) for r,v in races.items() if len(v)==6 and {x['boat'] for x in v}==set(range(1,7)) and len({x['racerId'] for x in v})==6}
 def parse_k(text):
-    races={};current=None;pay={};courses={}
+    races={};current=None;pay={};courses={};methods={}
     for line in text.splitlines():
         m=K_PAY.match(line)
         if m and len({int(m.group(i)) for i in (2,3,4)})==3:pay[int(m.group(1))]=[int(m.group(i)) for i in (2,3,4)]
         m=K_RACE.match(line)
         if m:
-            current=int(m.group(1));races[current]=[];courses[current]=[];continue
+            current=int(m.group(1));races[current]=[];courses[current]=[];methods[current]=None;continue
         if current is None:continue
+        mm=K_METHOD.search(line)
+        if mm:methods[current]=mm.group(1)
         m=K_FINISH.match(line)
         if m:
             races[current].append((int(m.group(1)),int(m.group(2)),m.group(3)))
@@ -56,7 +60,7 @@ def parse_k(text):
         if pay.get(r)!=order[:3]:continue
         course_pairs=courses.get(r,[])
         verified_courses=len(course_pairs)==6 and len({boat for boat,_ in course_pairs})==6 and {course for _,course in course_pairs}==set(range(1,7))
-        valid[r]={'finishOrder':order,'racerIds':{boat:ident for _,boat,ident in v},'entryCourseByBoat':dict(course_pairs) if verified_courses else None,'entryCourseVerified':verified_courses}
+        valid[r]={'finishOrder':order,'racerIds':{boat:ident for _,boat,ident in v},'entryCourseByBoat':dict(course_pairs) if verified_courses else None,'entryCourseVerified':verified_courses,'winningMethod':methods.get(r),'winningMethodVerified':methods.get(r) in K_METHODS}
     return valid
 def join(b,k,date,venue):
     if not re.fullmatch(r'20\d{6}',date) or not 1<=venue<=24:raise ValueError('invalid date/venue')
@@ -66,6 +70,7 @@ def join(b,k,date,venue):
             rejected.append(r);continue
         out.append({'date':date,'venue':venue,'race':r,'racers':b[r],'finishOrder':k[r]['finishOrder'],
           'entryCourseByBoat':k[r].get('entryCourseByBoat'),'entryCourseVerified':k[r].get('entryCourseVerified',False),
+          'winningMethod':k[r].get('winningMethod'),'winningMethodVerified':k[r].get('winningMethodVerified',False),
           'resultVerified':True,'historicalProgramSource':'official_B_archive',
           'historicalResultSource':'official_K_archive','asOfVerified':False,
           'capturedBeforeStart':False,'eligibleForWeightCalibration':False})
