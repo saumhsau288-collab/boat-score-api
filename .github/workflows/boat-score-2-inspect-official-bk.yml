@@ -6,6 +6,10 @@ on:
         description: 'Archive date YYYY-MM-DD'
         required: true
         default: '2026-11-16'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/boat-score-2-inspect-official-bk.yml'
   pull_request:
     paths:
       - 'scripts/inspect_official_bk.py'
@@ -24,12 +28,12 @@ jobs:
       - name: Test text inspector
         run: python3 -m unittest discover -s scripts -p 'test_inspect_official_bk.py'
       - name: Install LZH extractor
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
       - name: Download and inspect official archives
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name != 'pull_request'
         env:
-          ARCHIVE_DATE: ${{ inputs.archive_date }}
+          ARCHIVE_DATE: ${{ inputs.archive_date || '2026-11-16' }}
         run: |
           python3 - <<'PY'
           import datetime,os
@@ -50,7 +54,7 @@ jobs:
           find data/decoded -type f -print
           python3 scripts/inspect_official_bk.py $(find data/decoded -type f) --output data/inspection.json
       - name: Upload inspection summary only
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: always() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: boat-score-2-bk-inspection
