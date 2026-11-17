@@ -98,5 +98,25 @@ class ArchivedHistoryTests(unittest.TestCase):
                 archived_quality_summary(d)
 
 
+    def test_rejection_reasons_and_legacy_unknown(self):
+        with tempfile.TemporaryDirectory() as d:
+            payload = {'reports': [{'records': []}], 'venueSummary': [
+                {'venue': 1, 'matchedRaces': 0, 'rejectedRaces': [1],
+                 'rejectionDetails': [{'race': 1, 'reason': 'missing_valid_result', 'incidentStatus': 'unverified'}]},
+                {'venue': 2, 'matchedRaces': 0, 'rejectedRaces': [2]}]}
+            Path(d, '20261117.json').write_text(json.dumps(payload))
+            quality = archived_quality_summary(d)
+            self.assertEqual(quality['rejectionReasons'], {'missing_valid_result': 1, 'legacy_unclassified': 1})
+
+    def test_rejection_detail_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as d:
+            payload = {'reports': [{'records': []}], 'venueSummary': [
+                {'venue': 1, 'matchedRaces': 0, 'rejectedRaces': [1],
+                 'rejectionDetails': [{'race': 2, 'reason': 'missing_valid_result'}]}]}
+            Path(d, '20261117.json').write_text(json.dumps(payload))
+            with self.assertRaisesRegex(ValueError, 'Rejection detail race mismatch'):
+                archived_quality_summary(d)
+
+
 if __name__ == '__main__':
     unittest.main()
