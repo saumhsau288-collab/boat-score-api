@@ -10,7 +10,17 @@ K_FINISH=re.compile(r'^\s*(0[1-6])\s+([1-6])\s+(\d{4})\s')
 K_PAY=re.compile(r'^\s*([1-9]|1[0-2])R\s+([1-6])-([1-6])-([1-6])\s+\d+')
 def venue_section(text,venue,kind):
     """Isolate one official venue block; never mix races from different venues."""
-    marker=re.compile(r'^([0-2][0-9])'+kind+r'BGN\\s*
+    marker=re.compile(r'^([0-2][0-9])'+kind+r'BGN\s*$',re.M)
+    matches=list(marker.finditer(text))
+    if not matches:
+        raise ValueError('venue_markers_missing')
+    matching=[i for i,m in enumerate(matches) if int(m.group(1))==venue]
+    if len(matching)!=1:
+        raise ValueError('venue_missing_or_duplicate')
+    i=matching[0]
+    return text[matches[i].end():matches[i+1].start() if i+1<len(matches) else len(text)]
+
+def parse_b(text):
     races={};current=None
     for line in text.splitlines():
         m=B_RACE.match(line)
