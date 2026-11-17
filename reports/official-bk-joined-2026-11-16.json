@@ -95,6 +95,8 @@
         "5": 5
       },
       "entryCourseVerified": true,
+      "winningMethod": "逃げ",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -197,6 +199,8 @@
         "6": 6
       },
       "entryCourseVerified": true,
+      "winningMethod": "差し",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -299,6 +303,8 @@
         "2": 2
       },
       "entryCourseVerified": true,
+      "winningMethod": "まくり差し",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -401,6 +407,8 @@
         "4": 4
       },
       "entryCourseVerified": true,
+      "winningMethod": "差し",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -503,6 +511,8 @@
         "1": 1
       },
       "entryCourseVerified": true,
+      "winningMethod": "まくり差し",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -605,6 +615,8 @@
         "5": 5
       },
       "entryCourseVerified": true,
+      "winningMethod": "逃げ",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -707,6 +719,8 @@
         "4": 4
       },
       "entryCourseVerified": true,
+      "winningMethod": "逃げ",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -809,6 +823,8 @@
         "4": 4
       },
       "entryCourseVerified": true,
+      "winningMethod": "逃げ",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -911,6 +927,8 @@
         "5": 5
       },
       "entryCourseVerified": true,
+      "winningMethod": "逃げ",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -1013,6 +1031,8 @@
         "6": 6
       },
       "entryCourseVerified": true,
+      "winningMethod": "逃げ",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -1115,6 +1135,8 @@
         "6": 6
       },
       "entryCourseVerified": true,
+      "winningMethod": "逃げ",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
@@ -1217,6 +1239,8 @@
         "5": 5
       },
       "entryCourseVerified": true,
+      "winningMethod": "逃げ",
+      "winningMethodVerified": true,
       "resultVerified": true,
       "historicalProgramSource": "official_B_archive",
       "historicalResultSource": "official_K_archive",
