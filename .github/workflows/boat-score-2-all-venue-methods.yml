@@ -1,5 +1,8 @@
 name: Boat Score 2 all-venue racer method research
 on:
+  schedule:
+    # 23:00 UTC = 08:00 JST next day; analyze completed prior-day results.
+    - cron: '0 23 * * *'
   workflow_dispatch:
     inputs:
       archive_date:
@@ -18,6 +21,9 @@ on:
       - 'scripts/analyze_racer_winning_methods.py'
       - 'scripts/test_analyze_racer_winning_methods.py'
       - '.github/workflows/boat-score-2-all-venue-methods.yml'
+concurrency:
+  group: boat-score-2-daily-offline-research
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
@@ -37,15 +43,17 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
       - name: Download daily official B/K archives
         env:
-          ARCHIVE_DATE: ${{ inputs.archive_date || '2026-11-16' }}
+          ARCHIVE_DATE: ${{ inputs.archive_date || '' }}
           DAYS: ${{ inputs.days || '3' }}
         run: |
           python3 - <<'PY'
           import datetime,os
-          end=datetime.date.fromisoformat(os.environ['ARCHIVE_DATE'])
+          today=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date()
+          # A scheduled run must never use incomplete current-day results.
+          end=datetime.date.fromisoformat(os.environ['ARCHIVE_DATE']) if os.environ['ARCHIVE_DATE'] else today-datetime.timedelta(days=1)
           days=int(os.environ['DAYS'])
           if not 1<=days<=7:raise SystemExit('days must be 1..7')
-          if end>datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date():raise SystemExit('future date')
+          if end>today:raise SystemExit('future date')
           start=end-datetime.timedelta(days=days-1)
           with open('archive-range.txt','w') as f:f.write(start.isoformat()+' '+end.isoformat()+'\n')
           PY
@@ -103,4 +111,4 @@ jobs:
             data/reports/
             reports/all-venue-racer-winning-methods.json
             reports/all-venue-method-coverage.json
-          retention-days: 30
+          retention-days: 90
