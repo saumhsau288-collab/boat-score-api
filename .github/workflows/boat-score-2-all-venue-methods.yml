@@ -15,6 +15,8 @@ on:
     paths:
       - 'scripts/join_official_all_venues.py'
       - 'scripts/test_join_official_all_venues.py'
+      - 'scripts/analyze_racer_winning_methods.py'
+      - 'scripts/test_analyze_racer_winning_methods.py'
       - '.github/workflows/boat-score-2-all-venue-methods.yml'
 permissions:
   contents: read
@@ -81,10 +83,24 @@ jobs:
           print('Verified race rows:',len(rows))
           PY
           python3 scripts/analyze_racer_winning_methods.py data/all-venue-reports.json --output reports/all-venue-racer-winning-methods.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('reports/all-venue-racer-winning-methods.json').read_text())
+          rows=json.loads(Path('data/all-venue-reports.json').read_text())['records']
+          if r['raceCount']!=len(rows):raise SystemExit('race count mismatch')
+          if sum(r['winningMethods'].values())+r['unverifiedWinningMethods']!=r['raceCount']:raise SystemExit('method coverage mismatch')
+          if r['racersMeetingTechniqueSampleThreshold']+r['racersBelowTechniqueSampleThreshold']!=r['uniqueRacers']:raise SystemExit('racer coverage mismatch')
+          if any(x['sampleInsufficientForIndividualTechniquePreference'] and x['winningMethodSharesOfWinsPercent'] is not None for x in r['racerEvidence']):raise SystemExit('small-sample rates must be suppressed')
+          summary={'raceCount':r['raceCount'],'uniqueRacers':r['uniqueRacers'],'verifiedWinningMethods':sum(r['winningMethods'].values()),'unverifiedWinningMethods':r['unverifiedWinningMethods'],'racerMethodThreshold':r['racerMethodSampleThreshold'],'racersMeetingThreshold':r['racersMeetingTechniqueSampleThreshold'],'racersBelowThreshold':r['racersBelowTechniqueSampleThreshold'],'methodCounts':r['winningMethods'],'warning':'Historical observations only, not verified pre-race forecasts; do not adjust live scoring weights'}
+          Path('reports/all-venue-method-coverage.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\\n')
+          print(json.dumps(summary,ensure_ascii=False))
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: official-all-venue-racer-methods
           path: |
             data/reports/
             reports/all-venue-racer-winning-methods.json
+            reports/all-venue-method-coverage.json
           retention-days: 30
