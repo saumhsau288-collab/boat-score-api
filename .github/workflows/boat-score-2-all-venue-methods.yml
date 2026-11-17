@@ -25,7 +25,7 @@ concurrency:
   group: boat-score-2-daily-offline-research
   cancel-in-progress: false
 permissions:
-  contents: read
+  contents: write
 jobs:
   research:
     runs-on: ubuntu-latest
@@ -113,6 +113,49 @@ jobs:
           Path('reports/all-venue-method-coverage.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
           print(json.dumps(summary,ensure_ascii=False))
           PY
+      - name: Persist verified daily reports on isolated research branch
+        if: github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime,timezone
+          reports=sorted(Path('data/reports').glob('*.json'))
+          if not reports:raise SystemExit('No verified reports to archive')
+          for f in reports:
+            report=json.loads(f.read_text())
+            if not report.get('reports'):raise SystemExit('Empty research report: '+str(f))
+          print('Validated',len(reports),'daily reports for persistent archive')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          mkdir -p /tmp/boat-score-history
+          cp data/reports/*.json /tmp/boat-score-history/
+          if git ls-remote --exit-code --heads origin historical-research-data >/dev/null; then
+            git fetch origin historical-research-data
+            git switch -c historical-research-data --track origin/historical-research-data
+          else
+            git switch --orphan historical-research-data
+            git rm -rf --quiet . || true
+          fi
+          mkdir -p verified-daily
+          for F in /tmp/boat-score-history/*.json; do
+            NAME="$(basename "$F")"
+            if [ -f "verified-daily/$NAME" ] && ! cmp -s "$F" "verified-daily/$NAME"; then
+              echo "Historical report conflict for $NAME; refusing overwrite" >&2
+              exit 1
+            fi
+            cp "$F" "verified-daily/$NAME"
+          done
+          git add verified-daily
+          if git diff --cached --quiet; then
+            echo 'Historical archive already current'
+          else
+            git commit -m "Archive verified daily race reports"
+            git push origin HEAD:refs/heads/historical-research-data
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: official-all-venue-racer-methods
