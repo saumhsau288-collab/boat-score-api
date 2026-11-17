@@ -44,6 +44,7 @@ jobs:
           python3 -m unittest discover -s scripts -p 'test_parse_official_bk.py'
           python3 -m unittest discover -s scripts -p 'test_analyze_racer_winning_methods.py'
           python3 -m unittest discover -s scripts -p 'test_join_official_all_venues.py'
+          python3 -m unittest discover -s scripts -p 'test_analyze_archived_racer_history.py'
       - name: Install archive extractor
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
       - name: Download daily official B/K archives
