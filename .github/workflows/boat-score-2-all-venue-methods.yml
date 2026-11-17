@@ -93,7 +93,7 @@ jobs:
           if r['racersMeetingTechniqueSampleThreshold']+r['racersBelowTechniqueSampleThreshold']!=r['uniqueRacers']:raise SystemExit('racer coverage mismatch')
           if any(x['sampleInsufficientForIndividualTechniquePreference'] and x['winningMethodSharesOfWinsPercent'] is not None for x in r['racerEvidence']):raise SystemExit('small-sample rates must be suppressed')
           summary={'raceCount':r['raceCount'],'uniqueRacers':r['uniqueRacers'],'verifiedWinningMethods':sum(r['winningMethods'].values()),'unverifiedWinningMethods':r['unverifiedWinningMethods'],'racerMethodThreshold':r['racerMethodSampleThreshold'],'racersMeetingThreshold':r['racersMeetingTechniqueSampleThreshold'],'racersBelowThreshold':r['racersBelowTechniqueSampleThreshold'],'methodCounts':r['winningMethods'],'warning':'Historical observations only, not verified pre-race forecasts; do not adjust live scoring weights'}
-          Path('reports/all-venue-method-coverage.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\\n')
+          Path('reports/all-venue-method-coverage.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
           print(json.dumps(summary,ensure_ascii=False))
           PY
       - uses: actions/upload-artifact@v4
