@@ -514,7 +514,7 @@ document.getElementById('predictSelected').onclick=async function(){
  const stSubstitutions=Array.isArray(d.averageSTSubstitutions)?d.averageSTSubstitutions:[];
  const stSubstitutionNote=stSubstitutions.length?'\n公式平均STで代用：'+stSubstitutions.map(x=>x.boat+'号艇 '+x.original+' → '+x.averageST.toFixed(2)).join('、'):'';
  const recent50=recent50SupplementForSelection();
- const recent50Note=recent50?'【まくらぼ直近50走・参考加点（最大10点、買い目未反映）】\\n'+recent50.map(x=>x.boat+'号艇 '+x.runs+'走 / 1着率 '+x.winRate.toFixed(1)+'% / '+x.points.toFixed(2)+'点').join('\\n'):'【まくらぼ直近50走】\\nこのレースの照合済みデータはありません。参考加点は未算出です。';
+ const recent50Note=recent50?'【まくらぼ直近50走・参考加点（最大10点、買い目未反映）】\n'+recent50.map(x=>x.boat+'号艇 '+x.runs+'走 / 1着率 '+x.winRate.toFixed(1)+'% / '+x.points.toFixed(2)+'点').join('\n'):'【まくらぼ直近50走】\nこのレースの照合済みデータはありません。参考加点は未算出です。';
  const base=d.basePrediction;
  const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
  out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命】'+d.main.length+'点\n'+fmt(d.main)+'\n\n【穴】'+d.upset.length+'点\n'+fmt(d.upset)+'\n\n【評価に未反映の情報】\n'+(missing.length?missing.join('、'):'取得状況未確認')+'\n\n【直前情報の反映】\n'+exhibitionNote+'\n'+startNote+stSubstitutionNote+'\n\n'+comparison+'\n\n'+recent50Note+'\n\n【評価配分】\n'+(d.method==='weighted_national50_local20_motor30_unvalidated'?'全国勝率50%・当地勝率20%・モーター2連対率30%':'全国勝率70%・モーター2連対率30%')+'\n全国2連対率・3連対率の補助評価: '+(d.placeRateTieBreakVerified===true?'確認済み':'未反映')+'\n※暫定モデル。的中確率ではありません。';
