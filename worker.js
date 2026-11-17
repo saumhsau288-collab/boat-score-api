@@ -537,7 +537,7 @@ document.getElementById('predictSelected').onclick=async function(){
  const recent50Comparison=recent50?(()=>{
   const sorted=[...recent50].sort((a,b)=>b.points-a.points||a.boat-b.boat);
   const firstChoice=Array.isArray(d.main)&&d.main.length?String(d.main[0]).split(/[^1-6]+/).filter(Boolean)[0]:null;
-  return '【従来予想と直近50走の比較（検証用・買い目変更なし）】\\n'
+  return '【従来予想と直近50走の比較（検証用・買い目変更なし）】\n'
    +'直近50走の1着率順位：'+sorted.map(x=>x.boat+'号艇('+x.winRate.toFixed(1)+'%)').join(' ＞ ')+'\n'
    +'従来本命1点目の1着艇：'+(firstChoice?firstChoice+'号艇':'未確認')+'\n'
    +(firstChoice&&Number(firstChoice)!==sorted[0].boat?'※従来予想の軸と50走の首位が異なります。要検証。':'※50走は参考指標であり、コース別成績を確認するまで自動補正しません。')
