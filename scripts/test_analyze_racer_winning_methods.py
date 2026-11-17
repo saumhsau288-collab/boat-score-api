@@ -9,6 +9,8 @@ class Tests(unittest.TestCase):
   winner=next(x for x in out['racerEvidence'] if x['racerId']=='4006')
   self.assertEqual(winner['entryCourses']['5']['winningMethods']['まくり差し'],1)
   self.assertTrue(winner['sampleInsufficientForIndividualTechniquePreference'])
+  self.assertIsNone(winner['winningMethodSharesOfWinsPercent'])
+  self.assertEqual(out['racersMeetingTechniqueSampleThreshold'],0)
   with self.assertRaises(ValueError):analyze([{'records':[row,row]}])
  def test_no_guess_from_boat_number(self):
   racers=[{'boat':i,'racerId':str(4000+i)} for i in range(1,7)]
