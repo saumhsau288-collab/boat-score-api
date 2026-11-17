@@ -1,0 +1,56 @@
+name: Boat Score 2 official historical archive audit
+on:
+  workflow_dispatch:
+    inputs:
+      archive_date:
+        description: 'Official archive date (YYYY-MM-DD, Japan)'
+        required: true
+        default: '2026-11-16'
+  pull_request:
+    paths:
+      - 'scripts/audit_official_archives.py'
+      - 'scripts/test_audit_official_archives.py'
+      - '.github/workflows/boat-score-2-official-archive-audit.yml'
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test archive header checks
+        run: python3 -m unittest discover -s scripts -p 'test_audit_official_archives.py'
+      - name: Validate date
+        env:
+          ARCHIVE_DATE: ${{ inputs.archive_date }}
+        run: |
+          python3 - <<'PY'
+          import datetime,os
+          value=os.getenv('ARCHIVE_DATE') or '2026-11-16'
+          d=datetime.date.fromisoformat(value)
+          if d>datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).date():
+              raise SystemExit('Future dates not allowed')
+          with open('archive-date.txt','w') as f:f.write(value)
+          PY
+      - name: Download official B and K archives
+        run: |
+          DAY="$(cat archive-date.txt)"
+          python3 scripts/fetch_official_archives.py --start "$DAY" --end "$DAY" --out data/raw
+      - name: Audit downloaded archive headers
+        if: always()
+        run: |
+          DAY="$(cat archive-date.txt)"
+          python3 scripts/audit_official_archives.py --start "$DAY" --end "$DAY" --root data/raw --output data/raw/archive-audit.json
+      - name: Upload archive audit only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-official-archive-audit
+          path: |
+            data/raw/manifest.json
+            data/raw/archive-audit.json
+          if-no-files-found: warn
+          retention-days: 7
