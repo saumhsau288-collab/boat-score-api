@@ -13,6 +13,8 @@ on:
   pull_request:
     paths:
       - 'scripts/inspect_official_bk.py'
+      - 'scripts/parse_official_bk.py'
+      - 'scripts/test_parse_official_bk.py'
       - 'scripts/test_inspect_official_bk.py'
       - '.github/workflows/boat-score-2-inspect-official-bk.yml'
 jobs:

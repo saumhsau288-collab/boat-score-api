@@ -1,6 +1,11 @@
 import unittest
-from parse_official_bk import parse_b,parse_k,join
+from parse_official_bk import parse_b,parse_k,join,venue_section
 class Tests(unittest.TestCase):
+ def test_venue_isolation(self):
+  s='STARTB\\n24BBGN\\nOMURA\\n1R\\n23BBGN\\nKARATSU\\n1R'
+  self.assertIn('OMURA',venue_section(s,24,'B'))
+  self.assertNotIn('KARATSU',venue_section(s,24,'B'))
+  with self.assertRaises(ValueError):venue_section(s,22,'B')
  def test_b(self):
   lines=['　１Ｒ 一般']
   for i in range(1,7):lines.append(f'{i} {4590+i}加藤政彦42東京53B1 5.95 41.28 6.07 46.34 79 30.11 64 39.56 2 262')
