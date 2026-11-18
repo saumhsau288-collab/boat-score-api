@@ -17,7 +17,7 @@ export function checkOfficialResultResponse({requestedUrl,responseUrl,httpStatus
  if(!/text\/html/i.test(contentType||''))return {status:'result_not_html',verified:false};
  return {status:'official_result_page_candidate_not_authenticated',verified:false};
 }
-export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,maxRequests=288}={}){
+export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,maxRequests=288,concurrency=6}={}){
  if(!/^20\d{6}$/.test(String(capture?.date))||!Array.isArray(capture.records))throw Error('Invalid capture');
  const unique=new Map();
  for(const r of capture.records){
@@ -25,8 +25,11 @@ export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,max
   if(date!==String(capture.date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)continue;
   const key=[date,venue,race].join(':');unique.set(key,{date,venue,race});
  }
- const rows=[];
- for(const {date,venue,race} of [...unique.values()].slice(0,maxRequests)){
+ const targets=[...unique.values()].slice(0,maxRequests);
+ const rows=new Array(targets.length);
+ let next=0;
+ async function collect(index){
+  const {date,venue,race}=targets[index];
   const url=new URL('https://www.boatrace.jp/owpc/pc/race/raceresult');
   url.search=new URLSearchParams({rno:String(race),jcd:String(venue).padStart(2,'0'),hd:date}).toString();
   const row={date,venue,race,sourceUrl:url.toString(),verified:false,finishOrder:null,officialCutoffAt:null};
@@ -38,8 +41,10 @@ export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,max
     responseSha256:crypto.createHash('sha256').update(body).digest('hex'),htmlLength:body.length,
     htmlSample:body.slice(0,3000)});
   }catch(e){row.error=String(e?.message||e);}
-  rows.push(row);
+  rows[index]=row;
  }
+ const workers=Math.min(targets.length,Math.max(1,Math.min(12,Math.trunc(concurrency)||1)));
+ await Promise.all(Array.from({length:workers},async()=>{while(next<targets.length){const index=next++;await collect(index);}}));
  return {date:capture.date,records:rows,verifiedResults:0,warning:'Official page fetches are source candidates only. No finish order is inferred, and none may enter backtesting without independent verification.'};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
