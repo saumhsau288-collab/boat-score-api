@@ -8,6 +8,7 @@ export function summarizeCapture(data) {
   const counts={attempted:data.records.length,networkTimeout:0,otherNetworkError:0,httpFailure:0,notReady:0,ready:0,readyWithMissingInputs:0,readyWithNoReportedMissingInputs:0,retried:0,recoveredAfterRetry:0};
   const byVenue={};
   const byRace={};
+  const morningByRace={};
   const uniquePairs=new Set();
   let duplicateVenueRacePairs=0,invalidVenueRacePairs=0;
   const timing={firstRequestedAt:null,lastRequestedAt:null,lastReceivedAt:null,elapsedSeconds:null,byVenue:{}};
@@ -37,6 +38,7 @@ export function summarizeCapture(data) {
     const raceKey=Number.isInteger(race)&&race>=1&&race<=12?String(race):'unknown';
     const raceGroup=byRace[raceKey]??={attempted:0,ready:0,networkTimeout:0,firstRequestedAt:null,lastRequestedAt:null};
     raceGroup.attempted++;
+    const morningRace=morningByRace[raceKey]??={requestedInWindow:0,respondedInWindow:0,readyInWindow:0,usableSixPlusSixInWindow:0};
     if(venueKey==='unknown'||raceKey==='unknown') invalidVenueRacePairs++;
     else {
       const pair=venueKey+':'+raceKey;
@@ -48,6 +50,8 @@ export function summarizeCapture(data) {
     const bucket=record.error?(/timeout|timed out/i.test(record.error)?'networkTimeout':'otherFailure'):
       record.httpStatus===200?(record.response?.ready===true?'ready':'notReady'):'otherFailure';
     if(elapsed!==null)durations[bucket].push(elapsed);
+    if(start!==null&&Number.isFinite(morningStart)&&start>=morningStart&&start<=morningEnd)morningRace.requestedInWindow++;
+    if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningRace.respondedInWindow++;
     if(start===null||!Number.isFinite(morningStart))requestTimeUnknown++;
     else if(start>=morningStart&&start<=morningEnd)requestWithinMorningWindow++;
     else requestOutsideMorningWindow++;
@@ -86,11 +90,13 @@ export function summarizeCapture(data) {
       counts.httpFailure++;group.httpFailure++;
     } else if(record.response?.ready===true) {
       counts.ready++;group.ready++;raceGroup.ready++;
+      if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningRace.readyInWindow++;
       if(end===null||!Number.isFinite(morningStart))readyResponseTimeUnknown++;
       else if(end>=morningStart&&end<=morningEnd)readyResponseWithinMorningWindow++;
       else readyResponseOutsideMorningWindow++;
       if(validSix(record.response.main)&&validSix(record.response.upset)) {
         validSixPlusSix++;
+        if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningRace.usableSixPlusSixInWindow++;
         const mainKeys=new Set(record.response.main.map(p=>p.join('-')));
         if(record.response.upset.some(p=>mainKeys.has(p.join('-'))))overlappingMainUpsetTickets++;
         else fullyDistinctTwelveTickets++;
@@ -144,7 +150,7 @@ export function summarizeCapture(data) {
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,morningByRace,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
