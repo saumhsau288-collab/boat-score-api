@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Research diagnostics only. Unverified result candidates must NEVER become accuracy or weight-tuning evidence.
 import fs from 'node:fs';
+import crypto from 'node:crypto';
+import {extractOfficialFinishCandidate} from './extract-official-finish-candidate.mjs';
 const key=r=>[String(r?.date),Number(r?.venue),Number(r?.race)].join(':');
 const sourceMatchesRace=(e,r)=>{try{const u=new URL(e.sourceUrl);return u.protocol==='https:'&&u.hostname==='www.boatrace.jp'&&u.pathname==='/owpc/pc/race/raceresult'&&u.searchParams.getAll('hd').length===1&&u.searchParams.get('hd')===String(r.date)&&u.searchParams.getAll('jcd').length===1&&u.searchParams.get('jcd')===String(r.venue).padStart(2,'0')&&u.searchParams.getAll('rno').length===1&&u.searchParams.get('rno')===String(r.race);}catch{return false;}};
 const valid=p=>Array.isArray(p)&&p.length===3&&p.every(x=>Number.isInteger(x)&&x>=1&&x<=6)&&new Set(p).size===3;
@@ -16,7 +18,11 @@ export function inspectSavedTicketsAgainstResultCandidates(capture,evidence){
   const matches=byKey.get(key(r))||[];
   if(matches.length!==1){if(matches.length>1)counts.ambiguousEvidence++;else counts.candidateMissing++;continue;}
   const e=matches[0],top3=e.finishCandidate?.top3;
-  if(e.verified===true||e.finishCandidate?.verified===true||!valid(top3)||
+  const snapshot=e.htmlSnapshot;
+  const snapshotMatches=typeof snapshot==='string'&&
+   crypto.createHash('sha256').update(snapshot).digest('hex')===e.responseSha256&&
+   JSON.stringify(extractOfficialFinishCandidate(snapshot).top3)===JSON.stringify(top3);
+  if(e.verified===true||e.finishCandidate?.verified===true||!valid(top3)||!snapshotMatches||
      e.sourceCheck?.status!=='official_result_page_candidate_not_authenticated'||
      e.htmlSnapshotComplete!==true||!sourceMatchesRace(e,r)){
    counts.candidateMissing++;continue;
