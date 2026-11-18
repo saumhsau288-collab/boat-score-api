@@ -10,10 +10,14 @@ export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
   const key=[r?.date,r?.venue,r?.race].join(':');
   if(!byKey.has(key))byKey.set(key,r);else byKey.set(key,null);
  }
- for(const r of Array.isArray(capture?.records)?capture.records:[]){
+ const records=Array.isArray(capture?.records)?capture.records:[];
+ const captureKeyCounts=new Map();
+ for(const r of records){const key=[r?.date,r?.venue,r?.race].join(':');captureKeyCounts.set(key,(captureKeyCounts.get(key)||0)+1);}
+ for(const r of records){
   const key=[r.date,r.venue,r.race].join(':');
   const official=byKey.get(key),actual=verifiedPodium(official);
   const reasons=[];
+  if(captureKeyCounts.get(key)>1)reasons.push('duplicate_saved_capture_race');
   if(capture?.authenticatedBeforeRace!==true)reasons.push('capture_not_authenticated_before_race');
   if(r.response?.ready!==true||r.httpStatus!==200)reasons.push('prediction_not_ready');
   if(!validTrifectaPicks(r.response?.main)||!validTrifectaPicks(r.response?.upset))reasons.push('invalid_picks');
