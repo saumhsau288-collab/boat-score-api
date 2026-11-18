@@ -225,7 +225,7 @@ jobs:
               '| Outcome | Races |','|---|---:|',
               ...Object.entries(report.counts).map(([key,count])=>'| '+key+' | '+count+' |'),
               '', 'Capture JST: '+(report.captureTimeJst||'unknown')+'; morning window: '+report.scheduledMorningWindow,
-              'Workflow trigger: '+(report.scheduledTrigger===true?'scheduled':report.scheduledTrigger===false?'not scheduled':'unknown')+'; note: morning-window timing alone does not authenticate pre-race capture.',
+              'Workflow trigger: '+(report.triggerEvidence?.scheduledTrigger===true?'scheduled':report.triggerEvidence?.scheduledTrigger===false?'not scheduled':'unknown')+'; note: morning-window timing alone does not authenticate pre-race capture.',
               '', '### Retry telemetry coverage', '',
               '| Attempt history | Records |', '|---|---:|',
               '| With attempt history | '+(report.attemptTelemetry?.recordsWithAttempts??'unknown')+' |',
