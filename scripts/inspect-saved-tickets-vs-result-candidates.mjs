@@ -2,6 +2,7 @@
 // Research diagnostics only. Unverified result candidates must NEVER become accuracy or weight-tuning evidence.
 import fs from 'node:fs';
 const key=r=>[String(r?.date),Number(r?.venue),Number(r?.race)].join(':');
+const sourceMatchesRace=(e,r)=>{try{const u=new URL(e.sourceUrl);return u.protocol==='https:'&&u.hostname==='www.boatrace.jp'&&u.pathname==='/owpc/pc/race/raceresult'&&u.searchParams.getAll('hd').length===1&&u.searchParams.get('hd')===String(r.date)&&u.searchParams.getAll('jcd').length===1&&u.searchParams.get('jcd')===String(r.venue).padStart(2,'0')&&u.searchParams.getAll('rno').length===1&&u.searchParams.get('rno')===String(r.race);}catch{return false;}};
 const valid=p=>Array.isArray(p)&&p.length===3&&p.every(x=>Number.isInteger(x)&&x>=1&&x<=6)&&new Set(p).size===3;
 export function inspectSavedTicketsAgainstResultCandidates(capture,evidence){
  if(!Array.isArray(capture?.records)||!Array.isArray(evidence?.records))throw Error('Invalid capture/result candidates');
@@ -17,7 +18,7 @@ export function inspectSavedTicketsAgainstResultCandidates(capture,evidence){
   const e=matches[0],top3=e.finishCandidate?.top3;
   if(e.verified===true||e.finishCandidate?.verified===true||!valid(top3)||
      e.sourceCheck?.status!=='official_result_page_candidate_not_authenticated'||
-     e.htmlSnapshotComplete!==true||!/^https:\/\/www\.boatrace\.jp\/owpc\/pc\/race\/raceresult\?/.test(e.sourceUrl||'')){
+     e.htmlSnapshotComplete!==true||!sourceMatchesRace(e,r)){
    counts.candidateMissing++;continue;
   }
   const main=r.response.main,upset=r.response.upset;
