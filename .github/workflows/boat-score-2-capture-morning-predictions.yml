@@ -189,6 +189,9 @@ jobs:
                 '| '+venue+' | '+c.attempted+' | '+c.ready+' | '+c.notReady+' | '+c.networkTimeout+' | '+c.otherNetworkError+' | '+c.httpFailure+' |'),
               '', '### Capture timing by venue (observed, not scheduled)', '',
               'Overall elapsed seconds: '+(report.timing?.elapsedSeconds??'unknown'),'',
+              'Requests started 07:45–08:30 JST: '+(report.timing?.morningWindow?.requestWithinMorningWindow??'unknown')+
+              '; outside window: '+(report.timing?.morningWindow?.requestOutsideMorningWindow??'unknown')+
+              '; timestamp unavailable: '+(report.timing?.morningWindow?.requestTimeUnknown??'unknown'),'',
               '| Venue | First request UTC | Last response UTC | Elapsed seconds |',
               '|---|---|---|---:|',
               ...Object.entries(report.timing?.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,t])=>
