@@ -65,6 +65,8 @@ def diagnose_capture(payload):
     transport_causes = Counter()
     missing_input_shapes = Counter()
     verification_flags = Counter()
+    missing_input_lengths = Counter()
+    retry_types = Counter()
     for row in records:
         if not isinstance(row, dict):
             raise ValueError('Invalid capture row')
@@ -96,11 +98,17 @@ def diagnose_capture(payload):
                 missing_shape = 'object:' + ','.join(sorted(k for k in missing if isinstance(k, str)))[:200]
             elif isinstance(missing, list):
                 missing_shape = 'list'
+                missing_input_lengths[str(len(missing))] += 1
             elif missing is None:
                 missing_shape = 'null'
             else:
                 missing_shape = 'other'
             missing_input_shapes[missing_shape] += 1
+            retry = response.get('officialStatsRetry')
+            retry_types[('null' if retry is None else 'boolean' if type(retry) is bool
+                         else 'string' if isinstance(retry, str) else 'object' if isinstance(retry, dict)
+                         else 'list' if isinstance(retry, list) else 'number' if type(retry) in (int, float)
+                         else 'other')] += 1
             for field in ('officialVerified', 'statsVerified', 'officialStatsRetry'):
                 value = response.get(field)
                 state_name = 'true' if value is True else 'false' if value is False else 'other'
@@ -119,7 +127,9 @@ def diagnose_capture(payload):
             'notReadyResponseFieldSets': dict(sorted(not_ready_shapes.items())),
             'transportErrorCategories': dict(sorted(transport_causes.items())),
             'missingInputStructures': dict(sorted(missing_input_shapes.items())),
-            'verificationFlagCounts': dict(sorted(verification_flags.items()))}
+            'verificationFlagCounts': dict(sorted(verification_flags.items())),
+            'missingInputListLengths': dict(sorted(missing_input_lengths.items(), key=lambda x: int(x[0]))),
+            'officialStatsRetryTypes': dict(sorted(retry_types.items()))}
 
 def api(path, token, binary=False):
     request = urllib.request.Request(
@@ -137,7 +147,7 @@ def inventory(repository, token):
                                   'http200': 0, 'ready': 0, 'usableSixPlusSix': 0})
     errors = []
     inspected = 0
-    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter()})
+    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter(), 'missingInputListLengths': Counter(), 'officialStatsRetryTypes': Counter()})
     for page in range(1, 11):
         response = api(f'repos/{repository}/actions/artifacts?per_page=100&page={page}', token)
         artifacts = response.get('artifacts', [])
@@ -171,6 +181,8 @@ def inventory(repository, token):
                     bucket['transportErrorCategories'].update(diagnostic['transportErrorCategories'])
                     bucket['missingInputStructures'].update(diagnostic['missingInputStructures'])
                     bucket['verificationFlagCounts'].update(diagnostic['verificationFlagCounts'])
+                    bucket['missingInputListLengths'].update(diagnostic['missingInputListLengths'])
+                    bucket['officialStatsRetryTypes'].update(diagnostic['officialStatsRetryTypes'])
                     totals[date]['artifacts'] += 1
                     for key, value in counts.items():
                         totals[date][key] += value
@@ -188,7 +200,9 @@ def inventory(repository, token):
             'notReadyResponseFieldSets': dict(sorted(bucket['notReadyResponseFieldSets'].items())),
             'transportErrorCategories': dict(sorted(bucket['transportErrorCategories'].items())),
             'missingInputStructures': dict(sorted(bucket['missingInputStructures'].items())),
-            'verificationFlagCounts': dict(sorted(bucket['verificationFlagCounts'].items()))}
+            'verificationFlagCounts': dict(sorted(bucket['verificationFlagCounts'].items())),
+            'missingInputListLengths': dict(sorted(bucket['missingInputListLengths'].items(), key=lambda x: int(x[0]))),
+            'officialStatsRetryTypes': dict(sorted(bucket['officialStatsRetryTypes'].items()))}
     return {'byCaptureDate': dict(sorted(totals.items())),
             'diagnosticsByDate': diagnostic_output, 'artifactsInspected': inspected,
             'errors': errors, 'officialResultOverlap': None,
@@ -229,6 +243,12 @@ if __name__ == '__main__':
                 f.write('\\nVerification flags:\\n')
                 for flag, count in diagnostic['verificationFlagCounts'].items():
                     f.write(f'- {flag}: {count}\\n')
+                f.write('\\nMissing input list lengths (counts only):\\n')
+                for length, count in diagnostic['missingInputListLengths'].items():
+                    f.write(f'- {length} missing inputs: {count}\\n')
+                f.write('\\nOfficial retry types (no values):\\n')
+                for kind, count in diagnostic['officialStatsRetryTypes'].items():
+                    f.write(f'- {kind}: {count}\\n')
                 f.write('\\nTransport error categories:\\n')
                 for category, count in diagnostic['transportErrorCategories'].items():
                     f.write(f'- {category}: {count}\\n')
