@@ -7,23 +7,33 @@ function isOfficialBoatraceSource(url) {
   return parsed.protocol==='https:' && (parsed.hostname==='boatrace.jp' || parsed.hostname.endsWith('.boatrace.jp')) && !parsed.username && !parsed.password;
  } catch { return false; }
 }
+function raceKey(row) {
+ const date=String(row?.date??'');
+ const venue=Number(row?.venue), race=Number(row?.race);
+ if(!/^\d{8}$/.test(date) || !Number.isInteger(venue) || venue<1 || venue>24 ||
+    !Number.isInteger(race) || race<1 || race>12) return null;
+ return [date,venue,race].join(':');
+}
 export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
  const out={method:'saved_predictions_vs_independent_verified_results',compared:0,held:0,
   mainHits:0,upsetHits:0,holdReasons:{},rows:[],mainHitRate:null,upsetHitRate:null,
   note:'A comparison is only eligible with independent verified results and independently authenticated pre-race capture and documented capture-before-cutoff evidence. Historical retrospective API calls are not substitutes.'};
  const byKey=new Map();
  for(const r of Array.isArray(officialResults)?officialResults:[]){
-  const key=[r?.date,r?.venue,r?.race].join(':');
+  const key=raceKey(r);
+  if(key===null)continue;
   if(!byKey.has(key))byKey.set(key,r);else byKey.set(key,null);
  }
  const records=Array.isArray(capture?.records)?capture.records:[];
  const captureKeyCounts=new Map();
- for(const r of records){const key=[r?.date,r?.venue,r?.race].join(':');captureKeyCounts.set(key,(captureKeyCounts.get(key)||0)+1);}
+ for(const r of records){const key=raceKey(r);
+  if(key===null)continue;captureKeyCounts.set(key,(captureKeyCounts.get(key)||0)+1);}
  for(const r of records){
-  const key=[r.date,r.venue,r.race].join(':');
+  const key=raceKey(r);
   const official=byKey.get(key),actual=verifiedPodium(official);
   const reasons=[];
-  if(captureKeyCounts.get(key)>1)reasons.push('duplicate_saved_capture_race');
+  if(key===null)reasons.push('invalid_saved_capture_race_key');
+  if(key!==null && captureKeyCounts.get(key)>1)reasons.push('duplicate_saved_capture_race');
   if(capture?.authenticatedBeforeRace!==true)reasons.push('capture_not_authenticated_before_race');
   if(r.response?.ready!==true||r.httpStatus!==200)reasons.push('prediction_not_ready');
   if(!validTrifectaPicks(r.response?.main)||!validTrifectaPicks(r.response?.upset))reasons.push('invalid_picks');
