@@ -39,11 +39,14 @@ jobs:
           node --check scripts/test-audit-morning-input-coverage.mjs
           node --check scripts/classify-morning-capture-quality.mjs
           node --check scripts/test-classify-morning-capture-quality.mjs
+          node --check scripts/audit-capture-score-inputs.mjs
+          node --check scripts/test-audit-capture-score-inputs.mjs
       - name: Test capture validation with offline fixtures
         run: |
           node scripts/test-validate-morning-capture.mjs
           node scripts/test-audit-morning-input-coverage.mjs
           node scripts/test-classify-morning-capture-quality.mjs
+          node scripts/test-audit-capture-score-inputs.mjs
       - name: Capture existing deployed predictor responses without altering app
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
@@ -68,6 +71,14 @@ jobs:
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
             node scripts/classify-morning-capture-quality.mjs "$file" > "${file%.json}-quality.json"
+          done
+      - name: Audit per-boat scoring inputs in raw captures
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            case "$file" in *-quality.json) continue ;; esac
+            node scripts/audit-capture-score-inputs.mjs "$file" > "${file%.json}-score-inputs.json"
           done
       - name: Publish mobile-friendly capture quality summary
         if: always()
