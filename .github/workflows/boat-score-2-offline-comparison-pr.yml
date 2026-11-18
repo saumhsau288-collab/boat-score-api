@@ -4,6 +4,8 @@ on:
     paths:
       - 'scripts/compare_offline_predictions.py'
       - 'scripts/test_compare_offline_predictions.py'
+      - 'scripts/audit_capture_official_overlap.py'
+      - 'scripts/test_audit_capture_official_overlap.py'
       - '.github/workflows/boat-score-2-offline-comparison-pr.yml'
   workflow_dispatch:
 permissions:
@@ -17,6 +19,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Verify offline comparison syntax
-        run: python3 -m py_compile scripts/compare_offline_predictions.py scripts/test_compare_offline_predictions.py
+        run: python3 -m py_compile scripts/compare_offline_predictions.py scripts/test_compare_offline_predictions.py scripts/audit_capture_official_overlap.py scripts/test_audit_capture_official_overlap.py
       - name: Test immutable prediction versus official result comparison
         run: python3 -m unittest discover -s scripts -p 'test_compare_offline_predictions.py' -v
+      - name: Test raw capture versus official result coverage audit
+        run: python3 -m unittest discover -s scripts -p 'test_audit_capture_official_overlap.py' -v
