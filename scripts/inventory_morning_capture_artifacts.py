@@ -249,6 +249,16 @@ if __name__ == '__main__':
     result = inventory(repository, token)
     if result['errors']:
         print('ERROR: Some retained artifacts could not be read; counts are incomplete', file=sys.stderr)
+    # Put the most actionable, privacy-safe totals at the top for mobile log viewers.
+    for day, diagnostic in result['diagnosticsByDate'].items():
+        print('DIAGNOSTIC_SUMMARY ' + json.dumps({
+            'date': day,
+            'states': diagnostic['states'],
+            'notReadyReasonTypes': diagnostic['notReadyReasonTypes'],
+            'officialRetryCategories': diagnostic['officialRetryCategories'],
+            'verificationPairs': diagnostic['verificationPairs'],
+            'transportErrorCategories': diagnostic['transportErrorCategories'],
+        }, ensure_ascii=False, sort_keys=True), flush=True)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     summary = os.environ.get('GITHUB_STEP_SUMMARY')
     if summary:
