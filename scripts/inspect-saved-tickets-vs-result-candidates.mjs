@@ -10,11 +10,14 @@ export function inspectSavedTicketsAgainstResultCandidates(capture,evidence){
  if(!Array.isArray(capture?.records)||!Array.isArray(evidence?.records))throw Error('Invalid capture/result candidates');
  const byKey=new Map();
  for(const r of evidence.records){const k=key(r);if(!byKey.has(k))byKey.set(k,[r]);else byKey.get(k).push(r);}
- const counts={readyPredictions:0,candidatePresent:0,candidateMissing:0,ambiguousEvidence:0,invalidPicks:0,notReady:0};
+ const counts={readyPredictions:0,candidatePresent:0,candidateMissing:0,ambiguousEvidence:0,duplicatePredictions:0,invalidPicks:0,notReady:0};
+ const captureCounts=new Map();
+ for(const r of capture.records)captureCounts.set(key(r),(captureCounts.get(key(r))||0)+1);
  const rows=[];
  for(const r of capture.records){
   if(r.response?.ready!==true){counts.notReady++;continue;}
   counts.readyPredictions++;
+  if(captureCounts.get(key(r))!==1){counts.duplicatePredictions++;continue;}
   const matches=byKey.get(key(r))||[];
   if(matches.length!==1){if(matches.length>1)counts.ambiguousEvidence++;else counts.candidateMissing++;continue;}
   const e=matches[0],top3=e.finishCandidate?.top3;
