@@ -8,6 +8,8 @@ export function summarizeCapture(data) {
   const counts={attempted:data.records.length,networkTimeout:0,otherNetworkError:0,httpFailure:0,notReady:0,ready:0,readyWithMissingInputs:0,readyWithNoReportedMissingInputs:0,retried:0,recoveredAfterRetry:0};
   const byVenue={};
   const byRace={};
+  const uniquePairs=new Set();
+  let duplicateVenueRacePairs=0,invalidVenueRacePairs=0;
   const timing={firstRequestedAt:null,lastRequestedAt:null,lastReceivedAt:null,elapsedSeconds:null,byVenue:{}};
   const validTime=x=>typeof x==='string'&&Number.isFinite(Date.parse(x))?Date.parse(x):null;
   const minTime=(a,b)=>a===null?b:b===null?a:Math.min(a,b);
@@ -28,6 +30,12 @@ export function summarizeCapture(data) {
     const raceKey=Number.isInteger(race)&&race>=1&&race<=12?String(race):'unknown';
     const raceGroup=byRace[raceKey]??={attempted:0,ready:0,networkTimeout:0,firstRequestedAt:null,lastRequestedAt:null};
     raceGroup.attempted++;
+    if(venueKey==='unknown'||raceKey==='unknown') invalidVenueRacePairs++;
+    else {
+      const pair=venueKey+':'+raceKey;
+      if(uniquePairs.has(pair)) duplicateVenueRacePairs++;
+      uniquePairs.add(pair);
+    }
     const start=validTime(record.requestedAt),end=validTime(record.receivedAt);
     if(start===null||!Number.isFinite(morningStart))requestTimeUnknown++;
     else if(start>=morningStart&&start<=morningEnd)requestWithinMorningWindow++;
@@ -78,8 +86,13 @@ export function summarizeCapture(data) {
   timing.lastReceivedAt=lastResponse===null?null:new Date(lastResponse).toISOString();
   timing.elapsedSeconds=firstRequest!==null&&lastResponse!==null&&lastResponse>=firstRequest?Math.round((lastResponse-firstRequest)/1000):null;
   timing.morningWindow={startJst:'07:45',endJst:'08:30',requestWithinMorningWindow,requestOutsideMorningWindow,requestTimeUnknown,responseWithinMorningWindow,responseOutsideMorningWindow,responseTimeUnknown};
+  const coverage={uniqueVenueRacePairs:uniquePairs.size,duplicateVenueRacePairs,invalidVenueRacePairs,
+    requestedVenueCount:Object.keys(byVenue).filter(k=>k!=='unknown').length,
+    missingPairsWithinRequestedVenues:Object.keys(byVenue).filter(k=>k!=='unknown').flatMap(venue=>
+      Array.from({length:12},(_,i)=>venue+':'+(i+1)).filter(pair=>!uniquePairs.has(pair))),
+    warning:'Coverage is against 12 races for each requested venue, not verified active racing venues.'};
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,timing,missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,timing,coverage,missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
