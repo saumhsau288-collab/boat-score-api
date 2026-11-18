@@ -9,6 +9,12 @@ def extract(report,venue,race):
              if r.get('venue')==venue and r.get('race')==race]
     if len(matches)!=1:raise ValueError('Expected exactly one official matched race')
     row=matches[0]
+    if report.get('date')!=row.get('date'):
+        raise ValueError('Official daily archive date mismatch')
+    if row.get('historicalProgramSource')!='official_B_archive' or row.get('historicalResultSource')!='official_K_archive':
+        raise ValueError('Official B/K source provenance missing')
+    if row.get('capturedBeforeStart') is not False or row.get('asOfVerified') is not False:
+        raise ValueError('Post-race archive cannot claim pre-race authentication')
     if row.get('resultVerified') is not True:raise ValueError('Official result unverified')
     racers=row.get('racers')
     if not isinstance(racers,list) or len(racers)!=6 or {r.get('boat') for r in racers}!=set(range(1,7)):
