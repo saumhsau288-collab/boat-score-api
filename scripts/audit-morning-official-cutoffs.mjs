@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 // Conservative timing audit. The cutoff must be independently verified; raw API metadata alone is not proof.
 import fs from 'node:fs';
+function hasOfficialCutoffUrl(value) {
+ try {
+  const url=new URL(value);
+  return url.protocol==='https:' && (url.hostname==='boatrace.jp' || url.hostname.endsWith('.boatrace.jp')) && !url.username && !url.password;
+ } catch { return false; }
+}
 export function classifyCaptureTiming(record, officialCutoff) {
   const received=Date.parse(record?.receivedAt);
   if(!Number.isFinite(received))return {status:'invalid_capture_time'};
-  if(!officialCutoff || officialCutoff.verified!==true || officialCutoff.source!=='official' ||
+  if(!officialCutoff || officialCutoff.verified!==true || officialCutoff.source!=='official' || !hasOfficialCutoffUrl(officialCutoff.sourceUrl) ||
      !Number.isFinite(Date.parse(officialCutoff.cutoffAt)))
     return {status:'official_cutoff_unverified'};
   if(officialCutoff.date!==record.date || officialCutoff.venue!==record.venue || officialCutoff.race!==record.race)
