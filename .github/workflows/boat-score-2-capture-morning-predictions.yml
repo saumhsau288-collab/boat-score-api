@@ -170,6 +170,11 @@ jobs:
               '| Outcome | Races |','|---|---:|',
               ...Object.entries(report.counts).map(([key,count])=>'| '+key+' | '+count+' |'),
               '', 'Capture JST: '+(report.captureTimeJst||'unknown')+'; morning window: '+report.scheduledMorningWindow,
+              '', '### Capture outcomes by venue', '',
+              '| Venue | Attempted | Ready | Not ready | Timeout | Other error | HTTP failure |',
+              '|---|---:|---:|---:|---:|---:|---:|',
+              ...Object.entries(report.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,c])=>
+                '| '+venue+' | '+c.attempted+' | '+c.ready+' | '+c.notReady+' | '+c.networkTimeout+' | '+c.otherNetworkError+' | '+c.httpFailure+' |'),
               '', 'Missing input labels reported by ready API responses:', '',
               ...Object.entries(report.missingInputLabels||{}).map(([key,count])=>'- '+key+': '+count),
               '', 'Not-ready reasons:', '',
