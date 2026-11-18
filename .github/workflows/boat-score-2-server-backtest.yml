@@ -39,6 +39,12 @@ jobs:
           else
             echo 'No backtest JSON generated; calibration input audit skipped'
           fi
+      - name: Show backtest results in GitHub run summary
+        if: always()
+        env:
+          BACKTEST_DATE: ${{ inputs.backtest_date }}
+        run: |
+          node scripts/write-backtest-job-summary.mjs
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4

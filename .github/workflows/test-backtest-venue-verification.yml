@@ -5,6 +5,9 @@ on:
       - 'scripts/boat-score-2-server-backtest.mjs'
       - 'scripts/verified-venue-candidates.mjs'
       - 'scripts/test-verified-venue-candidates.mjs'
+      - 'scripts/backtest-comparison-eligibility.mjs'
+      - 'scripts/write-backtest-job-summary.mjs'
+      - '.github/workflows/boat-score-2-server-backtest.yml'
       - '.github/workflows/test-backtest-venue-verification.yml'
   workflow_dispatch:
 permissions:
@@ -18,4 +21,5 @@ jobs:
         with:
           node-version: '22'
       - run: node --check scripts/boat-score-2-server-backtest.mjs
+      - run: node --check scripts/write-backtest-job-summary.mjs
       - run: node --test scripts/test-verified-venue-candidates.mjs
