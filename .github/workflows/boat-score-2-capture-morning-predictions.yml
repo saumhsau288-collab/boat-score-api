@@ -152,6 +152,29 @@ jobs:
                 '| '+venue+' | '+x.ready+' | '+x.unverified+' | '+x.timeout+' | '+x.other+' |'),
               '', 'These are API response classifications, not confirmed venue schedules or prediction accuracy.', '');
           }
+          for (const name of rawNames) {
+            const raw=JSON.parse(fs.readFileSync('prediction-captures/'+name,'utf8'));
+            const missingByVenue=new Map();
+            const tracked=['recent50WinRate','exhibitionScore','nationalWinRate','localWinRate','motorTwoWinRate'];
+            for (const record of raw.records || []) {
+              if (record.httpStatus!==200 || record.response?.ready!==true) continue;
+              const venue=Number(record.venue);
+              if (!Number.isInteger(venue)||venue<1||venue>24) continue;
+              if (!missingByVenue.has(venue)) missingByVenue.set(venue,{ready:0,notReported:0,fields:Object.fromEntries(tracked.map(x=>[x,0]))});
+              const stats=missingByVenue.get(venue);stats.ready++;
+              const missing=record.response.missingInputs;
+              if (!Array.isArray(missing)) {stats.notReported++;continue;}
+              for (const field of new Set(missing)) if (Object.hasOwn(stats.fields,field)) stats.fields[field]++;
+            }
+            lines.push('### Reported missing score inputs by venue: '+raw.date,'',
+              '| Venue | Ready | Recent 50 | Exhibition | National | Local | Motor | Missing list absent |',
+              '|---:|---:|---:|---:|---:|---:|---:|---:|',
+              ...[...missingByVenue].sort((a,b)=>a[0]-b[0]).map(([venue,s])=>
+                '| '+venue+' | '+s.ready+' | '+s.fields.recent50WinRate+' | '+
+                s.fields.exhibitionScore+' | '+s.fields.nationalWinRate+' | '+
+                s.fields.localWinRate+' | '+s.fields.motorTwoWinRate+' | '+s.notReported+' |'),
+              '', 'Only explicit API missingInputs labels are counted; zero means not reported, not confirmed present.', '');
+          }
           if (!scoreNames.length) lines.push('No score input evidence report was generated.', '');
           if (!names.length) lines.push('No capture quality report was generated. Inspect raw artifact and failed steps.');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
