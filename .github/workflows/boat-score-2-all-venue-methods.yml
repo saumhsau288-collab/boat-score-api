@@ -225,7 +225,41 @@ jobs:
             raise SystemExit('Unsafe or incomplete retrospective evidence')
           print('Actual official race score and method pipeline passed')
           PY
+      - name: Summarize retrospective official race evidence on mobile
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          lines=['## Boat Score 2: official race retrospective check','',
+            'This is post-race official archive analysis, not a pre-race prediction.','']
+          selection=Path('reports/official-race-smoke-selection.json')
+          evidence=Path('reports/official-race-smoke-evidence.json')
+          if selection.exists():
+            try:
+              s=json.loads(selection.read_text(encoding='utf-8'))
+              lines.extend(['Selected: '+str(s.get('source'))+' / venue '+str(s.get('venue'))+' / race '+str(s.get('race')),''])
+            except (ValueError,OSError) as exc:
+              lines.extend(['Selection JSON unreadable: '+str(exc),''])
+          if evidence.exists():
+            try:
+              r=json.loads(evidence.read_text(encoding='utf-8'))
+              lines.extend(['| Boat | Score lower | Score upper | Missing score inputs | Historical method sample |',
+                '|---:|---:|---:|---|---|'])
+              for racer in r['racers']:
+                lines.append('| '+str(racer['boat'])+' | '+str(racer['scoreLowerBound'])+' | '+
+                  str(racer['scoreUpperBound'])+' | '+', '.join(racer['missingScoreInputs'])+' | '+
+                  str(racer['historicalMethodStatus'])+' |')
+              lines.extend(['','No score weight change or accuracy claim is permitted.'])
+            except (ValueError,KeyError,TypeError,OSError) as exc:
+              lines.append('Evidence JSON unreadable: '+str(exc))
+          else:
+            lines.append('No completed official race evidence. Inspect failed workflow step and uploaded diagnostics.')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as out:
+            out.write(chr(10).join(lines)+chr(10))
+          PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: official-all-venue-racer-methods
           path: |
