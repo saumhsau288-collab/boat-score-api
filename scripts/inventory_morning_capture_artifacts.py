@@ -7,7 +7,7 @@ import sys
 import urllib.request
 import urllib.parse
 import zipfile
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 
 def summarize_capture(payload):
@@ -50,6 +50,44 @@ class SafeArtifactRedirect(urllib.request.HTTPRedirectHandler):
         return redirected
 
 
+
+def diagnose_capture(payload):
+    """Aggregate response states without exposing or reconstructing individual predictions."""
+    if not isinstance(payload, dict) or payload.get('authenticatedBeforeRace') is not False:
+        raise ValueError('Expected unauthenticated raw capture')
+    records = payload.get('records')
+    if not isinstance(records, list):
+        raise ValueError('Missing capture records')
+    states = Counter()
+    venues = defaultdict(Counter)
+    ready_races = []
+    for row in records:
+        if not isinstance(row, dict):
+            raise ValueError('Invalid capture row')
+        venue, race = row.get('venue'), row.get('race')
+        if type(venue) is not int or not 1 <= venue <= 24 or type(race) is not int or not 1 <= race <= 12:
+            raise ValueError('Invalid captured venue/race identity')
+        response = row.get('response')
+        status = row.get('httpStatus')
+        if response is not None and not isinstance(response, dict):
+            state = 'unexpected_response_shape'
+        elif status != 200:
+            state = 'http_' + str(status) if type(status) is int else 'transport_error'
+        elif response is None:
+            state = 'http200_non_json'
+        elif response.get('ready') is True:
+            state = 'ready'
+            ready_races.append({'venue': venue, 'race': race})
+        elif response.get('ready') is False:
+            state = 'not_ready'
+        else:
+            state = 'ready_missing_or_invalid'
+        states[state] += 1
+        venues[str(venue)][state] += 1
+    return {'states': dict(sorted(states.items())),
+            'byVenue': {v: dict(sorted(c.items())) for v, c in sorted(venues.items(), key=lambda x: int(x[0]))},
+            'readyRaceIdentities': ready_races}
+
 def api(path, token, binary=False):
     request = urllib.request.Request(
         'https://api.github.com/' + path.lstrip('/'),
@@ -66,6 +104,7 @@ def inventory(repository, token):
                                   'http200': 0, 'ready': 0, 'usableSixPlusSix': 0})
     errors = []
     inspected = 0
+    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': []})
     for page in range(1, 11):
         response = api(f'repos/{repository}/actions/artifacts?per_page=100&page={page}', token)
         artifacts = response.get('artifacts', [])
@@ -89,6 +128,12 @@ def inventory(repository, token):
                     if not isinstance(date, str) or len(date) != 8 or not date.isdigit():
                         raise ValueError('Invalid capture date')
                     counts = summarize_capture(payload)
+                    diagnostic = diagnose_capture(payload)
+                    bucket = diagnostics[date]
+                    bucket['states'].update(diagnostic['states'])
+                    for venue, state_counts in diagnostic['byVenue'].items():
+                        bucket['byVenue'][venue].update(state_counts)
+                    bucket['readyRaceIdentities'].extend(diagnostic['readyRaceIdentities'])
                     totals[date]['artifacts'] += 1
                     for key, value in counts.items():
                         totals[date][key] += value
@@ -96,7 +141,15 @@ def inventory(repository, token):
                 errors.append({'artifactId': artifact.get('id'), 'reason': str(exc)})
         if len(artifacts) < 100:
             break
-    return {'byCaptureDate': dict(sorted(totals.items())), 'artifactsInspected': inspected,
+    diagnostic_output = {}
+    for day, bucket in sorted(diagnostics.items()):
+        diagnostic_output[day] = {
+            'states': dict(sorted(bucket['states'].items())),
+            'byVenue': {venue: dict(sorted(c.items()))
+                        for venue, c in sorted(bucket['byVenue'].items(), key=lambda x: int(x[0]))},
+            'readyRaceIdentities': bucket['readyRaceIdentities']}
+    return {'byCaptureDate': dict(sorted(totals.items())),
+            'diagnosticsByDate': diagnostic_output, 'artifactsInspected': inspected,
             'errors': errors, 'officialResultOverlap': None,
             'accuracyCalculationPermitted': False,
             'warning': 'Counts of stored raw API responses, NOT authenticated pre-race predictions. Duplicate attempts may be counted. No official result join or hit-rate calculation.'}
@@ -119,6 +172,14 @@ if __name__ == '__main__':
             f.write('|---|---:|---:|---:|---:|---:|\\n')
             for day, c in result['byCaptureDate'].items():
                 f.write(f"| {day} | {c['artifacts']} | {c['captured']} | {c['http200']} | {c['ready']} | {c['usableSixPlusSix']} |\\n")
+            for day, diagnostic in result['diagnosticsByDate'].items():
+                f.write(f'\\n### {day}: response diagnostics\\n\\n')
+                f.write('| Response state | Count |\\n|---|---:|\\n')
+                for state, count in diagnostic['states'].items():
+                    f.write(f'| {state} | {count} |\\n')
+                f.write('\\nReady venue/race IDs (not verified pre-race predictions): ')
+                f.write(', '.join(f"{r['venue']}-{r['race']}" for r in diagnostic['readyRaceIdentities']) or 'none')
+                f.write('\\n')
             f.write('\\nRaw captures are not authenticated forecasts; no accuracy metrics.\\n')
             if result['errors']:
                 f.write(f"\\nUnreadable artifacts: {len(result['errors'])} (inspect job log).\\n")
