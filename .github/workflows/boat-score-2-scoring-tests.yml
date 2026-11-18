@@ -7,6 +7,11 @@ on:
       - 'boat-score-2-*.js'
       - 'boat-score-2-*.mjs'
       - '.github/workflows/boat-score-2-scoring-tests.yml'
+  pull_request:
+    paths:
+      - 'boat-score-2-*.js'
+      - 'boat-score-2-*.mjs'
+      - '.github/workflows/boat-score-2-scoring-tests.yml'
   workflow_dispatch:
 
 permissions:
