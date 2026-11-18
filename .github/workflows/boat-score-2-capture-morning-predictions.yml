@@ -129,6 +129,29 @@ jobs:
               'Potential input fields: ' + (shape.possibleScoreInputFieldNames.join(', ') || '(none exposed)'), '',
               'Field names are not evidence that all scoring inputs were present.', '');
           }
+          const rawNames = fs.existsSync('prediction-captures')
+            ? fs.readdirSync('prediction-captures').filter(name =>
+                name.endsWith('.json') && !/-quality\\.json$|-score-inputs\\.json$|-response-shape\\.json$/.test(name)) : [];
+          for (const name of rawNames) {
+            const raw = JSON.parse(fs.readFileSync('prediction-captures/' + name, 'utf8'));
+            const byVenue = new Map();
+            for (const record of raw.records || []) {
+              const key = Number(record.venue);
+              if (!Number.isInteger(key) || key < 1 || key > 24) continue;
+              if (!byVenue.has(key)) byVenue.set(key,{ready:0,unverified:0,timeout:0,other:0});
+              const row=byVenue.get(key);
+              if (record.response?.ready === true && record.httpStatus === 200) row.ready++;
+              else if (record.response?.reason === 'official_six_boat_stats_unverified') row.unverified++;
+              else if (record.error && /timeout|timed out/i.test(record.error)) row.timeout++;
+              else row.other++;
+            }
+            lines.push('### Venue-level capture blockers: '+raw.date,'',
+              '| Venue | Ready | Official six-boat unverified | Timeouts | Other |',
+              '|---:|---:|---:|---:|---:|',
+              ...[...byVenue].sort((a,b)=>a[0]-b[0]).map(([venue,x])=>
+                '| '+venue+' | '+x.ready+' | '+x.unverified+' | '+x.timeout+' | '+x.other+' |'),
+              '', 'These are API response classifications, not confirmed venue schedules or prediction accuracy.', '');
+          }
           if (!scoreNames.length) lines.push('No score input evidence report was generated.', '');
           if (!names.length) lines.push('No capture quality report was generated. Inspect raw artifact and failed steps.');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
