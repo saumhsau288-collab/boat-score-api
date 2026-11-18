@@ -48,6 +48,22 @@ jobs:
           for file in prediction-captures/*.json; do
             node scripts/validate-morning-capture.mjs "$file"
           done
+      - name: Fail closed when no usable morning predictions were captured
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const files = fs.readdirSync('prediction-captures').filter(name => name.endsWith('.json'));
+          if (files.length !== 1) throw new Error('Expected exactly one capture artifact');
+          const data = JSON.parse(fs.readFileSync('prediction-captures/' + files[0], 'utf8'));
+          const valid = p => Array.isArray(p) && p.length === 3 &&
+            p.every(x => Number.isInteger(x) && x >= 1 && x <= 6) && new Set(p).size === 3;
+          const six = a => Array.isArray(a) && a.length === 6 &&
+            a.every(valid) && new Set(a.map(p => p.join('-'))).size === 6;
+          const usable = data.records.filter(r => r.httpStatus === 200 &&
+            r.response?.ready === true && six(r.response.main) && six(r.response.upset));
+          console.log('Usable six-main/six-upset morning predictions:', usable.length, 'of', data.attempted);
+          if (usable.length === 0) throw new Error('No usable morning predictions; raw artifact will still upload');
+          NODE
       - name: Upload timestamped raw responses
         if: always()
         uses: actions/upload-artifact@v4
