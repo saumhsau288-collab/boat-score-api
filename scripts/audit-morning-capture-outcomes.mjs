@@ -18,6 +18,9 @@ export function summarizeCapture(data) {
   let requestWithinMorningWindow=0,requestOutsideMorningWindow=0,requestTimeUnknown=0;
   let responseWithinMorningWindow=0,responseOutsideMorningWindow=0,responseTimeUnknown=0;
   let readyResponseWithinMorningWindow=0,readyResponseOutsideMorningWindow=0,readyResponseTimeUnknown=0;
+  let usablePicksWithinMorningWindow=0,usablePicksOutsideMorningWindow=0,usablePicksTimeUnknown=0;
+  const validPick=p=>Array.isArray(p)&&p.length===3&&p.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(p).size===3;
+  const validSix=p=>Array.isArray(p)&&p.length===6&&p.every(validPick)&&new Set(p.map(x=>x.join('-'))).size===6;
   const morningStart=typeof data.date==='string'&&/^20\d{6}$/.test(data.date)?Date.parse(data.date.slice(0,4)+'-'+data.date.slice(4,6)+'-'+data.date.slice(6,8)+'T07:45:00+09:00'):NaN;
   const morningEnd=Number.isFinite(morningStart)?morningStart+45*60*1000:NaN;
   const missingInputLabels={};
@@ -71,6 +74,11 @@ export function summarizeCapture(data) {
       if(end===null||!Number.isFinite(morningStart))readyResponseTimeUnknown++;
       else if(end>=morningStart&&end<=morningEnd)readyResponseWithinMorningWindow++;
       else readyResponseOutsideMorningWindow++;
+      if(validSix(record.response.main)&&validSix(record.response.upset)) {
+        if(end===null||!Number.isFinite(morningStart))usablePicksTimeUnknown++;
+        else if(end>=morningStart&&end<=morningEnd)usablePicksWithinMorningWindow++;
+        else usablePicksOutsideMorningWindow++;
+      }
       if(Array.isArray(record.response.missingInputs)) {
         if(record.response.missingInputs.length) counts.readyWithMissingInputs++;
         else counts.readyWithNoReportedMissingInputs++;
@@ -89,7 +97,7 @@ export function summarizeCapture(data) {
   timing.lastRequestedAt=lastRequest===null?null:new Date(lastRequest).toISOString();
   timing.lastReceivedAt=lastResponse===null?null:new Date(lastResponse).toISOString();
   timing.elapsedSeconds=firstRequest!==null&&lastResponse!==null&&lastResponse>=firstRequest?Math.round((lastResponse-firstRequest)/1000):null;
-  timing.morningWindow={startJst:'07:45',endJst:'08:30',requestWithinMorningWindow,requestOutsideMorningWindow,requestTimeUnknown,responseWithinMorningWindow,responseOutsideMorningWindow,responseTimeUnknown,readyResponseWithinMorningWindow,readyResponseOutsideMorningWindow,readyResponseTimeUnknown};
+  timing.morningWindow={startJst:'07:45',endJst:'08:30',requestWithinMorningWindow,requestOutsideMorningWindow,requestTimeUnknown,responseWithinMorningWindow,responseOutsideMorningWindow,responseTimeUnknown,readyResponseWithinMorningWindow,readyResponseOutsideMorningWindow,readyResponseTimeUnknown,usablePicksWithinMorningWindow,usablePicksOutsideMorningWindow,usablePicksTimeUnknown};
   const validVenues=Array.isArray(data.requestedVenues)&&data.requestedVenues.length>0&&
     data.requestedVenues.every(v=>Number.isInteger(v)&&v>=1&&v<=24)&&
     new Set(data.requestedVenues).size===data.requestedVenues.length;
