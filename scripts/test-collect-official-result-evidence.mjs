@@ -8,7 +8,7 @@ assert.equal(check(url.replace('rno=1','rno=2')).status,'result_race_identity_ch
 assert.equal(check('https://example.com/').status,'redirected_or_unexpected_result_page');
 assert.equal(check(url,404).status,'result_http_not_200');
 const fetchImpl=async request=>({url:request,status:200,headers:{get:()=> 'text/html'},text:async()=>'<html>result page</html>'});
-const capture={date:'20261118',records:[{date:'20261118',venue:1,race:1},{date:'20261118',venue:1,race:1},{date:'20261118',venue:2,race:2}]};
+const capture={date:'20261118',records:[{date:'20261118',venue:1,race:1,response:{ready:true}},{date:'20261118',venue:1,race:1,response:{ready:true}},{date:'20261118',venue:2,race:2,response:{ready:true}}]};
 const result=await collectOfficialResultEvidence(capture,{fetchImpl});
 assert.equal(result.records.length,2);
 assert.equal(result.verifiedResults,0);
@@ -23,12 +23,12 @@ const parallelFetch=async request=>{
  active--;
  return {url:request,status:200,headers:{get:()=> 'text/html'},text:async()=>'<html>result page</html>'};
 };
-const many={date:'20261118',records:Array.from({length:12},(_,i)=>({date:'20261118',venue:1,race:i+1}))};
+const many={date:'20261118',records:Array.from({length:12},(_,i)=>({date:'20261118',venue:1,race:i+1,response:{ready:true}}))};
 const parallel=await collectOfficialResultEvidence(many,{fetchImpl:parallelFetch,concurrency:3});
 assert.equal(parallel.records.length,12);
 assert.ok(peak>1&&peak<=3);
 assert.deepEqual(parallel.records.map(r=>r.race),Array.from({length:12},(_,i)=>i+1));
-const oversized=await collectOfficialResultEvidence({date:'20261118',records:[{venue:1,race:1}]},{fetchImpl:async request=>({url:request,status:200,headers:{get:()=> 'text/html'},text:async()=> 'X'.repeat(200001)})});
+const oversized=await collectOfficialResultEvidence({date:'20261118',records:[{venue:1,race:1,response:{ready:true}}]},{fetchImpl:async request=>({url:request,status:200,headers:{get:()=> 'text/html'},text:async()=> 'X'.repeat(200001)})});
 assert.equal(oversized.records[0].htmlSnapshot,null);
 assert.equal(oversized.records[0].htmlSnapshotComplete,false);
 assert.equal(oversized.records[0].htmlLength,200001);
@@ -37,7 +37,10 @@ const deferred=await collectOfficialResultEvidence(capture,{now:new Date('2026-1
 assert.equal(deferred.status,'deferred_until_after_capture_date');
 assert.equal(deferred.records.length,0);
 assert.equal(called,false);
-const malformed=await collectOfficialResultEvidence({date:'20261118',records:[null,{date:'20261118',venue:1,race:1}]},{fetchImpl});
+const malformed=await collectOfficialResultEvidence({date:'20261118',records:[null,{date:'20261118',venue:1,race:1,response:{ready:true}}]},{fetchImpl});
 assert.equal(malformed.records.length,1);
 await assert.rejects(()=>collectOfficialResultEvidence(capture,{fetchImpl,maxRequests:0}),/Invalid maxRequests/);
+const unready=await collectOfficialResultEvidence({date:'20261118',records:[{venue:1,race:1,response:{ready:false}},{venue:1,race:2,response:{ready:true}}]},{fetchImpl});
+assert.equal(unready.records.length,1);
+assert.equal(unready.records[0].race,2);
 console.log('Official result candidate collector tests passed');
