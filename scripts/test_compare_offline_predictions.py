@@ -16,6 +16,10 @@ def sample():
 def pred(race, pick, before=True):
     return {'date': '20261116', 'venue': 1, 'race': race,
             'capturedBeforeStart': before, 'asOfVerified': before,
+            'capturedAt': '2026-11-16T08:00:00+09:00',
+            'raceStartAt': '2026-11-16T12:00:00+09:00',
+            'captureEvidenceId': 'immutable-archive:20261116:1:' + str(race),
+            'predictionModelVersion': 'boat-score-2-test',
             'predictedFinishOrder': pick}
 
 
@@ -38,6 +42,26 @@ class ComparisonTests(unittest.TestCase):
         result = compare([pred(1, [3, 2, 1], False)], [sample()])
         self.assertEqual(result['totals']['unverifiedPredictionSnapshot'], 1)
         self.assertIsNone(result['exactTrifectaHitRatePercent'])
+
+    def test_flags_alone_are_insufficient(self):
+        p = pred(1, [3, 2, 1])
+        del p['capturedAt']
+        self.assertEqual(compare([p], [sample()])['totals']['unverifiedPredictionSnapshot'], 1)
+
+    def test_after_start_snapshot_excluded(self):
+        p = pred(1, [3, 2, 1])
+        p['capturedAt'] = '2026-11-16T13:00:00+09:00'
+        self.assertEqual(compare([p], [sample()])['totals']['unverifiedPredictionSnapshot'], 1)
+
+    def test_wrong_race_date_excluded(self):
+        p = pred(1, [3, 2, 1])
+        p['raceStartAt'] = '2026-11-17T12:00:00+09:00'
+        self.assertEqual(compare([p], [sample()])['totals']['unverifiedPredictionSnapshot'], 1)
+
+    def test_naive_timestamps_excluded(self):
+        p = pred(1, [3, 2, 1])
+        p['capturedAt'] = '2026-11-16T08:00:00'
+        self.assertEqual(compare([p], [sample()])['totals']['unverifiedPredictionSnapshot'], 1)
 
     def test_duplicate_rejected(self):
         with self.assertRaisesRegex(ValueError, 'Duplicate prediction'):

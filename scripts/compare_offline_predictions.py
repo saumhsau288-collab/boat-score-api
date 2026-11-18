@@ -6,8 +6,32 @@ Never reconstruct predictions from a finished race or change live scoring.
 import argparse
 import json
 from pathlib import Path
+from datetime import datetime, date, timezone, timedelta
 
 REQUIRED_PROVENANCE = ('capturedBeforeStart', 'asOfVerified')
+JST = timezone(timedelta(hours=9))
+
+
+def has_verifiable_snapshot(pred):
+    """Flags alone cannot establish that a prediction existed before the race."""
+    if not all(pred.get(field) is True for field in REQUIRED_PROVENANCE):
+        return False
+    if not isinstance(pred.get('predictionModelVersion'), str) or not pred['predictionModelVersion'].strip():
+        return False
+    if not isinstance(pred.get('captureEvidenceId'), str) or not pred['captureEvidenceId'].strip():
+        return False
+    try:
+        captured = datetime.fromisoformat(pred['capturedAt'])
+        started = datetime.fromisoformat(pred['raceStartAt'])
+        race_day = date.fromisoformat(pred['date'][:4] + '-' + pred['date'][4:6] + '-' + pred['date'][6:])
+    except (KeyError, TypeError, ValueError):
+        return False
+    if captured.tzinfo is None or started.tzinfo is None:
+        return False
+    if started.astimezone(JST).date() != race_day:
+        return False
+    return captured < started
+
 
 
 def compare(predictions, official_reports):
@@ -46,7 +70,7 @@ def compare(predictions, official_reports):
             raise ValueError('Duplicate prediction: ' + str(key))
         seen.add(key)
         totals['predictionRecords'] += 1
-        if not all(pred.get(field) is True for field in REQUIRED_PROVENANCE):
+        if not has_verifiable_snapshot(pred):
             status = 'unverifiedPredictionSnapshot'
         elif key in incidents:
             status = 'verifiedIncidentExcluded'
