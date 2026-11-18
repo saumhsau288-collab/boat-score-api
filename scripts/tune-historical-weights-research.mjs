@@ -14,7 +14,12 @@ export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candida
   const valid=/^20\d{6}$/.test(String(row?.date))&&Array.isArray(boats)&&boats.length===6&&
    new Set(boats.map(b=>b?.boat)).size===6&&boats.every(b=>Number.isInteger(b?.boat)&&b.boat>=1&&b.boat<=6&&FIELDS.every(f=>typeof b[f]==='number'&&Number.isFinite(b[f])&&b[f]>=0))&&
    Array.isArray(actual)&&actual.length===3&&actual.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(actual).size===3&&
-   row?.independentlyVerifiedResult===true&&row?.historicalInputProvenanceVerified===true;
+   row?.independentlyVerifiedResult===true&&row?.historicalInputProvenanceVerified===true&&
+   typeof row?.historicalInputSourceUrl==='string'&&/^https:\/\//.test(row.historicalInputSourceUrl)&&
+   typeof row?.officialResultSourceUrl==='string'&&/^https:\/\/(?:www\.)?boatrace\.jp\//.test(row.officialResultSourceUrl)&&
+   typeof row?.historicalInputCapturedAt==='string'&&Number.isFinite(Date.parse(row.historicalInputCapturedAt))&&
+   typeof row?.officialCutoffAt==='string'&&Number.isFinite(Date.parse(row.officialCutoffAt))&&
+   Date.parse(row.historicalInputCapturedAt)<Date.parse(row.officialCutoffAt);
   if(!valid){excluded.push({date:row?.date??null,reason:'missing_verified_historical_inputs_or_result'});continue;}
   const key=[row.date,row.venue,row.race].join(':');
   if(!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||counts.get(key)!==1){excluded.push({date:row.date,reason:'invalid_or_duplicate_race_key'});continue;}
