@@ -32,6 +32,14 @@ try {
  assert.notEqual(run({...timed,scheduledMorningWindow:false}).status,0);
  assert.notEqual(run({...timed,captureEnd:'2026-11-17T23:00:00Z'}).status,0);
  assert.equal(timed.scheduledMorningWindow,true);
+ const scoped={...base,requestedVenues:[1],requestedMaxRaces:1};
+ assert.equal(run(scoped).status,0);
+ assert.notEqual(run({...scoped,requestedMaxRaces:2}).status,0);
+ assert.notEqual(run({...scoped,requestedVenues:[2]}).status,0);
+ assert.notEqual(run({...scoped,requestedVenues:[1,1]}).status,0);
+ const scopedTwo={...base,requestedVenues:[1],requestedMaxRaces:2,attempted:2,httpSuccess:2,ready:2,records:[row,{...row,race:2}]};
+ assert.equal(run(scopedTwo).status,0);
+ assert.notEqual(run({...scopedTwo,records:[row,{...row,race:3}]}).status,0);
 
  assert.notEqual(run({...base,records:[row,row],attempted:2,httpSuccess:2,ready:2}).status,0);
  assert.notEqual(run({...base,records:[{...row,receivedAt:'2026-11-17T22:59:59Z'}]}).status,0);
