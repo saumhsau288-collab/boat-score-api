@@ -223,6 +223,18 @@ jobs:
           r=json.loads(Path('reports/official-race-smoke-evidence.json').read_text())
           if len(r['racers'])!=6 or r['accuracyCalculationPermitted'] is not False or r['retrospectiveOnly'] is not True:
             raise SystemExit('Unsafe or incomplete retrospective evidence')
+          if r.get('fullScoreRank') is not None:
+            raise SystemExit('Unexpected complete ranking from retrospective archive')
+          if len({x['racerId'] for x in r['racers']})!=6:
+            raise SystemExit('Duplicate racer identity in selected official race')
+          for x in r['racers']:
+            if not all(isinstance(x.get(k),(int,float)) for k in ('nationalWinRate','localWinRate','motorTwoWinRate')):
+              raise SystemExit('Official three-field evidence incomplete')
+            if not (0<=x['scoreLowerBound']<=x['scoreUpperBound']<=100):
+              raise SystemExit('Score interval outside allowed range')
+            if not {'recent50WinRate','exhibitionScore'}.issubset(set(x['missingScoreInputs'])):
+              raise SystemExit('Archived B/K missing inputs unexpectedly treated as complete')
+          print('Verified 6 distinct racers, three archived inputs, conservative bounds, and no false full ranking')
           print('Actual official race score and method pipeline passed')
           PY
       - name: Summarize retrospective official race evidence on mobile
