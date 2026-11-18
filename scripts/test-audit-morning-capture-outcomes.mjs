@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {summarizeCapture} from './audit-morning-capture-outcomes.mjs';
-const x=summarizeCapture({date:'20261118',captureTimeJst:'17:42',records:[
+const x=summarizeCapture({date:'20261118',captureTimeJst:'17:42',requestedVenues:[1],requestedMaxRaces:12,records:[
  {venue:1,race:1,requestedAt:'2026-11-17T23:00:00Z',receivedAt:'2026-11-17T23:00:20Z',error:'The operation was aborted due to timeout'},
  {error:'connection reset'},
  {httpStatus:503},
@@ -19,10 +19,15 @@ assert.equal(x.byRace.unknown.attempted,5);
 assert.equal(x.coverage.uniqueVenueRacePairs,2);
 assert.equal(x.coverage.duplicateVenueRacePairs,0);
 assert.equal(x.coverage.invalidVenueRacePairs,5);
+assert.equal(x.coverage.expectedPairCount,12);
 assert.equal(x.coverage.missingPairsWithinRequestedVenues.length,10);
 const repeated=summarizeCapture({records:[{venue:1,race:1},{venue:1,race:1}]});
 assert.equal(repeated.coverage.duplicateVenueRacePairs,1);
 assert.equal(repeated.coverage.uniqueVenueRacePairs,1);
+assert.equal(repeated.coverage.missingPairsWithinRequestedVenues,null);
+const partial=summarizeCapture({requestedVenues:[3,8],requestedMaxRaces:2,records:[{venue:3,race:1},{venue:8,race:1},{venue:3,race:2}]});
+assert.equal(partial.coverage.expectedPairCount,4);
+assert.deepEqual(partial.coverage.missingPairsWithinRequestedVenues,['8:2']);
 assert.equal(x.timing.elapsedSeconds,75);
 assert.deepEqual(x.timing.morningWindow,{startJst:'07:45',endJst:'08:30',requestWithinMorningWindow:2,requestOutsideMorningWindow:0,requestTimeUnknown:5,responseWithinMorningWindow:2,responseOutsideMorningWindow:0,responseTimeUnknown:5});
 assert.equal(x.timing.firstRequestedAt,'2026-11-17T23:00:00.000Z');
