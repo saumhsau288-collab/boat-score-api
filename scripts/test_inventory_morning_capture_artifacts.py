@@ -80,6 +80,24 @@ class InventoryTests(unittest.TestCase):
         self.assertNotIn('secret', str(result))
         self.assertNotIn('private', str(result))
 
+    def test_retry_categories_never_expose_upstream_messages(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200,
+             'response': {'ready': False, 'reason': 'secret reason',
+                          'officialStatsRetry': 'timeout secret-token'}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200,
+             'response': {'ready': False, 'reason': {'private': 'secret'},
+                          'officialStatsRetry': 'HTTP 503 private'}},
+            {'venue': 1, 'race': 3, 'httpStatus': 200,
+             'response': {'ready': False, 'officialStatsRetry': ''}}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['notReadyReasonTypes'],
+                         {'missing': 1, 'object': 1, 'string': 1})
+        self.assertEqual(result['officialRetryCategories'],
+                         {'empty': 1, 'http_error': 1, 'timeout': 1})
+        self.assertNotIn('secret', str(result))
+        self.assertNotIn('private', str(result))
+
     def test_joint_verification_flags_are_aggregated(self):
         rows = [
             {'venue': 1, 'race': 1, 'httpStatus': 200,
