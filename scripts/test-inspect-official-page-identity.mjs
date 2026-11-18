@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {inspectOfficialPageIdentity as inspect} from './inspect-official-page-identity.mjs';
+const id={date:'20261118',venue:2,race:3};
+const page='<a href="?hd=20261118&amp;jcd=02&amp;rno=3">race</a>';
+assert.equal(inspect(page,id).status,'identity_markers_consistent_not_authenticated');
+assert.equal(inspect('<h1>3R</h1>',id).status,'identity_markers_missing');
+assert.equal(inspect(page.replace('rno=3','rno=4'),id).status,'identity_markers_mismatch');
+assert.equal(inspect(page+'<a href="?hd=20261118&amp;jcd=02&amp;rno=4">4R</a>',id).status,'identity_markers_ambiguous');
+assert.equal(inspect(page,id).verified,false);
+console.log('Official page identity marker tests passed');

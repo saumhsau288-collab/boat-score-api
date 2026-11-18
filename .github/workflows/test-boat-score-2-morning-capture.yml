@@ -12,6 +12,8 @@ on:
       - 'scripts/capture-official-cutoff-source.mjs'
       - 'scripts/extract-official-cutoff-candidate.mjs'
       - 'scripts/test-extract-official-cutoff-candidate.mjs'
+      - 'scripts/inspect-official-page-identity.mjs'
+      - 'scripts/test-inspect-official-page-identity.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,3 +30,4 @@ jobs:
       - run: node scripts/test-audit-morning-official-cutoffs.mjs
       - run: node --check scripts/capture-official-cutoff-source.mjs
       - run: node scripts/test-extract-official-cutoff-candidate.mjs
+      - run: node scripts/test-inspect-official-page-identity.mjs
