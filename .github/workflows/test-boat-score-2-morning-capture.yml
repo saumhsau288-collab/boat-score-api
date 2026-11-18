@@ -6,6 +6,7 @@ on:
       - 'scripts/validate-morning-capture.mjs'
       - 'scripts/test-validate-morning-capture.mjs'
       - '.github/workflows/test-boat-score-2-morning-capture.yml'
+      - '.github/workflows/boat-score-2-capture-morning-predictions.yml'
       - 'scripts/audit-morning-official-cutoffs.mjs'
       - 'scripts/test-audit-morning-official-cutoffs.mjs'
   workflow_dispatch:

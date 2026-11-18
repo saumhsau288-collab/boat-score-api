@@ -43,6 +43,7 @@ jobs:
           node --check scripts/test-audit-capture-score-inputs.mjs
           node --check scripts/audit-capture-response-shapes.mjs
           node --check scripts/test-audit-capture-response-shapes.mjs
+          node --check scripts/audit-morning-official-cutoffs.mjs
       - name: Test capture validation with offline fixtures
         run: |
           node scripts/test-validate-morning-capture.mjs
@@ -50,6 +51,7 @@ jobs:
           node scripts/test-classify-morning-capture-quality.mjs
           node scripts/test-audit-capture-score-inputs.mjs
           node scripts/test-audit-capture-response-shapes.mjs
+          node scripts/test-audit-morning-official-cutoffs.mjs
       - name: Capture existing deployed predictor responses without altering app
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
@@ -60,6 +62,14 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             node scripts/validate-morning-capture.mjs "$file"
+          done
+      - name: Audit official cutoff availability without inventing cutoff times
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
+            node scripts/audit-morning-official-cutoffs.mjs "$file" > "${file%.json}-cutoff-audit.json"
           done
       - name: Report official input gaps and network timeouts
         if: always()
@@ -88,7 +98,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json) continue ;; esac
+            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-capture-response-shapes.mjs "$file" > "${file%.json}-response-shape.json"
           done
       - name: Publish mobile-friendly capture quality summary
@@ -106,6 +116,15 @@ jobs:
               '| Result | Races |', '|---|---:|',
               ...Object.entries(report.counts).map(([key, value]) => '| ' + key + ' | ' + value + ' |'),
               '', 'No hit rates or scoring adjustments are authorized from these raw responses.', '');
+          }
+          const cutoffNames = fs.existsSync('prediction-captures')
+            ? fs.readdirSync('prediction-captures').filter(name => name.endsWith('-cutoff-audit.json')) : [];
+          for (const name of cutoffNames) {
+            const report = JSON.parse(fs.readFileSync('prediction-captures/' + name,'utf8'));
+            lines.push('### Official cutoff evidence: '+report.date,'',
+              '| Timing classification | Races |','|---|---:|',
+              ...Object.entries(report.counts).map(([key,value])=>'| '+key+' | '+value+' |'),
+              '', 'No independently verified official cutoff supplied; unknown does not mean pre-race.', '');
           }
           const scoreNames = fs.existsSync('prediction-captures')
             ? fs.readdirSync('prediction-captures').filter(name => name.endsWith('-score-inputs.json')) : [];
@@ -131,7 +150,7 @@ jobs:
           }
           const rawNames = fs.existsSync('prediction-captures')
             ? fs.readdirSync('prediction-captures').filter(name =>
-                name.endsWith('.json') && !/-quality\\.json$|-score-inputs\\.json$|-response-shape\\.json$/.test(name)) : [];
+                name.endsWith('.json') && !/-quality\\.json$|-score-inputs\\.json$|-response-shape\\.json$|-cutoff-audit\\.json$/.test(name)) : [];
           for (const name of rawNames) {
             const raw = JSON.parse(fs.readFileSync('prediction-captures/' + name, 'utf8'));
             const byVenue = new Map();
@@ -183,7 +202,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const files = fs.readdirSync('prediction-captures').filter(name => name.endsWith('.json') && !name.endsWith('-quality.json') && !name.endsWith('-score-inputs.json') && !name.endsWith('-response-shape.json'));
+          const files = fs.readdirSync('prediction-captures').filter(name => name.endsWith('.json') && !name.endsWith('-quality.json') && !name.endsWith('-score-inputs.json') && !name.endsWith('-response-shape.json') && !name.endsWith('-cutoff-audit.json'));
           if (files.length !== 1) throw new Error('Expected exactly one capture artifact');
           const data = JSON.parse(fs.readFileSync('prediction-captures/' + files[0], 'utf8'));
           const valid = p => Array.isArray(p) && p.length === 3 &&
