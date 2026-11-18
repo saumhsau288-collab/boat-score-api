@@ -32,6 +32,7 @@ jobs:
           node-version: '22'
       - name: Check capture and validation scripts syntax
         run: |
+          node --check scripts/audit-morning-capture-outcomes.mjs
           node --check scripts/capture-existing-boat-score-2-predictions.mjs
           node --check scripts/validate-morning-capture.mjs
           node --check scripts/test-validate-morning-capture.mjs
@@ -47,6 +48,7 @@ jobs:
           node --check scripts/capture-official-cutoff-source.mjs
       - name: Test capture validation with offline fixtures
         run: |
+          node scripts/test-audit-morning-capture-outcomes.mjs
           node scripts/test-validate-morning-capture.mjs
           node scripts/test-audit-morning-input-coverage.mjs
           node scripts/test-classify-morning-capture-quality.mjs
@@ -279,6 +281,15 @@ jobs:
           console.log('Usable six-main/six-upset morning predictions:', usable.length, 'of', data.attempted);
           if (usable.length === 0) throw new Error('No usable morning predictions; raw artifact will still upload');
           NODE
+      - name: Summarize capture timeouts and missing input labels
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            case "$file" in *-quality.json|*-diagnostics.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
+            node scripts/audit-morning-capture-outcomes.mjs "$file"
+          done
       - name: Upload timestamped raw responses
         if: always()
         uses: actions/upload-artifact@v4
