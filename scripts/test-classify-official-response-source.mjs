@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {classifyOfficialResponseSource as classify} from './classify-official-response-source.mjs';
+const url='https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261118&jcd=02&rno=3';
+const base={requestedUrl:url,responseUrl:url,httpStatus:200,contentType:'text/html; charset=UTF-8'};
+assert.equal(classify(base).status,'official_html_source_consistent_not_authenticated');
+assert.equal(classify({...base,responseUrl:'https://example.com/owpc/pc/race/racelist'}).status,'redirected_off_official_domain');
+assert.equal(classify({...base,responseUrl:'https://www.boatrace.jp/'}).status,'unexpected_official_path');
+assert.equal(classify({...base,httpStatus:503}).status,'official_http_non_200');
+assert.equal(classify({...base,contentType:'application/json'}).status,'unexpected_content_type');
+console.log('Official response source checks passed');
