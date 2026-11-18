@@ -66,6 +66,34 @@ class InventoryTests(unittest.TestCase):
         self.assertNotIn('secret value', str(result))
         self.assertNotIn('private item', str(result))
 
+    def test_missing_input_counts_and_retry_types_are_private(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200,
+             'response': {'ready': False, 'missingInputs': ['secret A', 'secret B'],
+                          'officialStatsRetry': {'secret': 'value'}}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200,
+             'response': {'ready': False, 'missingInputs': [],
+                          'officialStatsRetry': 'private detail'}}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['missingInputListLengths'], {'0': 1, '2': 1})
+        self.assertEqual(result['officialStatsRetryTypes'], {'object': 1, 'string': 1})
+        self.assertNotIn('secret', str(result))
+        self.assertNotIn('private', str(result))
+
+    def test_joint_verification_flags_are_aggregated(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200,
+             'response': {'ready': False, 'officialVerified': False, 'statsVerified': False}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200,
+             'response': {'ready': False, 'officialVerified': True, 'statsVerified': True}},
+            {'venue': 1, 'race': 3, 'httpStatus': 200,
+             'response': {'ready': False, 'officialVerified': False, 'statsVerified': True}},
+            {'venue': 1, 'race': 4, 'httpStatus': 200,
+             'response': {'ready': False, 'officialVerified': None, 'statsVerified': False}}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['verificationPairs'],
+                         {'both_false': 1, 'both_true': 1, 'mixed_or_unknown': 2})
+
     def test_rejects_invalid_captured_identity(self):
         with self.assertRaisesRegex(ValueError, 'Invalid captured venue/race'):
             diagnose_capture({'authenticatedBeforeRace': False, 'records': [
@@ -78,6 +106,13 @@ class InventoryTests(unittest.TestCase):
                 {'httpStatus': 503, 'response': None}]
         result = summarize_capture({'authenticatedBeforeRace': False, 'records': rows})
         self.assertEqual(result, {'captured': 3, 'http200': 2, 'ready': 1, 'usableSixPlusSix': 1})
+
+    def test_rejects_malformed_raw_capture_rows(self):
+        payload = {'authenticatedBeforeRace': False, 'records': [None]}
+        with self.assertRaisesRegex(ValueError, 'Invalid capture row'):
+            summarize_capture(payload)
+        with self.assertRaisesRegex(ValueError, 'Invalid capture row'):
+            diagnose_capture(payload)
 
     def test_rejects_claimed_authenticated_capture(self):
         with self.assertRaises(ValueError):
