@@ -4,7 +4,7 @@ import {validTrifectaPicks,verifiedPodium} from './backtest-comparison-eligibili
 export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
  const out={method:'saved_predictions_vs_independent_verified_results',compared:0,held:0,
   mainHits:0,upsetHits:0,holdReasons:{},rows:[],mainHitRate:null,upsetHitRate:null,
-  note:'A comparison is only eligible with independent verified results and documented capture-before-cutoff evidence. Historical retrospective API calls are not substitutes.'};
+  note:'A comparison is only eligible with independent verified results and independently authenticated pre-race capture and documented capture-before-cutoff evidence. Historical retrospective API calls are not substitutes.'};
  const byKey=new Map();
  for(const r of Array.isArray(officialResults)?officialResults:[]){
   const key=[r?.date,r?.venue,r?.race].join(':');
@@ -14,6 +14,7 @@ export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
   const key=[r.date,r.venue,r.race].join(':');
   const official=byKey.get(key),actual=verifiedPodium(official);
   const reasons=[];
+  if(capture?.authenticatedBeforeRace!==true)reasons.push('capture_not_authenticated_before_race');
   if(r.response?.ready!==true||r.httpStatus!==200)reasons.push('prediction_not_ready');
   if(!validTrifectaPicks(r.response?.main)||!validTrifectaPicks(r.response?.upset))reasons.push('invalid_picks');
   if(!actual)reasons.push('no_independently_verified_result');
