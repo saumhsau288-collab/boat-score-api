@@ -118,5 +118,33 @@ class ArchivedHistoryTests(unittest.TestCase):
                 archived_quality_summary(d)
 
 
+    def test_incident_evidence_counts_only_identity_verified(self):
+        with tempfile.TemporaryDirectory() as d:
+            payload = {'reports': [{'records': []}], 'venueSummary': [
+                {'venue': 1, 'matchedRaces': 0, 'rejectedRaces': [1, 2],
+                 'rejectionDetails': [
+                     {'race': 1, 'reason': 'missing_valid_result',
+                      'incidentStatus': 'program_identity_verified',
+                      'incidentEvidence': [{'kind': 'flying_start', 'boat': 2, 'racerId': '4002'}]},
+                     {'race': 2, 'reason': 'missing_valid_result',
+                      'incidentStatus': 'unverified', 'incidentEvidence': [],
+                      'unverifiedIncidentEvidence': [{'kind': 'capsize', 'boat': 4, 'racerId': '9999'}]}]}]}
+            Path(d, '20261117.json').write_text(json.dumps(payload))
+            quality = archived_quality_summary(d)
+            self.assertEqual(quality['identityVerifiedIncidentRaces'], 1)
+            self.assertEqual(quality['incidentEvidenceCounts'], {'flying_start': 1})
+            self.assertEqual(quality['unverifiedIncidentEvidenceRaces'], 1)
+
+    def test_incident_evidence_without_identity_check_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            payload = {'reports': [{'records': []}], 'venueSummary': [
+                {'venue': 1, 'matchedRaces': 0, 'rejectedRaces': [1],
+                 'rejectionDetails': [{'race': 1, 'reason': 'missing_valid_result',
+                     'incidentStatus': 'unverified',
+                     'incidentEvidence': [{'kind': 'capsize', 'boat': 4, 'racerId': '9999'}]}]}]}
+            Path(d, '20261117.json').write_text(json.dumps(payload))
+            with self.assertRaisesRegex(ValueError, 'Incident evidence lacks'):
+                archived_quality_summary(d)
+
 if __name__ == '__main__':
     unittest.main()

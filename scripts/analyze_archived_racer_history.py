@@ -44,6 +44,9 @@ def archived_quality_summary(directory):
         matched = sum(v['matchedRaces'] for v in summaries)
         rejected = sum(len(v['rejectedRaces']) for v in summaries)
         reason_counts = {}
+        incident_counts = {}
+        incident_evidence_races = 0
+        incident_unverified_races = 0
         for venue in summaries:
             details = venue.get('rejectionDetails', [])
             if details:
@@ -56,6 +59,16 @@ def archived_quality_summary(directory):
                     if reason not in ('missing_valid_program', 'missing_valid_result', 'racer_id_mismatch'):
                         raise ValueError('Unknown rejection reason: ' + str(reason))
                     reason_counts[reason] = reason_counts.get(reason, 0) + 1
+                    evidence = item.get('incidentEvidence', [])
+                    if evidence:
+                        incident_evidence_races += 1
+                        if item.get('incidentStatus') != 'program_identity_verified':
+                            raise ValueError('Incident evidence lacks program identity verification: ' + file.name)
+                        for event in evidence:
+                            kind = event['kind']
+                            incident_counts[kind] = incident_counts.get(kind, 0) + 1
+                    elif item.get('unverifiedIncidentEvidence'):
+                        incident_unverified_races += 1
             else:
                 reason_counts['legacy_unclassified'] = reason_counts.get('legacy_unclassified', 0) + len(venue['rejectedRaces'])
         verified = sum(len(v['records']) for v in report['reports'])
@@ -63,12 +76,22 @@ def archived_quality_summary(directory):
             raise ValueError('Verified race count mismatch: ' + file.name)
         days.append({'date': file.stem, 'verifiedRaces': matched,
                      'rejectedRaces': rejected, 'rejectionReasons': reason_counts,
+                     'identityVerifiedIncidentRaces': incident_evidence_races,
+                     'incidentEvidenceCounts': incident_counts,
+                     'unverifiedIncidentEvidenceRaces': incident_unverified_races,
                      'venuesWithNoVerifiedRaces': [v['venue'] for v in summaries if v['matchedRaces'] == 0]})
     totals = {}
+    incident_totals = {}
+    for day in days:
+        for kind, count in day['incidentEvidenceCounts'].items():
+            incident_totals[kind] = incident_totals.get(kind, 0) + count
     for day in days:
         for reason, count in day['rejectionReasons'].items():
             totals[reason] = totals.get(reason, 0) + count
     return {'days': days, 'rejectionReasons': totals,
+            'identityVerifiedIncidentRaces': sum(d['identityVerifiedIncidentRaces'] for d in days),
+            'incidentEvidenceCounts': incident_totals,
+            'unverifiedIncidentEvidenceRaces': sum(d['unverifiedIncidentEvidenceRaces'] for d in days),
             'totalVerifiedRaces': sum(d['verifiedRaces'] for d in days),
             'totalRejectedRaces': sum(d['rejectedRaces'] for d in days),
             'warning': 'Rejected races are excluded, not treated as non-events; archived sample may be biased'}
