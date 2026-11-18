@@ -10,9 +10,11 @@ const rows=[];
 const targets=[];
 for(const file of files){
  const capture=JSON.parse(fs.readFileSync('prediction-captures/'+file,'utf8'));
+ if(!/^20\d{6}$/.test(String(capture.date))||!Array.isArray(capture.records))throw new Error('Invalid prediction capture source: '+file);
  for(const record of capture.records){
-  const venue=record.venue,race=record.race;
+  const venue=record?.venue,race=record?.race;
   if(!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)continue;
+  if(record.date!==undefined&&record.date!==capture.date)continue;
   targets.push({date:capture.date,venue,race});
  }
 }
