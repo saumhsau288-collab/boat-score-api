@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {fetchWithTimeoutRetry} from './fetch-with-timeout-retry.mjs';
+import {buildCaptureTasks} from './build-morning-capture-tasks.mjs';
 
 const base = process.env.BOAT_SCORE_URL || 'https://boat-score-2-preview.saumh-sau-288.workers.dev';
 function jstDate(now) {
@@ -25,7 +26,7 @@ const captureDateMatchesJst = date === captureJstDate;
 const captureTimeJst = new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(captureStart));
 const scheduledMorningWindow = captureDateMatchesJst && captureTimeJst >= '07:45' && captureTimeJst <= '08:30';
 const rows = [];
-const tasks = venues.flatMap(venue=>Array.from({length:maxRaces},(_,i)=>({venue,race:i+1})));
+const tasks = buildCaptureTasks(venues,maxRaces);
 let cursor = 0;
 async function capture({venue,race}) {
   const url = new URL('/api/predict/selected-race',base);
