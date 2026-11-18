@@ -1,10 +1,20 @@
 import assert from 'node:assert/strict';
 import {compareSavedCaptureWithVerifiedResults as compare} from './compare-saved-capture-results.mjs';
 const picks=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
-const capture={records:[{date:'20261118',venue:1,race:1,httpStatus:200,receivedAt:'2026-11-18T00:00:00Z',response:{ready:true,main:picks,upset:picks}}]};
+const capture={authenticatedBeforeRace:true,records:[{date:'20261118',venue:1,race:1,httpStatus:200,receivedAt:'2026-11-18T00:00:00Z',response:{ready:true,main:picks,upset:picks}}]};
 const result={date:'20261118',venue:1,race:1,verified:true,finishOrder:[1,2,3,4,5,6],sourceUrl:'https://www.boatrace.jp/result',officialCutoffAt:'2026-11-18T00:30:00Z'};
 const eligible=compare(capture,[result]);
 assert.equal(eligible.compared,1);assert.equal(eligible.mainHits,1);
+const unauthenticated=compare({...capture,authenticatedBeforeRace:false},[result]);
+assert.equal(unauthenticated.compared,0);
+assert.equal(unauthenticated.holdReasons.capture_not_authenticated_before_race,1);
+for(const invalid of [undefined,null,'true',1]){
+ const sample={...capture,authenticatedBeforeRace:invalid};
+ const report=compare(sample,[result]);
+ assert.equal(report.compared,0,'Unauthenticated or non-boolean marker must not qualify');
+ assert.equal(report.mainHitRate,null);
+ assert.equal(report.holdReasons.capture_not_authenticated_before_race,1);
+}
 assert.equal(compare(capture,[]).compared,0);
 assert.equal(compare(capture,[{...result,officialCutoffAt:undefined}]).compared,0);
 assert.equal(compare(capture,[{...result,officialCutoffAt:'2026-11-17T23:59:00Z'}]).compared,0);
