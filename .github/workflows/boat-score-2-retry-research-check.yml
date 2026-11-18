@@ -13,6 +13,8 @@ on:
       - 'scripts/classify-daily-venue-evidence.mjs'
       - 'scripts/test-classify-daily-venue-evidence.mjs'
       - 'scripts/test-report-morning-coverage-research.mjs'
+      - 'scripts/tune-historical-weights-research.mjs'
+      - 'scripts/test-tune-historical-weights-research.mjs'
       - '.github/workflows/boat-score-2-retry-research-check.yml'
   workflow_dispatch:
 
@@ -40,6 +42,8 @@ jobs:
           node --check scripts/classify-daily-venue-evidence.mjs
           node --check scripts/test-classify-daily-venue-evidence.mjs
           node --check scripts/test-report-morning-coverage-research.mjs
+          node --check scripts/tune-historical-weights-research.mjs
+          node --check scripts/test-tune-historical-weights-research.mjs
       - name: Run offline retry research regression
         run: |
           node scripts/test-research-capture-retry-policies.mjs
@@ -47,3 +51,4 @@ jobs:
           node scripts/test-audit-morning-coverage-research.mjs
           node scripts/test-classify-daily-venue-evidence.mjs
           node scripts/test-report-morning-coverage-research.mjs
+          node scripts/test-tune-historical-weights-research.mjs
