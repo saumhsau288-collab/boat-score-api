@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {compareScoreVariants} from './compare-score-variants.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:5+i/10,localWinRate:5,motorTwoWinRate:50,recent50WinRate:20,exhibitionScore:50}));
+const same=compareScoreVariants(racers,{nationalWinRate:45,localWinRate:25,motorTwoWinRate:15,recent50WinRate:10,exhibitionScore:5});
+assert.equal(same.status,'comparison_ready');
+assert(same.rows.every(r=>r.delta===0));
+assert.equal(same.productionChanged,false);
+assert.equal(same.actualDeployedScoreVerified,false);
+const changed=compareScoreVariants(racers,{nationalWinRate:50,localWinRate:20,motorTwoWinRate:15,recent50WinRate:10,exhibitionScore:5});
+assert.equal(changed.status,'comparison_ready');
+assert(changed.rows.some(r=>r.delta!==0));
+const missing=compareScoreVariants([{...racers[0],recent50WinRate:null},...racers.slice(1)],{nationalWinRate:45,localWinRate:25,motorTwoWinRate:15,recent50WinRate:10,exhibitionScore:5});
+assert.equal(missing.status,'insufficient_data');
+assert.equal(missing.rows[0].baselineScore,null);
+assert.equal(compareScoreVariants(racers,{nationalWinRate:100}).status,'invalid_weights');
+console.log('Offline score comparison tests passed');
