@@ -32,4 +32,12 @@ for(const spoofed of ['https://boatrace.jp.evil.example/result','https://example
  assert.equal(report.holdReasons.missing_official_result_source,1);
 }
 assert.equal(compare(capture,[{...result,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult'}]).compared,1);
+const normalizedDuplicate=compare({...capture,records:[capture.records[0],{...capture.records[0],venue:'01',race:'01'}]},[result]);
+assert.equal(normalizedDuplicate.compared,0);
+assert.equal(normalizedDuplicate.holdReasons.duplicate_saved_capture_race,2);
+const invalidKey=compare({...capture,records:[{...capture.records[0],venue:25}]},[result]);
+assert.equal(invalidKey.compared,0);
+assert.equal(invalidKey.holdReasons.invalid_saved_capture_race_key,1);
+const normalizedOfficial=compare(capture,[{...result,venue:'01',race:'01'}]);
+assert.equal(normalizedOfficial.compared,1);
 console.log('Saved capture / official result comparison eligibility tests passed');
