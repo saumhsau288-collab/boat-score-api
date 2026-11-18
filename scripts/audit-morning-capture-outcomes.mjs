@@ -12,6 +12,9 @@ export function summarizeCapture(data) {
   const minTime=(a,b)=>a===null?b:b===null?a:Math.min(a,b);
   const maxTime=(a,b)=>a===null?b:b===null?a:Math.max(a,b);
   let firstRequest=null,lastRequest=null,lastResponse=null;
+  let requestWithinMorningWindow=0,requestOutsideMorningWindow=0,requestTimeUnknown=0;
+  const morningStart=typeof data.date==='string'&&/^20\d{6}$/.test(data.date)?Date.parse(data.date.slice(0,4)+'-'+data.date.slice(4,6)+'-'+data.date.slice(6,8)+'T07:45:00+09:00'):NaN;
+  const morningEnd=Number.isFinite(morningStart)?morningStart+45*60*1000:NaN;
   const missingInputLabels={};
   const notReadyReasons={};
   for(const record of data.records) {
@@ -20,6 +23,9 @@ export function summarizeCapture(data) {
     const group=byVenue[venueKey]??={attempted:0,networkTimeout:0,otherNetworkError:0,httpFailure:0,notReady:0,ready:0};
     group.attempted++;
     const start=validTime(record.requestedAt),end=validTime(record.receivedAt);
+    if(start===null||!Number.isFinite(morningStart))requestTimeUnknown++;
+    else if(start>=morningStart&&start<=morningEnd)requestWithinMorningWindow++;
+    else requestOutsideMorningWindow++;
     firstRequest=minTime(firstRequest,start);
     lastRequest=maxTime(lastRequest,start);
     lastResponse=maxTime(lastResponse,end);
@@ -58,6 +64,7 @@ export function summarizeCapture(data) {
   timing.lastRequestedAt=lastRequest===null?null:new Date(lastRequest).toISOString();
   timing.lastReceivedAt=lastResponse===null?null:new Date(lastResponse).toISOString();
   timing.elapsedSeconds=firstRequest!==null&&lastResponse!==null&&lastResponse>=firstRequest?Math.round((lastResponse-firstRequest)/1000):null;
+  timing.morningWindow={startJst:'07:45',endJst:'08:30',requestWithinMorningWindow,requestOutsideMorningWindow,requestTimeUnknown};
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
     counts,byVenue,timing,missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
