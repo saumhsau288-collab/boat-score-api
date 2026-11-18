@@ -61,7 +61,7 @@ def inventory(repository, token):
                 data = api(f'repos/{repository}/actions/artifacts/{artifact["id"]}/zip', token, binary=True)
                 with zipfile.ZipFile(io.BytesIO(data)) as archive:
                     raw_files = [n for n in archive.namelist()
-                                 if n.startswith('prediction-captures/')
+                                 if (n.startswith('prediction-captures/') or '/' not in n)
                                  and n.endswith('.json')
                                  and not n.endswith(('-quality.json', '-score-inputs.json',
                                                      '-response-shape.json'))]
