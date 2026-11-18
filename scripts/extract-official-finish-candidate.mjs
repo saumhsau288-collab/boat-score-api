@@ -6,9 +6,9 @@ export function extractOfficialFinishCandidate(html){
  const candidates=[];
  for(const table of tables){
   const rows=[...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[...m[1].matchAll(/<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi)].map(c=>plain(c[1])));
-  if(!rows.some(cells=>cells.includes('着')&&cells.includes('艇番')))continue;
-  const head=rows.findIndex(cells=>cells.includes('着')&&cells.includes('艇番'));
-  const rankCol=rows[head].indexOf('着'),boatCol=rows[head].indexOf('艇番');
+  if(!rows.some(cells=>cells.includes('着')&&(cells.includes('艇番')||cells.includes('枠'))))continue;
+  const head=rows.findIndex(cells=>cells.includes('着')&&(cells.includes('艇番')||cells.includes('枠')));
+  const rankCol=rows[head].indexOf('着'),boatCol=rows[head].indexOf('艇番')>=0?rows[head].indexOf('艇番'):rows[head].indexOf('枠');
   const podium=new Map();let invalid=false;
   for(const cells of rows.slice(head+1)){
    const rank=cells[rankCol],boat=cells[boatCol];
