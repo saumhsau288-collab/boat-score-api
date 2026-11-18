@@ -50,7 +50,7 @@ jobs:
           const capture=JSON.parse(fs.readFileSync(file,'utf8'));
           if(String(capture.run?.workflowRunId)!==runId ||
              !Array.isArray(capture.records) ||
-             !/^20\\d{6}$/.test(String(capture.date))) {
+             !/^20\d{6}$/.test(String(capture.date))) {
             throw Error('Archived capture identity or schema does not match requested run');
           }
           NODE
