@@ -146,6 +146,15 @@ jobs:
               const status=row.pageIdentity?.status||'not_checked';
               identityCounts[status]=(identityCounts[status]||0)+1;
             }
+            const sourceCounts={};
+            for (const row of evidence.records||[]) {
+              const status=row.sourceCheck?.status||'not_checked';
+              sourceCounts[status]=(sourceCounts[status]||0)+1;
+            }
+            lines.push('### Official HTTP source checks (unverified)','',
+              '| Source status | Races |','|---|---:|',
+              ...Object.entries(sourceCounts).map(([status,count])=>'| '+status+' | '+count+' |'),
+              '', 'An official HTTP response alone does not verify a race deadline.','');
             lines.push('### Official race page identity checks (unverified)','',
               '| Identity status | Races |','|---|---:|',
               ...Object.entries(identityCounts).map(([status,count])=>'| '+status+' | '+count+' |'),
