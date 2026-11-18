@@ -69,6 +69,25 @@ jobs:
             [ -f "$file" ] || continue
             node scripts/classify-morning-capture-quality.mjs "$file" > "${file%.json}-quality.json"
           done
+      - name: Publish mobile-friendly capture quality summary
+        if: always()
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const names = fs.existsSync('prediction-captures')
+            ? fs.readdirSync('prediction-captures').filter(name => name.endsWith('-quality.json')) : [];
+          const lines = ['## Boat Score 2 morning capture quality', '',
+            'This is a raw research capture, not independently authenticated pre-race predictions.', ''];
+          for (const name of names) {
+            const report = JSON.parse(fs.readFileSync('prediction-captures/' + name, 'utf8'));
+            lines.push('### ' + report.date, '',
+              '| Result | Races |', '|---|---:|',
+              ...Object.entries(report.counts).map(([key, value]) => '| ' + key + ' | ' + value + ' |'),
+              '', 'No hit rates or scoring adjustments are authorized from these raw responses.', '');
+          }
+          if (!names.length) lines.push('No capture quality report was generated. Inspect raw artifact and failed steps.');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\\n') + '\\n');
+          NODE
       - name: Fail closed when no usable morning predictions were captured
         run: |
           node --input-type=module <<'NODE'
