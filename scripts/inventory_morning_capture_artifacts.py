@@ -61,6 +61,8 @@ def diagnose_capture(payload):
     states = Counter()
     venues = defaultdict(Counter)
     ready_races = []
+    not_ready_shapes = Counter()
+    transport_causes = Counter()
     for row in records:
         if not isinstance(row, dict):
             raise ValueError('Invalid capture row')
@@ -82,11 +84,23 @@ def diagnose_capture(payload):
             state = 'not_ready'
         else:
             state = 'ready_missing_or_invalid'
+        if state == 'not_ready':
+            # Report only response field names, not potentially sensitive values.
+            shape = ','.join(sorted(str(k) for k in response if isinstance(k, str)))[:300]
+            not_ready_shapes[shape or '(empty object)'] += 1
+        elif state == 'transport_error':
+            message = str(row.get('error') or '').lower()
+            cause = ('timeout' if 'timeout' in message or 'timed out' in message
+                     else 'network' if any(t in message for t in ('fetch failed', 'network', 'econn', 'enotfound'))
+                     else 'other')
+            transport_causes[cause] += 1
         states[state] += 1
         venues[str(venue)][state] += 1
     return {'states': dict(sorted(states.items())),
             'byVenue': {v: dict(sorted(c.items())) for v, c in sorted(venues.items(), key=lambda x: int(x[0]))},
-            'readyRaceIdentities': ready_races}
+            'readyRaceIdentities': ready_races,
+            'notReadyResponseFieldSets': dict(sorted(not_ready_shapes.items())),
+            'transportErrorCategories': dict(sorted(transport_causes.items()))}
 
 def api(path, token, binary=False):
     request = urllib.request.Request(
@@ -104,7 +118,7 @@ def inventory(repository, token):
                                   'http200': 0, 'ready': 0, 'usableSixPlusSix': 0})
     errors = []
     inspected = 0
-    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': []})
+    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter()})
     for page in range(1, 11):
         response = api(f'repos/{repository}/actions/artifacts?per_page=100&page={page}', token)
         artifacts = response.get('artifacts', [])
@@ -134,6 +148,8 @@ def inventory(repository, token):
                     for venue, state_counts in diagnostic['byVenue'].items():
                         bucket['byVenue'][venue].update(state_counts)
                     bucket['readyRaceIdentities'].extend(diagnostic['readyRaceIdentities'])
+                    bucket['notReadyResponseFieldSets'].update(diagnostic['notReadyResponseFieldSets'])
+                    bucket['transportErrorCategories'].update(diagnostic['transportErrorCategories'])
                     totals[date]['artifacts'] += 1
                     for key, value in counts.items():
                         totals[date][key] += value
@@ -147,7 +163,9 @@ def inventory(repository, token):
             'states': dict(sorted(bucket['states'].items())),
             'byVenue': {venue: dict(sorted(c.items()))
                         for venue, c in sorted(bucket['byVenue'].items(), key=lambda x: int(x[0]))},
-            'readyRaceIdentities': bucket['readyRaceIdentities']}
+            'readyRaceIdentities': bucket['readyRaceIdentities'],
+            'notReadyResponseFieldSets': dict(sorted(bucket['notReadyResponseFieldSets'].items())),
+            'transportErrorCategories': dict(sorted(bucket['transportErrorCategories'].items()))}
     return {'byCaptureDate': dict(sorted(totals.items())),
             'diagnosticsByDate': diagnostic_output, 'artifactsInspected': inspected,
             'errors': errors, 'officialResultOverlap': None,
@@ -179,7 +197,12 @@ if __name__ == '__main__':
                     f.write(f'| {state} | {count} |\\n')
                 f.write('\\nReady venue/race IDs (not verified pre-race predictions): ')
                 f.write(', '.join(f"{r['venue']}-{r['race']}" for r in diagnostic['readyRaceIdentities']) or 'none')
-                f.write('\\n')
+                f.write('\\n\\nNot-ready response field sets (field names only):\\n')
+                for fields, count in diagnostic['notReadyResponseFieldSets'].items():
+                    f.write(f'- {fields}: {count}\\n')
+                f.write('\\nTransport error categories:\\n')
+                for category, count in diagnostic['transportErrorCategories'].items():
+                    f.write(f'- {category}: {count}\\n')
             f.write('\\nRaw captures are not authenticated forecasts; no accuracy metrics.\\n')
             if result['errors']:
                 f.write(f"\\nUnreadable artifacts: {len(result['errors'])} (inspect job log).\\n")

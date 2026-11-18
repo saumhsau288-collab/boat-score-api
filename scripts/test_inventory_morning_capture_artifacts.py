@@ -35,6 +35,19 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(result['readyRaceIdentities'], [{'venue': 1, 'race': 1}])
         self.assertEqual(result['byVenue']['1'], {'ready': 1, 'not_ready': 1})
 
+    def test_not_ready_fields_and_transport_causes_are_aggregated_without_values(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200,
+             'response': {'ready': False, 'reason': 'private detail'}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200,
+             'response': {'ready': False, 'reason': 'different private detail'}},
+            {'venue': 1, 'race': 3, 'error': 'The operation timed out'},
+            {'venue': 1, 'race': 4, 'error': 'fetch failed'}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['notReadyResponseFieldSets'], {'ready,reason': 2})
+        self.assertEqual(result['transportErrorCategories'], {'network': 1, 'timeout': 1})
+        self.assertNotIn('private detail', str(result))
+
     def test_rejects_invalid_captured_identity(self):
         with self.assertRaisesRegex(ValueError, 'Invalid captured venue/race'):
             diagnose_capture({'authenticatedBeforeRace': False, 'records': [
