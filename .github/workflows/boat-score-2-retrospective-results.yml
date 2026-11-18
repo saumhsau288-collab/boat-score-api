@@ -36,6 +36,27 @@ jobs:
           fi
           mkdir -p archived-captures
           gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "boat-score-2-morning-raw-$SOURCE_RUN_ID" --dir archived-captures
+      - name: Verify downloaded capture belongs to requested Actions run
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          found=0
+          while IFS= read -r -d '' file; do
+            name="${file##*/}"
+            [[ "$name" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            node --input-type=module - "$file" "$SOURCE_RUN_ID" <<'NODE'
+          import fs from 'node:fs';
+          const [file,runId]=process.argv.slice(2);
+          const capture=JSON.parse(fs.readFileSync(file,'utf8'));
+          if(String(capture.run?.workflowRunId)!==runId ||
+             !Array.isArray(capture.records) ||
+             !/^20\\d{6}$/.test(String(capture.date))) {
+            throw Error('Archived capture identity or schema does not match requested run');
+          }
+          NODE
+            found=$((found+1))
+          done < <(find archived-captures -type f -name '*.json' -print0)
+          if [ "$found" -eq 0 ]; then echo 'No matching capture files in archive'; exit 1; fi
       - name: Collect results only for dates already ended in JST
         run: |
           mkdir -p retrospective-results
