@@ -25,14 +25,13 @@ try {
  const parsed=JSON.parse(ok.stdout);
  assert.equal(parsed.validMainSixAndUpsetSix,1);
  assert.equal(parsed.authenticatedBeforeRace,false);
- const timed={...base,captureStart:'2026-11-17T22:59:59Z',captureEnd:'2026-11-17T23:00:02Z',captureJstDate:'20261118',captureTimeJst:'08:59',captureDateMatchesJst:true,scheduledMorningWindow:false};
+ const timed={...base,captureStart:'2026-11-17T22:59:59Z',captureEnd:'2026-11-17T23:00:02Z',captureJstDate:'20261118',captureTimeJst:'07:59',captureDateMatchesJst:true,scheduledMorningWindow:true};
  assert.equal(run(timed).status,0);
  assert.notEqual(run({...timed,captureJstDate:'20261117'}).status,0);
  assert.notEqual(run({...timed,captureDateMatchesJst:false}).status,0);
- assert.notEqual(run({...timed,scheduledMorningWindow:true}).status,0);
+ assert.notEqual(run({...timed,scheduledMorningWindow:false}).status,0);
  assert.notEqual(run({...timed,captureEnd:'2026-11-17T23:00:00Z'}).status,0);
- const inWindow={...timed,captureStart:'2026-11-17T22:59:59Z'};
- assert.equal(inWindow.scheduledMorningWindow,false);
+ assert.equal(timed.scheduledMorningWindow,true);
 
  assert.notEqual(run({...base,records:[row,row],attempted:2,httpSuccess:2,ready:2}).status,0);
  assert.notEqual(run({...base,records:[{...row,receivedAt:'2026-11-17T22:59:59Z'}]}).status,0);
