@@ -44,6 +44,8 @@ jobs:
           node --check scripts/test-report-morning-coverage-research.mjs
           node --check scripts/tune-historical-weights-research.mjs
           node --check scripts/test-tune-historical-weights-research.mjs
+          node --check scripts/run-historical-weight-research.mjs
+          node --check scripts/test-run-historical-weight-research.mjs
       - name: Run offline retry research regression
         run: |
           node scripts/test-research-capture-retry-policies.mjs
@@ -52,3 +54,4 @@ jobs:
           node scripts/test-classify-daily-venue-evidence.mjs
           node scripts/test-report-morning-coverage-research.mjs
           node scripts/test-tune-historical-weights-research.mjs
+          node scripts/test-run-historical-weight-research.mjs
