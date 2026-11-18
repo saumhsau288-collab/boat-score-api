@@ -1,0 +1,58 @@
+name: Retrospective Boat Score 2 result evidence (research only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Completed morning capture Actions run ID (must have prediction-captures artifact)'
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  retrospective:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify offline parsing and evidence guards
+        run: |
+          node scripts/test-extract-official-finish-candidate.mjs
+          node scripts/test-collect-official-result-evidence.mjs
+          node scripts/test-inspect-saved-tickets-vs-result-candidates.mjs
+      - name: Download archived capture from specified run (read only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          if ! [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]; then
+            echo 'Invalid Actions run ID'; exit 2
+          fi
+          mkdir -p archived-captures
+          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir archived-captures
+      - name: Collect results only for dates already ended in JST
+        run: |
+          mkdir -p retrospective-results
+          count=0
+          while IFS= read -r -d '' file; do
+            name="${file##*/}"
+            [[ "$name" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            node scripts/collect-official-result-evidence.mjs "$file" > "retrospective-results/${name%.json}-official-result-candidates.json"
+            node scripts/inspect-saved-tickets-vs-result-candidates.mjs "$file" "retrospective-results/${name%.json}-official-result-candidates.json" > "retrospective-results/${name%.json}-candidate-diagnostics.json"
+            count=$((count+1))
+          done < <(find archived-captures -type f -name '*.json' -print0)
+          if [ "$count" -eq 0 ]; then echo 'No matching saved prediction captures'; exit 1; fi
+      - name: Archive retrospective source evidence and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-retrospective-${{ github.run_id }}
+          path: retrospective-results/
+          if-no-files-found: warn
+          retention-days: 30
