@@ -96,6 +96,20 @@ jobs:
               ...Object.entries(report.counts).map(([key, value]) => '| ' + key + ' | ' + value + ' |'),
               '', 'No hit rates or scoring adjustments are authorized from these raw responses.', '');
           }
+          const scoreNames = fs.existsSync('prediction-captures')
+            ? fs.readdirSync('prediction-captures').filter(name => name.endsWith('-score-inputs.json')) : [];
+          for (const name of scoreNames) {
+            const score = JSON.parse(fs.readFileSync('prediction-captures/' + name, 'utf8'));
+            lines.push('### Score input evidence: ' + score.date, '',
+              '| Check | Races |', '|---|---:|',
+              '| Ready predictions | ' + score.readyPredictions + ' |',
+              '| Explicit six-boat input evidence | ' + score.readyWithExplicitSixBoatInputEvidence + ' |',
+              '| All five score inputs present | ' + score.readyCompleteFiveInputs + ' |',
+              '| Missing explicit input evidence | ' + score.readyMissingInputEvidence + ' |',
+              '| Incomplete or invalid inputs | ' + score.readyInvalidOrIncompleteInputs + ' |',
+              '', 'Input absence in API responses does not prove the app did not use it. No pre-race authentication or score changes.', '');
+          }
+          if (!scoreNames.length) lines.push('No score input evidence report was generated.', '');
           if (!names.length) lines.push('No capture quality report was generated. Inspect raw artifact and failed steps.');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
           NODE
