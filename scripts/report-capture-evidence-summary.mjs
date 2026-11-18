@@ -10,6 +10,8 @@ const ready=raw.records.filter(r=>r.response?.ready===true).length;
 const rows=['### Morning capture evidence: '+raw.date,'','| Evidence | Count |','|---|---:|',
 '| Requests attempted | '+raw.records.length+' |','| Ready predictions | '+ready+' |',
 '| Network timeouts | '+(diagnostics?.counts?.networkTimeout??'not recorded')+' |',
+'| Requests retried | '+(diagnostics?.counts?.retried??'not recorded')+' |',
+'| Recovered after retry | '+(diagnostics?.counts?.recoveredAfterRetry??'not recorded')+' |',
 '| Before UNVERIFIED cutoff candidate | '+(timing?.counts?.readyBeforeCandidate??'not recorded')+' |',
 '| At/after UNVERIFIED cutoff candidate | '+(timing?.counts?.readyAfterCandidate??'not recorded')+' |',
 '| Candidate timing unavailable | '+(timing?.counts?.readyMissingCandidate??'not recorded')+' |',
