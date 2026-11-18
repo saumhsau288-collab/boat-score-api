@@ -88,6 +88,25 @@ class ComparisonTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Invalid official finish order'):
             compare([pred(1, [3, 2, 1])], [source])
 
+    def test_six_main_and_six_upset_predictions(self):
+        p = pred(1, [1, 2, 3])
+        p['mainSix'] = [[1, 2, 3], [1, 3, 2], [2, 1, 3],
+                        [2, 3, 1], [3, 1, 2], [3, 2, 1]]
+        p['upsetSix'] = [[4, 1, 2], [4, 2, 1], [5, 1, 2],
+                         [5, 2, 1], [6, 1, 2], [6, 2, 1]]
+        result = compare([p], [sample()])
+        self.assertEqual(result['totals']['sixPickCompared'], 1)
+        self.assertEqual(result['totals']['mainSixHits'], 1)
+        self.assertEqual(result['totals']['upsetSixHits'], 0)
+        self.assertEqual(result['mainSixHitRatePercent'], 100)
+        self.assertIsNone(result['exactTrifectaHitRatePercent'])
+
+    def test_six_picks_reject_duplicates(self):
+        p = pred(1, [3, 2, 1])
+        p['mainSix'] = [[3, 2, 1]] * 6
+        p['upsetSix'] = [[1, 2, 3]] * 6
+        self.assertEqual(compare([p], [sample()])['totals']['invalidPredictionExcluded'], 1)
+
     def test_duplicate_rejected(self):
         with self.assertRaisesRegex(ValueError, 'Duplicate prediction'):
             compare([pred(1, [1, 2, 3]), pred(1, [3, 2, 1])], [sample()])
