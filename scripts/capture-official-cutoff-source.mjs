@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import {extractOfficialCutoffCandidate} from './extract-official-cutoff-candidate.mjs';
 import {inspectOfficialPageIdentity} from './inspect-official-page-identity.mjs';
 import {classifyOfficialResponseSource} from './classify-official-response-source.mjs';
-const files=fs.readdirSync('prediction-captures').filter(n=>/^20\d{6}-[^/]+\.json$/.test(n));
+const files=fs.readdirSync('prediction-captures').filter(n=>/^20\d{6}-\d+\.json$/.test(n));
 const rows=[];
 const targets=[];
 for(const file of files){
