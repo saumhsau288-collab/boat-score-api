@@ -187,6 +187,12 @@ jobs:
               '|---|---:|---:|---:|---:|---:|---:|',
               ...Object.entries(report.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,c])=>
                 '| '+venue+' | '+c.attempted+' | '+c.ready+' | '+c.notReady+' | '+c.networkTimeout+' | '+c.otherNetworkError+' | '+c.httpFailure+' |'),
+              '', '### Capture record coverage', '',
+              'Unique venue-race pairs: '+(report.coverage?.uniqueVenueRacePairs??'unknown')+
+              '; duplicates: '+(report.coverage?.duplicateVenueRacePairs??'unknown')+
+              '; invalid pairs: '+(report.coverage?.invalidVenueRacePairs??'unknown')+
+              '; missing among requested venues (12 each): '+(report.coverage?.missingPairsWithinRequestedVenues?.length??'unknown'),
+              '', 'This is record completeness, not verified racing schedule coverage.',
               '', '### Capture timing by race number', '',
               '| Race | Attempted | Ready | Timeout | First request UTC | Last request UTC |',
               '|---|---:|---:|---:|---|---|',
