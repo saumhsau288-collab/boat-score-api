@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {partialScoreEvidence} from './partial-score-evidence.mjs';
+const racers=[ [6.72,8.10,41.30],[7.04,7.60,39.85],[7.75,7.54,29.66],[6.88,6.79,29.58],[7.61,7.24,33.78],[6.42,5.43,28.67] ].map(([nationalWinRate,localWinRate,motorTwoWinRate],i)=>({boat:i+1,nationalWinRate,localWinRate,motorTwoWinRate}));
+const r=partialScoreEvidence(racers);
+assert.equal(r.status,'partial_comparison_only');
+assert.equal(r.rows[2].observedSubtotal,58.17);
+assert.equal(r.rows[0].observedMaximum,85);
+assert.deepEqual(r.partialRank,[3,5,1,2,4,6]);
+assert.equal(r.full100PointRankingPermitted,false);
+assert.equal(r.accuracyCalculationPermitted,false);
+const unequal=partialScoreEvidence(racers.map((r,i)=>i===0?{...r,recent50WinRate:0}:r));
+assert.equal(unequal.status,'incomparable_input_coverage');
+assert.equal(unequal.partialRank,null);
+const invalid=partialScoreEvidence(racers.map((r,i)=>i===0?{...r,motorTwoWinRate:120}:r));
+assert.equal(invalid.status,'incomparable_input_coverage');
+assert.equal(invalid.rows[0].invalid[0],'motorTwoWinRate');
+console.log('Partial score evidence tests passed');
