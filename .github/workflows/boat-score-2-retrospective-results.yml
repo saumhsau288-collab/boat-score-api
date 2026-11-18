@@ -65,7 +65,7 @@ jobs:
               '| Eligible for weight tuning | '+report.eligibleForWeightTuning+' |','');
           }
           if(!names.length)lines.push('No candidate diagnostics were produced.','');
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\\n')+'\\n');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
           NODE
       - name: Archive retrospective source evidence and diagnostics
         if: always()
