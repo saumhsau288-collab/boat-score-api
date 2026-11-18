@@ -130,6 +130,15 @@ jobs:
               const status=row.cutoffCandidate?.status||'not_parsed';
               counts[status]=(counts[status]||0)+1;
             }
+            const identityCounts={};
+            for (const row of evidence.records||[]) {
+              const status=row.pageIdentity?.status||'not_checked';
+              identityCounts[status]=(identityCounts[status]||0)+1;
+            }
+            lines.push('### Official race page identity checks (unverified)','',
+              '| Identity status | Races |','|---|---:|',
+              ...Object.entries(identityCounts).map(([status,count])=>'| '+status+' | '+count+' |'),
+              '', 'Consistent URL markers are not independent proof of a race-specific deadline.','');
             lines.push('### Official cutoff text candidates (unverified)','',
               '| Candidate status | Races |','|---|---:|',
               ...Object.entries(counts).map(([status,count])=>'| '+status+' | '+count+' |'),
