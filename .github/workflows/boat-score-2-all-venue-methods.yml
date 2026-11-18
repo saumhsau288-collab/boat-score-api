@@ -37,6 +37,8 @@ on:
       - 'scripts/test_audit_capture_official_overlap.py'
       - 'scripts/preview_racer_score_evidence.py'
       - 'scripts/test_preview_racer_score_evidence.py'
+      - 'scripts/audit_official_score_input_coverage.py'
+      - 'scripts/test_audit_official_score_input_coverage.py'
       - 'scripts/audit_prediction_snapshot_evidence.py'
       - 'scripts/test_audit_prediction_snapshot_evidence.py'
       - 'scripts/capture-existing-boat-score-2-predictions.mjs'
@@ -76,6 +78,7 @@ jobs:
           python3 -m unittest discover -s scripts -p 'test_compare_offline_predictions.py'
           python3 -m unittest discover -s scripts -p 'test_audit_capture_official_overlap.py'
           python3 -m unittest discover -s scripts -p 'test_preview_racer_score_evidence.py'
+          python3 -m unittest discover -s scripts -p 'test_audit_official_score_input_coverage.py'
           python3 -m unittest discover -s scripts -p 'test_audit_prediction_snapshot_evidence.py'
       - uses: actions/setup-node@v4
         with:
@@ -149,6 +152,7 @@ jobs:
           print('Verified race rows:',len(rows))
           PY
           python3 scripts/audit_official_incidents.py --reports data/reports --output reports/official-incident-audit.json
+          python3 scripts/audit_official_score_input_coverage.py --input data/all-venue-reports.json --output reports/official-score-input-coverage.json
           python3 scripts/analyze_racer_winning_methods.py data/all-venue-reports.json --output reports/all-venue-racer-winning-methods.json
           python3 - <<'PY'
           import json
