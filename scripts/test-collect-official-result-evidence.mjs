@@ -14,6 +14,8 @@ assert.equal(result.records.length,2);
 assert.equal(result.verifiedResults,0);
 assert.equal(result.records[0].finishOrder,null);
 assert.equal(result.records[0].sourceCheck.verified,false);
+assert.equal(result.records[0].htmlSnapshot,'<html>result page</html>');
+assert.equal(result.records[0].htmlSnapshotComplete,true);
 let active=0,peak=0;
 const parallelFetch=async request=>{
  active++;peak=Math.max(peak,active);
@@ -26,4 +28,8 @@ const parallel=await collectOfficialResultEvidence(many,{fetchImpl:parallelFetch
 assert.equal(parallel.records.length,12);
 assert.ok(peak>1&&peak<=3);
 assert.deepEqual(parallel.records.map(r=>r.race),Array.from({length:12},(_,i)=>i+1));
+const oversized=await collectOfficialResultEvidence({date:'20261118',records:[{venue:1,race:1}]},{fetchImpl:async request=>({url:request,status:200,headers:{get:()=> 'text/html'},text:async()=> 'X'.repeat(200001)})});
+assert.equal(oversized.records[0].htmlSnapshot,null);
+assert.equal(oversized.records[0].htmlSnapshotComplete,false);
+assert.equal(oversized.records[0].htmlLength,200001);
 console.log('Official result candidate collector tests passed');
