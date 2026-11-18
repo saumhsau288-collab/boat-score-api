@@ -1,5 +1,8 @@
 // Offline experimental weight tuning on independently prepared historical feature rows.
 // This does not recreate or alter the deployed predictor. Never fit on evaluation races.
+function isOfficialSource(value){
+ try{const u=new URL(value);return u.protocol==='https:'&&(u.hostname==='boatrace.jp'||u.hostname.endsWith('.boatrace.jp'))&&!u.username&&!u.password;}catch{return false;}
+}
 export const FIELDS=['nationalWinRate','localWinRate','motorTwoWinRate','recent50WinRate','exhibitionScore'];
 export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candidates}={}){
  if(!/^20\d{6}$/.test(String(trainEndDate)))throw Error('Training cutoff YYYYMMDD required');
@@ -15,8 +18,8 @@ export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candida
    new Set(boats.map(b=>b?.boat)).size===6&&boats.every(b=>Number.isInteger(b?.boat)&&b.boat>=1&&b.boat<=6&&FIELDS.every(f=>typeof b[f]==='number'&&Number.isFinite(b[f])&&b[f]>=0))&&
    Array.isArray(actual)&&actual.length===3&&actual.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(actual).size===3&&
    row?.independentlyVerifiedResult===true&&row?.historicalInputProvenanceVerified===true&&
-   typeof row?.historicalInputSourceUrl==='string'&&/^https:\/\//.test(row.historicalInputSourceUrl)&&
-   typeof row?.officialResultSourceUrl==='string'&&/^https:\/\/(?:www\.)?boatrace\.jp\//.test(row.officialResultSourceUrl)&&
+   typeof row?.historicalInputSourceUrl==='string'&&isOfficialSource(row.historicalInputSourceUrl)&&
+   typeof row?.officialResultSourceUrl==='string'&&isOfficialSource(row.officialResultSourceUrl)&&
    typeof row?.historicalInputCapturedAt==='string'&&Number.isFinite(Date.parse(row.historicalInputCapturedAt))&&
    typeof row?.officialCutoffAt==='string'&&Number.isFinite(Date.parse(row.officialCutoffAt))&&
    Date.parse(row.historicalInputCapturedAt)<Date.parse(row.officialCutoffAt);
