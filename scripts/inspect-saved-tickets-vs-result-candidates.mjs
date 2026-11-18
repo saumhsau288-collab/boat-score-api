@@ -31,7 +31,7 @@ export function inspectSavedTicketsAgainstResultCandidates(capture,evidence){
    counts.candidateMissing++;continue;
   }
   const main=r.response.main,upset=r.response.upset;
-  if(!Array.isArray(main)||!Array.isArray(upset)||main.length!==6||upset.length!==6||![...main,...upset].every(valid)){counts.invalidPicks++;continue;}
+  if(!Array.isArray(main)||!Array.isArray(upset)||main.length!==6||upset.length!==6||![...main,...upset].every(valid)||new Set([...main,...upset].map(p=>p.join('-'))).size!==12){counts.invalidPicks++;continue;}
   counts.candidatePresent++;
   rows.push({date:r.date,venue:r.venue,race:r.race,candidateTop3:top3,
    candidateInMain:main.some(p=>p.join('-')===top3.join('-')),
