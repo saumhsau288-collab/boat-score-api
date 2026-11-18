@@ -44,6 +44,7 @@ jobs:
           node --check scripts/audit-capture-response-shapes.mjs
           node --check scripts/test-audit-capture-response-shapes.mjs
           node --check scripts/audit-morning-official-cutoffs.mjs
+          node --check scripts/capture-official-cutoff-source.mjs
       - name: Test capture validation with offline fixtures
         run: |
           node scripts/test-validate-morning-capture.mjs
@@ -63,6 +64,10 @@ jobs:
           for file in prediction-captures/*.json; do
             node scripts/validate-morning-capture.mjs "$file"
           done
+      - name: Collect official cutoff source evidence (not yet verified)
+        if: always()
+        run: |
+          [ -d prediction-captures ] && node scripts/capture-official-cutoff-source.mjs || true
       - name: Audit official cutoff availability without inventing cutoff times
         if: always()
         run: |
