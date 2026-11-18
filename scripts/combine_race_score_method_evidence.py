@@ -38,6 +38,23 @@ def combine(race,score_bounds,history):
             raise ValueError('Invalid score bounds')
         if not (0<=score['lower']<=score['upper']<=100):
             raise ValueError('Invalid score interval')
+        fields=(('nationalWinRate',45,10),('localWinRate',25,10),
+                ('motorTwoWinRate',15,100),('recent50WinRate',10,100),
+                ('exhibitionScore',5,100))
+        missing=[name for name,weight,limit in fields if racer.get(name) is None]
+        if score['missing']!=missing:
+            raise ValueError('Score missing fields disagree with racer inputs')
+        for name,weight,limit in fields:
+            value=racer.get(name)
+            if value is not None and (isinstance(value,bool) or
+                not isinstance(value,(int,float)) or not 0<=value<=limit):
+                raise ValueError('Invalid score input '+name)
+        expected_unknown=sum(weight for name,weight,limit in fields if racer.get(name) is None)
+        expected_lower=round(sum(racer[name]/limit*weight for name,weight,limit in fields
+                                 if racer.get(name) is not None)+1e-9,2)
+        expected_upper=min(100,round(expected_lower+expected_unknown,2))
+        if score['unknownMaximum']!=expected_unknown or abs(score['lower']-expected_lower)>0.011 or abs(score['upper']-expected_upper)>0.011:
+            raise ValueError('Score interval does not match the same racer inputs')
         output.append({'boat':boat,'racerId':racer['racerId'],
           'nationalWinRate':racer.get('nationalWinRate'),'localWinRate':racer.get('localWinRate'),
           'motorTwoWinRate':racer.get('motorTwoWinRate'),
