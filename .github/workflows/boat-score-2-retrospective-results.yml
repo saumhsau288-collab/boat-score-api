@@ -48,7 +48,9 @@ jobs:
           import fs from 'node:fs';
           const [file,runId]=process.argv.slice(2);
           const capture=JSON.parse(fs.readFileSync(file,'utf8'));
+          const fileName=file.split('/').pop();
           if(String(capture.run?.workflowRunId)!==runId ||
+             fileName!==capture.date+'-'+runId+'.json' ||
              !Array.isArray(capture.records) ||
              !/^20\d{6}$/.test(String(capture.date))) {
             throw Error('Archived capture identity or schema does not match requested run');
