@@ -37,6 +37,8 @@ on:
       - 'scripts/test_audit_capture_official_overlap.py'
       - 'scripts/preview_racer_score_evidence.py'
       - 'scripts/test_preview_racer_score_evidence.py'
+      - 'scripts/report_six_racer_course_methods.py'
+      - 'scripts/test_report_six_racer_course_methods.py'
       - 'scripts/audit_official_score_input_coverage.py'
       - 'scripts/test_audit_official_score_input_coverage.py'
       - 'scripts/audit_prediction_snapshot_evidence.py'
@@ -84,6 +86,7 @@ jobs:
           python3 -m unittest discover -s scripts -p 'test_compare_offline_predictions.py'
           python3 -m unittest discover -s scripts -p 'test_audit_capture_official_overlap.py'
           python3 -m unittest discover -s scripts -p 'test_preview_racer_score_evidence.py'
+          python3 -m unittest discover -s scripts -p 'test_report_six_racer_course_methods.py'
           python3 -m unittest discover -s scripts -p 'test_audit_official_score_input_coverage.py'
           python3 -m unittest discover -s scripts -p 'test_audit_prediction_snapshot_evidence.py'
       - uses: actions/setup-node@v4
