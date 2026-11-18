@@ -37,6 +37,9 @@ assert.deepEqual(x.timing.morningWindow,{startJst:'07:45',endJst:'08:30',request
 const validSix=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
 const usable=summarizeCapture({date:'20261118',records:[{venue:1,race:1,receivedAt:'2026-11-17T23:00:10Z',httpStatus:200,response:{ready:true,main:validSix,upset:validSix}},{venue:1,race:2,receivedAt:'2026-11-18T00:00:00Z',httpStatus:200,response:{ready:true,main:validSix,upset:validSix.slice(0,5)}}]});
 assert.equal(usable.timing.morningWindow.usablePicksWithinMorningWindow,1);
+assert.deepEqual(usable.morningByRace['1'],{requestedInWindow:0,respondedInWindow:1,readyInWindow:1,usableSixPlusSixInWindow:1});
+assert.deepEqual(usable.morningByRace['2'],{requestedInWindow:0,respondedInWindow:0,readyInWindow:0,usableSixPlusSixInWindow:0});
+assert.equal(Object.values(x.morningByRace).reduce((n,v)=>n+v.respondedInWindow,0),x.timing.morningWindow.responseWithinMorningWindow);
 assert.deepEqual(usable.ticketDistinctness,{validSixPlusSix:1,overlappingMainUpsetTickets:1,fullyDistinctTwelveTickets:0});
 const distinct=summarizeCapture({records:[{venue:1,race:1,httpStatus:200,response:{ready:true,main:validSix,upset:[[4,1,2],[4,2,1],[5,1,2],[5,2,1],[6,1,2],[6,2,1]]}}]});
 assert.deepEqual(distinct.ticketDistinctness,{validSixPlusSix:1,overlappingMainUpsetTickets:0,fullyDistinctTwelveTickets:1});
