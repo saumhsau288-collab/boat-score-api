@@ -7,6 +7,8 @@ export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candida
  const validWeights=w=>w&&FIELDS.every(f=>typeof w[f]==='number'&&Number.isFinite(w[f])&&w[f]>=0)&&FIELDS.some(f=>w[f]>0);
  if(!validWeights(baselineWeights)||candidates.some(w=>!validWeights(w)))throw Error('Invalid weights');
  const train=[],test=[],excluded=[];
+ const counts=new Map();
+ for(const row of rows){const key=[row?.date,row?.venue,row?.race].join(':');if(Number.isInteger(row?.venue)&&Number.isInteger(row?.race))counts.set(key,(counts.get(key)||0)+1);}
  for(const row of rows){
   const boats=row?.boats,actual=row?.actual;
   const valid=/^20\d{6}$/.test(String(row?.date))&&Array.isArray(boats)&&boats.length===6&&
@@ -14,6 +16,8 @@ export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candida
    Array.isArray(actual)&&actual.length===3&&actual.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(actual).size===3&&
    row?.independentlyVerifiedResult===true&&row?.historicalInputProvenanceVerified===true;
   if(!valid){excluded.push({date:row?.date??null,reason:'missing_verified_historical_inputs_or_result'});continue;}
+  const key=[row.date,row.venue,row.race].join(':');
+  if(!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||counts.get(key)!==1){excluded.push({date:row.date,reason:'invalid_or_duplicate_race_key'});continue;}
   (row.date<=trainEndDate?train:test).push(row);
  }
  if(!train.length||!test.length)throw Error('Independent training and later evaluation races required');
@@ -25,5 +29,6 @@ export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candida
  return {method:'offline_weight_research_time_split',trainEndDate,excluded,trainRaces:train.length,testRaces:test.length,
   baseline:{weights:baselineWeights,train:measure(train,baselineWeights),test:measure(test,baselineWeights)},
   candidate:{weights:best.weights,train:best.train,test:measure(test,best.weights)},
+  evaluationChange:{exactTop3:measure(test,best.weights).exactTop3-measure(test,baselineWeights).exactTop3,top3BoatOverlap:measure(test,best.weights).top3BoatOverlap-measure(test,baselineWeights).top3BoatOverlap},
   approvedForDeployment:false,warning:'Experimental ranking proxy only, not deployed Boat Score 2 trifecta prediction. Evaluation races never used to select weights. Independent provenance flags must be backed by evidence.'};
 }
