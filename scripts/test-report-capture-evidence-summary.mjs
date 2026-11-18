@@ -15,6 +15,8 @@ try{
  const out=execFileSync(process.execPath,['scripts/report-capture-evidence-summary.mjs',dir],{encoding:'utf8'});
  assert.match(out,/Requests attempted \| 2/);
  assert.match(out,/Ready predictions \| 1/);
+ assert.match(out,/Requests retried \| 2/);
+ assert.match(out,/Recovered after retry \| 1/);
  assert.match(out,/Before UNVERIFIED cutoff candidate \| 1/);
  assert.match(out,/Verified eligible for weight tuning \| 0/);
  assert.match(out,/NOT independently verified/);
