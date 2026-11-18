@@ -13,4 +13,16 @@ const missing=compareScoreVariants([{...racers[0],recent50WinRate:null},...racer
 assert.equal(missing.status,'insufficient_data');
 assert.equal(missing.rows[0].baselineScore,null);
 assert.equal(compareScoreVariants(racers,{nationalWinRate:100}).status,'invalid_weights');
+assert.deepEqual(same.baselineRanking,[6,5,4,3,2,1]);
+assert.deepEqual(same.candidateRanking,same.baselineRanking);
+assert.equal(same.rankingChanged,false);
+assert.equal(missing.baselineRanking,null);
+assert.equal(missing.rankingChanged,null);
+const crossing=Array.from({length:6},(_,i)=>({...racers[i],nationalWinRate:i===0?9:5,localWinRate:i===1?10:5}));
+const switchResult=compareScoreVariants(crossing,{nationalWinRate:20,localWinRate:50,motorTwoWinRate:15,recent50WinRate:10,exhibitionScore:5});
+assert.equal(switchResult.status,'comparison_ready');
+assert.equal(switchResult.baselineRanking[0],1);
+assert.equal(switchResult.candidateRanking[0],2);
+assert.equal(switchResult.rankingChanged,true);
+assert.equal(switchResult.rankingChanges.find(r=>r.boat===2).rankDelta,1);
 console.log('Offline score comparison tests passed');
