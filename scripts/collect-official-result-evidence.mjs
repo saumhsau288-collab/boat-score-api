@@ -22,6 +22,7 @@ export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,max
  if(!/^20\d{6}$/.test(String(capture?.date))||!Array.isArray(capture.records))throw Error('Invalid capture');
  const unique=new Map();
  for(const r of capture.records){
+  if(!r||typeof r!=='object')continue;
   const date=String(r.date??capture.date),venue=Number(r.venue),race=Number(r.race);
   if(date!==String(capture.date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)continue;
   const key=[date,venue,race].join(':');unique.set(key,{date,venue,race});
@@ -33,6 +34,7 @@ export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,max
   return {date:capture.date,records:[],verifiedResults:0,status:'deferred_until_after_capture_date',
    warning:'Official results for today or a future date are not collected during morning capture. Run a separate retrospective collection after the date ends.'};
  }
+ if(!Number.isInteger(maxRequests)||maxRequests<1||maxRequests>288)throw Error('Invalid maxRequests');
  const targets=[...unique.values()].slice(0,maxRequests);
  const rows=new Array(targets.length);
  let next=0;
