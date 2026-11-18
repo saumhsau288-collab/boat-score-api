@@ -18,6 +18,15 @@ if(!/^20\d{6}$/.test(date)||!fs.existsSync(file)){
  if(!Object.keys(data.holdReasonCounts||{}).length)lines.push('| none reported | 0 |');
  lines.push('','### Race details','','| Venue | Race | Status | Hold reasons |','| ---: | ---: | --- | --- |');
  for(const r of data.records||[])lines.push('| '+r.venue+' | '+r.race+' | '+r.status+' | '+(r.holdReasons?.join(', ')||'-')+' |');
- lines.push('','**Caution:** Retrospective API predictions are not saved pre-race predictions. Held races are not counted as misses.');
+ const auditPath='backtest-results/calibration-input-audit.json';
+ if(fs.existsSync(auditPath)){
+  const audit=JSON.parse(fs.readFileSync(auditPath,'utf8'));
+  lines.push('','### Historical input coverage','','| Missing input | Races |','| --- | ---: |');
+  for(const [name,count] of Object.entries(audit.missingInputs||{}))lines.push('| '+name+' | '+count+' |');
+  if(!Object.keys(audit.missingInputs||{}).length)lines.push('| none reported | 0 |');
+  lines.push('','Verified pre-race six-racer snapshots: **'+(audit.usablePreRaceSnapshots??0)+'**',
+   'Score calibration ready: **'+(audit.calibrationReady===true?'yes':'no')+'**');
+ }
+ lines.push('','**Caution:** Retrospective API predictions are not saved pre-race predictions. Held races are not counted as misses. Do not optimize score weights without authenticated pre-race snapshots.');
 }
 fs.appendFileSync(summaryPath,lines.join('\n')+'\n');
