@@ -79,8 +79,20 @@ class Tests(unittest.TestCase):
   b={1:[{'boat':i,'racerId':str(4000+i)} for i in range(1,7)]}
   evidence={1:[{'kind':'flying_start','statusCode':'F','boat':2,'racerId':'4002'}]}
   result=join(b,{},'20261116',1,evidence)
-  self.assertEqual(result['rejectionDetails'][0]['incidentStatus'],'explicit_result_row')
+  self.assertEqual(result['rejectionDetails'][0]['incidentStatus'],'program_identity_verified')
   self.assertEqual(result['rejectionDetails'][0]['reason'],'missing_valid_result')
   self.assertEqual(result['rejectionDetails'][0]['incidentEvidence'],evidence[1])
   self.assertEqual(result['matchedRaces'],0)
+ def test_incident_wrong_racer_id_remains_unverified(self):
+  b={1:[{'boat':i,'racerId':str(4000+i)} for i in range(1,7)]}
+  evidence={1:[{'kind':'capsize','statusCode':'転','boat':2,'racerId':'9999'}]}
+  result=join(b,{},'20261116',1,evidence)
+  detail=result['rejectionDetails'][0]
+  self.assertEqual(detail['incidentStatus'],'unverified')
+  self.assertEqual(detail['incidentEvidence'],[])
+  self.assertEqual(detail['unverifiedIncidentEvidence'],evidence[1])
+ def test_incident_without_program_remains_unverified(self):
+  evidence={2:[{'kind':'flying_start','statusCode':'F','boat':2,'racerId':'4002'}]}
+  result=join({}, {2:{'racerIds':{},'finishOrder':[]}},'20261116',1,evidence)
+  self.assertEqual(result['rejectionDetails'][0]['incidentStatus'],'unverified')
 if __name__=='__main__':unittest.main()
