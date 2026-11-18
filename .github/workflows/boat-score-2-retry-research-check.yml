@@ -52,6 +52,8 @@ jobs:
           node --check scripts/test-inventory-existing-prediction-captures.mjs
           node --check scripts/run-existing-prediction-capture-inventory.mjs
           node --check scripts/test-run-existing-prediction-capture-inventory.mjs
+          node --check scripts/calibrate-existing-boat-score-module.mjs
+          node --check scripts/test-calibrate-existing-boat-score-module.mjs
       - name: Run offline retry research regression
         run: |
           node scripts/test-research-capture-retry-policies.mjs
@@ -64,3 +66,4 @@ jobs:
           node scripts/test-audit-historical-tuning-readiness.mjs
           node scripts/test-inventory-existing-prediction-captures.mjs
           node scripts/test-run-existing-prediction-capture-inventory.mjs
+          node scripts/test-calibrate-existing-boat-score-module.mjs
