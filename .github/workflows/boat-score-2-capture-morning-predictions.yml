@@ -42,6 +42,8 @@ jobs:
           node --check scripts/audit-makulabo-heatmap-zero.mjs
           node --check scripts/audit-recent50-source-readiness.mjs
           node --check scripts/audit-explicit-score-exclusions.mjs
+          node --check scripts/report-morning-coverage-research.mjs
+          node --check scripts/audit-morning-coverage-research.mjs
           node --check scripts/audit-morning-capture-outcomes.mjs
           node --check scripts/research-capture-retry-policies.mjs
           node --check scripts/test-research-capture-retry-policies.mjs
@@ -107,6 +109,14 @@ jobs:
           CAPTURE_VENUES: ${{ inputs.capture_venues }}
           BOAT_SCORE_URL: https://boat-score-2-preview.saumh-sau-288.workers.dev
         run: node scripts/capture-existing-boat-score-2-predictions.mjs
+      - name: Save read-only per-race morning timing and coverage evidence
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\\.json$ ]] || continue
+            node scripts/report-morning-coverage-research.mjs "$file" > "${file%.json}-morning-coverage.json"
+          done
       - name: Audit captured API responses and prediction ticket format
         run: |
           for file in prediction-captures/*.json; do
