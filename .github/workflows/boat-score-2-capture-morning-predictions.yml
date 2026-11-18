@@ -66,6 +66,7 @@ jobs:
           node --check scripts/test-audit-capture-response-shapes.mjs
           node --check scripts/audit-morning-official-cutoffs.mjs
           node --check scripts/summarize-cutoff-candidates.mjs
+          node --check scripts/report-capture-evidence-summary.mjs
           node --check scripts/test-summarize-cutoff-candidates.mjs
           node --check scripts/summarize-official-venue-activity.mjs
           node --check scripts/capture-official-cutoff-source.mjs
@@ -542,6 +543,12 @@ jobs:
           console.log(JSON.stringify({source,counts:report.counts,verifiedCutoffs:report.verifiedCutoffs,calibrationEligible:report.calibrationEligible}));
           NODE
             done
+          fi
+      - name: Publish conservative capture evidence summary
+        if: always()
+        run: |
+          if [ -d prediction-captures ]; then
+            node scripts/report-capture-evidence-summary.mjs prediction-captures
           fi
       - name: Upload timestamped raw responses
         if: always()
