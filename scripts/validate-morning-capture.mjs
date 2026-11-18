@@ -20,6 +20,15 @@ if(data.captureStart!==undefined || data.captureEnd!==undefined || data.captureJ
  if(data.captureTimeJst!==time)throw new Error('Incorrect JST capture time');
  if(data.scheduledMorningWindow!==(data.captureDateMatchesJst&&time>='07:45'&&time<='08:30'))throw new Error('Incorrect morning window flag');
 }
+const hasScope=data.requestedVenues!==undefined||data.requestedMaxRaces!==undefined;
+let expectedPairs=null;
+if(hasScope){
+ const venues=data.requestedVenues,races=data.requestedMaxRaces;
+ if(!Array.isArray(venues)||venues.length===0||venues.some(v=>!Number.isInteger(v)||v<1||v>24)||
+    new Set(venues).size!==venues.length||!Number.isInteger(races)||races<1||races>12)
+   throw new Error('Invalid requested capture scope');
+ expectedPairs=new Set(venues.flatMap(v=>Array.from({length:races},(_,i)=>v+':'+(i+1))));
+}
 const keys=new Set(),stats={attempted:0,httpSuccess:0,ready:0,validMainSixAndUpsetSix:0,unverified:0,errors:0};
 const validPick=p=>Array.isArray(p)&&p.length===3&&p.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(p).size===3;
 const validSix=a=>Array.isArray(a)&&a.length===6&&a.every(validPick)&&new Set(a.map(p=>p.join('-'))).size===6;
@@ -27,6 +36,7 @@ for(const row of data.records){
  const key=[row.date,row.venue,row.race].join(':');
  if(keys.has(key))throw new Error('Duplicate race: '+key);
  keys.add(key);
+ if(expectedPairs&&!expectedPairs.has(row.venue+':'+row.race))throw new Error('Race outside requested capture scope: '+key);
  if(row.date!==data.date||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12)throw new Error('Invalid race identity');
  if(!row.requestedAt||!row.receivedAt||!Number.isFinite(Date.parse(row.requestedAt))||!Number.isFinite(Date.parse(row.receivedAt))||Date.parse(row.requestedAt)>Date.parse(row.receivedAt))throw new Error('Invalid capture timestamps');
  if(data.captureStart!==undefined&&(Date.parse(row.requestedAt)<Date.parse(data.captureStart)||Date.parse(row.receivedAt)>Date.parse(data.captureEnd)))throw new Error('Race request outside capture interval');
@@ -54,5 +64,7 @@ for(const row of data.records){
  }
  stats.unverified++;
 }
+if(expectedPairs&&(keys.size!==expectedPairs.size||[...expectedPairs].some(pair=>!keys.has(data.date+':'+pair))))
+ throw new Error('Incomplete requested capture scope');
 if(stats.httpSuccess!==data.httpSuccess||stats.ready!==data.ready)throw new Error('Capture summary mismatch');
 console.log(JSON.stringify({date:data.date,...stats,authenticatedBeforeRace:false},null,2));
