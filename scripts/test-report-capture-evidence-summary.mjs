@@ -8,7 +8,7 @@ try{
  const base='20261119-123';
  const save=(suffix,obj)=>fs.writeFileSync(path.join(dir,base+suffix+'.json'),JSON.stringify(obj));
  save('',{date:'20261119',records:[{response:{ready:true}},{response:{ready:false}}]});
- save('-diagnostics',{counts:{networkTimeout:1}});
+ save('-diagnostics',{counts:{networkTimeout:1,retried:2,recoveredAfterRetry:1}});
  save('-cutoff-candidates',{counts:{readyBeforeCandidate:1,readyAfterCandidate:0,readyMissingCandidate:0}});
  save('-calibration-readiness',{eligibleForWeightTuning:0});
  save('-deployed-ticket-replay',{matched:1,mismatched:0});
