@@ -58,7 +58,7 @@ export function summarizeCapture(data) {
       else {
         recordsWithResponseHash++;
         const key=record.responseSha256.toLowerCase();
-        const entry=responseHashPairs.get(key)??={count:0,pairs:new Set()};
+        const entry=responseHashPairs.get(key)??{count:0,pairs:new Set()};
         entry.count++;
         if(venueKey!=='unknown'&&raceKey!=='unknown')entry.pairs.add(venueKey+':'+raceKey);
         responseHashPairs.set(key,entry);
