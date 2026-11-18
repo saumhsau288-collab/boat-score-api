@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {auditHeatmapZeroSubstitution} from './audit-makulabo-heatmap-zero.mjs';
+const html='<table><tr><td>0</td><td>&nbsp;</td><td>12</td></tr><tr><td></td><td>3</td></tr></table>';
+const r=auditHeatmapZeroSubstitution(html);
+assert.equal(r.totalRows,2);
+assert.equal(r.rowsWithBlankCells,2);
+assert.equal(r.blankCellCount,2);
+assert.equal(r.rowsWithLiteralZero,1);
+assert.equal(r.eligibleForLast50Scoring,false);
+assert.equal(auditHeatmapZeroSubstitution('<tr><td>0</td></tr>').blankCellCount,0);
+console.log('Makulabo blank-versus-zero audit tests passed');
