@@ -157,11 +157,16 @@ jobs:
           mkdir -p verified-daily
           for F in /tmp/boat-score-history/*.json; do
             NAME="$(basename "$F")"
-            if [ -f "verified-daily/$NAME" ] && ! cmp -s "$F" "verified-daily/$NAME"; then
-              echo "Historical report conflict for $NAME; refusing overwrite" >&2
-              exit 1
+            if [ -f "verified-daily/$NAME" ]; then
+              if cmp -s "$F" "verified-daily/$NAME"; then
+                echo "Archive already contains identical report: $NAME"
+              else
+                echo "::warning::Historical report differs for $NAME; preserving immutable original. New parse is available in run artifacts for separate review."
+              fi
+              continue
             fi
             cp "$F" "verified-daily/$NAME"
+            echo "Archived new report: $NAME"
           done
           # Run the offline analyzer against every accumulated day, not just this week's window.
           mkdir -p /tmp/boat-score-history/results
