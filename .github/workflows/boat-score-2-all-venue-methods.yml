@@ -31,6 +31,8 @@ on:
       - 'scripts/test_merge_immutable_history.py'
       - 'scripts/audit_official_incidents.py'
       - 'scripts/test_audit_official_incidents.py'
+      - 'scripts/compare_offline_predictions.py'
+      - 'scripts/test_compare_offline_predictions.py'
       - '.github/workflows/boat-score-2-all-venue-methods.yml'
 concurrency:
   group: boat-score-2-daily-offline-research
@@ -53,6 +55,7 @@ jobs:
           python3 -m unittest discover -s scripts -p 'test_analyze_archived_racer_history.py'
           python3 -m unittest discover -s scripts -p 'test_merge_immutable_history.py'
           python3 -m unittest discover -s scripts -p 'test_audit_official_incidents.py'
+          python3 -m unittest discover -s scripts -p 'test_compare_offline_predictions.py'
       - name: Install archive extractor
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
       - name: Download daily official B/K archives
