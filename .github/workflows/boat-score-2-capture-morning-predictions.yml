@@ -92,7 +92,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const files = fs.readdirSync('prediction-captures').filter(name => name.endsWith('.json'));
+          const files = fs.readdirSync('prediction-captures').filter(name => name.endsWith('.json') && !name.endsWith('-quality.json'));
           if (files.length !== 1) throw new Error('Expected exactly one capture artifact');
           const data = JSON.parse(fs.readFileSync('prediction-captures/' + files[0], 'utf8'));
           const valid = p => Array.isArray(p) && p.length === 3 &&
