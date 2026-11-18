@@ -5,7 +5,7 @@ const selectedVenue=Number(process.env.BACKTEST_VENUE||0);
 if(selectedVenue&&(!Number.isInteger(selectedVenue)||selectedVenue<1||selectedVenue>24))throw Error('Invalid venue');
 const base=process.env.BOAT_SCORE_URL||'https://boat-score-2-preview.saumh-sau-288.workers.dev';
 if(!/^20\d{6}$/.test(date))throw Error('Invalid date');
-const get=async(path,timeout=75000)=>{try{const r=await fetch(base+path,{signal:AbortSignal.timeout(timeout)});const j=await r.json();return r.ok?j:{error:'http_'+r.status,...j}}catch(e){return {error:String(e.message||e)}}};
+const get=async(path,timeout=75000)=>{const started=Date.now();try{const r=await fetch(base+path,{signal:AbortSignal.timeout(timeout)});const j=await r.json();return {...(r.ok?j:{error:'http_'+r.status,...j}),_probe:{source:'http_response',status:r.status,elapsedMs:Date.now()-started}}}catch(e){return {error:String(e.message||e),_probe:{source:'client_exception',kind:e.name==='TimeoutError'?'client_timeout':'client_error',elapsedMs:Date.now()-started}}}};
 const pool=async(items,limit,fn)=>{let index=0;const results=new Array(items.length);await Promise.all(Array.from({length:limit},async()=>{while(index<items.length){const i=index++;results[i]=await fn(items[i],i)}}));return results};
 console.log('Checking venue race-1 entries, not assuming unverified venues are closed.');
 const venues=await pool(selectedVenue?[selectedVenue]:Array.from({length:24},(_,i)=>i+1),2,async venue=>{
@@ -15,7 +15,7 @@ const venues=await pool(selectedVenue?[selectedVenue]:Array.from({length:24},(_,
  const reason=d.checks?.[0]?.reason||d.error||null;
  const verified=d.verifiedVenues?.includes(venue)===true;
  const errorKind=verified?'none':/timeout|timed out|aborted/i.test(String(reason))?'timeout':/^http_\d{3}$/.test(String(reason))?'http_error':'unverified_other';
- console.log('VENUE_CHECK',JSON.stringify({venue,verified,elapsedMs,errorKind,reason:typeof reason==='string'?reason.slice(0,120):null}));
+ console.log('VENUE_CHECK',JSON.stringify({venue,verified,elapsedMs,errorKind,source:d._probe?.source||'unknown',httpStatus:d._probe?.status||null,clientErrorKind:d._probe?.kind||null,reason:typeof reason==='string'?reason.slice(0,120):null}));
  return {venue,verified,reason,errorKind,elapsedMs};
 });
 console.log('VENUE_CHECK_SUMMARY',JSON.stringify(venues.reduce((counts,item)=>{counts[item.errorKind]=(counts[item.errorKind]||0)+1;return counts},{})));
