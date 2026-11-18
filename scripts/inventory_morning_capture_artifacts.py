@@ -70,6 +70,8 @@ def diagnose_capture(payload):
     missing_input_lengths = Counter()
     retry_types = Counter()
     verification_pairs = Counter()
+    reason_types = Counter()
+    retry_categories = Counter()
     for row in records:
         if not isinstance(row, dict):
             raise ValueError('Invalid capture row')
@@ -107,7 +109,18 @@ def diagnose_capture(payload):
             else:
                 missing_shape = 'other'
             missing_input_shapes[missing_shape] += 1
+            reason = response.get('reason')
+            reason_types[('missing' if reason is None else 'string' if isinstance(reason, str)
+                          else 'object' if isinstance(reason, dict) else 'other')] += 1
             retry = response.get('officialStatsRetry')
+            # Fixed categories only; never output free-form upstream retry messages.
+            retry_text = retry.strip().lower() if isinstance(retry, str) else ''
+            if isinstance(retry, str):
+                retry_category = ('empty' if not retry_text else
+                                  'timeout' if 'timeout' in retry_text or 'timed out' in retry_text else
+                                  'http_error' if 'http' in retry_text or 'status' in retry_text else
+                                  'other_string')
+                retry_categories[retry_category] += 1
             retry_types[('null' if retry is None else 'boolean' if type(retry) is bool
                          else 'string' if isinstance(retry, str) else 'object' if isinstance(retry, dict)
                          else 'list' if isinstance(retry, list) else 'number' if type(retry) in (int, float)
@@ -139,7 +152,9 @@ def diagnose_capture(payload):
             'verificationFlagCounts': dict(sorted(verification_flags.items())),
             'missingInputListLengths': dict(sorted(missing_input_lengths.items(), key=lambda x: int(x[0]))),
             'officialStatsRetryTypes': dict(sorted(retry_types.items())),
-            'verificationPairs': dict(sorted(verification_pairs.items()))}
+            'verificationPairs': dict(sorted(verification_pairs.items())),
+            'notReadyReasonTypes': dict(sorted(reason_types.items())),
+            'officialRetryCategories': dict(sorted(retry_categories.items()))}
 
 def api(path, token, binary=False):
     request = urllib.request.Request(
@@ -157,7 +172,7 @@ def inventory(repository, token):
                                   'http200': 0, 'ready': 0, 'usableSixPlusSix': 0})
     errors = []
     inspected = 0
-    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter(), 'missingInputListLengths': Counter(), 'officialStatsRetryTypes': Counter(), 'verificationPairs': Counter()})
+    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter(), 'missingInputListLengths': Counter(), 'officialStatsRetryTypes': Counter(), 'verificationPairs': Counter(), 'notReadyReasonTypes': Counter(), 'officialRetryCategories': Counter()})
     for page in range(1, 11):
         response = api(f'repos/{repository}/actions/artifacts?per_page=100&page={page}', token)
         artifacts = response.get('artifacts', [])
@@ -194,6 +209,8 @@ def inventory(repository, token):
                     bucket['missingInputListLengths'].update(diagnostic['missingInputListLengths'])
                     bucket['officialStatsRetryTypes'].update(diagnostic['officialStatsRetryTypes'])
                     bucket['verificationPairs'].update(diagnostic['verificationPairs'])
+                    bucket['notReadyReasonTypes'].update(diagnostic['notReadyReasonTypes'])
+                    bucket['officialRetryCategories'].update(diagnostic['officialRetryCategories'])
                     totals[date]['artifacts'] += 1
                     for key, value in counts.items():
                         totals[date][key] += value
@@ -214,7 +231,9 @@ def inventory(repository, token):
             'verificationFlagCounts': dict(sorted(bucket['verificationFlagCounts'].items())),
             'missingInputListLengths': dict(sorted(bucket['missingInputListLengths'].items(), key=lambda x: int(x[0]))),
             'officialStatsRetryTypes': dict(sorted(bucket['officialStatsRetryTypes'].items())),
-            'verificationPairs': dict(sorted(bucket['verificationPairs'].items()))}
+            'verificationPairs': dict(sorted(bucket['verificationPairs'].items())),
+            'notReadyReasonTypes': dict(sorted(bucket['notReadyReasonTypes'].items())),
+            'officialRetryCategories': dict(sorted(bucket['officialRetryCategories'].items()))}
     return {'byCaptureDate': dict(sorted(totals.items())),
             'diagnosticsByDate': diagnostic_output, 'artifactsInspected': inspected,
             'errors': errors, 'officialResultOverlap': None,
@@ -261,6 +280,12 @@ if __name__ == '__main__':
                 f.write('\nOfficial/statistics verification pairs:\n')
                 for pair, count in diagnostic['verificationPairs'].items():
                     f.write(f'- {pair}: {count}\n')
+                f.write('\nNot-ready reason value types:\n')
+                for kind, count in diagnostic['notReadyReasonTypes'].items():
+                    f.write(f'- {kind}: {count}\n')
+                f.write('\nOfficial retry failure categories (no raw messages):\n')
+                for category, count in diagnostic['officialRetryCategories'].items():
+                    f.write(f'- {category}: {count}\n')
                 f.write('\nOfficial retry types (no values):\n')
                 for kind, count in diagnostic['officialStatsRetryTypes'].items():
                     f.write(f'- {kind}: {count}\n')
