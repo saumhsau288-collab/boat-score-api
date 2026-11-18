@@ -20,6 +20,8 @@ def has_verifiable_snapshot(pred):
         return False
     if not isinstance(pred.get('captureEvidenceId'), str) or not pred['captureEvidenceId'].strip():
         return False
+    if not isinstance(pred.get('date'), str) or len(pred['date']) != 8 or not pred['date'].isdigit():
+        return False
     try:
         captured = datetime.fromisoformat(pred['capturedAt'])
         started = datetime.fromisoformat(pred['raceStartAt'])
