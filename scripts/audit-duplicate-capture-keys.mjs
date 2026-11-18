@@ -5,7 +5,7 @@ export function auditDuplicateCaptureKeys(capture) {
   const counts = new Map();
   for (const record of records) {
     const date = record?.date, venue = record?.venue, race = record?.race;
-    if (!/^\\d{8}$/.test(String(date)) ||
+    if (!/^\d{8}$/.test(String(date)) ||
         !Number.isInteger(Number(venue)) || Number(venue) < 1 || Number(venue) > 24 ||
         !Number.isInteger(Number(race)) || Number(race) < 1 || Number(race) > 12) continue;
     const key = [date, Number(venue), Number(race)].join(':');
