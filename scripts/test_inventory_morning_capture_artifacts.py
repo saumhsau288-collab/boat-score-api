@@ -98,6 +98,22 @@ class InventoryTests(unittest.TestCase):
         self.assertNotIn('secret', str(result))
         self.assertNotIn('private', str(result))
 
+    def test_only_explicit_retry_http_codes_are_counted(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200,
+             'response': {'ready': False, 'officialStatsRetry': 'HTTP 503 private'}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200,
+             'response': {'ready': False, 'officialStatsRetry': 'status code: 404 secret'}},
+            {'venue': 1, 'race': 3, 'httpStatus': 200,
+             'response': {'ready': False, 'officialStatsRetry': 'HTTP retry no code'}},
+            {'venue': 1, 'race': 4, 'httpStatus': 200,
+             'response': {'ready': False, 'officialStatsRetry': 'racer 503 no HTTP'}}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['explicitRetryHttpStatuses'],
+                         {'404': 1, '503': 1, 'not_explicit': 2})
+        self.assertNotIn('private', str(result))
+        self.assertNotIn('secret', str(result))
+
     def test_joint_verification_flags_are_aggregated(self):
         rows = [
             {'venue': 1, 'race': 1, 'httpStatus': 200,
