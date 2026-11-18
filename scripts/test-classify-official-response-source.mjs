@@ -7,4 +7,8 @@ assert.equal(classify({...base,responseUrl:'https://example.com/owpc/pc/race/rac
 assert.equal(classify({...base,responseUrl:'https://www.boatrace.jp/'}).status,'unexpected_official_path');
 assert.equal(classify({...base,httpStatus:503}).status,'official_http_non_200');
 assert.equal(classify({...base,contentType:'application/json'}).status,'unexpected_content_type');
+assert.equal(classify({...base,responseUrl:url.replace('rno=3','rno=4')}).status,'official_race_query_changed');
+assert.equal(classify({...base,responseUrl:url.replace('jcd=02','jcd=03')}).status,'official_race_query_changed');
+assert.equal(classify({...base,responseUrl:url.replace('hd=20261118','hd=20261119')}).status,'official_race_query_changed');
+assert.equal(classify({...base,responseUrl:url+'&rno=3'}).status,'official_race_query_changed');
 console.log('Official response source checks passed');
