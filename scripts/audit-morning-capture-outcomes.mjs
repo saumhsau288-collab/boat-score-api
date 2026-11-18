@@ -9,6 +9,7 @@ export function summarizeCapture(data) {
   const byVenue={};
   const byRace={};
   const morningByRace={};
+  const morningByVenue={};
   const uniquePairs=new Set();
   let duplicateVenueRacePairs=0,invalidVenueRacePairs=0;
   const timing={firstRequestedAt:null,lastRequestedAt:null,lastReceivedAt:null,elapsedSeconds:null,byVenue:{}};
@@ -40,6 +41,7 @@ export function summarizeCapture(data) {
     const venueKey=Number.isInteger(venue)&&venue>=1&&venue<=24?String(venue):'unknown';
     const group=byVenue[venueKey]??={attempted:0,networkTimeout:0,otherNetworkError:0,httpFailure:0,notReady:0,ready:0};
     group.attempted++;
+    const morningVenue=morningByVenue[venueKey]??={respondedBy0830:0,readyBy0830:0,usableSixPlusSixBy0830:0,firstUsableAt:null};
     const race=Number(record.race);
     const raceKey=Number.isInteger(race)&&race>=1&&race<=12?String(race):'unknown';
     const raceGroup=byRace[raceKey]??={attempted:0,ready:0,networkTimeout:0,firstRequestedAt:null,lastRequestedAt:null};
@@ -61,6 +63,7 @@ export function summarizeCapture(data) {
     if(elapsed!==null)durations[bucket].push(elapsed);
     if(start!==null&&Number.isFinite(morningStart)&&start>=morningStart&&start<=morningEnd)morningRace.requestedInWindow++;
     if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningRace.respondedInWindow++;
+    if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningVenue.respondedBy0830++;
     if(start===null||!Number.isFinite(morningStart))requestTimeUnknown++;
     else if(start>=morningStart&&start<=morningEnd)requestWithinMorningWindow++;
     else requestOutsideMorningWindow++;
@@ -101,6 +104,7 @@ export function summarizeCapture(data) {
       counts.ready++;group.ready++;raceGroup.ready++;
       for(const clock of milestones)eightClockMilestones[clock].ready++;
       if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningRace.readyInWindow++;
+      if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningVenue.readyBy0830++;
       if(end===null||!Number.isFinite(morningStart))readyResponseTimeUnknown++;
       else if(end>=morningStart&&end<=morningEnd)readyResponseWithinMorningWindow++;
       else readyResponseOutsideMorningWindow++;
@@ -108,6 +112,11 @@ export function summarizeCapture(data) {
         validSixPlusSix++;
         for(const clock of milestones)eightClockMilestones[clock].validSixPlusSix++;
         if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningRace.usableSixPlusSixInWindow++;
+        if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd){
+          morningVenue.usableSixPlusSixBy0830++;
+          const previous=validTime(morningVenue.firstUsableAt);
+          morningVenue.firstUsableAt=new Date(previous===null?end:Math.min(previous,end)).toISOString();
+        }
         const mainKeys=new Set(record.response.main.map(p=>p.join('-')));
         if(record.response.upset.some(p=>mainKeys.has(p.join('-'))))overlappingMainUpsetTickets++;
         else {fullyDistinctTwelveTickets++;for(const clock of milestones)eightClockMilestones[clock].distinctTwelve++;}
@@ -161,7 +170,7 @@ export function summarizeCapture(data) {
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,morningByRace,eightClockMilestones,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,morningByRace,morningByVenue,eightClockMilestones,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
