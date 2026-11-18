@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {inspectSavedTicketsAgainstResultCandidates as inspect} from './inspect-saved-tickets-vs-result-candidates.mjs';
+const main=[[3,1,5],[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,2,1]];
+const upset=[[4,1,2],[4,2,1],[5,1,2],[5,2,1],[6,1,2],[6,2,1]];
+const capture={date:'20261118',records:[{date:'20261118',venue:1,race:1,response:{ready:true,main,upset}}]};
+const evidence={records:[{date:'20261118',venue:1,race:1,verified:false,finishCandidate:{verified:false,top3:[3,1,5]}}]};
+const result=inspect(capture,evidence);
+assert.equal(result.counts.candidatePresent,1);
+assert.equal(result.rows[0].candidateInMain,true);
+assert.equal(result.rows[0].candidateInUpset,false);
+assert.equal(result.verifiedComparisons,0);
+assert.equal(result.accuracyRate,null);
+assert.equal(result.eligibleForWeightTuning,0);
+assert.equal(inspect(capture,{records:[]}).counts.candidateMissing,1);
+assert.equal(inspect(capture,{records:[...evidence.records,...evidence.records]}).counts.ambiguousEvidence,1);
+console.log('Unverified candidate matching diagnostics tests passed');
