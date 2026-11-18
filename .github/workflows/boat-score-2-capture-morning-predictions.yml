@@ -209,6 +209,10 @@ jobs:
               '; missing within requested scope: '+(report.coverage?.missingPairsWithinRequestedVenues?.length??'unknown')+
               '; unexpected outside scope: '+(report.coverage?.unexpectedPairsOutsideScope?.length??'unknown'),
               '', 'This is record completeness, not verified racing schedule coverage.',
+              '', '### Identical API response body diagnostics', '',
+              '| Metric | Count |', '|---|---:|',
+              ...Object.entries(report.responseHashDiagnostics||{}).filter(([k,v])=>typeof v==='number').map(([k,v])=>'| '+k+' | '+v+' |'),
+              '', 'Repeated hashes are signals to inspect, not proof of incorrect predictions.',
               '', '### Prediction arrivals after 08:00 JST', '',
               '| By JST | Responses | Ready | Valid 6+6 | 12 distinct |', '|---|---:|---:|---:|---:|',
               ...Object.entries(report.eightClockMilestones||{}).map(([clock,c])=>
