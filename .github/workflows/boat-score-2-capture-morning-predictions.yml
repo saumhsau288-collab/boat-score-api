@@ -187,6 +187,11 @@ jobs:
               '|---|---:|---:|---:|---:|---:|---:|',
               ...Object.entries(report.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,c])=>
                 '| '+venue+' | '+c.attempted+' | '+c.ready+' | '+c.notReady+' | '+c.networkTimeout+' | '+c.otherNetworkError+' | '+c.httpFailure+' |'),
+              '', '### Capture timing by race number', '',
+              '| Race | Attempted | Ready | Timeout | First request UTC | Last request UTC |',
+              '|---|---:|---:|---:|---|---|',
+              ...Object.entries(report.byRace||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([race,c])=>
+                '| '+race+' | '+c.attempted+' | '+c.ready+' | '+c.networkTimeout+' | '+(c.firstRequestedAt||'unknown')+' | '+(c.lastRequestedAt||'unknown')+' |'),
               '', '### Capture timing by venue (observed, not scheduled)', '',
               'Overall elapsed seconds: '+(report.timing?.elapsedSeconds??'unknown'),'',
               'Requests started 07:45–08:30 JST: '+(report.timing?.morningWindow?.requestWithinMorningWindow??'unknown')+
