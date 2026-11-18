@@ -29,6 +29,12 @@ try {
  assert.notEqual(run({...base,records:[{...row,receivedAt:'2026-11-17T22:59:59Z'}]}).status,0);
  assert.notEqual(run({...base,authenticatedBeforeRace:true}).status,0);
  assert.notEqual(run({...base,ready:0}).status,0);
+ assert.notEqual(run({...base,records:[{...row,httpStatus:503}]}).status,0);
+ assert.notEqual(run({...base,records:[{...row,httpStatus:undefined}]}).status,0);
+ assert.notEqual(run({...base,records:[{...row,error:'timeout'}]}).status,0);
+ const network={...row,error:'timeout',httpStatus:undefined,response:undefined};
+ const networkData={...base,httpSuccess:0,ready:0,records:[network]};
+ assert.equal(run(networkData).status,0);
  const invalid=run({...base,records:[{...row,response:{ready:true,main:[six[0],...six.slice(1,5),six[0]],upset}}]});
  assert.equal(invalid.status,0,invalid.stderr);
  assert.equal(JSON.parse(invalid.stdout).validMainSixAndUpsetSix,0);
