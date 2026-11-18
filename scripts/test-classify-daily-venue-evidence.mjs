@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {classifyDailyVenueEvidence} from './classify-daily-venue-evidence.mjs';
+const html='<a href="/owpc/pc/race/racelist?rno=1&amp;jcd=02&amp;hd=20261118">戸田</a><a href="/owpc/pc/race/racelist?rno=2&jcd=02&hd=20261118">戸田</a><a href="/owpc/pc/race/racelist?rno=1&jcd=08&hd=20261117">常滑</a>';
+const report=classifyDailyVenueEvidence(html,{date:'20261118'});
+assert.deepEqual(report.linkedVenues,[2]);
+assert.equal(report.linkCount,2);
+assert.equal(report.safeToFilterByActivity,false);
+assert.deepEqual(report.verifiedActiveVenues,[]);
+assert.throws(()=>classifyDailyVenueEvidence(html,{}));
+console.log('Daily official venue link evidence tests passed');

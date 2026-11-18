@@ -1,0 +1,87 @@
+name: Boat Score 2 retry research checks
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/research-capture-retry-policies.mjs'
+      - 'scripts/test-research-capture-retry-policies.mjs'
+      - 'scripts/select-verified-active-venues.mjs'
+      - 'scripts/test-select-verified-active-venues.mjs'
+      - 'scripts/audit-morning-coverage-research.mjs'
+      - 'scripts/test-audit-morning-coverage-research.mjs'
+      - 'scripts/report-morning-coverage-research.mjs'
+      - 'scripts/classify-daily-venue-evidence.mjs'
+      - 'scripts/test-classify-daily-venue-evidence.mjs'
+      - 'scripts/test-report-morning-coverage-research.mjs'
+      - 'scripts/tune-historical-weights-research.mjs'
+      - 'scripts/test-tune-historical-weights-research.mjs'
+      - '.github/workflows/boat-score-2-retry-research-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check research scripts syntax
+        run: |
+          node --check scripts/research-capture-retry-policies.mjs
+          node --check scripts/test-research-capture-retry-policies.mjs
+          node --check scripts/select-verified-active-venues.mjs
+          node --check scripts/test-select-verified-active-venues.mjs
+          node --check scripts/audit-morning-coverage-research.mjs
+          node --check scripts/test-audit-morning-coverage-research.mjs
+          node --check scripts/report-morning-coverage-research.mjs
+          node --check scripts/classify-daily-venue-evidence.mjs
+          node --check scripts/test-classify-daily-venue-evidence.mjs
+          node --check scripts/test-report-morning-coverage-research.mjs
+          node --check scripts/tune-historical-weights-research.mjs
+          node --check scripts/test-tune-historical-weights-research.mjs
+          node --check scripts/run-historical-weight-research.mjs
+          node --check scripts/test-run-historical-weight-research.mjs
+          node --check scripts/audit-historical-tuning-readiness.mjs
+          node --check scripts/test-audit-historical-tuning-readiness.mjs
+          node --check scripts/inventory-existing-prediction-captures.mjs
+          node --check scripts/test-inventory-existing-prediction-captures.mjs
+          node --check scripts/run-existing-prediction-capture-inventory.mjs
+          node --check scripts/test-run-existing-prediction-capture-inventory.mjs
+          node --check scripts/calibrate-existing-boat-score-module.mjs
+          node --check scripts/test-calibrate-existing-boat-score-module.mjs
+          node --check scripts/replay-deployed-base-tickets.mjs
+          node --check scripts/test-replay-deployed-base-tickets.mjs
+          node --check scripts/compare-deployed-base-weight-variants.mjs
+          node --check scripts/test-compare-deployed-base-weight-variants.mjs
+          node --check scripts/tune-deployed-base-twelve-tickets.mjs
+          node --check scripts/test-tune-deployed-base-twelve-tickets.mjs
+          node --check scripts/audit-archived-deployed-tickets.mjs
+          node --check scripts/test-audit-archived-deployed-tickets.mjs
+          node --check scripts/audit-capture-calibration-readiness.mjs
+          node --check scripts/test-audit-capture-calibration-readiness.mjs
+          node --check scripts/summarize-cutoff-candidates.mjs
+          node --check scripts/test-summarize-cutoff-candidates.mjs
+      - name: Run offline retry research regression
+        run: |
+          node scripts/test-research-capture-retry-policies.mjs
+          node scripts/test-select-verified-active-venues.mjs
+          node scripts/test-audit-morning-coverage-research.mjs
+          node scripts/test-classify-daily-venue-evidence.mjs
+          node scripts/test-report-morning-coverage-research.mjs
+          node scripts/test-tune-historical-weights-research.mjs
+          node scripts/test-run-historical-weight-research.mjs
+          node scripts/test-audit-historical-tuning-readiness.mjs
+          node scripts/test-inventory-existing-prediction-captures.mjs
+          node scripts/test-run-existing-prediction-capture-inventory.mjs
+          node scripts/test-calibrate-existing-boat-score-module.mjs
+          node scripts/test-replay-deployed-base-tickets.mjs
+          node scripts/test-compare-deployed-base-weight-variants.mjs
+          node scripts/test-tune-deployed-base-twelve-tickets.mjs
+          node scripts/test-audit-archived-deployed-tickets.mjs
+          node scripts/test-audit-capture-calibration-readiness.mjs
+          node scripts/test-summarize-cutoff-candidates.mjs

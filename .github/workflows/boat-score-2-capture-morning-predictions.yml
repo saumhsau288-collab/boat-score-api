@@ -33,6 +33,10 @@ jobs:
       - name: Check capture and validation scripts syntax
         run: |
           node --check scripts/audit-base-vs-adjusted.mjs
+          node --check scripts/audit-archived-deployed-tickets.mjs
+          node --check scripts/audit-capture-calibration-readiness.mjs
+          node --check scripts/test-audit-capture-calibration-readiness.mjs
+          node --check scripts/test-audit-archived-deployed-tickets.mjs
           node --check scripts/audit-applied-adjustments.mjs
           node --check scripts/audit-saved-comparison-evidence.mjs
           node --check scripts/run-saved-capture-result-comparison.mjs
@@ -42,7 +46,11 @@ jobs:
           node --check scripts/audit-makulabo-heatmap-zero.mjs
           node --check scripts/audit-recent50-source-readiness.mjs
           node --check scripts/audit-explicit-score-exclusions.mjs
+          node --check scripts/report-morning-coverage-research.mjs
+          node --check scripts/audit-morning-coverage-research.mjs
           node --check scripts/audit-morning-capture-outcomes.mjs
+          node --check scripts/research-capture-retry-policies.mjs
+          node --check scripts/test-research-capture-retry-policies.mjs
           node --check scripts/fetch-with-timeout-retry.mjs
           node --check scripts/build-morning-capture-tasks.mjs
           node --check scripts/capture-existing-boat-score-2-predictions.mjs
@@ -57,14 +65,19 @@ jobs:
           node --check scripts/audit-capture-response-shapes.mjs
           node --check scripts/test-audit-capture-response-shapes.mjs
           node --check scripts/audit-morning-official-cutoffs.mjs
+          node --check scripts/summarize-cutoff-candidates.mjs
+          node --check scripts/test-summarize-cutoff-candidates.mjs
           node --check scripts/summarize-official-venue-activity.mjs
           node --check scripts/capture-official-cutoff-source.mjs
       - name: Test capture validation with offline fixtures
         run: |
           node scripts/test-summarize-official-venue-activity.mjs
           node scripts/test-build-morning-capture-tasks.mjs
+          node scripts/test-research-capture-retry-policies.mjs
           node scripts/test-fetch-with-timeout-retry.mjs
           node scripts/test-audit-base-vs-adjusted.mjs
+          node scripts/test-audit-archived-deployed-tickets.mjs
+          node scripts/test-audit-capture-calibration-readiness.mjs
           node scripts/test-audit-applied-adjustments.mjs
           node scripts/test-audit-saved-comparison-evidence.mjs
           node scripts/test-run-saved-capture-result-comparison.mjs
@@ -80,6 +93,7 @@ jobs:
           node scripts/test-audit-capture-score-inputs.mjs
           node scripts/test-audit-capture-response-shapes.mjs
           node scripts/test-audit-morning-official-cutoffs.mjs
+          node scripts/test-summarize-cutoff-candidates.mjs
       - name: Check live deployed predictor reachability (read only)
         env:
           BOAT_SCORE_URL: https://boat-score-2-preview.saumh-sau-288.workers.dev
@@ -104,6 +118,21 @@ jobs:
           CAPTURE_VENUES: ${{ inputs.capture_venues }}
           BOAT_SCORE_URL: https://boat-score-2-preview.saumh-sau-288.workers.dev
         run: node scripts/capture-existing-boat-score-2-predictions.mjs
+      - name: Inventory captured deployed predictor data for historical comparison
+        if: always()
+        run: |
+          if [ -d prediction-captures ]; then
+            node scripts/run-existing-prediction-capture-inventory.mjs prediction-captures > prediction-captures/existing-prediction-inventory.json || true
+            cat prediction-captures/existing-prediction-inventory.json
+          fi
+      - name: Save read-only per-race morning timing and coverage evidence
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            node scripts/report-morning-coverage-research.mjs "$file" > "${file%.json}-morning-coverage.json"
+          done
       - name: Audit captured API responses and prediction ticket format
         run: |
           for file in prediction-captures/*.json; do
@@ -459,6 +488,61 @@ jobs:
           console.log('Usable six-main/six-upset morning predictions:', usable.length, 'of', data.attempted);
           if (usable.length === 0) throw new Error('No usable morning predictions; raw artifact will still upload');
           NODE
+      - name: Verify archived deployed 12-ticket replay (no accuracy claims)
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            CAPTURE_FILE="$file" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {auditArchivedDeployedTickets} from './scripts/audit-archived-deployed-tickets.mjs';
+          const source=process.env.CAPTURE_FILE;
+          const result=auditArchivedDeployedTickets(JSON.parse(fs.readFileSync(source,'utf8')));
+          const target=source.replace(/\.json$/,'-deployed-ticket-replay.json');
+          fs.writeFileSync(target,JSON.stringify(result,null,2)+'\n');
+          console.log(JSON.stringify({source,target,ready:result.ready,matched:result.matched,mismatched:result.mismatched,invalid:result.invalid}));
+          if(result.mismatched>0||result.invalid>0)process.exitCode=1;
+          NODE
+          done
+      - name: Report calibration readiness of captured races (research only)
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            CAPTURE_FILE="$file" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {auditCaptureCalibrationReadiness} from './scripts/audit-capture-calibration-readiness.mjs';
+          const source=process.env.CAPTURE_FILE;
+          const capture=JSON.parse(fs.readFileSync(source,'utf8'));
+          // The official source collector currently supplies candidates, NOT authenticated cutoffs.
+          const report=auditCaptureCalibrationReadiness(capture,[]);
+          const target=source.replace(/\.json$/,'-calibration-readiness.json');
+          fs.writeFileSync(target,JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify({source,counts:report.counts,eligibleForWeightTuning:report.eligibleForWeightTuning}));
+          NODE
+          done
+      - name: Compare saved prediction times with unverified cutoff candidates
+        if: always()
+        run: |
+          if [ -f prediction-captures/official-cutoff-source-evidence.json ]; then
+            for file in prediction-captures/*.json; do
+              [ -f "$file" ] || continue
+              [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+              CAPTURE_FILE="$file" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {summarizeCutoffCandidates} from './scripts/summarize-cutoff-candidates.mjs';
+          const source=process.env.CAPTURE_FILE;
+          const capture=JSON.parse(fs.readFileSync(source,'utf8'));
+          const evidence=JSON.parse(fs.readFileSync('prediction-captures/official-cutoff-source-evidence.json','utf8'));
+          const report=summarizeCutoffCandidates(capture,evidence);
+          const target=source.replace(/\.json$/,'-cutoff-candidates.json');
+          fs.writeFileSync(target,JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify({source,counts:report.counts,verifiedCutoffs:report.verifiedCutoffs,calibrationEligible:report.calibrationEligible}));
+          NODE
+            done
+          fi
       - name: Upload timestamped raw responses
         if: always()
         uses: actions/upload-artifact@v4

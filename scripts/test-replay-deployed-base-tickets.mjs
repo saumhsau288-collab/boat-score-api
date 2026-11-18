@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {replayDeployedBaseTickets} from './replay-deployed-base-tickets.mjs';
+const rows=Array.from({length:6},(_,i)=>({boat:i+1,win:9-i,motor:60-i*5,local:8-i,top2:70-i*5,top3:80-i*5}));
+const a=replayDeployedBaseTickets(rows);
+assert.equal(a.ready,true);assert.equal(a.main.length,6);assert.equal(a.upset.length,6);
+assert.deepEqual(a.main[0],[1,2,3]);assert.equal(a.upset.every(p=>p[0]>=4),true);
+assert.equal(new Set([...a.main,...a.upset].map(x=>x.join('-'))).size,12);
+const b=replayDeployedBaseTickets(rows.map(x=>({...x,local:null})));
+assert.equal(b.method,'weighted_racer70_motor30_screening_unvalidated');
+assert.equal(replayDeployedBaseTickets(rows.slice(1)).ready,false);
+console.log('Deployed base ticket replay fixtures passed');

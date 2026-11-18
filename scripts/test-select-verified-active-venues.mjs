@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {selectVerifiedActiveVenues} from './select-verified-active-venues.mjs';
+const date='20261118';
+assert.deepEqual(selectVerifiedActiveVenues({safeToFilterByActivity:false,verifiedActiveVenues:[1],date},{date}).venues,[]);
+assert.equal(selectVerifiedActiveVenues({safeToFilterByActivity:true,verifiedActiveVenues:[1],date:'20261117',authentication:'independently_verified_official_schedule'},{date}).verified,false);
+assert.equal(selectVerifiedActiveVenues({safeToFilterByActivity:true,verifiedActiveVenues:[1],date},{date}).verified,false);
+assert.deepEqual(selectVerifiedActiveVenues({safeToFilterByActivity:true,verifiedActiveVenues:[8,2],date,authentication:'independently_verified_official_schedule'},{date}).venues,[2,8]);
+assert.equal(selectVerifiedActiveVenues({safeToFilterByActivity:true,verifiedActiveVenues:[2,2],date,authentication:'independently_verified_official_schedule'},{date}).verified,false);
+assert.throws(()=>selectVerifiedActiveVenues({},{}));
+console.log('Verified venue selection fail-closed tests passed');
