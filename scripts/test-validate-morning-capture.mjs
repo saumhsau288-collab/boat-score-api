@@ -36,6 +36,11 @@ try {
  assert.equal(run(scoped).status,0);
  const attemptOne={attempt:1,requestedAt:row.requestedAt,receivedAt:row.receivedAt,httpStatus:200};
  assert.equal(run({...base,records:[{...row,attempts:[attemptOne]}]}).status,0);
+ const tagged={...base,run:{trigger:'schedule'},scheduledTrigger:true,records:[{...row,attempts:[attemptOne]}]};
+ assert.equal(run(tagged).status,0);
+ assert.notEqual(run({...tagged,scheduledTrigger:false}).status,0);
+ assert.notEqual(run({...tagged,records:[row]}).status,0);
+ assert.equal(run({...tagged,run:{trigger:'workflow_dispatch'},scheduledTrigger:false}).status,0);
  assert.notEqual(run({...base,records:[{...row,attempts:[{...attemptOne,httpStatus:503}]}]}).status,0);
  assert.notEqual(run({...base,records:[{...row,attempts:[{...attemptOne,attempt:2}]}]}).status,0);
  assert.notEqual(run({...base,records:[{...row,attempts:[{...attemptOne,receivedAt:'2026-11-17T23:00:03Z'}]}]}).status,0);
