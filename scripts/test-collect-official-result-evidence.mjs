@@ -14,4 +14,16 @@ assert.equal(result.records.length,2);
 assert.equal(result.verifiedResults,0);
 assert.equal(result.records[0].finishOrder,null);
 assert.equal(result.records[0].sourceCheck.verified,false);
+let active=0,peak=0;
+const parallelFetch=async request=>{
+ active++;peak=Math.max(peak,active);
+ await new Promise(resolve=>setTimeout(resolve,3));
+ active--;
+ return {url:request,status:200,headers:{get:()=> 'text/html'},text:async()=>'<html>result page</html>'};
+};
+const many={date:'20261118',records:Array.from({length:12},(_,i)=>({date:'20261118',venue:1,race:i+1}))};
+const parallel=await collectOfficialResultEvidence(many,{fetchImpl:parallelFetch,concurrency:3});
+assert.equal(parallel.records.length,12);
+assert.ok(peak>1&&peak<=3);
+assert.deepEqual(parallel.records.map(r=>r.race),Array.from({length:12},(_,i)=>i+1));
 console.log('Official result candidate collector tests passed');
