@@ -1,0 +1,32 @@
+name: Validate offline backtest comparator PR
+on:
+  pull_request:
+    paths:
+      - 'scripts/compare-saved-capture-results.mjs'
+      - 'scripts/backtest-comparison-eligibility.mjs'
+      - 'scripts/run-saved-capture-result-comparison.mjs'
+      - 'scripts/test-compare-saved-capture-results.mjs'
+      - 'scripts/test-run-saved-capture-result-comparison.mjs'
+      - '.github/workflows/validate-offline-backtest-pr.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: |
+          node --check scripts/compare-saved-capture-results.mjs
+          node --check scripts/run-saved-capture-result-comparison.mjs
+          node --check scripts/test-compare-saved-capture-results.mjs
+          node --check scripts/test-run-saved-capture-result-comparison.mjs
+      - name: Run isolated comparator regression tests
+        run: |
+          node scripts/test-compare-saved-capture-results.mjs
+          node scripts/test-run-saved-capture-result-comparison.mjs
