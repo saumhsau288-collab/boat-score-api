@@ -188,7 +188,7 @@ jobs:
           }
           const rawNames = fs.existsSync('prediction-captures')
             ? fs.readdirSync('prediction-captures').filter(name =>
-                /^20\\d{6}-[^/]+\\.json$/.test(name)) : [];
+                /^20\d{6}-[^/]+\.json$/.test(name)) : [];
           for (const name of rawNames) {
             const raw = JSON.parse(fs.readFileSync('prediction-captures/' + name, 'utf8'));
             const byVenue = new Map();
