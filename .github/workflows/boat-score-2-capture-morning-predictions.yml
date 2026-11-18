@@ -207,6 +207,9 @@ jobs:
               'Responses completed 07:45–08:30 JST: '+(report.timing?.morningWindow?.responseWithinMorningWindow??'unknown')+
               '; outside window: '+(report.timing?.morningWindow?.responseOutsideMorningWindow??'unknown')+
               '; timestamp unavailable: '+(report.timing?.morningWindow?.responseTimeUnknown??'unknown'),'',
+              'READY predictions received 07:45–08:30 JST: '+(report.timing?.morningWindow?.readyResponseWithinMorningWindow??'unknown')+
+              '; outside window: '+(report.timing?.morningWindow?.readyResponseOutsideMorningWindow??'unknown')+
+              '; timestamp unavailable: '+(report.timing?.morningWindow?.readyResponseTimeUnknown??'unknown'),'',
               '| Venue | First request UTC | Last response UTC | Elapsed seconds |',
               '|---|---|---|---:|',
               ...Object.entries(report.timing?.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,t])=>
