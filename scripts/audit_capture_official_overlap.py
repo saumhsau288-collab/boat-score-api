@@ -16,12 +16,19 @@ def audit(capture, reports):
             raise ValueError('Official venue count mismatch')
         for summary, venue in zip(summaries, venues):
             number = summary['venue']
+            if venue.get('venue') is not None and venue['venue'] != number:
+                raise ValueError('Official venue identity mismatch')
             if len(venue['records']) != summary['matchedRaces']:
                 raise ValueError('Official race count mismatch')
             for record in venue['records']:
                 key = (date, number, record['race'])
                 if record.get('resultVerified') is not True or record.get('date') != date or record.get('venue') != number:
                     raise ValueError('Official identity/verification mismatch')
+                order = record.get('finishOrder')
+                if (not isinstance(order, list) or len(order) != 6
+                        or any(type(boat) is not int for boat in order)
+                        or sorted(order) != list(range(1, 7))):
+                    raise ValueError('Invalid official finish order')
                 if key in official:
                     raise ValueError('Duplicate official result')
                 official.add(key)

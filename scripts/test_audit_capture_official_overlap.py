@@ -19,6 +19,25 @@ class CaptureOfficialOverlapTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             audit({**capture,'authenticatedBeforeRace':True},official)
 
+    def test_official_venue_identity_mismatch_rejected(self):
+        report = {'date': '20261118',
+                  'venueSummary': [{'venue': 1, 'matchedRaces': 0, 'rejectedRaces': []}],
+                  'reports': [{'venue': 2, 'records': []}]}
+        with self.assertRaisesRegex(ValueError, 'Official venue identity mismatch'):
+            audit({'authenticatedBeforeRace': False, 'records': []}, [report])
+
+    def test_invalid_official_finish_order_rejected(self):
+        for order in ([True, 2, 3, 4, 5, 6], [1.0, 2, 3, 4, 5, 6],
+                      [1, 1, 3, 4, 5, 6]):
+            with self.subTest(order=order):
+                report = {'date': '20261118',
+                          'venueSummary': [{'venue': 1, 'matchedRaces': 1, 'rejectedRaces': []}],
+                          'reports': [{'venue': 1, 'records': [
+                              {'date': '20261118', 'venue': 1, 'race': 1,
+                               'resultVerified': True, 'finishOrder': order}]}]}
+                with self.assertRaisesRegex(ValueError, 'Invalid official finish order'):
+                    audit({'authenticatedBeforeRace': False, 'records': []}, [report])
+
     def test_duplicate_capture_rejected(self):
         row={'date':'20261118','venue':1,'race':1}
         with self.assertRaises(ValueError):
