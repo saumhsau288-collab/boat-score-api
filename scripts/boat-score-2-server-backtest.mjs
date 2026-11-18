@@ -8,11 +8,17 @@ if(!/^20\d{6}$/.test(date))throw Error('Invalid date');
 const get=async(path,timeout=75000)=>{try{const r=await fetch(base+path,{signal:AbortSignal.timeout(timeout)});const j=await r.json();return r.ok?j:{error:'http_'+r.status,...j}}catch(e){return {error:String(e.message||e)}}};
 const pool=async(items,limit,fn)=>{let index=0;const results=new Array(items.length);await Promise.all(Array.from({length:limit},async()=>{while(index<items.length){const i=index++;results[i]=await fn(items[i],i)}}));return results};
 console.log('Checking venue race-1 entries, not assuming unverified venues are closed.');
-const venues=await pool(selectedVenue?[selectedVenue]:Array.from({length:24},(_,i)=>i+1),3,async venue=>{
+const venues=await pool(selectedVenue?[selectedVenue]:Array.from({length:24},(_,i)=>i+1),2,async venue=>{
+ const started=Date.now();
  const d=await get('/api/official/active-venues?date='+date+'&offset='+(venue-1),35000);
- console.log('venue',venue,d.checks?.[0]?.status||d.error||'unknown');
- return {venue,verified:d.verifiedVenues?.includes(venue)===true,reason:d.checks?.[0]?.reason||d.error||null};
+ const elapsedMs=Date.now()-started;
+ const reason=d.checks?.[0]?.reason||d.error||null;
+ const verified=d.verifiedVenues?.includes(venue)===true;
+ const errorKind=verified?'none':/timeout|timed out|aborted/i.test(String(reason))?'timeout':/^http_\\d{3}$/.test(String(reason))?'http_error':'unverified_other';
+ console.log('VENUE_CHECK',JSON.stringify({venue,verified,elapsedMs,errorKind,reason:typeof reason==='string'?reason.slice(0,120):null}));
+ return {venue,verified,reason,errorKind,elapsedMs};
 });
+console.log('VENUE_CHECK_SUMMARY',JSON.stringify(venues.reduce((counts,item)=>{counts[item.errorKind]=(counts[item.errorKind]||0)+1;return counts},{})));
 const verifiedVenues=verifiedVenueCandidates(venues);
 const targets=verifiedVenues.flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1})));
 console.log('Officially verified venue candidates:',verifiedVenues,'race targets:',targets.length);
