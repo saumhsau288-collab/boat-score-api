@@ -24,6 +24,6 @@ export function auditDuplicateCaptureKeys(capture) {
     duplicateRaceKeys: duplicates.length,
     excessDuplicateRecords: duplicates.reduce((sum, row) => sum + row.count - 1, 0),
     duplicates,
-    safeForIndependentRaceHitRate: duplicates.length === 0 && invalidRaceKeyRecords === 0
+    safeForIndependentRaceHitRate: records.length > 0 && duplicates.length === 0 && invalidRaceKeyRecords === 0
   };
 }
