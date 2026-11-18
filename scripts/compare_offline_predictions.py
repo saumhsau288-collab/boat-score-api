@@ -40,10 +40,25 @@ def compare(predictions, official_reports):
     unresolved = set()
     for report in official_reports:
         date = report['date']
-        for venue, venue_report in zip(report['venueSummary'], report['reports']):
+        summaries = report['venueSummary']
+        venue_reports = report['reports']
+        if len(summaries) != len(venue_reports):
+            raise ValueError('Official venue summary/report length mismatch: ' + str(date))
+        for venue, venue_report in zip(summaries, venue_reports):
             number = venue['venue']
+            if venue_report.get('venue') is not None and venue_report['venue'] != number:
+                raise ValueError('Official venue identity mismatch: ' + str(date))
+            if len(venue_report['records']) != venue['matchedRaces']:
+                raise ValueError('Official matched race count mismatch: ' + str(date))
             for race in venue_report['records']:
                 key = (date, number, race['race'])
+                if race.get('date') != date or race.get('venue') != number:
+                    raise ValueError('Official race identity mismatch: ' + str(key))
+                if race.get('resultVerified') is not True:
+                    raise ValueError('Unverified official race: ' + str(key))
+                order = race.get('finishOrder')
+                if not isinstance(order, list) or sorted(order) != list(range(1, 7)):
+                    raise ValueError('Invalid official finish order: ' + str(key))
                 if key in official:
                     raise ValueError('Duplicate official race: ' + str(key))
                 official[key] = race
@@ -57,6 +72,8 @@ def compare(predictions, official_reports):
                 key = (date, number, race_number)
                 if key not in incidents:
                     unresolved.add(key)
+            if any((date, number, n) in official for n in venue.get('rejectedRaces', [])):
+                raise ValueError('Official race both matched and rejected: ' + str(date))
     seen = set()
     details = []
     totals = {'predictionRecords': 0, 'eligibleCompared': 0,

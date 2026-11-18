@@ -4,12 +4,13 @@ from compare_offline_predictions import compare
 
 def sample():
     return {'date': '20261116',
-            'venueSummary': [{'venue': 1, 'rejectedRaces': [2, 3],
+            'venueSummary': [{'venue': 1, 'matchedRaces': 1, 'rejectedRaces': [2, 3],
                               'rejectionDetails': [
                                   {'race': 2, 'incidentStatus': 'program_identity_verified',
                                    'incidentEvidence': [{'kind': 'capsize'}]},
                                   {'race': 3, 'incidentStatus': 'unverified', 'incidentEvidence': []}]}],
-            'reports': [{'records': [{'date': '20261116', 'venue': 1, 'race': 1,
+            'reports': [{'venue': 1, 'records': [{'date': '20261116', 'venue': 1, 'race': 1,
+                                     'resultVerified': True,
                                      'finishOrder': [3, 2, 1, 4, 5, 6]}]}]}
 
 
@@ -62,6 +63,30 @@ class ComparisonTests(unittest.TestCase):
         p = pred(1, [3, 2, 1])
         p['capturedAt'] = '2026-11-16T08:00:00'
         self.assertEqual(compare([p], [sample()])['totals']['unverifiedPredictionSnapshot'], 1)
+
+    def test_official_venue_count_mismatch_rejected(self):
+        source = sample()
+        source['venueSummary'] = []
+        with self.assertRaisesRegex(ValueError, 'length mismatch'):
+            compare([pred(1, [3, 2, 1])], [source])
+
+    def test_official_venue_identity_mismatch_rejected(self):
+        source = sample()
+        source['reports'][0]['venue'] = 2
+        with self.assertRaisesRegex(ValueError, 'venue identity mismatch'):
+            compare([pred(1, [3, 2, 1])], [source])
+
+    def test_unverified_official_race_rejected(self):
+        source = sample()
+        source['reports'][0]['records'][0]['resultVerified'] = False
+        with self.assertRaisesRegex(ValueError, 'Unverified official race'):
+            compare([pred(1, [3, 2, 1])], [source])
+
+    def test_invalid_finish_order_rejected(self):
+        source = sample()
+        source['reports'][0]['records'][0]['finishOrder'] = [1, 1, 2, 3, 4, 5]
+        with self.assertRaisesRegex(ValueError, 'Invalid official finish order'):
+            compare([pred(1, [3, 2, 1])], [source])
 
     def test_duplicate_rejected(self):
         with self.assertRaisesRegex(ValueError, 'Duplicate prediction'):
