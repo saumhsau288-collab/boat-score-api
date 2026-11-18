@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {checkOfficialResultResponse,collectOfficialResultEvidence} from './collect-official-result-evidence.mjs';
+const url='https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&hd=20261118';
+const check=(responseUrl=url,httpStatus=200,contentType='text/html')=>checkOfficialResultResponse({requestedUrl:url,responseUrl,httpStatus,contentType});
+assert.equal(check().status,'official_result_page_candidate_not_authenticated');
+assert.equal(check().verified,false);
+assert.equal(check(url.replace('rno=1','rno=2')).status,'result_race_identity_changed');
+assert.equal(check('https://example.com/').status,'redirected_or_unexpected_result_page');
+assert.equal(check(url,404).status,'result_http_not_200');
+const fetchImpl=async request=>({url:request,status:200,headers:{get:()=> 'text/html'},text:async()=>'<html>result page</html>'});
+const capture={date:'20261118',records:[{date:'20261118',venue:1,race:1},{date:'20261118',venue:1,race:1},{date:'20261118',venue:2,race:2}]};
+const result=await collectOfficialResultEvidence(capture,{fetchImpl});
+assert.equal(result.records.length,2);
+assert.equal(result.verifiedResults,0);
+assert.equal(result.records[0].finishOrder,null);
+assert.equal(result.records[0].sourceCheck.verified,false);
+console.log('Official result candidate collector tests passed');
