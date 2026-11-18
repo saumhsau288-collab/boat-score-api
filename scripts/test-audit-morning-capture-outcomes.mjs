@@ -17,7 +17,7 @@ assert.equal(x.byRace['12'].ready,1);
 assert.equal(x.byRace['12'].firstRequestedAt,'2026-11-17T23:01:00.000Z');
 assert.equal(x.byRace.unknown.attempted,5);
 assert.equal(x.timing.elapsedSeconds,75);
-assert.deepEqual(x.timing.morningWindow,{startJst:'07:45',endJst:'08:30',requestWithinMorningWindow:2,requestOutsideMorningWindow:0,requestTimeUnknown:5});
+assert.deepEqual(x.timing.morningWindow,{startJst:'07:45',endJst:'08:30',requestWithinMorningWindow:2,requestOutsideMorningWindow:0,requestTimeUnknown:5,responseWithinMorningWindow:2,responseOutsideMorningWindow:0,responseTimeUnknown:5});
 assert.equal(x.timing.firstRequestedAt,'2026-11-17T23:00:00.000Z');
 assert.equal(x.timing.byVenue['1'].elapsedSeconds,75);
 assert.equal(x.timing.byVenue.unknown.elapsedSeconds,null);
