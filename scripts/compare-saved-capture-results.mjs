@@ -1,6 +1,12 @@
 // Offline only: compare SAVED predictions with independently verified official results.
 // Never request a historical prediction after a race and call it a pre-race forecast.
 import {validTrifectaPicks,verifiedPodium} from './backtest-comparison-eligibility.mjs';
+function isOfficialBoatraceSource(url) {
+ try {
+  const parsed=new URL(url);
+  return parsed.protocol==='https:' && (parsed.hostname==='boatrace.jp' || parsed.hostname.endsWith('.boatrace.jp')) && !parsed.username && !parsed.password;
+ } catch { return false; }
+}
 export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
  const out={method:'saved_predictions_vs_independent_verified_results',compared:0,held:0,
   mainHits:0,upsetHits:0,holdReasons:{},rows:[],mainHitRate:null,upsetHitRate:null,
@@ -22,7 +28,7 @@ export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
   if(r.response?.ready!==true||r.httpStatus!==200)reasons.push('prediction_not_ready');
   if(!validTrifectaPicks(r.response?.main)||!validTrifectaPicks(r.response?.upset))reasons.push('invalid_picks');
   if(!actual)reasons.push('no_independently_verified_result');
-  if(typeof official?.sourceUrl!=='string'||!/^https:\/\//.test(official.sourceUrl))
+  if(!isOfficialBoatraceSource(official?.sourceUrl))
    reasons.push('missing_official_result_source');
   const cutoff=Date.parse(official?.officialCutoffAt);
   const captured=Date.parse(r.receivedAt);
