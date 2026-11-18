@@ -46,9 +46,11 @@ jobs:
           node --check scripts/audit-capture-response-shapes.mjs
           node --check scripts/test-audit-capture-response-shapes.mjs
           node --check scripts/audit-morning-official-cutoffs.mjs
+          node --check scripts/summarize-official-venue-activity.mjs
           node --check scripts/capture-official-cutoff-source.mjs
       - name: Test capture validation with offline fixtures
         run: |
+          node scripts/test-summarize-official-venue-activity.mjs
           node scripts/test-fetch-with-timeout-retry.mjs
           node scripts/test-audit-morning-capture-outcomes.mjs
           node scripts/test-validate-morning-capture.mjs
@@ -91,6 +93,12 @@ jobs:
         if: always()
         run: |
           [ -d prediction-captures ] && node scripts/capture-official-cutoff-source.mjs || true
+      - name: Summarize official venue activity evidence without filtering unverified venues
+        if: always()
+        run: |
+          if [ -f prediction-captures/official-cutoff-source-evidence.json ]; then
+            node scripts/summarize-official-venue-activity.mjs prediction-captures/official-cutoff-source-evidence.json
+          fi
       - name: Audit official cutoff availability without inventing cutoff times
         if: always()
         run: |
@@ -182,6 +190,16 @@ jobs:
               '', 'Not-ready reasons:', '',
               ...Object.entries(report.notReadyReasons||{}).map(([key,count])=>'- '+key+': '+count),
               '', 'Not a hit rate; capture timing is not independently authenticated.','');
+          }
+          const venueEvidencePath='prediction-captures/official-venue-activity-evidence.json';
+          if(fs.existsSync(venueEvidencePath)){
+            const evidence=JSON.parse(fs.readFileSync(venueEvidencePath,'utf8'));
+            lines.push('### Venue activity evidence (NOT verified active venues)','',
+              '| Venue | Pages | HTTP 200 | Source consistent | Identity consistent | Cutoff candidates |',
+              '|---|---:|---:|---:|---:|---:|',
+              ...Object.entries(evidence.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,c])=>
+                '| '+venue+' | '+c.requested+' | '+c.http200+' | '+c.sourceConsistent+' | '+c.identityConsistent+' | '+c.cutoffCandidates+' |'),
+              '', 'HTTP 200 does not prove the venue is racing. No venues are excluded without verified schedule evidence.','');
           }
           const officialEvidencePath='prediction-captures/official-cutoff-source-evidence.json';
           if (fs.existsSync(officialEvidencePath)) {
