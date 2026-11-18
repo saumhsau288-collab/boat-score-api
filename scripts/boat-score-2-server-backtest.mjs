@@ -14,7 +14,7 @@ const venues=await pool(selectedVenue?[selectedVenue]:Array.from({length:24},(_,
  const elapsedMs=Date.now()-started;
  const reason=d.checks?.[0]?.reason||d.error||null;
  const verified=d.verifiedVenues?.includes(venue)===true;
- const errorKind=verified?'none':/timeout|timed out|aborted/i.test(String(reason))?'timeout':/^http_\\d{3}$/.test(String(reason))?'http_error':'unverified_other';
+ const errorKind=verified?'none':/timeout|timed out|aborted/i.test(String(reason))?'timeout':/^http_\d{3}$/.test(String(reason))?'http_error':'unverified_other';
  console.log('VENUE_CHECK',JSON.stringify({venue,verified,elapsedMs,errorKind,reason:typeof reason==='string'?reason.slice(0,120):null}));
  return {venue,verified,reason,errorKind,elapsedMs};
 });
