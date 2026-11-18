@@ -32,6 +32,7 @@ jobs:
           node-version: '22'
       - name: Check capture and validation scripts syntax
         run: |
+          node --check scripts/audit-base-vs-adjusted.mjs
           node --check scripts/audit-applied-adjustments.mjs
           node --check scripts/audit-explicit-score-exclusions.mjs
           node --check scripts/audit-morning-capture-outcomes.mjs
@@ -56,6 +57,7 @@ jobs:
           node scripts/test-summarize-official-venue-activity.mjs
           node scripts/test-build-morning-capture-tasks.mjs
           node scripts/test-fetch-with-timeout-retry.mjs
+          node scripts/test-audit-base-vs-adjusted.mjs
           node scripts/test-audit-applied-adjustments.mjs
           node scripts/test-audit-explicit-score-exclusions.mjs
           node scripts/test-audit-morning-capture-outcomes.mjs
@@ -153,6 +155,14 @@ jobs:
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-capture-response-shapes.mjs "$file" > "${file%.json}-response-shape.json"
           done
+      - name: Compare actual base and adjusted predictor ticket lists
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            node scripts/audit-base-vs-adjusted.mjs "$file" > "${file%.json}-base-vs-adjusted.json"
+          done
       - name: Audit deployed exhibition and start adjustment flags
         if: always()
         run: |
@@ -229,6 +239,9 @@ jobs:
               '; missing within requested scope: '+(report.coverage?.missingPairsWithinRequestedVenues?.length??'unknown')+
               '; unexpected outside scope: '+(report.coverage?.unexpectedPairsOutsideScope?.length??'unknown'),
               '', 'This is record completeness, not verified racing schedule coverage.',
+              '', '### Base prediction versus adjusted tickets', '',
+              ...Object.entries((()=>{const file='prediction-captures/'+name.replace('-diagnostics.json','-base-vs-adjusted.json');return fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{};})()).filter(([k,v])=>typeof v==='number').map(([k,v])=>'- '+k+': '+v),
+              '', 'Ticket changes are not evidence of improved accuracy.',
               '', '### Applied exhibition/start adjustment flags', '',
               ...Object.entries((()=>{const file='prediction-captures/'+name.replace('-diagnostics.json','-applied-adjustments.json');return fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{};})()).filter(([k,v])=>typeof v==='number').map(([k,v])=>'- '+k+': '+v),
               '', 'API flags only; no independent verification of scoring math.',
