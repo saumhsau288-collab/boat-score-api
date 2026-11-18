@@ -22,7 +22,7 @@ export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,max
  if(!/^20\d{6}$/.test(String(capture?.date))||!Array.isArray(capture.records))throw Error('Invalid capture');
  const unique=new Map();
  for(const r of capture.records){
-  if(!r||typeof r!=='object')continue;
+  if(!r||typeof r!=='object'||r.response?.ready!==true)continue;
   const date=String(r.date??capture.date),venue=Number(r.venue),race=Number(r.race);
   if(date!==String(capture.date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)continue;
   const key=[date,venue,race].join(':');unique.set(key,{date,venue,race});
