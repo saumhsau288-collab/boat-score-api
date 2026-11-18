@@ -109,6 +109,13 @@ jobs:
           CAPTURE_VENUES: ${{ inputs.capture_venues }}
           BOAT_SCORE_URL: https://boat-score-2-preview.saumh-sau-288.workers.dev
         run: node scripts/capture-existing-boat-score-2-predictions.mjs
+      - name: Inventory captured deployed predictor data for historical comparison
+        if: always()
+        run: |
+          if [ -d prediction-captures ]; then
+            node scripts/run-existing-prediction-capture-inventory.mjs prediction-captures > prediction-captures/existing-prediction-inventory.json || true
+            cat prediction-captures/existing-prediction-inventory.json
+          fi
       - name: Save read-only per-race morning timing and coverage evidence
         if: always()
         run: |
