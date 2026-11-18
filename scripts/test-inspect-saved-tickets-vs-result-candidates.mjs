@@ -19,4 +19,7 @@ assert.equal(inspect(capture,untrusted).counts.candidateMissing,1);
 const truncated=structuredClone(evidence);
 truncated.records[0].htmlSnapshotComplete=false;
 assert.equal(inspect(capture,truncated).counts.candidateMissing,1);
+const mismatched=structuredClone(evidence);
+mismatched.records[0].sourceUrl=mismatched.records[0].sourceUrl.replace('rno=1','rno=2');
+assert.equal(inspect(capture,mismatched).counts.candidateMissing,1);
 console.log('Unverified candidate matching diagnostics tests passed');
