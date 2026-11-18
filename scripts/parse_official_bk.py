@@ -97,8 +97,17 @@ def join(b,k,date,venue,incident_evidence=None):
             reason = ('missing_valid_program' if r not in b else
                       'missing_valid_result' if r not in k else 'racer_id_mismatch')
             rejected.append(r)
-            evidence=incident_evidence.get(r,[])
-            rejection_details.append({'race':r,'reason':reason,'incidentStatus':'explicit_result_row' if evidence else 'unverified','incidentEvidence':evidence})
+            raw_evidence=incident_evidence.get(r,[])
+            # Cross-check the boat's registered racer against the B program before
+            # treating an incident row as verified race-specific evidence.
+            program_ids={x['boat']:x['racerId'] for x in b.get(r,[])}
+            evidence=[item for item in raw_evidence
+                      if program_ids.get(item['boat']) == item['racerId']]
+            unverified_evidence=[item for item in raw_evidence if item not in evidence]
+            rejection_details.append({'race':r,'reason':reason,
+                'incidentStatus':'program_identity_verified' if evidence else 'unverified',
+                'incidentEvidence':evidence,
+                'unverifiedIncidentEvidence':unverified_evidence})
             continue
         out.append({'date':date,'venue':venue,'race':r,'racers':b[r],'finishOrder':k[r]['finishOrder'],
           'entryCourseByBoat':k[r].get('entryCourseByBoat'),'entryCourseVerified':k[r].get('entryCourseVerified',False),
