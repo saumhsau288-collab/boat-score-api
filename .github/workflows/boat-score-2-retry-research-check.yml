@@ -5,6 +5,8 @@ on:
     paths:
       - 'scripts/research-capture-retry-policies.mjs'
       - 'scripts/test-research-capture-retry-policies.mjs'
+      - 'scripts/select-verified-active-venues.mjs'
+      - 'scripts/test-select-verified-active-venues.mjs'
       - '.github/workflows/boat-score-2-retry-research-check.yml'
   workflow_dispatch:
 
@@ -24,5 +26,9 @@ jobs:
         run: |
           node --check scripts/research-capture-retry-policies.mjs
           node --check scripts/test-research-capture-retry-policies.mjs
+          node --check scripts/select-verified-active-venues.mjs
+          node --check scripts/test-select-verified-active-venues.mjs
       - name: Run offline retry research regression
-        run: node scripts/test-research-capture-retry-policies.mjs
+        run: |
+          node scripts/test-research-capture-retry-policies.mjs
+          node scripts/test-select-verified-active-venues.mjs
