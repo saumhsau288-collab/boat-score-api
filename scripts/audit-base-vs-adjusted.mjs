@@ -8,7 +8,7 @@ export function auditBaseVsAdjusted(data){
  const result={date:data.date||null,ready:0,comparable:0,missingOrInvalidBase:0,
   mainExactOrderChanged:0,mainTicketSetChanged:0,upsetExactOrderChanged:0,upsetTicketSetChanged:0,
   eitherTicketSetChanged:0,onlyTicketOrderChanged:0,noTicketChange:0,
-  predictionChangedFlagMismatch:0,examples:[],
+  predictionChangedFlagMismatch:0,byAdjustmentFlags:{},examples:[],
   warning:'Compares API-supplied basePrediction and adjusted tickets only; changed tickets are not evidence of improved accuracy.'};
  for(const r of data.records){
   if(r.httpStatus!==200||r.response?.ready!==true)continue;
@@ -27,6 +27,14 @@ export function auditBaseVsAdjusted(data){
   if(mainSet||upsetSet)result.eitherTicketSetChanged++;
   else if(mainOrder||upsetOrder)result.onlyTicketOrderChanged++;
   else result.noTicketChange++;
+  const ex=p.exhibitionAdjustmentApplied===true?'yes':p.exhibitionAdjustmentApplied===false?'no':'unknown';
+  const st=p.startAdjustmentApplied===true?'yes':p.startAdjustmentApplied===false?'no':'unknown';
+  const flagKey='exhibition:'+ex+';start:'+st;
+  const group=result.byAdjustmentFlags[flagKey]??={comparable:0,eitherSetChanged:0,orderOnlyChanged:0,noChange:0};
+  group.comparable++;
+  if(mainSet||upsetSet)group.eitherSetChanged++;
+  else if(mainOrder||upsetOrder)group.orderOnlyChanged++;
+  else group.noChange++;
   if(typeof p.predictionChanged==='boolean'&&p.predictionChanged!==(mainOrder||upsetOrder))result.predictionChangedFlagMismatch++;
   if(result.examples.length<12)result.examples.push({venue:r.venue,race:r.race,mainOrder,mainSet,upsetOrder,upsetSet,apiPredictionChanged:p.predictionChanged??null});
  }
