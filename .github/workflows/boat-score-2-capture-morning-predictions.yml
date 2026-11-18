@@ -523,6 +523,31 @@ jobs:
           console.log(JSON.stringify({source,counts:report.counts,eligibleForWeightTuning:report.eligibleForWeightTuning}));
           NODE
           done
+      - name: Show calibration evidence gate in GitHub run summary
+        if: always()
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const dir='prediction-captures';
+          const names=fs.existsSync(dir)?fs.readdirSync(dir).filter(n=>/^20\d{6}-\d+-calibration-readiness\.json$/.test(n)):[];
+          const lines=['## Actual deployed predictor: weight-tuning evidence gate','',
+            'Green workflow status does not mean the prediction weights improved or that pre-race evidence was verified.',''];
+          for(const name of names){
+            const report=JSON.parse(fs.readFileSync(dir+'/'+name,'utf8'));
+            const c=report.counts||{};
+            lines.push('### '+(report.date||name),'',
+              '| Evidence status | Races |','|---|---:|',
+              '| Ready API responses | '+(c.ready??'unknown')+' |',
+              '| Missing authenticated official cutoff | '+(c.missingCutoff??'unknown')+' |',
+              '| At or after authenticated cutoff | '+(c.afterCutoff??'unknown')+' |',
+              '| Before cutoff (timing only, not authenticated inputs) | '+(c.beforeCutoffTimingOnly??'unknown')+' |',
+              '| Missing original six-boat pre-race score inputs | '+(c.missingRawSixBoatInputs??'unknown')+' |',
+              '| Eligible for weight tuning | '+(report.eligibleForWeightTuning??'unknown')+' |',
+              '',report.warning||'No independent result or input authentication has been established.','');
+          }
+          if(!names.length)lines.push('No calibration-readiness report was produced. Do not infer that any race is eligible.','');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
+          NODE
       - name: Compare saved prediction times with unverified cutoff candidates
         if: always()
         run: |
