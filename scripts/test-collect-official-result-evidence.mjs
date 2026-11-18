@@ -37,4 +37,7 @@ const deferred=await collectOfficialResultEvidence(capture,{now:new Date('2026-1
 assert.equal(deferred.status,'deferred_until_after_capture_date');
 assert.equal(deferred.records.length,0);
 assert.equal(called,false);
+const malformed=await collectOfficialResultEvidence({date:'20261118',records:[null,{date:'20261118',venue:1,race:1}]},{fetchImpl});
+assert.equal(malformed.records.length,1);
+await assert.rejects(()=>collectOfficialResultEvidence(capture,{fetchImpl,maxRequests:0}),/Invalid maxRequests/);
 console.log('Official result candidate collector tests passed');
