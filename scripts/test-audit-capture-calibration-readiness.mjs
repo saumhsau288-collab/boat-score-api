@@ -9,4 +9,10 @@ assert.equal(y.counts.beforeCutoffTimingOnly,1);assert.equal(y.eligibleForWeight
 const z=auditCaptureCalibrationReadiness({date:r.date,records:[{...r,receivedAt:'2026-11-18T01:06:00Z'}]},[c]);
 assert.equal(z.counts.afterCutoff,1);
 assert.throws(()=>auditCaptureCalibrationReadiness({records:[r]},[c,c]),/Duplicate/);
+const invalid=auditCaptureCalibrationReadiness({date:r.date,records:[{...r,receivedAt:'not-a-time'}]},[c]);
+assert.equal(invalid.counts.invalidCaptureTime,1);
+assert.equal(invalid.counts.missingCutoff,0);
+const mismatch=auditCaptureCalibrationReadiness({date:r.date,records:[r]},[{...c,venue:2,date:r.date}]);
+assert.equal(mismatch.counts.missingCutoff,1); // Different race key is never assigned to this record.
+assert.equal(mismatch.counts.cutoffIdentityMismatch,0);
 console.log('Conservative calibration readiness tests passed');
