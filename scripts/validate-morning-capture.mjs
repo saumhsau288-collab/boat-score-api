@@ -20,6 +20,14 @@ if(data.captureStart!==undefined || data.captureEnd!==undefined || data.captureJ
  if(data.captureTimeJst!==time)throw new Error('Incorrect JST capture time');
  if(data.scheduledMorningWindow!==(data.captureDateMatchesJst&&time>='07:45'&&time<='08:30'))throw new Error('Incorrect morning window flag');
 }
+// New captures declare their workflow trigger and must retain retry provenance.
+// Legacy captures without trigger metadata remain readable but unverified.
+if(data.run?.trigger!==undefined && data.run.trigger!==null){
+ if(typeof data.run.trigger!=='string'||!data.run.trigger)throw new Error('Invalid workflow trigger');
+ if(data.scheduledTrigger!==(data.run.trigger==='schedule'))throw new Error('Scheduled trigger flag mismatch');
+ if(data.records.some(row=>!Array.isArray(row.attempts)||row.attempts.length===0))
+   throw new Error('Trigger-tagged capture missing per-attempt history');
+}
 const hasScope=data.requestedVenues!==undefined||data.requestedMaxRaces!==undefined;
 let expectedPairs=null;
 if(hasScope){
