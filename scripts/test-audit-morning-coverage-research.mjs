@@ -20,5 +20,9 @@ const timed=auditMorningCoverage({date:'20261118',captureStart:'2026-11-17T23:00
 ]});
 assert.equal(timed.captureDateMatchesJst,true);
 assert.equal(timed.recordsRequestedInMorningWindow,1);
+const noDate=auditMorningCoverage({captureStart:'invalid',records:[{venue:1,race:1,requestedAt:'not-a-date',error:'timeout'}]});
+assert.equal(noDate.captureDateMatchesJst,false);
+assert.equal(noDate.recordsRequestedInMorningWindow,0);
+assert.equal(noDate.inMorningWindow,false);
 assert.throws(()=>auditMorningCoverage({}));
 console.log('Morning capture coverage research tests passed');
