@@ -241,6 +241,10 @@ jobs:
               '', 'This is record completeness, not verified racing schedule coverage.',
               '', '### Base prediction versus adjusted tickets', '',
               ...Object.entries((()=>{const file='prediction-captures/'+name.replace('-diagnostics.json','-base-vs-adjusted.json');return fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{};})()).filter(([k,v])=>typeof v==='number').map(([k,v])=>'- '+k+': '+v),
+              '', '| Exhibition / Start | Compared | Set changed | Order only | No change |',
+              '|---|---:|---:|---:|---:|',
+              ...Object.entries((()=>{const file='prediction-captures/'+name.replace('-diagnostics.json','-base-vs-adjusted.json');return fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')).byAdjustmentFlags:{};})()).map(([k,v])=>
+                '| '+k+' | '+v.comparable+' | '+v.eitherSetChanged+' | '+v.orderOnlyChanged+' | '+v.noChange+' |'),
               '', 'Ticket changes are not evidence of improved accuracy.',
               '', '### Applied exhibition/start adjustment flags', '',
               ...Object.entries((()=>{const file='prediction-captures/'+name.replace('-diagnostics.json','-applied-adjustments.json');return fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{};})()).filter(([k,v])=>typeof v==='number').map(([k,v])=>'- '+k+': '+v),
