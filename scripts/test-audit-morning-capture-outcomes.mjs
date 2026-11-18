@@ -28,6 +28,7 @@ assert.equal(repeated.coverage.missingPairsWithinRequestedVenues,null);
 const partial=summarizeCapture({requestedVenues:[3,8],requestedMaxRaces:2,records:[{venue:3,race:1},{venue:8,race:1},{venue:3,race:2}]});
 assert.equal(partial.coverage.expectedPairCount,4);
 assert.deepEqual(partial.coverage.missingPairsWithinRequestedVenues,['8:2']);
+assert.deepEqual(x.attemptStats,{firstAttempts:1,secondAttempts:1,firstAttemptTimeouts:1,secondAttemptTimeouts:0,firstAttemptHttpSuccess:0,secondAttemptHttpSuccess:1,firstAttemptOtherErrors:0,secondAttemptOtherErrors:0});
 assert.equal(x.timing.elapsedSeconds,75);
 assert.deepEqual(x.latencySeconds.networkTimeout,{samples:1,p50:20,p95:20,max:20});
 assert.deepEqual(x.latencySeconds.ready,{samples:1,p50:15,p95:15,max:15});
