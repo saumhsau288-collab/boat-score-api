@@ -17,6 +17,17 @@ def combine(race,score_bounds,history):
     bounds=score_bounds.get('scoreBounds')
     if not isinstance(bounds,list) or len(bounds)!=6 or {r.get('boat') for r in bounds}!=set(range(1,7)):
         raise ValueError('Expected six score bounds')
+    # Fail closed on mismatched identity or unsupported metadata instead of silently joining by boat.
+    for row in racers:
+        for key,maximum in (('nationalWinRate',10),('localWinRate',10),('motorTwoWinRate',100)):
+            value=row.get(key)
+            if value is not None and (isinstance(value,bool) or not isinstance(value,(int,float)) or not 0<=value<=maximum):
+                raise ValueError('Invalid official score input '+key)
+    if score_bounds.get('fullScoreRank') is not None and not score_bounds.get('rankingVerified'):
+        raise ValueError('Full ranking without complete scoring evidence')
+    for entry in bounds:
+        if entry.get('missing') is None or not isinstance(entry.get('missing'),list):
+            raise ValueError('Missing score evidence list required')
     methods=method_report(history,racers)
     method_by_boat={r['boat']:r for r in methods['racers']}
     score_by_boat={r['boat']:r for r in bounds}
