@@ -19,7 +19,7 @@ if (venues.length === 0 || venues.some(v => !Number.isInteger(v) || v < 1 || v >
 const maxRaces = Number(process.env.CAPTURE_RACES || 12);
 if (!Number.isInteger(maxRaces) || maxRaces < 1 || maxRaces > 12) throw new Error('Invalid races');
 if (!base.startsWith('https://')) throw new Error('HTTPS required');
-const run = {workflowRunId:process.env.GITHUB_RUN_ID||null, workflowRunAttempt:process.env.GITHUB_RUN_ATTEMPT||null, commit:process.env.GITHUB_SHA||null};
+const run = {workflowRunId:process.env.GITHUB_RUN_ID||null, workflowRunAttempt:process.env.GITHUB_RUN_ATTEMPT||null, commit:process.env.GITHUB_SHA||null, trigger:process.env.GITHUB_EVENT_NAME||null};
 const captureStart = new Date().toISOString();
 const captureJstDate = jstDate(new Date(captureStart));
 const captureDateMatchesJst = date === captureJstDate;
