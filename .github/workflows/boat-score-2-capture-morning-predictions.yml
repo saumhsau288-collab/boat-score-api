@@ -62,6 +62,7 @@ jobs:
       - name: Audit captured API responses and prediction ticket format
         run: |
           for file in prediction-captures/*.json; do
+            case "${file##*/}" in 20??????-*.json) ;; *) continue ;; esac
             node scripts/validate-morning-capture.mjs "$file"
           done
       - name: Collect official cutoff source evidence (not yet verified)
@@ -73,6 +74,8 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-*.json) ;; *) continue ;; esac
+            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-morning-official-cutoffs.mjs "$file" > "${file%.json}-cutoff-audit.json"
           done
@@ -81,6 +84,8 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-*.json) ;; *) continue ;; esac
+            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             node scripts/audit-morning-input-coverage.mjs "$file"
           done
       - name: Classify raw prediction quality for later review
@@ -88,6 +93,8 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-*.json) ;; *) continue ;; esac
+            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             node scripts/classify-morning-capture-quality.mjs "$file" > "${file%.json}-quality.json"
           done
       - name: Audit per-boat scoring inputs in raw captures
@@ -95,6 +102,8 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-*.json) ;; *) continue ;; esac
+            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             case "$file" in *-quality.json) continue ;; esac
             node scripts/audit-capture-score-inputs.mjs "$file" > "${file%.json}-score-inputs.json"
           done
@@ -103,6 +112,8 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-*.json) ;; *) continue ;; esac
+            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-capture-response-shapes.mjs "$file" > "${file%.json}-response-shape.json"
           done
@@ -177,7 +188,7 @@ jobs:
           }
           const rawNames = fs.existsSync('prediction-captures')
             ? fs.readdirSync('prediction-captures').filter(name =>
-                name.endsWith('.json') && !/-quality\\.json$|-score-inputs\\.json$|-response-shape\\.json$|-cutoff-audit\\.json$/.test(name)) : [];
+                /^20\\d{6}-[^/]+\\.json$/.test(name)) : [];
           for (const name of rawNames) {
             const raw = JSON.parse(fs.readFileSync('prediction-captures/' + name, 'utf8'));
             const byVenue = new Map();
