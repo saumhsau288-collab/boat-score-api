@@ -222,38 +222,38 @@ if __name__ == '__main__':
     summary = os.environ.get('GITHUB_STEP_SUMMARY')
     if summary:
         with open(summary, 'a', encoding='utf-8') as f:
-            f.write('## Stored Boat Score 2 morning raw captures\\n\\n')
-            f.write('| Date JST | Artifacts | Attempts | HTTP 200 | Ready | 6+6 format |\\n')
-            f.write('|---|---:|---:|---:|---:|---:|\\n')
+            f.write('## Stored Boat Score 2 morning raw captures\n\n')
+            f.write('| Date JST | Artifacts | Attempts | HTTP 200 | Ready | 6+6 format |\n')
+            f.write('|---|---:|---:|---:|---:|---:|\n')
             for day, c in result['byCaptureDate'].items():
-                f.write(f"| {day} | {c['artifacts']} | {c['captured']} | {c['http200']} | {c['ready']} | {c['usableSixPlusSix']} |\\n")
+                f.write(f"| {day} | {c['artifacts']} | {c['captured']} | {c['http200']} | {c['ready']} | {c['usableSixPlusSix']} |\n")
             for day, diagnostic in result['diagnosticsByDate'].items():
-                f.write(f'\\n### {day}: response diagnostics\\n\\n')
-                f.write('| Response state | Count |\\n|---|---:|\\n')
+                f.write(f'\n### {day}: response diagnostics\n\n')
+                f.write('| Response state | Count |\n|---|---:|\n')
                 for state, count in diagnostic['states'].items():
-                    f.write(f'| {state} | {count} |\\n')
-                f.write('\\nReady venue/race IDs (not verified pre-race predictions): ')
+                    f.write(f'| {state} | {count} |\n')
+                f.write('\nReady venue/race IDs (not verified pre-race predictions): ')
                 f.write(', '.join(f"{r['venue']}-{r['race']}" for r in diagnostic['readyRaceIdentities']) or 'none')
-                f.write('\\n\\nNot-ready response field sets (field names only):\\n')
+                f.write('\n\nNot-ready response field sets (field names only):\n')
                 for fields, count in diagnostic['notReadyResponseFieldSets'].items():
-                    f.write(f'- {fields}: {count}\\n')
-                f.write('\\nMissing input structures (no values):\\n')
+                    f.write(f'- {fields}: {count}\n')
+                f.write('\nMissing input structures (no values):\n')
                 for shape, count in diagnostic['missingInputStructures'].items():
-                    f.write(f'- {shape}: {count}\\n')
-                f.write('\\nVerification flags:\\n')
+                    f.write(f'- {shape}: {count}\n')
+                f.write('\nVerification flags:\n')
                 for flag, count in diagnostic['verificationFlagCounts'].items():
-                    f.write(f'- {flag}: {count}\\n')
-                f.write('\\nMissing input list lengths (counts only):\\n')
+                    f.write(f'- {flag}: {count}\n')
+                f.write('\nMissing input list lengths (counts only):\n')
                 for length, count in diagnostic['missingInputListLengths'].items():
-                    f.write(f'- {length} missing inputs: {count}\\n')
-                f.write('\\nOfficial retry types (no values):\\n')
+                    f.write(f'- {length} missing inputs: {count}\n')
+                f.write('\nOfficial retry types (no values):\n')
                 for kind, count in diagnostic['officialStatsRetryTypes'].items():
-                    f.write(f'- {kind}: {count}\\n')
-                f.write('\\nTransport error categories:\\n')
+                    f.write(f'- {kind}: {count}\n')
+                f.write('\nTransport error categories:\n')
                 for category, count in diagnostic['transportErrorCategories'].items():
-                    f.write(f'- {category}: {count}\\n')
-            f.write('\\nRaw captures are not authenticated forecasts; no accuracy metrics.\\n')
+                    f.write(f'- {category}: {count}\n')
+            f.write('\nRaw captures are not authenticated forecasts; no accuracy metrics.\n')
             if result['errors']:
-                f.write(f"\\nUnreadable artifacts: {len(result['errors'])} (inspect job log).\\n")
+                f.write(f"\nUnreadable artifacts: {len(result['errors'])} (inspect job log).\n")
     if result['errors']:
         sys.exit(1)
