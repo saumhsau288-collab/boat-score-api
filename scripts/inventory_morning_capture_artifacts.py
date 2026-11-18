@@ -115,10 +115,12 @@ def diagnose_capture(payload):
             retry = response.get('officialStatsRetry')
             # Fixed categories only; never output free-form upstream retry messages.
             retry_text = retry.strip().lower() if isinstance(retry, str) else ''
-            retry_categories[('empty' if not retry_text else
-                              'timeout' if 'timeout' in retry_text or 'timed out' in retry_text else
-                              'http_error' if 'http' in retry_text or 'status' in retry_text else
-                              'other_string')] += 1 if isinstance(retry, str) else 0
+            if isinstance(retry, str):
+                retry_category = ('empty' if not retry_text else
+                                  'timeout' if 'timeout' in retry_text or 'timed out' in retry_text else
+                                  'http_error' if 'http' in retry_text or 'status' in retry_text else
+                                  'other_string')
+                retry_categories[retry_category] += 1
             retry_types[('null' if retry is None else 'boolean' if type(retry) is bool
                          else 'string' if isinstance(retry, str) else 'object' if isinstance(retry, dict)
                          else 'list' if isinstance(retry, list) else 'number' if type(retry) in (int, float)
@@ -278,6 +280,12 @@ if __name__ == '__main__':
                 f.write('\nOfficial/statistics verification pairs:\n')
                 for pair, count in diagnostic['verificationPairs'].items():
                     f.write(f'- {pair}: {count}\n')
+                f.write('\nNot-ready reason value types:\n')
+                for kind, count in diagnostic['notReadyReasonTypes'].items():
+                    f.write(f'- {kind}: {count}\n')
+                f.write('\nOfficial retry failure categories (no raw messages):\n')
+                for category, count in diagnostic['officialRetryCategories'].items():
+                    f.write(f'- {category}: {count}\n')
                 f.write('\nOfficial retry types (no values):\n')
                 for kind, count in diagnostic['officialStatsRetryTypes'].items():
                     f.write(f'- {kind}: {count}\n')
