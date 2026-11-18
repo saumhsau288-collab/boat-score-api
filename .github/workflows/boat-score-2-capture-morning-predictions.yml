@@ -187,6 +187,10 @@ jobs:
               '|---|---:|---:|---:|---:|---:|---:|',
               ...Object.entries(report.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,c])=>
                 '| '+venue+' | '+c.attempted+' | '+c.ready+' | '+c.notReady+' | '+c.networkTimeout+' | '+c.otherNetworkError+' | '+c.httpFailure+' |'),
+              '', '### Request latency by outcome (seconds)', '',
+              '| Outcome | Timed samples | p50 | p95 | Max |', '|---|---:|---:|---:|---:|',
+              ...Object.entries(report.latencySeconds||{}).map(([k,v])=>
+                '| '+k+' | '+v.samples+' | '+(v.p50??'n/a')+' | '+(v.p95??'n/a')+' | '+(v.max??'n/a')+' |'),
               '', '### Capture record coverage', '',
               'Expected pairs from requested scope: '+(report.coverage?.expectedPairCount??'unknown')+'; unique venue-race pairs: '+(report.coverage?.uniqueVenueRacePairs??'unknown')+
               '; duplicates: '+(report.coverage?.duplicateVenueRacePairs??'unknown')+
