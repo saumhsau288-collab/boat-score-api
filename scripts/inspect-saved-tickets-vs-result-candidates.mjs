@@ -15,7 +15,11 @@ export function inspectSavedTicketsAgainstResultCandidates(capture,evidence){
   const matches=byKey.get(key(r))||[];
   if(matches.length!==1){if(matches.length>1)counts.ambiguousEvidence++;else counts.candidateMissing++;continue;}
   const e=matches[0],top3=e.finishCandidate?.top3;
-  if(e.verified===true||e.finishCandidate?.verified===true||!valid(top3)){counts.candidateMissing++;continue;}
+  if(e.verified===true||e.finishCandidate?.verified===true||!valid(top3)||
+     e.sourceCheck?.status!=='official_result_page_candidate_not_authenticated'||
+     e.htmlSnapshotComplete!==true||!/^https:\/\/www\.boatrace\.jp\/owpc\/pc\/race\/raceresult\?/.test(e.sourceUrl||'')){
+   counts.candidateMissing++;continue;
+  }
   const main=r.response.main,upset=r.response.upset;
   if(!Array.isArray(main)||!Array.isArray(upset)||main.length!==6||upset.length!==6||![...main,...upset].every(valid)){counts.invalidPicks++;continue;}
   counts.candidatePresent++;
