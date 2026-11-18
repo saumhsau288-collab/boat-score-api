@@ -3,6 +3,12 @@
 function isOfficialSource(value){
  try{const u=new URL(value);return u.protocol==='https:'&&(u.hostname==='boatrace.jp'||u.hostname.endsWith('.boatrace.jp'))&&!u.username&&!u.password;}catch{return false;}
 }
+function jstDate(iso){
+ const d=new Date(iso);
+ if(!Number.isFinite(d.getTime()))return null;
+ const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+ return parts.year+parts.month+parts.day;
+}
 export const FIELDS=['nationalWinRate','localWinRate','motorTwoWinRate','recent50WinRate','exhibitionScore'];
 export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candidates}={}){
  if(!/^20\d{6}$/.test(String(trainEndDate)))throw Error('Training cutoff YYYYMMDD required');
@@ -22,7 +28,8 @@ export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candida
    typeof row?.officialResultSourceUrl==='string'&&isOfficialSource(row.officialResultSourceUrl)&&
    typeof row?.historicalInputCapturedAt==='string'&&Number.isFinite(Date.parse(row.historicalInputCapturedAt))&&
    typeof row?.officialCutoffAt==='string'&&Number.isFinite(Date.parse(row.officialCutoffAt))&&
-   Date.parse(row.historicalInputCapturedAt)<Date.parse(row.officialCutoffAt);
+   Date.parse(row.historicalInputCapturedAt)<Date.parse(row.officialCutoffAt)&&
+   jstDate(row.historicalInputCapturedAt)===row.date&&jstDate(row.officialCutoffAt)===row.date;
   if(!valid){excluded.push({date:row?.date??null,reason:'missing_verified_historical_inputs_or_result'});continue;}
   const key=[row.date,row.venue,row.race].join(':');
   if(!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||counts.get(key)!==1){excluded.push({date:row.date,reason:'invalid_or_duplicate_race_key'});continue;}
