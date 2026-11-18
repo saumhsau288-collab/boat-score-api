@@ -48,6 +48,25 @@ jobs:
             count=$((count+1))
           done < <(find archived-captures -type f -name '*.json' -print0)
           if [ "$count" -eq 0 ]; then echo 'No matching saved prediction captures'; exit 1; fi
+      - name: Summarize retrospective candidate evidence (not official accuracy)
+        if: always()
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const dir='retrospective-results';
+          const names=fs.existsSync(dir)?fs.readdirSync(dir).filter(n=>n.endsWith('-candidate-diagnostics.json')):[];
+          const lines=['## Boat Score 2 retrospective result candidate checks','',
+            'Unverified result candidates are not official hit rates or weight-tuning evidence.',''];
+          for(const name of names){
+            const report=JSON.parse(fs.readFileSync(dir+'/'+name,'utf8'));
+            lines.push('### '+(report.date||name),'','| Diagnostic | Races |','|---|---:|',
+              ...Object.entries(report.counts||{}).map(([k,v])=>'| '+k+' | '+v+' |'),
+              '| Verified comparisons | '+report.verifiedComparisons+' |',
+              '| Eligible for weight tuning | '+report.eligibleForWeightTuning+' |','');
+          }
+          if(!names.length)lines.push('No candidate diagnostics were produced.','');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\\n')+'\\n');
+          NODE
       - name: Archive retrospective source evidence and diagnostics
         if: always()
         uses: actions/upload-artifact@v4
