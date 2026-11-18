@@ -19,6 +19,10 @@ if (!Number.isInteger(maxRaces) || maxRaces < 1 || maxRaces > 12) throw new Erro
 if (!base.startsWith('https://')) throw new Error('HTTPS required');
 const run = {workflowRunId:process.env.GITHUB_RUN_ID||null, workflowRunAttempt:process.env.GITHUB_RUN_ATTEMPT||null, commit:process.env.GITHUB_SHA||null};
 const captureStart = new Date().toISOString();
+const captureJstDate = jstDate(new Date(captureStart));
+const captureDateMatchesJst = date === captureJstDate;
+const captureTimeJst = new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(captureStart));
+const scheduledMorningWindow = captureDateMatchesJst && captureTimeJst >= '07:45' && captureTimeJst <= '08:30';
 const rows = [];
 const tasks = venues.flatMap(venue=>Array.from({length:maxRaces},(_,i)=>({venue,race:i+1})));
 let cursor = 0;
@@ -41,10 +45,10 @@ async function capture({venue,race}) {
   }
 }
 await Promise.all(Array.from({length:3},async()=>{while(cursor<tasks.length){const index=cursor++;rows[index]=await capture(tasks[index]);}}));
-const summary={date,captureStart,captureEnd:new Date().toISOString(),run,base,attempted:rows.length,
+const summary={date,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,run,base,attempted:rows.length,
   httpSuccess:rows.filter(x=>x.httpStatus===200).length,ready:rows.filter(x=>x.response?.ready===true).length,
   records:rows,authenticatedBeforeRace:false,
-  warning:'Raw server-observed responses only. No verified official start times, model provenance, or independently authenticated pre-race snapshots. Do not calculate prediction accuracy from this file without further validation.'};
+  warning:'Raw server-observed responses only. Matching JST date and 08:00 capture window are timing checks, not proof of pre-race capture. No verified official start times, model provenance, or independently authenticated pre-race snapshots. Do not calculate prediction accuracy from this file without further validation.'};
 fs.mkdirSync('prediction-captures',{recursive:true});
 const target='prediction-captures/'+date+'-'+(run.workflowRunId||'local')+'.json';
 fs.writeFileSync(target,JSON.stringify(summary,null,2)+'\n');
