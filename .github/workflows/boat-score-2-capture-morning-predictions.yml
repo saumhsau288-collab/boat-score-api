@@ -69,6 +69,8 @@ jobs:
           node --check scripts/test-summarize-cutoff-candidates.mjs
           node --check scripts/summarize-official-venue-activity.mjs
           node --check scripts/capture-official-cutoff-source.mjs
+          node --check scripts/extract-official-finish-candidate.mjs
+          node --check scripts/test-extract-official-finish-candidate.mjs
           node --check scripts/collect-official-result-evidence.mjs
           node --check scripts/test-collect-official-result-evidence.mjs
       - name: Test capture validation with offline fixtures
@@ -95,6 +97,7 @@ jobs:
           node scripts/test-audit-capture-score-inputs.mjs
           node scripts/test-audit-capture-response-shapes.mjs
           node scripts/test-audit-morning-official-cutoffs.mjs
+          node scripts/test-extract-official-finish-candidate.mjs
           node scripts/test-collect-official-result-evidence.mjs
           node scripts/test-summarize-cutoff-candidates.mjs
       - name: Check live deployed predictor reachability (read only)
