@@ -66,6 +66,20 @@ class InventoryTests(unittest.TestCase):
         self.assertNotIn('secret value', str(result))
         self.assertNotIn('private item', str(result))
 
+    def test_missing_input_counts_and_retry_types_are_private(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200,
+             'response': {'ready': False, 'missingInputs': ['secret A', 'secret B'],
+                          'officialStatsRetry': {'secret': 'value'}}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200,
+             'response': {'ready': False, 'missingInputs': [],
+                          'officialStatsRetry': 'private detail'}}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['missingInputListLengths'], {'0': 1, '2': 1})
+        self.assertEqual(result['officialStatsRetryTypes'], {'object': 1, 'string': 1})
+        self.assertNotIn('secret', str(result))
+        self.assertNotIn('private', str(result))
+
     def test_rejects_invalid_captured_identity(self):
         with self.assertRaisesRegex(ValueError, 'Invalid captured venue/race'):
             diagnose_capture({'authenticatedBeforeRace': False, 'records': [
