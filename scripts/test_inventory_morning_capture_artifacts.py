@@ -48,6 +48,24 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(result['transportErrorCategories'], {'network': 1, 'timeout': 1})
         self.assertNotIn('private detail', str(result))
 
+    def test_missing_input_diagnostics_do_not_leak_values(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200,
+             'response': {'ready': False, 'missingInputs': {'motor': 'secret value'},
+                          'officialVerified': False, 'statsVerified': True,
+                          'officialStatsRetry': None}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200,
+             'response': {'ready': False, 'missingInputs': ['private item'],
+                          'officialVerified': False, 'statsVerified': False,
+                          'officialStatsRetry': True}}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['missingInputStructures'], {'list': 1, 'object:motor': 1})
+        self.assertEqual(result['verificationFlagCounts']['officialVerified:false'], 2)
+        self.assertEqual(result['verificationFlagCounts']['statsVerified:true'], 1)
+        self.assertEqual(result['verificationFlagCounts']['officialStatsRetry:other'], 1)
+        self.assertNotIn('secret value', str(result))
+        self.assertNotIn('private item', str(result))
+
     def test_rejects_invalid_captured_identity(self):
         with self.assertRaisesRegex(ValueError, 'Invalid captured venue/race'):
             diagnose_capture({'authenticatedBeforeRace': False, 'records': [
