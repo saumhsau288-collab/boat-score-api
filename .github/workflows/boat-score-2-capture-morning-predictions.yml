@@ -122,6 +122,19 @@ jobs:
               ...Object.entries(report.counts).map(([key, value]) => '| ' + key + ' | ' + value + ' |'),
               '', 'No hit rates or scoring adjustments are authorized from these raw responses.', '');
           }
+          const officialEvidencePath='prediction-captures/official-cutoff-source-evidence.json';
+          if (fs.existsSync(officialEvidencePath)) {
+            const evidence=JSON.parse(fs.readFileSync(officialEvidencePath,'utf8'));
+            const counts={};
+            for (const row of evidence.records||[]) {
+              const status=row.cutoffCandidate?.status||'not_parsed';
+              counts[status]=(counts[status]||0)+1;
+            }
+            lines.push('### Official cutoff text candidates (unverified)','',
+              '| Candidate status | Races |','|---|---:|',
+              ...Object.entries(counts).map(([status,count])=>'| '+status+' | '+count+' |'),
+              '', 'Candidates are NOT authenticated official cutoff times. No hit rates may be calculated from these candidates.','');
+          }
           const cutoffNames = fs.existsSync('prediction-captures')
             ? fs.readdirSync('prediction-captures').filter(name => name.endsWith('-cutoff-audit.json')) : [];
           for (const name of cutoffNames) {
