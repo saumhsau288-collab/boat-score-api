@@ -93,6 +93,13 @@ class InventoryTests(unittest.TestCase):
         result = summarize_capture({'authenticatedBeforeRace': False, 'records': rows})
         self.assertEqual(result, {'captured': 3, 'http200': 2, 'ready': 1, 'usableSixPlusSix': 1})
 
+    def test_rejects_malformed_raw_capture_rows(self):
+        payload = {'authenticatedBeforeRace': False, 'records': [None]}
+        with self.assertRaisesRegex(ValueError, 'Invalid capture row'):
+            summarize_capture(payload)
+        with self.assertRaisesRegex(ValueError, 'Invalid capture row'):
+            diagnose_capture(payload)
+
     def test_rejects_claimed_authenticated_capture(self):
         with self.assertRaises(ValueError):
             summarize_capture({'authenticatedBeforeRace': True, 'records': []})
