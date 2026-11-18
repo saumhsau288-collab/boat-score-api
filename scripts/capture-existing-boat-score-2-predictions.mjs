@@ -2,6 +2,7 @@
 // Read-only capture of the deployed Boat Score 2 predictor. No model recreation.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import {fetchWithTimeoutRetry} from './fetch-with-timeout-retry.mjs';
 
 const base = process.env.BOAT_SCORE_URL || 'https://boat-score-2-preview.saumh-sau-288.workers.dev';
 function jstDate(now) {
@@ -30,30 +31,16 @@ async function capture({venue,race}) {
   const url = new URL('/api/predict/selected-race',base);
   url.search = new URLSearchParams({date,venue:String(venue),race:String(race),mode:'beforeinfo'}).toString();
   const requestedAt = new Date().toISOString();
-  const attempts=[];
-  // A single bounded retry for network timeouts only; preserve first and final timing.
-  for (let attempt=1; attempt<=2; attempt++) {
-    const attemptRequestedAt=new Date().toISOString();
-    try {
-      const response = await fetch(url,{signal:AbortSignal.timeout(attempt===1?20000:10000),headers:{'Accept':'application/json'}});
-      const responseText = await response.text();
-      const receivedAt = new Date().toISOString();
-      let payload;
-      try { payload = JSON.parse(responseText); } catch { payload = null; }
-      attempts.push({attempt,requestedAt:attemptRequestedAt,receivedAt,httpStatus:response.status});
-      return {date,venue,race,requestedAt,receivedAt,httpStatus:response.status,
-        attempts,
-        responseSha256:crypto.createHash('sha256').update(responseText).digest('hex'),
-        response:payload,rawResponseNonJson:payload===null,source:'existing_deployed_Boat_Score_2_selected_race'};
-    } catch(e) {
-      const receivedAt=new Date().toISOString();
-      const error=String(e?.message||e);
-      attempts.push({attempt,requestedAt:attemptRequestedAt,receivedAt,error});
-      if(attempt===1 && /timeout|timed out|aborted due to timeout/i.test(error)) continue;
-      return {date,venue,race,requestedAt,receivedAt,error,attempts,
-        source:'existing_deployed_Boat_Score_2_selected_race'};
-    }
-  }
+  const result=await fetchWithTimeoutRetry(url,{headers:{Accept:'application/json'}});
+  const {attempts,receivedAt}=result;
+  if(result.error) return {date,venue,race,requestedAt,receivedAt,error:result.error,attempts,
+    source:'existing_deployed_Boat_Score_2_selected_race'};
+  const {response,responseText}=result;
+  let payload;
+  try { payload = JSON.parse(responseText); } catch { payload = null; }
+  return {date,venue,race,requestedAt,receivedAt,httpStatus:response.status,attempts,
+    responseSha256:crypto.createHash('sha256').update(responseText).digest('hex'),
+    response:payload,rawResponseNonJson:payload===null,source:'existing_deployed_Boat_Score_2_selected_race'};
 }
 await Promise.all(Array.from({length:3},async()=>{while(cursor<tasks.length){const index=cursor++;rows[index]=await capture(tasks[index]);}}));
 const summary={date,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,run,base,attempted:rows.length,
