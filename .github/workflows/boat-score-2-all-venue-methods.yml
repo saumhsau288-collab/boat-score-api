@@ -54,6 +54,8 @@ on:
       - 'scripts/test-preview-score-race-ranking.mjs'
       - 'scripts/partial-score-evidence.mjs'
       - 'scripts/test-partial-score-evidence.mjs'
+      - 'scripts/score-uncertainty-bounds.mjs'
+      - 'scripts/test-score-uncertainty-bounds.mjs'
       - 'scripts/audit-capture-score-inputs.mjs'
       - 'scripts/test-audit-capture-score-inputs.mjs'
       - '.github/workflows/boat-score-2-capture-morning-predictions.yml'
@@ -97,6 +99,7 @@ jobs:
           node scripts/test-compare-score-variants.mjs
           node scripts/test-preview-score-race-ranking.mjs
           node scripts/test-partial-score-evidence.mjs
+          node scripts/test-score-uncertainty-bounds.mjs
           node scripts/test-audit-capture-score-inputs.mjs
       - name: Install archive extractor
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools

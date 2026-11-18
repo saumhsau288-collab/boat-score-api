@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {scoreUncertaintyBounds} from './score-uncertainty-bounds.mjs';
+const racers=[ [6.72,8.10,41.30],[7.04,7.60,39.85],[7.75,7.54,29.66],[6.88,6.79,29.58],[7.61,7.24,33.78],[6.42,5.43,28.67] ].map(([nationalWinRate,localWinRate,motorTwoWinRate],i)=>({boat:i+1,nationalWinRate,localWinRate,motorTwoWinRate}));
+const result=scoreUncertaintyBounds(racers);
+assert.equal(result.status,'partial_comparison_only');
+assert.deepEqual(result.partialRank,[3,5,1,2,4,6]);
+assert.equal(result.rankingVerified,false);
+assert.equal(result.fullScoreRank,null);
+assert.equal(result.scoreBounds[2].lower,58.17);
+assert.equal(result.scoreBounds[2].upper,73.17);
+assert.equal(result.guaranteedAbove.length,0);
+const full=scoreUncertaintyBounds(racers.map(r=>({...r,recent50WinRate:20,exhibitionScore:50})));
+assert.equal(full.rankingVerified,true);
+assert.deepEqual(full.fullScoreRank,full.partialRank);
+const invalid=scoreUncertaintyBounds(racers.map((r,i)=>i===0?{...r,nationalWinRate:20}:r));
+assert.equal(invalid.status,'invalid_inputs');
+assert.equal(invalid.scoreBounds,null);
+console.log('Score uncertainty bounds tests passed');
