@@ -34,6 +34,8 @@ jobs:
         run: |
           node --check scripts/audit-base-vs-adjusted.mjs
           node --check scripts/audit-archived-deployed-tickets.mjs
+          node --check scripts/audit-capture-calibration-readiness.mjs
+          node --check scripts/test-audit-capture-calibration-readiness.mjs
           node --check scripts/test-audit-archived-deployed-tickets.mjs
           node --check scripts/audit-applied-adjustments.mjs
           node --check scripts/audit-saved-comparison-evidence.mjs
@@ -73,6 +75,7 @@ jobs:
           node scripts/test-fetch-with-timeout-retry.mjs
           node scripts/test-audit-base-vs-adjusted.mjs
           node scripts/test-audit-archived-deployed-tickets.mjs
+          node scripts/test-audit-capture-calibration-readiness.mjs
           node scripts/test-audit-applied-adjustments.mjs
           node scripts/test-audit-saved-comparison-evidence.mjs
           node scripts/test-run-saved-capture-result-comparison.mjs
@@ -497,6 +500,24 @@ jobs:
           fs.writeFileSync(target,JSON.stringify(result,null,2)+'\n');
           console.log(JSON.stringify({source,target,ready:result.ready,matched:result.matched,mismatched:result.mismatched,invalid:result.invalid}));
           if(result.mismatched>0||result.invalid>0)process.exitCode=1;
+          NODE
+          done
+      - name: Report calibration readiness of captured races (research only)
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            CAPTURE_FILE="$file" node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {auditCaptureCalibrationReadiness} from './scripts/audit-capture-calibration-readiness.mjs';
+          const source=process.env.CAPTURE_FILE;
+          const capture=JSON.parse(fs.readFileSync(source,'utf8'));
+          // The official source collector currently supplies candidates, NOT authenticated cutoffs.
+          const report=auditCaptureCalibrationReadiness(capture,[]);
+          const target=source.replace(/\.json$/,'-calibration-readiness.json');
+          fs.writeFileSync(target,JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify({source,counts:report.counts,eligibleForWeightTuning:report.eligibleForWeightTuning}));
           NODE
           done
       - name: Upload timestamped raw responses
