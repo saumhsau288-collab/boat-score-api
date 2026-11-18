@@ -28,9 +28,8 @@ async function collect({date,venue,race}){
     htmlLength:body.length,htmlSample:body.slice(0,3000),
     verified:false,officialCutoffAt:null,
     note:'Official domain fetch evidence only; no deadline extracted or independently verified.'});
-  }catch(e){rows.push({date:capture.date,venue,requestedAt,receivedAt:new Date().toISOString(),
+  }catch(e){rows.push({date,venue,race,requestedAt,receivedAt:new Date().toISOString(),
     sourceUrl:url.toString(),error:String(e.message||e),verified:false,officialCutoffAt:null});}
- }
 }
 await Promise.all(Array.from({length:6},async()=>{while(cursor<uniqueTargets.length){const index=cursor++;await collect(uniqueTargets[index]);}}));
 fs.writeFileSync('prediction-captures/official-cutoff-source-evidence.json',JSON.stringify({
