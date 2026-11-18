@@ -10,5 +10,7 @@ assert.equal(parse(table+table).status,'multiple_finish_tables');
 assert.equal(parse(table.replace('<td>5</td>','<td>3</td>')).top3,null);
 assert.equal(parse(table.replace('<td>5</td>','<td>7</td>')).top3,null);
 assert.equal(parse(table.replace('<td>3</td>','<td>失格</td>')).top3,null);
+assert.deepEqual(parse(table.replace('<th>艇番</th>','<th>枠</th>')).top3,[3,1,5]);
+assert.equal(parse(table.replace('<th>艇番</th>','<th>選手番号</th>')).top3,null);
 assert.equal(parse('').status,'missing_html');
 console.log('Strict official finish candidate extraction tests passed');
