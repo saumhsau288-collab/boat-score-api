@@ -1,0 +1,46 @@
+name: Capture Boat Score 2 morning predictions (research only)
+
+on:
+  schedule:
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+    inputs:
+      capture_date:
+        description: 'JST date YYYYMMDD (blank = today JST)'
+        required: false
+        type: string
+      capture_venues:
+        description: 'Comma-separated venue numbers; blank = all 24'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: boat-score-2-research-morning-capture
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture existing deployed predictor responses without altering app
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUES: ${{ inputs.capture_venues }}
+          BOAT_SCORE_URL: https://boat-score-2-preview.saumh-sau-288.workers.dev
+        run: node scripts/capture-existing-boat-score-2-predictions.mjs
+      - name: Upload timestamped raw responses
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-morning-raw-${{ github.run_id }}
+          path: prediction-captures/
+          retention-days: 90
+          if-no-files-found: warn
