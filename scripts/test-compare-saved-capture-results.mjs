@@ -8,6 +8,13 @@ assert.equal(eligible.compared,1);assert.equal(eligible.mainHits,1);
 const unauthenticated=compare({...capture,authenticatedBeforeRace:false},[result]);
 assert.equal(unauthenticated.compared,0);
 assert.equal(unauthenticated.holdReasons.capture_not_authenticated_before_race,1);
+for(const invalid of [undefined,null,'true',1]){
+ const sample={...capture,authenticatedBeforeRace:invalid};
+ const report=compare(sample,[result]);
+ assert.equal(report.compared,0,'Unauthenticated or non-boolean marker must not qualify');
+ assert.equal(report.mainHitRate,null);
+ assert.equal(report.holdReasons.capture_not_authenticated_before_race,1);
+}
 assert.equal(compare(capture,[]).compared,0);
 assert.equal(compare(capture,[{...result,officialCutoffAt:undefined}]).compared,0);
 assert.equal(compare(capture,[{...result,officialCutoffAt:'2026-11-17T23:59:00Z'}]).compared,0);
