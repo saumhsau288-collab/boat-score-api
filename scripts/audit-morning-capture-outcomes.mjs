@@ -24,6 +24,7 @@ export function summarizeCapture(data) {
   const morningStart=typeof data.date==='string'&&/^20\d{6}$/.test(data.date)?Date.parse(data.date.slice(0,4)+'-'+data.date.slice(4,6)+'-'+data.date.slice(6,8)+'T07:45:00+09:00'):NaN;
   const morningEnd=Number.isFinite(morningStart)?morningStart+45*60*1000:NaN;
   const durations={ready:[],notReady:[],networkTimeout:[],otherFailure:[]};
+  const attemptStats={firstAttempts:0,secondAttempts:0,firstAttemptTimeouts:0,secondAttemptTimeouts:0,firstAttemptHttpSuccess:0,secondAttemptHttpSuccess:0,firstAttemptOtherErrors:0,secondAttemptOtherErrors:0};
   const missingInputLabels={};
   const notReadyReasons={};
   for(const record of data.records) {
@@ -65,6 +66,14 @@ export function summarizeCapture(data) {
     vTiming.firstRequestedAt=vFirst===null?null:new Date(vFirst).toISOString();
     vTiming.lastReceivedAt=vLast===null?null:new Date(vLast).toISOString();
     vTiming.elapsedSeconds=vFirst!==null&&vLast!==null&&vLast>=vFirst?Math.round((vLast-vFirst)/1000):null;
+    if(Array.isArray(record.attempts)) for(const attempt of record.attempts) {
+      if(attempt?.attempt!==1&&attempt?.attempt!==2)continue;
+      const prefix=attempt.attempt===1?'first':'second';
+      attemptStats[prefix+'Attempts']++;
+      if(attempt.httpStatus===200)attemptStats[prefix+'AttemptHttpSuccess']++;
+      else if(typeof attempt.error==='string'&&/timeout|timed out/i.test(attempt.error))attemptStats[prefix+'AttemptTimeouts']++;
+      else if(attempt.error)attemptStats[prefix+'AttemptOtherErrors']++;
+    }
     if(Array.isArray(record.attempts)&&record.attempts.length>1) {
       counts.retried++;
       if(record.httpStatus===200) counts.recoveredAfterRetry++;
@@ -122,7 +131,7 @@ export function summarizeCapture(data) {
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,timing,coverage,latencySeconds,missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,timing,coverage,latencySeconds,attemptStats,missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
