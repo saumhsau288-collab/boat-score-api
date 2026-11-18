@@ -31,6 +31,9 @@ export function summarizeCapture(data) {
     if(start===null||!Number.isFinite(morningStart))requestTimeUnknown++;
     else if(start>=morningStart&&start<=morningEnd)requestWithinMorningWindow++;
     else requestOutsideMorningWindow++;
+    if(end===null||!Number.isFinite(morningStart))responseTimeUnknown++;
+    else if(end>=morningStart&&end<=morningEnd)responseWithinMorningWindow++;
+    else responseOutsideMorningWindow++;
     const raceFirst=minTime(validTime(raceGroup.firstRequestedAt),start);
     const raceLast=maxTime(validTime(raceGroup.lastRequestedAt),start);
     raceGroup.firstRequestedAt=raceFirst===null?null:new Date(raceFirst).toISOString();
@@ -73,7 +76,7 @@ export function summarizeCapture(data) {
   timing.lastRequestedAt=lastRequest===null?null:new Date(lastRequest).toISOString();
   timing.lastReceivedAt=lastResponse===null?null:new Date(lastResponse).toISOString();
   timing.elapsedSeconds=firstRequest!==null&&lastResponse!==null&&lastResponse>=firstRequest?Math.round((lastResponse-firstRequest)/1000):null;
-  timing.morningWindow={startJst:'07:45',endJst:'08:30',requestWithinMorningWindow,requestOutsideMorningWindow,requestTimeUnknown};
+  timing.morningWindow={startJst:'07:45',endJst:'08:30',requestWithinMorningWindow,requestOutsideMorningWindow,requestTimeUnknown,responseWithinMorningWindow,responseOutsideMorningWindow,responseTimeUnknown};
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
     counts,byVenue,byRace,timing,missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
