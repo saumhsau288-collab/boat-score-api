@@ -88,6 +88,26 @@ class ComparisonTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Invalid official finish order'):
             compare([pred(1, [3, 2, 1])], [source])
 
+    def test_malformed_prediction_date_excluded(self):
+        for invalid_date in (None, 20261116, '2026-11-16', '2026111x'):
+            with self.subTest(invalid_date=invalid_date):
+                p = pred(1, [3, 2, 1])
+                p['date'] = invalid_date
+                result = compare([p], [sample()])
+                self.assertEqual(result['totals']['unverifiedPredictionSnapshot'], 1)
+
+    def test_boolean_finish_order_rejected(self):
+        source = sample()
+        source['reports'][0]['records'][0]['finishOrder'] = [True, 2, 3, 4, 5, 6]
+        with self.assertRaisesRegex(ValueError, 'Invalid official finish order'):
+            compare([pred(1, [3, 2, 1])], [source])
+
+    def test_float_finish_order_rejected(self):
+        source = sample()
+        source['reports'][0]['records'][0]['finishOrder'] = [1.0, 2, 3, 4, 5, 6]
+        with self.assertRaisesRegex(ValueError, 'Invalid official finish order'):
+            compare([pred(1, [3, 2, 1])], [source])
+
     def test_six_main_and_six_upset_predictions(self):
         p = pred(1, [1, 2, 3])
         p['mainSix'] = [[1, 2, 3], [1, 3, 2], [2, 1, 3],

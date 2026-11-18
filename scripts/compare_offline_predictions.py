@@ -20,6 +20,8 @@ def has_verifiable_snapshot(pred):
         return False
     if not isinstance(pred.get('captureEvidenceId'), str) or not pred['captureEvidenceId'].strip():
         return False
+    if not isinstance(pred.get('date'), str) or len(pred['date']) != 8 or not pred['date'].isdigit():
+        return False
     try:
         captured = datetime.fromisoformat(pred['capturedAt'])
         started = datetime.fromisoformat(pred['raceStartAt'])
@@ -69,7 +71,9 @@ def compare(predictions, official_reports):
                 if race.get('resultVerified') is not True:
                     raise ValueError('Unverified official race: ' + str(key))
                 order = race.get('finishOrder')
-                if not isinstance(order, list) or sorted(order) != list(range(1, 7)):
+                if (not isinstance(order, list) or len(order) != 6
+                        or any(type(boat) is not int for boat in order)
+                        or sorted(order) != list(range(1, 7))):
                     raise ValueError('Invalid official finish order: ' + str(key))
                 if key in official:
                     raise ValueError('Duplicate official race: ' + str(key))
