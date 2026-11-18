@@ -3,11 +3,15 @@
 export function auditDuplicateCaptureKeys(capture) {
   const records = Array.isArray(capture?.records) ? capture.records : [];
   const counts = new Map();
+  let invalidRaceKeyRecords = 0;
   for (const record of records) {
     const date = record?.date, venue = record?.venue, race = record?.race;
     if (!/^\d{8}$/.test(String(date)) ||
         !Number.isInteger(Number(venue)) || Number(venue) < 1 || Number(venue) > 24 ||
-        !Number.isInteger(Number(race)) || Number(race) < 1 || Number(race) > 12) continue;
+        !Number.isInteger(Number(race)) || Number(race) < 1 || Number(race) > 12) {
+      invalidRaceKeyRecords++;
+      continue;
+    }
     const key = [date, Number(venue), Number(race)].join(':');
     counts.set(key, (counts.get(key) || 0) + 1);
   }
@@ -16,9 +20,10 @@ export function auditDuplicateCaptureKeys(capture) {
   return {
     totalRecords: records.length,
     uniqueValidRaceKeys: counts.size,
+    invalidRaceKeyRecords,
     duplicateRaceKeys: duplicates.length,
     excessDuplicateRecords: duplicates.reduce((sum, row) => sum + row.count - 1, 0),
     duplicates,
-    safeForIndependentRaceHitRate: duplicates.length === 0
+    safeForIndependentRaceHitRate: duplicates.length === 0 && invalidRaceKeyRecords === 0
   };
 }
