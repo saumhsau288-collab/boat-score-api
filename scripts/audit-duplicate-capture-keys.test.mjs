@@ -22,3 +22,11 @@ test('invalid identifiers prevent independent hit-rate approval',()=>{
  assert.equal(result.invalidRaceKeyRecords,2);
  assert.equal(result.safeForIndependentRaceHitRate,false);
 });
+
+test('empty or missing records are not sufficient for independent hit rates',()=>{
+ for(const capture of [undefined,{}, {records:[]}]){
+  const report=auditDuplicateCaptureKeys(capture);
+  assert.equal(report.totalRecords,0);
+  assert.equal(report.safeForIndependentRaceHitRate,false);
+ }
+});
