@@ -69,7 +69,9 @@ def compare(predictions, official_reports):
                 if race.get('resultVerified') is not True:
                     raise ValueError('Unverified official race: ' + str(key))
                 order = race.get('finishOrder')
-                if not isinstance(order, list) or sorted(order) != list(range(1, 7)):
+                if (not isinstance(order, list) or len(order) != 6
+                        or any(type(boat) is not int for boat in order)
+                        or sorted(order) != list(range(1, 7))):
                     raise ValueError('Invalid official finish order: ' + str(key))
                 if key in official:
                     raise ValueError('Duplicate official race: ' + str(key))
