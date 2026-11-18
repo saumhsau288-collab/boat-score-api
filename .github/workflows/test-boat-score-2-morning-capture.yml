@@ -15,6 +15,8 @@ on:
       - 'scripts/test-audit-archived-deployed-tickets.mjs'
       - 'scripts/audit-capture-calibration-readiness.mjs'
       - 'scripts/test-audit-capture-calibration-readiness.mjs'
+      - 'scripts/report-capture-evidence-summary.mjs'
+      - 'scripts/test-report-capture-evidence-summary.mjs'
       - 'scripts/summarize-cutoff-candidates.mjs'
       - 'scripts/test-summarize-cutoff-candidates.mjs'
       - '.github/workflows/test-boat-score-2-morning-capture.yml'
@@ -57,3 +59,4 @@ jobs:
       - run: node scripts/test-audit-archived-deployed-tickets.mjs
       - run: node scripts/test-audit-capture-calibration-readiness.mjs
       - run: node scripts/test-summarize-cutoff-candidates.mjs
+      - run: node scripts/test-report-capture-evidence-summary.mjs
