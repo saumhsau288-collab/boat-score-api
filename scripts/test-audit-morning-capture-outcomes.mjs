@@ -66,6 +66,20 @@ assert.equal(x.topBlocker.races,1);
 const blocked=summarizeCapture({records:[{error:'timeout'},{error:'timeout'},{httpStatus:200,response:{ready:false,reason:'official_six_boat_stats_unverified'}},{httpStatus:200,response:{ready:true}}]});
 assert.equal(blocked.topBlocker.code,'networkTimeout');
 assert.equal(blocked.topBlocker.races,2);
+const repeatedHash='a'.repeat(64);
+const hashed=summarizeCapture({records:[
+ {venue:1,race:1,httpStatus:200,responseSha256:repeatedHash,response:{ready:false}},
+ {venue:1,race:2,httpStatus:200,responseSha256:repeatedHash,response:{ready:false}},
+ {venue:1,race:2,httpStatus:200,responseSha256:repeatedHash,response:{ready:false}},
+ {venue:1,race:3,httpStatus:200,responseSha256:'b'.repeat(64),response:{ready:false}},
+ {venue:1,race:4,httpStatus:200,responseSha256:'not-a-hash',response:{ready:false}}
+]});
+assert.equal(hashed.responseHashDiagnostics.recordsWithResponseHash,4);
+assert.equal(hashed.responseHashDiagnostics.invalidResponseHashes,1);
+assert.equal(hashed.responseHashDiagnostics.uniqueResponseHashes,2);
+assert.equal(hashed.responseHashDiagnostics.repeatedAcrossDifferentRaces,1);
+assert.equal(hashed.responseHashDiagnostics.affectedDistinctVenueRacePairs,2);
+assert.equal(hashed.responseHashDiagnostics.topRepeatedHashes[0].distinctVenueRacePairs,2);
 assert.equal(x.authenticatedBeforeRace,false);
 assert.equal(x.accuracyCalculationPermitted,false);
 console.log('Morning capture diagnostics passed');
