@@ -187,6 +187,10 @@ jobs:
               '|---|---:|---:|---:|---:|---:|---:|',
               ...Object.entries(report.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,c])=>
                 '| '+venue+' | '+c.attempted+' | '+c.ready+' | '+c.notReady+' | '+c.networkTimeout+' | '+c.otherNetworkError+' | '+c.httpFailure+' |'),
+              '', '### Largest observed capture blockers', '',
+              '| Blocker | Affected races | Next investigation |', '|---|---:|---|',
+              ...((report.rankedBlockers||[]).filter(b=>b.races>0).map(b=>'| '+b.code+' | '+b.races+' | '+b.action+' |')),
+              '', 'Ranking describes observed API responses, not confirmed root causes.',
               '', '### Main/upset ticket overlap', '',
               '| Metric | Races |', '|---|---:|',
               ...Object.entries(report.ticketDistinctness||{}).map(([k,v])=>'| '+k+' | '+v+' |'),
