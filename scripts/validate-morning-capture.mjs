@@ -40,6 +40,30 @@ for(const row of data.records){
  if(row.date!==data.date||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12)throw new Error('Invalid race identity');
  if(!row.requestedAt||!row.receivedAt||!Number.isFinite(Date.parse(row.requestedAt))||!Number.isFinite(Date.parse(row.receivedAt))||Date.parse(row.requestedAt)>Date.parse(row.receivedAt))throw new Error('Invalid capture timestamps');
  if(data.captureStart!==undefined&&(Date.parse(row.requestedAt)<Date.parse(data.captureStart)||Date.parse(row.receivedAt)>Date.parse(data.captureEnd)))throw new Error('Race request outside capture interval');
+ if(row.attempts!==undefined){
+   if(!Array.isArray(row.attempts)||row.attempts.length<1||row.attempts.length>2)
+     throw new Error('Invalid retry attempts count');
+   for(let i=0;i<row.attempts.length;i++){
+     const attempt=row.attempts[i];
+     if(attempt?.attempt!==i+1||!Number.isFinite(Date.parse(attempt.requestedAt))||
+       !Number.isFinite(Date.parse(attempt.receivedAt))||
+       Date.parse(attempt.requestedAt)>Date.parse(attempt.receivedAt))
+       throw new Error('Invalid retry attempt timestamps/order');
+     if(Date.parse(attempt.requestedAt)<Date.parse(row.requestedAt)||
+       Date.parse(attempt.receivedAt)>Date.parse(row.receivedAt))
+       throw new Error('Retry attempt outside record interval');
+     if(i>0&&Date.parse(attempt.requestedAt)<Date.parse(row.attempts[i-1].receivedAt))
+       throw new Error('Overlapping retry attempts');
+     if(i<row.attempts.length-1&&!/timeout|timed out/i.test(String(attempt.error||'')))
+       throw new Error('Retry requires preceding timeout');
+   }
+   const finalAttempt=row.attempts.at(-1);
+   if(row.error){
+     if(finalAttempt.error!==row.error)throw new Error('Final attempt error mismatch');
+   }else if(finalAttempt.httpStatus!==row.httpStatus)
+     throw new Error('Final attempt HTTP status mismatch');
+ }
+
  stats.attempted++;
  if(row.error){
    if(row.httpStatus!==undefined || row.response!==undefined)
