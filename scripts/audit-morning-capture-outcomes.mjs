@@ -189,7 +189,11 @@ export function summarizeCapture(data) {
     const percentile=p=>values.length?Math.round(values[Math.ceil(values.length*p)-1]*10)/10:null;
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
-  return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
+  const trigger=data.run?.trigger??null;
+  const triggerEvidence={trigger,scheduledTrigger:trigger===null?null:trigger==='schedule',
+    morningWindow:data.scheduledMorningWindow===true,
+    warning:'GitHub schedule trigger and morning-window timestamps do not authenticate pre-race predictions.'};
+  return {triggerEvidence,date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
     counts,byVenue,byRace,morningByRace,eightClockMilestones,responseHashDiagnostics,timing,coverage,latencySeconds,attemptStats,attemptTelemetry,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};

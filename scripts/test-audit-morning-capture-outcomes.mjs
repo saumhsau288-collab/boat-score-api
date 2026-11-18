@@ -84,4 +84,7 @@ assert.equal(x.authenticatedBeforeRace,false);
 assert.equal(x.accuracyCalculationPermitted,false);
 assert.deepEqual(x.attemptTelemetry,{recordsWithAttempts:1,recordsWithoutAttempts:6,recordsWithMultipleAttempts:1});
 assert.deepEqual(blocked.attemptTelemetry,{recordsWithAttempts:0,recordsWithoutAttempts:4,recordsWithMultipleAttempts:0});
+assert.equal(x.triggerEvidence.scheduledTrigger,null);
+assert.deepEqual(summarizeCapture({run:{trigger:'schedule'},scheduledMorningWindow:false,records:[]}).triggerEvidence,{trigger:'schedule',scheduledTrigger:true,morningWindow:false,warning:'GitHub schedule trigger and morning-window timestamps do not authenticate pre-race predictions.'});
+assert.equal(summarizeCapture({run:{trigger:'workflow_dispatch'},records:[]}).triggerEvidence.scheduledTrigger,false);
 console.log('Morning capture diagnostics passed');
