@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+"""Offline comparison of immutable pre-race predictions to official results.
+
+Never reconstruct predictions from a finished race or change live scoring.
+"""
+import argparse
+import json
+from pathlib import Path
+
+REQUIRED_PROVENANCE = ('capturedBeforeStart', 'asOfVerified')
+
+
+def compare(predictions, official_reports):
+    official = {}
+    incidents = set()
+    unresolved = set()
+    for report in official_reports:
+        date = report['date']
+        for venue, venue_report in zip(report['venueSummary'], report['reports']):
+            number = venue['venue']
+            for race in venue_report['records']:
+                key = (date, number, race['race'])
+                if key in official:
+                    raise ValueError('Duplicate official race: ' + str(key))
+                official[key] = race
+            for item in venue.get('rejectionDetails', []):
+                key = (date, number, item['race'])
+                if item.get('incidentStatus') == 'program_identity_verified' and item.get('incidentEvidence'):
+                    incidents.add(key)
+                else:
+                    unresolved.add(key)
+            for race_number in venue.get('rejectedRaces', []):
+                key = (date, number, race_number)
+                if key not in incidents:
+                    unresolved.add(key)
+    seen = set()
+    details = []
+    totals = {'predictionRecords': 0, 'eligibleCompared': 0,
+              'unverifiedPredictionSnapshot': 0, 'verifiedIncidentExcluded': 0,
+              'unresolvedOfficialExcluded': 0, 'officialResultMissing': 0,
+              'invalidPredictionExcluded': 0, 'topPickWins': 0,
+              'exactTrifectaHits': 0}
+    for pred in predictions:
+        key = (pred.get('date'), pred.get('venue'), pred.get('race'))
+        if key in seen:
+            raise ValueError('Duplicate prediction: ' + str(key))
+        seen.add(key)
+        totals['predictionRecords'] += 1
+        if not all(pred.get(field) is True for field in REQUIRED_PROVENANCE):
+            status = 'unverifiedPredictionSnapshot'
+        elif key in incidents:
+            status = 'verifiedIncidentExcluded'
+        elif key in unresolved:
+            status = 'unresolvedOfficialExcluded'
+        elif key not in official:
+            status = 'officialResultMissing'
+        else:
+            pick = pred.get('predictedFinishOrder')
+            if not isinstance(pick, list) or len(pick) != 3 or any(type(v) is not int for v in pick) or len(set(pick)) != 3 or any(v not in range(1, 7) for v in pick):
+                status = 'invalidPredictionExcluded'
+            else:
+                status = 'eligibleCompared'
+                order = official[key]['finishOrder']
+                totals['topPickWins'] += int(pick[0] == order[0])
+                totals['exactTrifectaHits'] += int(pick == order[:3])
+        totals[status] += 1
+        details.append({'date': key[0], 'venue': key[1], 'race': key[2], 'status': status})
+    eligible = totals['eligibleCompared']
+    return {'totals': totals,
+            'topPickWinRatePercent': round(100 * totals['topPickWins'] / eligible, 2) if eligible else None,
+            'exactTrifectaHitRatePercent': round(100 * totals['exactTrifectaHits'] / eligible, 2) if eligible else None,
+            'details': details,
+            'warning': 'Compare only stored predictions with independently verified pre-race capture; no retroactive reconstruction. Incident and unresolved races are excluded, not counted as misses.'}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--predictions', required=True)
+    parser.add_argument('--official-reports', required=True)
+    parser.add_argument('--output', required=True)
+    args = parser.parse_args()
+    predictions = json.loads(Path(args.predictions).read_text(encoding='utf-8'))
+    if not isinstance(predictions, list):
+        raise ValueError('Predictions must be a JSON list')
+    reports = [json.loads(p.read_text(encoding='utf-8')) for p in sorted(Path(args.official_reports).glob('*.json'))]
+    if not reports:
+        raise ValueError('No official daily reports')
+    result = compare(predictions, reports)
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    print(json.dumps({k: v for k, v in result.items() if k != 'details'}, ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    main()
