@@ -7,14 +7,14 @@ if(!/^20\d{6}$/.test(date))throw Error('Invalid date');
 const get=async(path,timeout=75000)=>{try{const r=await fetch(base+path,{signal:AbortSignal.timeout(timeout)});const j=await r.json();return r.ok?j:{error:'http_'+r.status,...j}}catch(e){return {error:String(e.message||e)}}};
 const pool=async(items,limit,fn)=>{let index=0;const results=new Array(items.length);await Promise.all(Array.from({length:limit},async()=>{while(index<items.length){const i=index++;results[i]=await fn(items[i],i)}}));return results};
 console.log('Checking venue race-1 entries, not assuming unverified venues are closed.');
-const venues=selectedVenue?[]:await pool(Array.from({length:24},(_,i)=>i+1),3,async venue=>{
+const venues=await pool(selectedVenue?[selectedVenue]:Array.from({length:24},(_,i)=>i+1),3,async venue=>{
  const d=await get('/api/official/active-venues?date='+date+'&offset='+(venue-1),35000);
  console.log('venue',venue,d.checks?.[0]?.status||d.error||'unknown');
  return {venue,verified:d.verifiedVenues?.includes(venue)===true,reason:d.checks?.[0]?.reason||d.error||null};
 });
-const verifiedVenues=selectedVenue?[selectedVenue]:venues.filter(x=>x.verified).map(x=>x.venue);
+const verifiedVenues=venues.filter(x=>x.verified).map(x=>x.venue);
 const targets=verifiedVenues.flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1})));
-console.log('Confirmed race-1 venue candidates:',verifiedVenues,'race targets:',targets.length);
+console.log('Officially verified venue candidates:',verifiedVenues,'race targets:',targets.length);
 if (targets.length === 0) {
   console.error('BACKTEST_BLOCKED: No venue was verified. This is an official-data verification failure, not a successful zero-race comparison.');
   console.error('Unverified venue reasons:', JSON.stringify(venues));
@@ -36,7 +36,7 @@ const records=await pool(targets,3,async({venue,race},i)=>{
 });
 const compared=records.filter(x=>x.status==='compared');
 const mainHits=compared.filter(x=>x.mainHit).length,upsetHits=compared.filter(x=>x.upsetHit).length;
-const summary={date,method:'existing_deployed_Boat_Score_2_predictor',retrospective:true,notSavedMorningPredictions:true,verifiedVenueCandidates:selectedVenue?[]:verifiedVenues,manuallySelectedVenue:selectedVenue||null,unverifiedVenues:venues.filter(x=>!x.verified),checkedRaces:records.length,comparedRaces:compared.length,heldRaces:records.length-compared.length,mainHits,upsetHits,mainHitRate:compared.length?mainHits/compared.length:null,upsetHitRate:compared.length?upsetHits/compared.length:null,notes:['Official metrics may not be historical point-in-time snapshots','Makulabo and heatmap are not scored unless already part of existing prediction API','Unverified venues are not necessarily closed'],records};
+const summary={date,method:'existing_deployed_Boat_Score_2_predictor',retrospective:true,notSavedMorningPredictions:true,verifiedVenueCandidates:verifiedVenues,manuallySelectedVenue:selectedVenue||null,unverifiedVenues:venues.filter(x=>!x.verified),checkedRaces:records.length,comparedRaces:compared.length,heldRaces:records.length-compared.length,mainHits,upsetHits,mainHitRate:compared.length?mainHits/compared.length:null,upsetHitRate:compared.length?upsetHits/compared.length:null,notes:['Official metrics may not be historical point-in-time snapshots','Makulabo and heatmap are not scored unless already part of existing prediction API','Unverified venues are not necessarily closed'],records};
 fs.mkdirSync('backtest-results',{recursive:true});
 fs.writeFileSync('backtest-results/'+date+'.json',JSON.stringify(summary,null,2));
 fs.writeFileSync('backtest-results/'+date+'.csv',['date,venue,race,status,actual,main,upset,mainHit,upsetHit,predictionReason,resultReason',...records.map(r=>[r.date,r.venue,r.race,r.status,r.actual||'',r.main.join('|'),r.upset.join('|'),r.mainHit??'',r.upsetHit??'',r.predictionReason||'',r.resultReason||''].map(x=>'"'+String(x).replaceAll('"','""')+'"').join(','))].join('\n'));
