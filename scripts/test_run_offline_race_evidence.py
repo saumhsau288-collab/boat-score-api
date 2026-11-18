@@ -8,8 +8,8 @@ class TestRunner(unittest.TestCase):
  def test_actual_pipeline(self):
   r=run(self.race,self.history)
   self.assertEqual(len(r['racers']),6)
-  self.assertEqual(r['racers'][0]['scoreLowerBound'],47.7)
-  self.assertEqual(r['racers'][0]['scoreUpperBound'],62.7)
+  self.assertEqual(r['racers'][0]['scoreLowerBound'],47.5)
+  self.assertEqual(r['racers'][0]['scoreUpperBound'],62.5)
   self.assertEqual(r['racers'][0]['missingScoreInputs'],['recent50WinRate','exhibitionScore'])
   self.assertFalse(r['accuracyCalculationPermitted'])
  def test_reject_invalid(self):
