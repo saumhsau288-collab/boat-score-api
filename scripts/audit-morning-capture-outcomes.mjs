@@ -33,6 +33,8 @@ export function summarizeCapture(data) {
 
   const durations={ready:[],notReady:[],networkTimeout:[],otherFailure:[]};
   const attemptStats={firstAttempts:0,secondAttempts:0,firstAttemptTimeouts:0,secondAttemptTimeouts:0,firstAttemptHttpSuccess:0,secondAttemptHttpSuccess:0,firstAttemptOtherErrors:0,secondAttemptOtherErrors:0};
+  const responseHashPairs=new Map();
+  let recordsWithResponseHash=0,invalidResponseHashes=0;
   const missingInputLabels={};
   const notReadyReasons={};
   for(const record of data.records) {
@@ -50,6 +52,17 @@ export function summarizeCapture(data) {
       const pair=venueKey+':'+raceKey;
       if(uniquePairs.has(pair)) duplicateVenueRacePairs++;
       uniquePairs.add(pair);
+    }
+    if(record.httpStatus===200&&record.responseSha256!==undefined){
+      if(typeof record.responseSha256!=='string'||!/^[a-f0-9]{64}$/i.test(record.responseSha256))invalidResponseHashes++;
+      else {
+        recordsWithResponseHash++;
+        const key=record.responseSha256.toLowerCase();
+        const entry=responseHashPairs.get(key)??={count:0,pairs:new Set()};
+        entry.count++;
+        if(venueKey!=='unknown'&&raceKey!=='unknown')entry.pairs.add(venueKey+':'+raceKey);
+        responseHashPairs.set(key,entry);
+      }
     }
     const start=validTime(record.requestedAt),end=validTime(record.receivedAt);
     const elapsed=start!==null&&end!==null&&end>=start?(end-start)/1000:null;
@@ -147,6 +160,17 @@ export function summarizeCapture(data) {
     missingPairsWithinRequestedVenues:expectedPairs?.filter(pair=>!uniquePairs.has(pair))??null,
     unexpectedPairsOutsideScope:scopeKnown?[...uniquePairs].filter(pair=>!expectedPairs.includes(pair)):null,
     warning:scopeKnown?'Coverage uses explicitly requested venues and race scope, not verified active racing venues.':'Capture scope unavailable; cannot assert missing records.'};
+  const reusedResponseHashes=[...responseHashPairs.entries()]
+    .filter(([,entry])=>entry.pairs.size>1)
+    .map(([sha256,entry])=>({sha256,records:entry.count,distinctVenueRacePairs:entry.pairs.size}))
+    .sort((a,b)=>b.distinctVenueRacePairs-a.distinctVenueRacePairs||a.sha256.localeCompare(b.sha256));
+  const responseHashDiagnostics={recordsWithResponseHash,invalidResponseHashes,
+    uniqueResponseHashes:responseHashPairs.size,
+    repeatedAcrossDifferentRaces:reusedResponseHashes.length,
+    affectedDistinctVenueRacePairs:new Set([...responseHashPairs.values()]
+      .filter(entry=>entry.pairs.size>1).flatMap(entry=>[...entry.pairs])).size,
+    topRepeatedHashes:reusedResponseHashes.slice(0,5),
+    warning:'Identical raw API response bodies across races warrant investigation but may be legitimate; hashes alone do not establish a predictor defect.'};
   const rankedBlockers=[
     {code:'networkTimeout',races:counts.networkTimeout,action:'Investigate predictor latency and retry recoveries'},
     {code:'officialSixBoatUnverified',races:notReadyReasons.official_six_boat_stats_unverified||0,action:'Verify six-boat official input source; do not synthesize missing values'},
@@ -161,7 +185,7 @@ export function summarizeCapture(data) {
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,morningByRace,eightClockMilestones,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,morningByRace,eightClockMilestones,responseHashDiagnostics,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
