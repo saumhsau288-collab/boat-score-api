@@ -3,6 +3,7 @@
 import io
 import json
 import os
+import re
 import sys
 import urllib.request
 import urllib.parse
@@ -72,6 +73,7 @@ def diagnose_capture(payload):
     verification_pairs = Counter()
     reason_types = Counter()
     retry_categories = Counter()
+    explicit_http_statuses = Counter()
     for row in records:
         if not isinstance(row, dict):
             raise ValueError('Invalid capture row')
@@ -121,6 +123,9 @@ def diagnose_capture(payload):
                                   'http_error' if 'http' in retry_text or 'status' in retry_text else
                                   'other_string')
                 retry_categories[retry_category] += 1
+                # Only extract a code when it is explicitly labeled as HTTP/status.
+                match = re.search(r'\b(?:http(?:\s+status)?|status(?:\s+code)?)\s*[:= -]?\s*([45][0-9]{2})\b', retry_text)
+                explicit_http_statuses[match.group(1) if match else 'not_explicit'] += 1
             retry_types[('null' if retry is None else 'boolean' if type(retry) is bool
                          else 'string' if isinstance(retry, str) else 'object' if isinstance(retry, dict)
                          else 'list' if isinstance(retry, list) else 'number' if type(retry) in (int, float)
@@ -154,7 +159,8 @@ def diagnose_capture(payload):
             'officialStatsRetryTypes': dict(sorted(retry_types.items())),
             'verificationPairs': dict(sorted(verification_pairs.items())),
             'notReadyReasonTypes': dict(sorted(reason_types.items())),
-            'officialRetryCategories': dict(sorted(retry_categories.items()))}
+            'officialRetryCategories': dict(sorted(retry_categories.items())),
+            'explicitRetryHttpStatuses': dict(sorted(explicit_http_statuses.items()))}
 
 def api(path, token, binary=False):
     request = urllib.request.Request(
@@ -172,7 +178,7 @@ def inventory(repository, token):
                                   'http200': 0, 'ready': 0, 'usableSixPlusSix': 0})
     errors = []
     inspected = 0
-    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter(), 'missingInputListLengths': Counter(), 'officialStatsRetryTypes': Counter(), 'verificationPairs': Counter(), 'notReadyReasonTypes': Counter(), 'officialRetryCategories': Counter()})
+    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter(), 'missingInputListLengths': Counter(), 'officialStatsRetryTypes': Counter(), 'verificationPairs': Counter(), 'notReadyReasonTypes': Counter(), 'officialRetryCategories': Counter(), 'explicitRetryHttpStatuses': Counter()})
     for page in range(1, 11):
         response = api(f'repos/{repository}/actions/artifacts?per_page=100&page={page}', token)
         artifacts = response.get('artifacts', [])
@@ -211,6 +217,7 @@ def inventory(repository, token):
                     bucket['verificationPairs'].update(diagnostic['verificationPairs'])
                     bucket['notReadyReasonTypes'].update(diagnostic['notReadyReasonTypes'])
                     bucket['officialRetryCategories'].update(diagnostic['officialRetryCategories'])
+                    bucket['explicitRetryHttpStatuses'].update(diagnostic['explicitRetryHttpStatuses'])
                     totals[date]['artifacts'] += 1
                     for key, value in counts.items():
                         totals[date][key] += value
@@ -233,7 +240,8 @@ def inventory(repository, token):
             'officialStatsRetryTypes': dict(sorted(bucket['officialStatsRetryTypes'].items())),
             'verificationPairs': dict(sorted(bucket['verificationPairs'].items())),
             'notReadyReasonTypes': dict(sorted(bucket['notReadyReasonTypes'].items())),
-            'officialRetryCategories': dict(sorted(bucket['officialRetryCategories'].items()))}
+            'officialRetryCategories': dict(sorted(bucket['officialRetryCategories'].items())),
+            'explicitRetryHttpStatuses': dict(sorted(bucket['explicitRetryHttpStatuses'].items()))}
     return {'byCaptureDate': dict(sorted(totals.items())),
             'diagnosticsByDate': diagnostic_output, 'artifactsInspected': inspected,
             'errors': errors, 'officialResultOverlap': None,
@@ -256,6 +264,7 @@ if __name__ == '__main__':
             'states': diagnostic['states'],
             'notReadyReasonTypes': diagnostic['notReadyReasonTypes'],
             'officialRetryCategories': diagnostic['officialRetryCategories'],
+            'explicitRetryHttpStatuses': diagnostic['explicitRetryHttpStatuses'],
             'verificationPairs': diagnostic['verificationPairs'],
             'transportErrorCategories': diagnostic['transportErrorCategories'],
         }, ensure_ascii=False, sort_keys=True), flush=True)
@@ -296,6 +305,9 @@ if __name__ == '__main__':
                 f.write('\nOfficial retry failure categories (no raw messages):\n')
                 for category, count in diagnostic['officialRetryCategories'].items():
                     f.write(f'- {category}: {count}\n')
+                f.write('\nExplicit HTTP status codes in retry messages (not independently verified):\n')
+                for status, count in diagnostic['explicitRetryHttpStatuses'].items():
+                    f.write(f'- {status}: {count}\n')
                 f.write('\nOfficial retry types (no values):\n')
                 for kind, count in diagnostic['officialStatsRetryTypes'].items():
                     f.write(f'- {kind}: {count}\n')
