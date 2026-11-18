@@ -1,0 +1,21 @@
+name: Test Boat Score 2 backtest venue verification
+on:
+  pull_request:
+    paths:
+      - 'scripts/boat-score-2-server-backtest.mjs'
+      - 'scripts/verified-venue-candidates.mjs'
+      - 'scripts/test-verified-venue-candidates.mjs'
+      - '.github/workflows/test-backtest-venue-verification.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check scripts/boat-score-2-server-backtest.mjs
+      - run: node --test scripts/test-verified-venue-candidates.mjs
