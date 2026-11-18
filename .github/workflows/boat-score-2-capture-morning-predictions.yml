@@ -32,6 +32,7 @@ jobs:
           node-version: '22'
       - name: Check capture and validation scripts syntax
         run: |
+          node --check scripts/audit-explicit-score-exclusions.mjs
           node --check scripts/audit-morning-capture-outcomes.mjs
           node --check scripts/fetch-with-timeout-retry.mjs
           node --check scripts/build-morning-capture-tasks.mjs
@@ -54,6 +55,7 @@ jobs:
           node scripts/test-summarize-official-venue-activity.mjs
           node scripts/test-build-morning-capture-tasks.mjs
           node scripts/test-fetch-with-timeout-retry.mjs
+          node scripts/test-audit-explicit-score-exclusions.mjs
           node scripts/test-audit-morning-capture-outcomes.mjs
           node scripts/test-validate-morning-capture.mjs
           node scripts/test-audit-morning-input-coverage.mjs
@@ -149,6 +151,14 @@ jobs:
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-capture-response-shapes.mjs "$file" > "${file%.json}-response-shape.json"
           done
+      - name: Audit explicit unscored inputs reported by deployed predictor
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            node scripts/audit-explicit-score-exclusions.mjs "$file" > "${file%.json}-explicit-exclusions.json"
+          done
       - name: Summarize capture timeouts and missing input labels
         if: always()
         run: |
@@ -209,6 +219,8 @@ jobs:
               '; missing within requested scope: '+(report.coverage?.missingPairsWithinRequestedVenues?.length??'unknown')+
               '; unexpected outside scope: '+(report.coverage?.unexpectedPairsOutsideScope?.length??'unknown'),
               '', 'This is record completeness, not verified racing schedule coverage.',
+              '', '### Explicit scoring exclusions reported by deployed API', '',
+              ...Object.entries((()=>{const file='prediction-captures/'+name.replace('-diagnostics.json','-explicit-exclusions.json');return fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')).explicitExclusions:{};})()).map(([key,value])=>'- '+key+': '+value),
               '', '### Identical API response body diagnostics', '',
               '| Metric | Count |', '|---|---:|',
               ...Object.entries(report.responseHashDiagnostics||{}).filter(([k,v])=>typeof v==='number').map(([k,v])=>'| '+k+' | '+v+' |'),
