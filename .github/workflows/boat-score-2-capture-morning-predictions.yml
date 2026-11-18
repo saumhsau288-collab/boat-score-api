@@ -98,7 +98,7 @@ jobs:
       - name: Audit captured API responses and prediction ticket format
         run: |
           for file in prediction-captures/*.json; do
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             node scripts/validate-morning-capture.mjs "$file"
           done
       - name: Collect official cutoff source evidence (not yet verified)
@@ -116,7 +116,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-morning-official-cutoffs.mjs "$file" > "${file%.json}-cutoff-audit.json"
@@ -126,7 +126,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             node scripts/audit-morning-input-coverage.mjs "$file"
           done
@@ -135,7 +135,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             node scripts/classify-morning-capture-quality.mjs "$file" > "${file%.json}-quality.json"
           done
@@ -144,7 +144,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             case "$file" in *-quality.json) continue ;; esac
             node scripts/audit-capture-score-inputs.mjs "$file" > "${file%.json}-score-inputs.json"
@@ -154,7 +154,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-capture-response-shapes.mjs "$file" > "${file%.json}-response-shape.json"
@@ -164,7 +164,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             node scripts/audit-base-vs-adjusted.mjs "$file" > "${file%.json}-base-vs-adjusted.json"
           done
       - name: Audit deployed exhibition and start adjustment flags
@@ -172,7 +172,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             node scripts/audit-applied-adjustments.mjs "$file" > "${file%.json}-applied-adjustments.json"
           done
       - name: Audit explicit unscored inputs reported by deployed predictor
@@ -180,7 +180,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             node scripts/audit-explicit-score-exclusions.mjs "$file" > "${file%.json}-explicit-exclusions.json"
           done
       - name: Summarize capture timeouts and missing input labels
@@ -188,7 +188,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             case "$file" in *-quality.json|*-diagnostics.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-morning-capture-outcomes.mjs "$file"
           done
