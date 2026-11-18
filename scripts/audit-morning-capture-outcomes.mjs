@@ -32,6 +32,7 @@ export function summarizeCapture(data) {
     (Number(clock.slice(0,2))*60+Number(clock.slice(3))-(8*60))*60000:NaN);
 
   const durations={ready:[],notReady:[],networkTimeout:[],otherFailure:[]};
+  const attemptTelemetry={recordsWithAttempts:0,recordsWithoutAttempts:0,recordsWithMultipleAttempts:0};
   const attemptStats={firstAttempts:0,secondAttempts:0,firstAttemptTimeouts:0,secondAttemptTimeouts:0,firstAttemptHttpSuccess:0,secondAttemptHttpSuccess:0,firstAttemptOtherErrors:0,secondAttemptOtherErrors:0};
   const responseHashPairs=new Map();
   let recordsWithResponseHash=0,invalidResponseHashes=0;
@@ -93,6 +94,10 @@ export function summarizeCapture(data) {
     vTiming.firstRequestedAt=vFirst===null?null:new Date(vFirst).toISOString();
     vTiming.lastReceivedAt=vLast===null?null:new Date(vLast).toISOString();
     vTiming.elapsedSeconds=vFirst!==null&&vLast!==null&&vLast>=vFirst?Math.round((vLast-vFirst)/1000):null;
+    if(Array.isArray(record.attempts)&&record.attempts.length>0) {
+      attemptTelemetry.recordsWithAttempts++;
+      if(record.attempts.length>1)attemptTelemetry.recordsWithMultipleAttempts++;
+    } else attemptTelemetry.recordsWithoutAttempts++;
     if(Array.isArray(record.attempts)) for(const attempt of record.attempts) {
       if(attempt?.attempt!==1&&attempt?.attempt!==2)continue;
       const prefix=attempt.attempt===1?'first':'second';
@@ -185,7 +190,7 @@ export function summarizeCapture(data) {
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,morningByRace,eightClockMilestones,responseHashDiagnostics,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,morningByRace,eightClockMilestones,responseHashDiagnostics,timing,coverage,latencySeconds,attemptStats,attemptTelemetry,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
