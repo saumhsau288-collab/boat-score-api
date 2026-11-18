@@ -34,6 +34,18 @@ def has_verifiable_snapshot(pred):
 
 
 
+def valid_trifecta(pick):
+    return (isinstance(pick, list) and len(pick) == 3
+            and all(type(v) is int and 1 <= v <= 6 for v in pick)
+            and len(set(pick)) == 3)
+
+
+def valid_six_picks(picks):
+    return (isinstance(picks, list) and len(picks) == 6
+            and all(valid_trifecta(pick) for pick in picks)
+            and len({tuple(pick) for pick in picks}) == 6)
+
+
 def compare(predictions, official_reports):
     official = {}
     incidents = set()
@@ -80,7 +92,9 @@ def compare(predictions, official_reports):
               'unverifiedPredictionSnapshot': 0, 'verifiedIncidentExcluded': 0,
               'unresolvedOfficialExcluded': 0, 'officialResultMissing': 0,
               'invalidPredictionExcluded': 0, 'topPickWins': 0,
-              'exactTrifectaHits': 0}
+              'exactTrifectaHits': 0,
+              'sixPickCompared': 0, 'mainSixHits': 0, 'upsetSixHits': 0,
+              'eitherSixHits': 0}
     for pred in predictions:
         key = (pred.get('date'), pred.get('venue'), pred.get('race'))
         if key in seen:
@@ -97,19 +111,38 @@ def compare(predictions, official_reports):
             status = 'officialResultMissing'
         else:
             pick = pred.get('predictedFinishOrder')
-            if not isinstance(pick, list) or len(pick) != 3 or any(type(v) is not int for v in pick) or len(set(pick)) != 3 or any(v not in range(1, 7) for v in pick):
+            main = pred.get('mainSix')
+            upset = pred.get('upsetSix')
+            six_mode = main is not None or upset is not None
+            if six_mode and (not valid_six_picks(main) or not valid_six_picks(upset)):
+                status = 'invalidPredictionExcluded'
+            elif not six_mode and not valid_trifecta(pick):
                 status = 'invalidPredictionExcluded'
             else:
                 status = 'eligibleCompared'
                 order = official[key]['finishOrder']
-                totals['topPickWins'] += int(pick[0] == order[0])
-                totals['exactTrifectaHits'] += int(pick == order[:3])
+                actual = order[:3]
+                if six_mode:
+                    totals['sixPickCompared'] += 1
+                    main_hit = actual in main
+                    upset_hit = actual in upset
+                    totals['mainSixHits'] += int(main_hit)
+                    totals['upsetSixHits'] += int(upset_hit)
+                    totals['eitherSixHits'] += int(main_hit or upset_hit)
+                else:
+                    totals['topPickWins'] += int(pick[0] == order[0])
+                    totals['exactTrifectaHits'] += int(pick == actual)
         totals[status] += 1
         details.append({'date': key[0], 'venue': key[1], 'race': key[2], 'status': status})
     eligible = totals['eligibleCompared']
+    six = totals['sixPickCompared']
+    single = eligible - six
     return {'totals': totals,
-            'topPickWinRatePercent': round(100 * totals['topPickWins'] / eligible, 2) if eligible else None,
-            'exactTrifectaHitRatePercent': round(100 * totals['exactTrifectaHits'] / eligible, 2) if eligible else None,
+            'topPickWinRatePercent': round(100 * totals['topPickWins'] / single, 2) if single else None,
+            'exactTrifectaHitRatePercent': round(100 * totals['exactTrifectaHits'] / single, 2) if single else None,
+            'mainSixHitRatePercent': round(100 * totals['mainSixHits'] / six, 2) if six else None,
+            'upsetSixHitRatePercent': round(100 * totals['upsetSixHits'] / six, 2) if six else None,
+            'eitherSixHitRatePercent': round(100 * totals['eitherSixHits'] / six, 2) if six else None,
             'details': details,
             'warning': 'Compare only stored predictions with independently verified pre-race capture; no retroactive reconstruction. Incident and unresolved races are excluded, not counted as misses.'}
 
