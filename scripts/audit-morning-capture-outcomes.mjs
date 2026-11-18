@@ -23,6 +23,7 @@ export function summarizeCapture(data) {
   const validSix=p=>Array.isArray(p)&&p.length===6&&p.every(validPick)&&new Set(p.map(x=>x.join('-'))).size===6;
   const morningStart=typeof data.date==='string'&&/^20\d{6}$/.test(data.date)?Date.parse(data.date.slice(0,4)+'-'+data.date.slice(4,6)+'-'+data.date.slice(6,8)+'T07:45:00+09:00'):NaN;
   const morningEnd=Number.isFinite(morningStart)?morningStart+45*60*1000:NaN;
+  const durations={ready:[],notReady:[],networkTimeout:[],otherFailure:[]};
   const missingInputLabels={};
   const notReadyReasons={};
   for(const record of data.records) {
@@ -41,6 +42,10 @@ export function summarizeCapture(data) {
       uniquePairs.add(pair);
     }
     const start=validTime(record.requestedAt),end=validTime(record.receivedAt);
+    const elapsed=start!==null&&end!==null&&end>=start?(end-start)/1000:null;
+    const bucket=record.error?(/timeout|timed out/i.test(record.error)?'networkTimeout':'otherFailure'):
+      record.httpStatus===200?(record.response?.ready===true?'ready':'notReady'):'otherFailure';
+    if(elapsed!==null)durations[bucket].push(elapsed);
     if(start===null||!Number.isFinite(morningStart))requestTimeUnknown++;
     else if(start>=morningStart&&start<=morningEnd)requestWithinMorningWindow++;
     else requestOutsideMorningWindow++;
@@ -111,8 +116,13 @@ export function summarizeCapture(data) {
     missingPairsWithinRequestedVenues:expectedPairs?.filter(pair=>!uniquePairs.has(pair))??null,
     unexpectedPairsOutsideScope:scopeKnown?[...uniquePairs].filter(pair=>!expectedPairs.includes(pair)):null,
     warning:scopeKnown?'Coverage uses explicitly requested venues and race scope, not verified active racing venues.':'Capture scope unavailable; cannot assert missing records.'};
+  const latencySeconds=Object.fromEntries(Object.entries(durations).map(([key,values])=>{
+    values.sort((a,b)=>a-b);
+    const percentile=p=>values.length?Math.round(values[Math.ceil(values.length*p)-1]*10)/10:null;
+    return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
+  }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,timing,coverage,missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,timing,coverage,latencySeconds,missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
