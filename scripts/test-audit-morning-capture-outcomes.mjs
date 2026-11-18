@@ -82,4 +82,6 @@ assert.equal(hashed.responseHashDiagnostics.affectedDistinctVenueRacePairs,2);
 assert.equal(hashed.responseHashDiagnostics.topRepeatedHashes[0].distinctVenueRacePairs,2);
 assert.equal(x.authenticatedBeforeRace,false);
 assert.equal(x.accuracyCalculationPermitted,false);
+assert.deepEqual(x.attemptTelemetry,{recordsWithAttempts:1,recordsWithoutAttempts:6,recordsWithMultipleAttempts:1});
+assert.deepEqual(blocked.attemptTelemetry,{recordsWithAttempts:0,recordsWithoutAttempts:4,recordsWithMultipleAttempts:0});
 console.log('Morning capture diagnostics passed');
