@@ -53,6 +53,24 @@ jobs:
           node scripts/test-audit-capture-score-inputs.mjs
           node scripts/test-audit-capture-response-shapes.mjs
           node scripts/test-audit-morning-official-cutoffs.mjs
+      - name: Check live deployed predictor reachability (read only)
+        env:
+          BOAT_SCORE_URL: https://boat-score-2-preview.saumh-sau-288.workers.dev
+        run: |
+          node --input-type=module <<'NODE'
+          const base=process.env.BOAT_SCORE_URL;
+          const url=new URL('/api/predict/selected-race',base);
+          const now=new Date();
+          const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
+          const fields=Object.fromEntries(date.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+          url.search=new URLSearchParams({date:fields.year+fields.month+fields.day,venue:'1',race:'1',mode:'beforeinfo'}).toString();
+          try {
+            const res=await fetch(url,{signal:AbortSignal.timeout(15000),headers:{Accept:'application/json'}});
+            const text=await res.text();
+            let data;try{data=JSON.parse(text);}catch{data=null;}
+            console.log(JSON.stringify({check:'read_only_endpoint_probe',httpStatus:res.status,contentType:res.headers.get('content-type'),jsonParsed:data!==null,ready:data?.ready===true,reason:data?.reason||null,bytes:text.length}));
+          }catch(e){console.log(JSON.stringify({check:'read_only_endpoint_probe',error:String(e?.message||e)}));}
+          NODE
       - name: Capture existing deployed predictor responses without altering app
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
