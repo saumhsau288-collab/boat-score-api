@@ -16,9 +16,11 @@ const venues=await pool(selectedVenue?[selectedVenue]:Array.from({length:24},(_,
  const verified=d.verifiedVenues?.includes(venue)===true;
  const errorKind=verified?'none':/timeout|timed out|aborted/i.test(String(reason))?'timeout':/^http_\d{3}$/.test(String(reason))?'http_error':'unverified_other';
  console.log('VENUE_CHECK',JSON.stringify({venue,verified,elapsedMs,errorKind,source:d._probe?.source||'unknown',httpStatus:d._probe?.status||null,clientErrorKind:d._probe?.kind||null,reason:typeof reason==='string'?reason.slice(0,120):null}));
- return {venue,verified,reason,errorKind,elapsedMs};
+ return {venue,verified,reason,errorKind,elapsedMs,source:d._probe?.source||'unknown',httpStatus:d._probe?.status??null,clientErrorKind:d._probe?.kind||null};
 });
 console.log('VENUE_CHECK_SUMMARY',JSON.stringify(venues.reduce((counts,item)=>{counts[item.errorKind]=(counts[item.errorKind]||0)+1;return counts},{})));
+console.log('VENUE_ORIGIN_SUMMARY',JSON.stringify(venues.reduce((counts,item)=>{const key=item.source==='http_response'?'api_http_'+String(item.httpStatus??'unknown'):item.source==='client_exception'?'client_'+String(item.clientErrorKind||'unknown'):'unknown';counts[key]=(counts[key]||0)+1;return counts},{})));
+console.log('VENUE_TIMEOUT_TIMING',JSON.stringify(venues.filter(item=>item.errorKind==='timeout').reduce((acc,item)=>{const bucket=item.elapsedMs<10000?'under_10s':item.elapsedMs<35000?'10_to_35s':'35s_or_more';acc[bucket]=(acc[bucket]||0)+1;return acc},{})));
 const verifiedVenues=verifiedVenueCandidates(venues);
 const targets=verifiedVenues.flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1})));
 console.log('Officially verified venue candidates:',verifiedVenues,'race targets:',targets.length);
