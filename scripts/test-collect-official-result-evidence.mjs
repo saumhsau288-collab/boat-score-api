@@ -32,4 +32,9 @@ const oversized=await collectOfficialResultEvidence({date:'20261118',records:[{v
 assert.equal(oversized.records[0].htmlSnapshot,null);
 assert.equal(oversized.records[0].htmlSnapshotComplete,false);
 assert.equal(oversized.records[0].htmlLength,200001);
+let called=false;
+const deferred=await collectOfficialResultEvidence(capture,{now:new Date('2026-11-18T00:00:00Z'),fetchImpl:async()=>{called=true;throw Error('Should not fetch current-day results');}});
+assert.equal(deferred.status,'deferred_until_after_capture_date');
+assert.equal(deferred.records.length,0);
+assert.equal(called,false);
 console.log('Official result candidate collector tests passed');
