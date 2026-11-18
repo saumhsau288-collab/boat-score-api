@@ -137,6 +137,15 @@ jobs:
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
             node scripts/audit-capture-response-shapes.mjs "$file" > "${file%.json}-response-shape.json"
           done
+      - name: Summarize capture timeouts and missing input labels
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            case "$file" in *-quality.json|*-diagnostics.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
+            node scripts/audit-morning-capture-outcomes.mjs "$file"
+          done
       - name: Publish mobile-friendly capture quality summary
         if: always()
         run: |
@@ -152,6 +161,20 @@ jobs:
               '| Result | Races |', '|---|---:|',
               ...Object.entries(report.counts).map(([key, value]) => '| ' + key + ' | ' + value + ' |'),
               '', 'No hit rates or scoring adjustments are authorized from these raw responses.', '');
+          }
+          const diagnosticNames=fs.existsSync('prediction-captures')
+            ? fs.readdirSync('prediction-captures').filter(name=>/^20\d{6}-\d+-diagnostics\.json$/.test(name)) : [];
+          for (const name of diagnosticNames) {
+            const report=JSON.parse(fs.readFileSync('prediction-captures/'+name,'utf8'));
+            lines.push('### Actual capture outcomes: '+report.date,'',
+              '| Outcome | Races |','|---|---:|',
+              ...Object.entries(report.counts).map(([key,count])=>'| '+key+' | '+count+' |'),
+              '', 'Capture JST: '+(report.captureTimeJst||'unknown')+'; morning window: '+report.scheduledMorningWindow,
+              '', 'Missing input labels reported by ready API responses:', '',
+              ...Object.entries(report.missingInputLabels||{}).map(([key,count])=>'- '+key+': '+count),
+              '', 'Not-ready reasons:', '',
+              ...Object.entries(report.notReadyReasons||{}).map(([key,count])=>'- '+key+': '+count),
+              '', 'Not a hit rate; capture timing is not independently authenticated.','');
           }
           const officialEvidencePath='prediction-captures/official-cutoff-source-evidence.json';
           if (fs.existsSync(officialEvidencePath)) {
@@ -281,15 +304,6 @@ jobs:
           console.log('Usable six-main/six-upset morning predictions:', usable.length, 'of', data.attempted);
           if (usable.length === 0) throw new Error('No usable morning predictions; raw artifact will still upload');
           NODE
-      - name: Summarize capture timeouts and missing input labels
-        if: always()
-        run: |
-          for file in prediction-captures/*.json; do
-            [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
-            case "$file" in *-quality.json|*-diagnostics.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
-            node scripts/audit-morning-capture-outcomes.mjs "$file"
-          done
       - name: Upload timestamped raw responses
         if: always()
         uses: actions/upload-artifact@v4
