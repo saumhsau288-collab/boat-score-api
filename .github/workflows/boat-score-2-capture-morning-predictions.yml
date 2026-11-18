@@ -187,6 +187,12 @@ jobs:
               '|---|---:|---:|---:|---:|---:|---:|',
               ...Object.entries(report.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,c])=>
                 '| '+venue+' | '+c.attempted+' | '+c.ready+' | '+c.notReady+' | '+c.networkTimeout+' | '+c.otherNetworkError+' | '+c.httpFailure+' |'),
+              '', '### Capture timing by venue (observed, not scheduled)', '',
+              'Overall elapsed seconds: '+(report.timing?.elapsedSeconds??'unknown'),'',
+              '| Venue | First request UTC | Last response UTC | Elapsed seconds |',
+              '|---|---|---|---:|',
+              ...Object.entries(report.timing?.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,t])=>
+                '| '+venue+' | '+(t.firstRequestedAt||'unknown')+' | '+(t.lastReceivedAt||'unknown')+' | '+(t.elapsedSeconds??'unknown')+' |'),
               '', 'Missing input labels reported by ready API responses:', '',
               ...Object.entries(report.missingInputLabels||{}).map(([key,count])=>'- '+key+': '+count),
               '', 'Not-ready reasons:', '',
