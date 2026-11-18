@@ -11,6 +11,6 @@ for(const [index,match] of loops.entries()){
 }
 assert.ok(workflow.includes('*-source-evidence.json'),'Official source evidence must be excluded from audits');
 const examples=['20261118-12345.json','official-cutoff-source-evidence.json','20261118-12345-quality.json','20261118-12345-cutoff-audit.json'];
-const raw=examples.filter(name=>/^20\d{6}-\\d+\.json$/.test(name)&&!/-quality\.json$|-score-inputs\.json$|-response-shape\.json$|-cutoff-audit\.json$/.test(name));
+const raw=examples.filter(name=>/^20\d{6}-\d+\.json$/.test(name)&&!/-quality\.json$|-score-inputs\.json$|-response-shape\.json$|-cutoff-audit\.json$/.test(name));
 assert.deepEqual(raw,['20261118-12345.json']);
 console.log('Morning capture file isolation regression tests passed');
