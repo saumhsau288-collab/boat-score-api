@@ -34,6 +34,7 @@ jobs:
         run: |
           node --check scripts/audit-base-vs-adjusted.mjs
           node --check scripts/audit-applied-adjustments.mjs
+          node --check scripts/run-saved-capture-result-comparison.mjs
           node --check scripts/compare-saved-capture-results.mjs
           node --check scripts/audit-makulabo-heatmap-zero.mjs
           node --check scripts/audit-recent50-source-readiness.mjs
@@ -62,6 +63,7 @@ jobs:
           node scripts/test-fetch-with-timeout-retry.mjs
           node scripts/test-audit-base-vs-adjusted.mjs
           node scripts/test-audit-applied-adjustments.mjs
+          node scripts/test-run-saved-capture-result-comparison.mjs
           node scripts/test-compare-saved-capture-results.mjs
           node scripts/test-audit-makulabo-heatmap-zero.mjs
           node scripts/test-audit-recent50-source-readiness.mjs
