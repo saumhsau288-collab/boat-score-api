@@ -79,15 +79,6 @@ jobs:
           CAPTURE_VENUES: ${{ inputs.capture_venues }}
           BOAT_SCORE_URL: https://boat-score-2-preview.saumh-sau-288.workers.dev
         run: node scripts/capture-existing-boat-score-2-predictions.mjs
-      - name: Summarize capture timeouts and missing input labels
-        if: always()
-        run: |
-          for file in prediction-captures/*.json; do
-            [ -f "$file" ] || continue
-            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
-            case "$file" in *-quality.json|*-diagnostics.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
-            node scripts/audit-morning-capture-outcomes.mjs "$file"
-          done
       - name: Audit captured API responses and prediction ticket format
         run: |
           for file in prediction-captures/*.json; do
@@ -290,6 +281,15 @@ jobs:
           console.log('Usable six-main/six-upset morning predictions:', usable.length, 'of', data.attempted);
           if (usable.length === 0) throw new Error('No usable morning predictions; raw artifact will still upload');
           NODE
+      - name: Summarize capture timeouts and missing input labels
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            case "${file##*/}" in 20??????-[0-9]*.json) ;; *) continue ;; esac
+            case "$file" in *-quality.json|*-diagnostics.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json) continue ;; esac
+            node scripts/audit-morning-capture-outcomes.mjs "$file"
+          done
       - name: Upload timestamped raw responses
         if: always()
         uses: actions/upload-artifact@v4
