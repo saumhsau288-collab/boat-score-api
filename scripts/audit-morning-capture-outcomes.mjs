@@ -86,11 +86,19 @@ export function summarizeCapture(data) {
   timing.lastReceivedAt=lastResponse===null?null:new Date(lastResponse).toISOString();
   timing.elapsedSeconds=firstRequest!==null&&lastResponse!==null&&lastResponse>=firstRequest?Math.round((lastResponse-firstRequest)/1000):null;
   timing.morningWindow={startJst:'07:45',endJst:'08:30',requestWithinMorningWindow,requestOutsideMorningWindow,requestTimeUnknown,responseWithinMorningWindow,responseOutsideMorningWindow,responseTimeUnknown};
+  const validVenues=Array.isArray(data.requestedVenues)&&data.requestedVenues.length>0&&
+    data.requestedVenues.every(v=>Number.isInteger(v)&&v>=1&&v<=24)&&
+    new Set(data.requestedVenues).size===data.requestedVenues.length;
+  const validRaces=Number.isInteger(data.requestedMaxRaces)&&data.requestedMaxRaces>=1&&data.requestedMaxRaces<=12;
+  const scopeKnown=validVenues&&validRaces;
+  const expectedPairs=scopeKnown?data.requestedVenues.flatMap(venue=>
+    Array.from({length:data.requestedMaxRaces},(_,i)=>venue+':'+(i+1))):null;
   const coverage={uniqueVenueRacePairs:uniquePairs.size,duplicateVenueRacePairs,invalidVenueRacePairs,
-    requestedVenueCount:Object.keys(byVenue).filter(k=>k!=='unknown').length,
-    missingPairsWithinRequestedVenues:Object.keys(byVenue).filter(k=>k!=='unknown').flatMap(venue=>
-      Array.from({length:12},(_,i)=>venue+':'+(i+1)).filter(pair=>!uniquePairs.has(pair))),
-    warning:'Coverage is against 12 races for each requested venue, not verified active racing venues.'};
+    requestedVenueCount:scopeKnown?data.requestedVenues.length:null,
+    expectedPairCount:expectedPairs?.length??null,
+    missingPairsWithinRequestedVenues:expectedPairs?.filter(pair=>!uniquePairs.has(pair))??null,
+    unexpectedPairsOutsideScope:scopeKnown?[...uniquePairs].filter(pair=>!expectedPairs.includes(pair)):null,
+    warning:scopeKnown?'Coverage uses explicitly requested venues and race scope, not verified active racing venues.':'Capture scope unavailable; cannot assert missing records.'};
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
     counts,byVenue,byRace,timing,coverage,missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
