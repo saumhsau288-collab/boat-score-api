@@ -41,7 +41,7 @@ assert.equal(called,false);
 const malformed=await collectOfficialResultEvidence({date:'20261118',records:[null,{date:'20261118',venue:1,race:1,response:{ready:true}}]},{...afterCapture,fetchImpl});
 assert.equal(malformed.records.length,1);
 await assert.rejects(()=>collectOfficialResultEvidence(capture,{...afterCapture,fetchImpl,maxRequests:0}),/Invalid maxRequests/);
-const unready=await collectOfficialResultEvidence({date:'20261118',records:[{venue:1,race:1,response:{ready:false}},{venue:1,race:2,response:{ready:true}}]},{fetchImpl});
+const unready=await collectOfficialResultEvidence({date:'20261118',records:[{venue:1,race:1,response:{ready:false}},{venue:1,race:2,response:{ready:true}}]},{...afterCapture,fetchImpl});
 assert.equal(unready.records.length,1);
 assert.equal(unready.records[0].race,2);
 console.log('Official result candidate collector tests passed');
