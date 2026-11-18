@@ -494,7 +494,7 @@ jobs:
           const source=process.env.CAPTURE_FILE;
           const result=auditArchivedDeployedTickets(JSON.parse(fs.readFileSync(source,'utf8')));
           const target=source.replace(/\.json$/,'-deployed-ticket-replay.json');
-          fs.writeFileSync(target,JSON.stringify(result,null,2)+'\\n');
+          fs.writeFileSync(target,JSON.stringify(result,null,2)+'\n');
           console.log(JSON.stringify({source,target,ready:result.ready,matched:result.matched,mismatched:result.mismatched,invalid:result.invalid}));
           if(result.mismatched>0||result.invalid>0)process.exitCode=1;
           NODE
