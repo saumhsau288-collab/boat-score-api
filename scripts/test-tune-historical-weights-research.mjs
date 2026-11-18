@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {tuneHistoricalWeights,FIELDS} from './tune-historical-weights-research.mjs';
 const w=(field)=>Object.fromEntries(FIELDS.map(f=>[f,f===field?1:0]));
 const boats=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:6-i,localWinRate:i+1,motorTwoWinRate:0,recent50WinRate:0,exhibitionScore:0}));
-const row=(date,actual)=>({date,venue:1,race:1,boats,actual,independentlyVerifiedResult:true,historicalInputProvenanceVerified:true});
+const row=(date,actual)=>({date,venue:1,race:1,boats,actual,independentlyVerifiedResult:true,historicalInputProvenanceVerified:true,historicalInputSourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult',historicalInputCapturedAt:'2026-11-01T00:00:00+09:00',officialCutoffAt:'2026-11-01T12:00:00+09:00'});
 const r=tuneHistoricalWeights([row('20261101',[6,5,4]),row('20261102',[6,5,4]),row('20261103',[1,2,3])],
  {trainEndDate:'20261102',baselineWeights:w('nationalWinRate'),candidates:[w('nationalWinRate'),w('localWinRate')]});
 assert.equal(r.candidate.train.exactTop3,2);
