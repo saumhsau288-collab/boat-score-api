@@ -159,6 +159,8 @@ jobs:
           fi
           mkdir -p verified-daily
           python3 /tmp/boat-score-history/merge_immutable_history.py --incoming /tmp/boat-score-history --archive verified-daily --summary /tmp/boat-score-history/results/merge-summary.json
+          mkdir -p reports
+          cp /tmp/boat-score-history/results/merge-summary.json reports/history-merge-summary.json
           # Run the offline analyzer against every accumulated day, not just this week's window.
           mkdir -p /tmp/boat-score-history/results
           python3 /tmp/boat-score-history/analyze_archived_racer_history.py --archive verified-daily --output /tmp/boat-score-history/results/long-term-racer-methods.json
@@ -179,4 +181,5 @@ jobs:
             reports/all-venue-racer-winning-methods.json
             reports/all-venue-method-coverage.json
             reports/daily-data-completeness.json
+            reports/history-merge-summary.json
           retention-days: 90
