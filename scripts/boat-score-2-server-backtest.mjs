@@ -1,3 +1,4 @@
+import { verifiedVenueCandidates } from './verified-venue-candidates.mjs';
 import fs from 'node:fs';
 const date=process.env.BACKTEST_DATE||'20261116';
 const selectedVenue=Number(process.env.BACKTEST_VENUE||0);
@@ -12,7 +13,7 @@ const venues=await pool(selectedVenue?[selectedVenue]:Array.from({length:24},(_,
  console.log('venue',venue,d.checks?.[0]?.status||d.error||'unknown');
  return {venue,verified:d.verifiedVenues?.includes(venue)===true,reason:d.checks?.[0]?.reason||d.error||null};
 });
-const verifiedVenues=venues.filter(x=>x.verified).map(x=>x.venue);
+const verifiedVenues=verifiedVenueCandidates(venues);
 const targets=verifiedVenues.flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1})));
 console.log('Officially verified venue candidates:',verifiedVenues,'race targets:',targets.length);
 if (targets.length === 0) {
