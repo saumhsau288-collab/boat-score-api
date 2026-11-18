@@ -35,7 +35,7 @@ jobs:
             echo 'Invalid Actions run ID'; exit 2
           fi
           mkdir -p archived-captures
-          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --dir archived-captures
+          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "boat-score-2-morning-raw-$SOURCE_RUN_ID" --dir archived-captures
       - name: Collect results only for dates already ended in JST
         run: |
           mkdir -p retrospective-results
