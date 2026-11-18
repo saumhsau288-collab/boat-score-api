@@ -41,12 +41,15 @@ jobs:
           node --check scripts/test-classify-morning-capture-quality.mjs
           node --check scripts/audit-capture-score-inputs.mjs
           node --check scripts/test-audit-capture-score-inputs.mjs
+          node --check scripts/audit-capture-response-shapes.mjs
+          node --check scripts/test-audit-capture-response-shapes.mjs
       - name: Test capture validation with offline fixtures
         run: |
           node scripts/test-validate-morning-capture.mjs
           node scripts/test-audit-morning-input-coverage.mjs
           node scripts/test-classify-morning-capture-quality.mjs
           node scripts/test-audit-capture-score-inputs.mjs
+          node scripts/test-audit-capture-response-shapes.mjs
       - name: Capture existing deployed predictor responses without altering app
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
@@ -80,6 +83,14 @@ jobs:
             case "$file" in *-quality.json) continue ;; esac
             node scripts/audit-capture-score-inputs.mjs "$file" > "${file%.json}-score-inputs.json"
           done
+      - name: Discover actual deployed response score-input field names
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json) continue ;; esac
+            node scripts/audit-capture-response-shapes.mjs "$file" > "${file%.json}-response-shape.json"
+          done
       - name: Publish mobile-friendly capture quality summary
         if: always()
         run: |
@@ -109,6 +120,15 @@ jobs:
               '| Incomplete or invalid inputs | ' + score.readyInvalidOrIncompleteInputs + ' |',
               '', 'Input absence in API responses does not prove the app did not use it. No pre-race authentication or score changes.', '');
           }
+          const shapeNames = fs.existsSync('prediction-captures')
+            ? fs.readdirSync('prediction-captures').filter(name => name.endsWith('-response-shape.json')) : [];
+          for (const name of shapeNames) {
+            const shape = JSON.parse(fs.readFileSync('prediction-captures/' + name, 'utf8'));
+            lines.push('### Deployed API field discovery: ' + shape.date, '',
+              'Ready responses inspected: ' + shape.readyResponsesInspected, '',
+              'Potential input fields: ' + (shape.possibleScoreInputFieldNames.join(', ') || '(none exposed)'), '',
+              'Field names are not evidence that all scoring inputs were present.', '');
+          }
           if (!scoreNames.length) lines.push('No score input evidence report was generated.', '');
           if (!names.length) lines.push('No capture quality report was generated. Inspect raw artifact and failed steps.');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
@@ -117,7 +137,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const files = fs.readdirSync('prediction-captures').filter(name => name.endsWith('.json') && !name.endsWith('-quality.json') && !name.endsWith('-score-inputs.json'));
+          const files = fs.readdirSync('prediction-captures').filter(name => name.endsWith('.json') && !name.endsWith('-quality.json') && !name.endsWith('-score-inputs.json') && !name.endsWith('-response-shape.json'));
           if (files.length !== 1) throw new Error('Expected exactly one capture artifact');
           const data = JSON.parse(fs.readFileSync('prediction-captures/' + files[0], 'utf8'));
           const valid = p => Array.isArray(p) && p.length === 3 &&
