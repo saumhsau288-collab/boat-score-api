@@ -31,4 +31,8 @@ assert.equal(inspect(capture,tampered).counts.candidateMissing,1);
 const fabricated=structuredClone(evidence);
 fabricated.records[0].finishCandidate.top3=[1,3,5];
 assert.equal(inspect(capture,fabricated).counts.candidateMissing,1);
+const duplicateCapture={...capture,records:[...capture.records,...capture.records]};
+const duplicateResult=inspect(duplicateCapture,evidence);
+assert.equal(duplicateResult.counts.duplicatePredictions,2);
+assert.equal(duplicateResult.counts.candidatePresent,0);
 console.log('Unverified candidate matching diagnostics tests passed');
