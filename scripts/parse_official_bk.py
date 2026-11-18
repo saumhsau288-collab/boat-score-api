@@ -39,7 +39,7 @@ def parse_b(text):
     return {r:sorted(v,key=lambda x:x['boat']) for r,v in races.items() if len(v)==6 and {x['boat'] for x in v}==set(range(1,7)) and len({x['racerId'] for x in v})==6}
 
 # Only explicit result-row incident status is evidence. Header legends are not.
-K_INCIDENT_ROW=re.compile(r'^\\s*(F|L|転|転覆|沈|沈没|落|落水|妨|妨害|失|失格)\\s+([1-6])\\s+(\\d{4})\\s')
+K_INCIDENT_ROW=re.compile(r'^\s*(F|L|転覆|転|沈没|沈|落水|落|妨害|妨|失格|失)\s+([1-6])\s+(\d{4})\s')
 K_INCIDENT_KIND={'F':'flying_start','L':'late_start','転':'capsize','転覆':'capsize','沈':'sinking','沈没':'sinking','落':'overboard','落水':'overboard','妨':'disqualification','妨害':'disqualification','失':'disqualification','失格':'disqualification'}
 
 
