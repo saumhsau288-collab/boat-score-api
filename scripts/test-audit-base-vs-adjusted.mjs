@@ -17,4 +17,6 @@ assert.equal(report.onlyTicketOrderChanged,1);
 assert.equal(report.eitherTicketSetChanged,1);
 assert.equal(report.noTicketChange,1);
 assert.equal(report.predictionChangedFlagMismatch,0);
+assert.deepEqual(report.byAdjustmentFlags['exhibition:unknown;start:unknown'],
+ {comparable:3,eitherSetChanged:1,orderOnlyChanged:1,noChange:1});
 console.log('Base versus adjusted ticket comparison tests passed');
