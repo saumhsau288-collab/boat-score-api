@@ -1,8 +1,27 @@
 import unittest
-from inventory_morning_capture_artifacts import summarize_capture
+import urllib.request
+from inventory_morning_capture_artifacts import summarize_capture, SafeArtifactRedirect
 
 
 class InventoryTests(unittest.TestCase):
+    def test_cross_host_redirect_strips_github_authentication(self):
+        source = urllib.request.Request(
+            'https://api.github.com/repos/owner/repo/actions/artifacts/1/zip',
+            headers={'Authorization': 'Bearer secret',
+                     'X-GitHub-Api-Version': '2022-11-28'})
+        redirected = SafeArtifactRedirect().redirect_request(
+            source, None, 302, 'Found', {},
+            'https://signed-storage.example.net/archive.zip')
+        self.assertNotIn('Authorization', redirected.headers)
+        self.assertNotIn('X-github-api-version', redirected.headers)
+
+    def test_same_host_redirect_keeps_authentication(self):
+        source = urllib.request.Request(
+            'https://api.github.com/a', headers={'Authorization': 'Bearer secret'})
+        redirected = SafeArtifactRedirect().redirect_request(
+            source, None, 302, 'Found', {}, 'https://api.github.com/b')
+        self.assertIn('Authorization', redirected.headers)
+
     def test_counts_only_raw_usable_responses(self):
         six = [[1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1]]
         rows = [{'httpStatus': 200, 'response': {'ready': True, 'main': six, 'upset': six}},

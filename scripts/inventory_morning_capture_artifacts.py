@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import urllib.request
+import urllib.parse
 import zipfile
 from collections import defaultdict
 
@@ -33,13 +34,29 @@ def summarize_capture(payload):
     return counts
 
 
+class SafeArtifactRedirect(urllib.request.HTTPRedirectHandler):
+    """Do not send GitHub API credentials to a signed artifact storage URL."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if redirected is None:
+            return None
+        old_host = urllib.parse.urlsplit(req.full_url).hostname
+        new_host = urllib.parse.urlsplit(newurl).hostname
+        if old_host != new_host:
+            for header in list(redirected.headers):
+                if header.lower() in ('authorization', 'x-github-api-version'):
+                    del redirected.headers[header]
+        return redirected
+
+
 def api(path, token, binary=False):
     request = urllib.request.Request(
         'https://api.github.com/' + path.lstrip('/'),
         headers={'Authorization': 'Bearer ' + token,
                  'Accept': 'application/vnd.github+json',
                  'X-GitHub-Api-Version': '2022-11-28'})
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with urllib.request.build_opener(SafeArtifactRedirect()).open(request, timeout=30) as response:
         data = response.read()
     return data if binary else json.loads(data)
 
@@ -91,6 +108,8 @@ if __name__ == '__main__':
     if not repository or not token:
         sys.exit('GITHUB_REPOSITORY and GH_TOKEN required')
     result = inventory(repository, token)
+    if result['errors']:
+        print('ERROR: Some retained artifacts could not be read; counts are incomplete', file=sys.stderr)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     summary = os.environ.get('GITHUB_STEP_SUMMARY')
     if summary:
@@ -103,3 +122,5 @@ if __name__ == '__main__':
             f.write('\\nRaw captures are not authenticated forecasts; no accuracy metrics.\\n')
             if result['errors']:
                 f.write(f"\\nUnreadable artifacts: {len(result['errors'])} (inspect job log).\\n")
+    if result['errors']:
+        sys.exit(1)
