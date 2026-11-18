@@ -544,6 +544,7 @@ jobs:
               '| At or after authenticated cutoff | '+(c.afterCutoff??'unknown')+' |',
               '| Before cutoff (timing only, not authenticated inputs) | '+(c.beforeCutoffTimingOnly??'unknown')+' |',
               '| Missing original six-boat pre-race score inputs | '+(c.missingRawSixBoatInputs??'unknown')+' |',
+              '| Missing independently verified official finish | '+(c.missingVerifiedOfficialResults??'unknown')+' |',
               '| Eligible for weight tuning | '+(report.eligibleForWeightTuning??'unknown')+' |',
               '',report.warning||'No independent result or input authentication has been established.','');
           }
