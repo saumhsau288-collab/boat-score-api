@@ -3,9 +3,9 @@ import {auditCaptureCalibrationReadiness} from './audit-capture-calibration-read
 const r={date:'20261118',venue:1,race:1,receivedAt:'2026-11-18T01:00:00Z',response:{ready:true,rankedScores:[]}};
 const c={...r,verified:true,source:'official',sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',cutoffAt:'2026-11-18T01:05:00Z'};
 const x=auditCaptureCalibrationReadiness({date:r.date,records:[r]});
-assert.equal(x.counts.missingCutoff,1);assert.equal(x.eligibleForWeightTuning,0);
+assert.equal(x.counts.missingCutoff,1);assert.equal(x.counts.missingVerifiedOfficialResults,1);assert.equal(x.eligibleForWeightTuning,0);
 const y=auditCaptureCalibrationReadiness({date:r.date,records:[r]},[c]);
-assert.equal(y.counts.beforeCutoffTimingOnly,1);assert.equal(y.eligibleForWeightTuning,0);
+assert.equal(y.counts.beforeCutoffTimingOnly,1);assert.equal(y.counts.missingVerifiedOfficialResults,1);assert.equal(y.eligibleForWeightTuning,0);
 const z=auditCaptureCalibrationReadiness({date:r.date,records:[{...r,receivedAt:'2026-11-18T01:06:00Z'}]},[c]);
 assert.equal(z.counts.afterCutoff,1);
 assert.throws(()=>auditCaptureCalibrationReadiness({records:[r]},[c,c]),/Duplicate/);
