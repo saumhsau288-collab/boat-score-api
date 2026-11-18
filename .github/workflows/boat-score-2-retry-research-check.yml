@@ -1,0 +1,28 @@
+name: Boat Score 2 retry research checks
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/research-capture-retry-policies.mjs'
+      - 'scripts/test-research-capture-retry-policies.mjs'
+      - '.github/workflows/boat-score-2-retry-research-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check research scripts syntax
+        run: |
+          node --check scripts/research-capture-retry-policies.mjs
+          node --check scripts/test-research-capture-retry-policies.mjs
+      - name: Run offline retry research regression
+        run: node scripts/test-research-capture-retry-policies.mjs
