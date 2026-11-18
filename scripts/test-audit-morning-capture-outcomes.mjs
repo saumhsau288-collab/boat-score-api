@@ -29,7 +29,11 @@ const partial=summarizeCapture({requestedVenues:[3,8],requestedMaxRaces:2,record
 assert.equal(partial.coverage.expectedPairCount,4);
 assert.deepEqual(partial.coverage.missingPairsWithinRequestedVenues,['8:2']);
 assert.equal(x.timing.elapsedSeconds,75);
-assert.deepEqual(x.timing.morningWindow,{startJst:'07:45',endJst:'08:30',requestWithinMorningWindow:2,requestOutsideMorningWindow:0,requestTimeUnknown:5,responseWithinMorningWindow:2,responseOutsideMorningWindow:0,responseTimeUnknown:5,readyResponseWithinMorningWindow:1,readyResponseOutsideMorningWindow:0,readyResponseTimeUnknown:2});
+assert.deepEqual(x.timing.morningWindow,{startJst:'07:45',endJst:'08:30',requestWithinMorningWindow:2,requestOutsideMorningWindow:0,requestTimeUnknown:5,responseWithinMorningWindow:2,responseOutsideMorningWindow:0,responseTimeUnknown:5,readyResponseWithinMorningWindow:1,readyResponseOutsideMorningWindow:0,readyResponseTimeUnknown:2,usablePicksWithinMorningWindow:0,usablePicksOutsideMorningWindow:0,usablePicksTimeUnknown:0});
+const validSix=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
+const usable=summarizeCapture({date:'20261118',records:[{venue:1,race:1,receivedAt:'2026-11-17T23:00:10Z',httpStatus:200,response:{ready:true,main:validSix,upset:validSix}},{venue:1,race:2,receivedAt:'2026-11-18T00:00:00Z',httpStatus:200,response:{ready:true,main:validSix,upset:validSix.slice(0,5)}}]});
+assert.equal(usable.timing.morningWindow.usablePicksWithinMorningWindow,1);
+assert.equal(usable.timing.morningWindow.usablePicksOutsideMorningWindow,0);
 assert.equal(x.timing.morningWindow.readyResponseWithinMorningWindow+x.timing.morningWindow.readyResponseOutsideMorningWindow+x.timing.morningWindow.readyResponseTimeUnknown,x.counts.ready);
 assert.equal(x.timing.firstRequestedAt,'2026-11-17T23:00:00.000Z');
 assert.equal(x.timing.byVenue['1'].elapsedSeconds,75);
