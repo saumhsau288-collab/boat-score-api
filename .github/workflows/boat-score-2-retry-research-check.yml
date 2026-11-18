@@ -16,6 +16,13 @@ on:
       - 'scripts/tune-historical-weights-research.mjs'
       - 'scripts/test-tune-historical-weights-research.mjs'
       - '.github/workflows/boat-score-2-retry-research-check.yml'
+      - 'scripts/collect-official-result-evidence.mjs'
+      - 'scripts/test-collect-official-result-evidence.mjs'
+      - 'scripts/extract-official-finish-candidate.mjs'
+      - 'scripts/test-extract-official-finish-candidate.mjs'
+      - 'scripts/inspect-saved-tickets-vs-result-candidates.mjs'
+      - 'scripts/test-inspect-saved-tickets-vs-result-candidates.mjs'
+      - '.github/workflows/boat-score-2-retrospective-results.yml'
   workflow_dispatch:
 
 permissions:
@@ -66,6 +73,12 @@ jobs:
           node --check scripts/test-audit-capture-calibration-readiness.mjs
           node --check scripts/summarize-cutoff-candidates.mjs
           node --check scripts/test-summarize-cutoff-candidates.mjs
+          node --check scripts/collect-official-result-evidence.mjs
+          node --check scripts/test-collect-official-result-evidence.mjs
+          node --check scripts/extract-official-finish-candidate.mjs
+          node --check scripts/test-extract-official-finish-candidate.mjs
+          node --check scripts/inspect-saved-tickets-vs-result-candidates.mjs
+          node --check scripts/test-inspect-saved-tickets-vs-result-candidates.mjs
       - name: Run offline retry research regression
         run: |
           node scripts/test-research-capture-retry-policies.mjs
@@ -85,3 +98,6 @@ jobs:
           node scripts/test-audit-archived-deployed-tickets.mjs
           node scripts/test-audit-capture-calibration-readiness.mjs
           node scripts/test-summarize-cutoff-candidates.mjs
+          node scripts/test-collect-official-result-evidence.mjs
+          node scripts/test-extract-official-finish-candidate.mjs
+          node scripts/test-inspect-saved-tickets-vs-result-candidates.mjs
