@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {auditArchivedDeployedTickets} from './audit-archived-deployed-tickets.mjs';
+import {replayDeployedBaseTickets} from './replay-deployed-base-tickets.mjs';
+const stats=Array.from({length:6},(_,i)=>({boat:i+1,win:9-i,motor:60-i*5,local:8-i}));
+const prediction=replayDeployedBaseTickets(stats);
+const capture={date:'20261101',records:[{date:'20261101',venue:1,race:1,response:{...prediction,predictionChanged:true}}]};
+const ok=auditArchivedDeployedTickets(capture);
+assert.equal(ok.matched,1);assert.equal(ok.mismatched,0);assert.equal(ok.weightCalibrationEligible,false);
+const bad=auditArchivedDeployedTickets({date:capture.date,records:[{...capture.records[0],response:{...prediction,main:[]}}]});
+assert.equal(bad.mismatched,1);
+assert.equal(auditArchivedDeployedTickets({date:capture.date,records:[{response:{ready:false}}]}).ready,0);
+console.log('Archived deployed ticket replay tests passed');
