@@ -23,6 +23,16 @@ console.log('VENUE_ORIGIN_SUMMARY',JSON.stringify(venues.reduce((counts,item)=>{
 console.log('VENUE_TIMEOUT_TIMING',JSON.stringify(venues.filter(item=>item.errorKind==='timeout').reduce((acc,item)=>{const bucket=item.elapsedMs<10000?'under_10s':item.elapsedMs<35000?'10_to_35s':'35s_or_more';acc[bucket]=(acc[bucket]||0)+1;return acc},{})));
 // An HTTP response can report an upstream official timeout even when the client request succeeded.
 console.log('VENUE_TIMEOUT_ORIGIN',JSON.stringify(venues.filter(item=>item.errorKind==='timeout').reduce((acc,item)=>{const key=item.source==='http_response'?'api_reported_timeout_http_'+String(item.httpStatus??'unknown'):item.source==='client_exception'?'client_'+String(item.clientErrorKind||'unknown'):'unknown';acc[key]=(acc[key]||0)+1;return acc},{})));
+// A selected venue can be rechecked via the deployed non-fast official verifier.
+// This avoids confusing the 4.5s+4.5s fast-verification budget with a site outage.
+// Never override the original verification result unless the slower endpoint verifies it.
+if(selectedVenue && venues.length===1 && !venues[0].verified && venues[0].errorKind==='timeout'){
+ const started=Date.now();
+ const slower=await get('/api/official/verify-one-venue?date='+date+'&venue='+selectedVenue,40000);
+ const verified=slower.verified===true;
+ console.log('SLOW_VERIFICATION_CHECK',JSON.stringify({venue:selectedVenue,verified,elapsedMs:Date.now()-started,source:slower._probe?.source||'unknown',httpStatus:slower._probe?.status??null,reason:verified?null:String(slower.reason||slower.error||'unverified').slice(0,120)}));
+ if(verified){venues[0]={...venues[0],verified:true,reason:null,errorKind:'none',verificationMethod:'slow_official_endpoint'};}
+}
 const verifiedVenues=verifiedVenueCandidates(venues);
 const targets=verifiedVenues.flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1})));
 console.log('Officially verified venue candidates:',verifiedVenues,'race targets:',targets.length);
