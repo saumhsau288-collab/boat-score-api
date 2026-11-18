@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {extractOfficialFinishCandidate as parse} from './extract-official-finish-candidate.mjs';
+const table='<table><tr><th>着</th><th>艇番</th><th>選手</th></tr><tr><td>1</td><td>3</td><td>A</td></tr><tr><td>2</td><td>1</td><td>B</td></tr><tr><td>3</td><td>5</td><td>C</td></tr></table>';
+const valid=parse(table);
+assert.deepEqual(valid.top3,[3,1,5]);
+assert.equal(valid.verified,false);
+assert.equal(valid.status,'finish_candidate_needs_independent_verification');
+assert.equal(parse('<table><tr><td>1</td><td>3</td></tr></table>').top3,null);
+assert.equal(parse(table+table).status,'multiple_finish_tables');
+assert.equal(parse(table.replace('<td>5</td>','<td>3</td>')).top3,null);
+assert.equal(parse(table.replace('<td>5</td>','<td>7</td>')).top3,null);
+assert.equal(parse(table.replace('<td>3</td>','<td>失格</td>')).top3,null);
+assert.equal(parse('').status,'missing_html');
+console.log('Strict official finish candidate extraction tests passed');
