@@ -187,6 +187,10 @@ jobs:
               '|---|---:|---:|---:|---:|---:|---:|',
               ...Object.entries(report.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,c])=>
                 '| '+venue+' | '+c.attempted+' | '+c.ready+' | '+c.notReady+' | '+c.networkTimeout+' | '+c.otherNetworkError+' | '+c.httpFailure+' |'),
+              '', '### Main/upset ticket overlap', '',
+              '| Metric | Races |', '|---|---:|',
+              ...Object.entries(report.ticketDistinctness||{}).map(([k,v])=>'| '+k+' | '+v+' |'),
+              '', 'Overlap is diagnostic only; it does not change the deployed prediction or buy list.',
               '', '### Retry attempt outcomes', '',
               '| Attempt metric | Count |', '|---|---:|',
               ...Object.entries(report.attemptStats||{}).map(([k,v])=>'| '+k+' | '+v+' |'),
