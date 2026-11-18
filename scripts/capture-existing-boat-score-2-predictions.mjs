@@ -25,6 +25,7 @@ const captureJstDate = jstDate(new Date(captureStart));
 const captureDateMatchesJst = date === captureJstDate;
 const captureTimeJst = new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(captureStart));
 const scheduledMorningWindow = captureDateMatchesJst && captureTimeJst >= '07:45' && captureTimeJst <= '08:30';
+const scheduledTrigger = run.trigger === 'schedule';
 const rows = [];
 const tasks = buildCaptureTasks(venues,maxRaces);
 let cursor = 0;
@@ -44,10 +45,10 @@ async function capture({venue,race}) {
     response:payload,rawResponseNonJson:payload===null,source:'existing_deployed_Boat_Score_2_selected_race'};
 }
 await Promise.all(Array.from({length:3},async()=>{while(cursor<tasks.length){const index=cursor++;rows[index]=await capture(tasks[index]);}}));
-const summary={date,requestedVenues:venues,requestedMaxRaces:maxRaces,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,run,base,attempted:rows.length,
+const summary={date,requestedVenues:venues,requestedMaxRaces:maxRaces,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,scheduledTrigger,run,base,attempted:rows.length,
   httpSuccess:rows.filter(x=>x.httpStatus===200).length,ready:rows.filter(x=>x.response?.ready===true).length,
   records:rows,authenticatedBeforeRace:false,
-  warning:'Raw server-observed responses only. Matching JST date and 08:00 capture window are timing checks, not proof of pre-race capture. No verified official start times, model provenance, or independently authenticated pre-race snapshots. Do not calculate prediction accuracy from this file without further validation.'};
+  warning:'Raw server-observed responses only. Workflow trigger, matching JST date and 08:00 capture window are timing checks, not proof of pre-race capture. No verified official start times, model provenance, or independently authenticated pre-race snapshots. Do not calculate prediction accuracy from this file without further validation.'};
 fs.mkdirSync('prediction-captures',{recursive:true});
 const target='prediction-captures/'+date+'-'+(run.workflowRunId||'local')+'.json';
 fs.writeFileSync(target,JSON.stringify(summary,null,2)+'\n');
