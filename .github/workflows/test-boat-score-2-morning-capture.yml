@@ -2,6 +2,8 @@ name: Test Boat Score 2 morning capture
 on:
   pull_request:
     paths:
+      - 'scripts/summarize-official-venue-activity.mjs'
+      - 'scripts/test-summarize-official-venue-activity.mjs'
       - 'scripts/capture-existing-boat-score-2-predictions.mjs'
       - 'scripts/fetch-with-timeout-retry.mjs'
       - 'scripts/test-fetch-with-timeout-retry.mjs'
@@ -33,6 +35,7 @@ jobs:
         with:
           node-version: '22'
       - run: node --check scripts/capture-existing-boat-score-2-predictions.mjs
+      - run: node scripts/test-summarize-official-venue-activity.mjs
       - run: node scripts/test-fetch-with-timeout-retry.mjs
       - run: node scripts/test-validate-morning-capture.mjs
       - run: node scripts/test-audit-morning-official-cutoffs.mjs
