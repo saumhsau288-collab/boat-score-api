@@ -24,6 +24,8 @@ def summarize_capture(payload):
                         and len(set(p)) == 3 for p in picks)
                 and len({tuple(p) for p in picks}) == 6)
     for row in records:
+        if not isinstance(row, dict):
+            raise ValueError('Invalid capture row')
         if row.get('httpStatus') == 200:
             counts['http200'] += 1
             response = row.get('response')
