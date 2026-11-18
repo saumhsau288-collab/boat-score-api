@@ -86,7 +86,7 @@ jobs:
               '', 'No hit rates or scoring adjustments are authorized from these raw responses.', '');
           }
           if (!names.length) lines.push('No capture quality report was generated. Inspect raw artifact and failed steps.');
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\\n') + '\\n');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n');
           NODE
       - name: Fail closed when no usable morning predictions were captured
         run: |
