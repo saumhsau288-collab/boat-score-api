@@ -4,7 +4,7 @@ const summaryPath=process.env.GITHUB_STEP_SUMMARY;
 if(!summaryPath)throw Error('GITHUB_STEP_SUMMARY not set');
 const file='backtest-results/'+date+'.json';
 const lines=['## Boat Score 2 historical comparison',''];
-if(!/^20\\d{6}$/.test(date)||!fs.existsSync(file)){
+if(!/^20\d{6}$/.test(date)||!fs.existsSync(file)){
  lines.push('No backtest result JSON available. Check the compare step logs.');
 }else{
  const data=JSON.parse(fs.readFileSync(file,'utf8'));
@@ -20,4 +20,4 @@ if(!/^20\\d{6}$/.test(date)||!fs.existsSync(file)){
  for(const r of data.records||[])lines.push('| '+r.venue+' | '+r.race+' | '+r.status+' | '+(r.holdReasons?.join(', ')||'-')+' |');
  lines.push('','**Caution:** Retrospective API predictions are not saved pre-race predictions. Held races are not counted as misses.');
 }
-fs.appendFileSync(summaryPath,lines.join('\\n')+'\\n');
+fs.appendFileSync(summaryPath,lines.join('\n')+'\n');
