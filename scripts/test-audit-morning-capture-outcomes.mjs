@@ -41,6 +41,17 @@ assert.deepEqual(usable.morningByRace['1'],{requestedInWindow:0,respondedInWindo
 assert.deepEqual(usable.morningByRace['2'],{requestedInWindow:0,respondedInWindow:0,readyInWindow:0,usableSixPlusSixInWindow:0});
 assert.equal(Object.values(x.morningByRace).reduce((n,v)=>n+v.respondedInWindow,0),x.timing.morningWindow.responseWithinMorningWindow);
 assert.deepEqual(usable.ticketDistinctness,{validSixPlusSix:1,overlappingMainUpsetTickets:1,fullyDistinctTwelveTickets:0});
+assert.deepEqual(usable.eightClockMilestones['08:05'],{responses:1,ready:1,validSixPlusSix:1,distinctTwelve:0});
+assert.deepEqual(usable.eightClockMilestones['08:30'],{responses:1,ready:1,validSixPlusSix:1,distinctTwelve:0});
+const milestones=summarizeCapture({date:'20261118',records:[
+ {receivedAt:'2026-11-17T23:04:00Z',httpStatus:200,response:{ready:true,main:validSix,upset:validSix}},
+ {receivedAt:'2026-11-17T23:12:00Z',httpStatus:200,response:{ready:false}},
+ {receivedAt:'2026-11-17T23:28:00Z',httpStatus:200,response:{ready:true,main:validSix,upset:validSix}}
+]});
+assert.deepEqual(milestones.eightClockMilestones['08:05'],{responses:1,ready:1,validSixPlusSix:1,distinctTwelve:0});
+assert.deepEqual(milestones.eightClockMilestones['08:15'],{responses:2,ready:1,validSixPlusSix:1,distinctTwelve:0});
+assert.deepEqual(milestones.eightClockMilestones['08:30'],{responses:3,ready:2,validSixPlusSix:2,distinctTwelve:0});
+
 const distinct=summarizeCapture({records:[{venue:1,race:1,httpStatus:200,response:{ready:true,main:validSix,upset:[[4,1,2],[4,2,1],[5,1,2],[5,2,1],[6,1,2],[6,2,1]]}}]});
 assert.deepEqual(distinct.ticketDistinctness,{validSixPlusSix:1,overlappingMainUpsetTickets:0,fullyDistinctTwelveTickets:1});
 assert.equal(usable.timing.morningWindow.usablePicksOutsideMorningWindow,0);
