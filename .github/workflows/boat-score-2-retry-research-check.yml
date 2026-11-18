@@ -62,6 +62,8 @@ jobs:
           node --check scripts/test-tune-deployed-base-twelve-tickets.mjs
           node --check scripts/audit-archived-deployed-tickets.mjs
           node --check scripts/test-audit-archived-deployed-tickets.mjs
+          node --check scripts/audit-capture-calibration-readiness.mjs
+          node --check scripts/test-audit-capture-calibration-readiness.mjs
       - name: Run offline retry research regression
         run: |
           node scripts/test-research-capture-retry-policies.mjs
@@ -79,3 +81,4 @@ jobs:
           node scripts/test-compare-deployed-base-weight-variants.mjs
           node scripts/test-tune-deployed-base-twelve-tickets.mjs
           node scripts/test-audit-archived-deployed-tickets.mjs
+          node scripts/test-audit-capture-calibration-readiness.mjs
