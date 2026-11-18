@@ -21,4 +21,13 @@ class Tests(unittest.TestCase):
  def test_missing_boat(self):
   self.score['scoreBounds']=self.score['scoreBounds'][:5]
   with self.assertRaises(ValueError):combine(self.race,self.score,self.history)
+ def test_false_full_ranking(self):
+  self.score['fullScoreRank']=[1,2,3,4,5,6]
+  with self.assertRaises(ValueError):combine(self.race,self.score,self.history)
+ def test_invalid_official_rate(self):
+  self.race['racers'][0]['localWinRate']=12
+  with self.assertRaises(ValueError):combine(self.race,self.score,self.history)
+ def test_missing_score_metadata(self):
+  del self.score['scoreBounds'][0]['missing']
+  with self.assertRaises(ValueError):combine(self.race,self.score,self.history)
 if __name__=='__main__':unittest.main()
