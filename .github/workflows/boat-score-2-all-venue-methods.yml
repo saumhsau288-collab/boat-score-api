@@ -35,6 +35,10 @@ on:
       - 'scripts/test_compare_offline_predictions.py'
       - 'scripts/audit_prediction_snapshot_evidence.py'
       - 'scripts/test_audit_prediction_snapshot_evidence.py'
+      - 'scripts/capture-existing-boat-score-2-predictions.mjs'
+      - 'scripts/validate-morning-capture.mjs'
+      - 'scripts/test-validate-morning-capture.mjs'
+      - '.github/workflows/boat-score-2-capture-morning-predictions.yml'
       - '.github/workflows/boat-score-2-all-venue-methods.yml'
 concurrency:
   group: boat-score-2-daily-offline-research
@@ -59,6 +63,14 @@ jobs:
           python3 -m unittest discover -s scripts -p 'test_audit_official_incidents.py'
           python3 -m unittest discover -s scripts -p 'test_compare_offline_predictions.py'
           python3 -m unittest discover -s scripts -p 'test_audit_prediction_snapshot_evidence.py'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify morning capture logic offline
+        run: |
+          node --check scripts/capture-existing-boat-score-2-predictions.mjs
+          node --check scripts/validate-morning-capture.mjs
+          node scripts/test-validate-morning-capture.mjs
       - name: Install archive extractor
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
       - name: Download daily official B/K archives
