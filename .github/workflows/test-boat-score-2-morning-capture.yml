@@ -16,6 +16,7 @@ on:
       - 'scripts/test-inspect-official-page-identity.mjs'
       - 'scripts/classify-official-response-source.mjs'
       - 'scripts/test-classify-official-response-source.mjs'
+      - 'scripts/test-morning-capture-file-isolation.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,3 +35,4 @@ jobs:
       - run: node scripts/test-extract-official-cutoff-candidate.mjs
       - run: node scripts/test-inspect-official-page-identity.mjs
       - run: node scripts/test-classify-official-response-source.mjs
+      - run: node scripts/test-morning-capture-file-isolation.mjs
