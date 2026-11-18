@@ -189,6 +189,42 @@ jobs:
           Path('reports/all-venue-method-coverage.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
           print(json.dumps(summary,ensure_ascii=False))
           PY
+      - name: Exercise actual official race through offline score and method pipeline
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          files=sorted(Path('data/reports').glob('*.json'))
+          selected=None
+          for file in files:
+            daily=json.loads(file.read_text(encoding='utf-8'))
+            for venue in daily.get('reports',[]):
+              for row in venue.get('records',[]):
+                if row.get('resultVerified') is True and len(row.get('racers',[]))==6:
+                  selected=(file,row['venue'],row['race'])
+                  break
+              if selected:break
+            if selected:break
+          if not selected:raise SystemExit('No official verified race to exercise')
+          Path('reports/official-race-smoke-selection.json').write_text(
+            json.dumps({'source':str(selected[0]),'venue':selected[1],'race':selected[2],
+              'retrospectiveOnly':True},ensure_ascii=False,indent=2)+'\\n')
+          print('Selected verified retrospective race:',selected)
+          PY
+          python3 - <<'PY'
+          import json,subprocess
+          from pathlib import Path
+          s=json.loads(Path('reports/official-race-smoke-selection.json').read_text())
+          subprocess.run(['python3','scripts/official_race_offline_evidence.py',
+            '--official-report',s['source'],
+            '--history','reports/all-venue-racer-winning-methods.json',
+            '--venue',str(s['venue']),'--race',str(s['race']),
+            '--output','reports/official-race-smoke-evidence.json'],check=True)
+          r=json.loads(Path('reports/official-race-smoke-evidence.json').read_text())
+          if len(r['racers'])!=6 or r['accuracyCalculationPermitted'] is not False or r['retrospectiveOnly'] is not True:
+            raise SystemExit('Unsafe or incomplete retrospective evidence')
+          print('Actual official race score and method pipeline passed')
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: official-all-venue-racer-methods
@@ -198,6 +234,8 @@ jobs:
             reports/all-venue-method-coverage.json
             reports/daily-data-completeness.json
             reports/official-incident-audit.json
+            reports/official-race-smoke-selection.json
+            reports/official-race-smoke-evidence.json
           retention-days: 90
       - name: Show history persistence decision
         run: |
