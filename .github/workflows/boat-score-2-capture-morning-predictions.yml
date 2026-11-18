@@ -210,6 +210,9 @@ jobs:
               'READY predictions received 07:45–08:30 JST: '+(report.timing?.morningWindow?.readyResponseWithinMorningWindow??'unknown')+
               '; outside window: '+(report.timing?.morningWindow?.readyResponseOutsideMorningWindow??'unknown')+
               '; timestamp unavailable: '+(report.timing?.morningWindow?.readyResponseTimeUnknown??'unknown'),'',
+              'VALID 6-main/6-upset predictions received 07:45–08:30 JST: '+(report.timing?.morningWindow?.usablePicksWithinMorningWindow??'unknown')+
+              '; outside window: '+(report.timing?.morningWindow?.usablePicksOutsideMorningWindow??'unknown')+
+              '; timestamp unavailable: '+(report.timing?.morningWindow?.usablePicksTimeUnknown??'unknown'),'',
               '| Venue | First request UTC | Last response UTC | Elapsed seconds |',
               '|---|---|---|---:|',
               ...Object.entries(report.timing?.byVenue||{}).sort((a,b)=>Number(a[0])-Number(b[0])).map(([venue,t])=>
