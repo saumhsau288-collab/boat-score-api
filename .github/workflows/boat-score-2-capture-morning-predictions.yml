@@ -539,6 +539,8 @@ jobs:
               '| Evidence status | Races |','|---|---:|',
               '| Ready API responses | '+(c.ready??'unknown')+' |',
               '| Missing authenticated official cutoff | '+(c.missingCutoff??'unknown')+' |',
+              '| Invalid capture timestamps | '+(c.invalidCaptureTime??'unknown')+' |',
+              '| Official cutoff identity mismatches | '+(c.cutoffIdentityMismatch??'unknown')+' |',
               '| At or after authenticated cutoff | '+(c.afterCutoff??'unknown')+' |',
               '| Before cutoff (timing only, not authenticated inputs) | '+(c.beforeCutoffTimingOnly??'unknown')+' |',
               '| Missing original six-boat pre-race score inputs | '+(c.missingRawSixBoatInputs??'unknown')+' |',
