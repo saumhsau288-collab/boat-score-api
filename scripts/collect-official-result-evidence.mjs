@@ -2,6 +2,7 @@
 // Read-only official result source collector. Fetching a page is NOT verification of its finish order.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import {extractOfficialFinishCandidate} from './extract-official-finish-candidate.mjs';
 export function checkOfficialResultResponse({requestedUrl,responseUrl,httpStatus,contentType}){
  let requested,actual;
  try{requested=new URL(requestedUrl);actual=new URL(responseUrl);}catch{return {status:'invalid_url',verified:false};}
@@ -43,7 +44,8 @@ export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,max
     htmlLength:body.length,htmlSample:body.slice(0,3000),
     // Preserve full candidate HTML for offline parsing only when it fits; never mark it verified.
     htmlSnapshot:sourceConsistent&&body.length<=200000?body:null,
-    htmlSnapshotComplete:sourceConsistent&&body.length<=200000});
+    htmlSnapshotComplete:sourceConsistent&&body.length<=200000,
+    finishCandidate:sourceConsistent&&body.length<=200000?extractOfficialFinishCandidate(body):{status:'source_or_snapshot_unavailable',verified:false,top3:null}});
   }catch(e){row.error=String(e?.message||e);}
   rows[index]=row;
  }
