@@ -25,6 +25,12 @@ export function summarizeCapture(data) {
   const validSix=p=>Array.isArray(p)&&p.length===6&&p.every(validPick)&&new Set(p.map(x=>x.join('-'))).size===6;
   const morningStart=typeof data.date==='string'&&/^20\d{6}$/.test(data.date)?Date.parse(data.date.slice(0,4)+'-'+data.date.slice(4,6)+'-'+data.date.slice(6,8)+'T07:45:00+09:00'):NaN;
   const morningEnd=Number.isFinite(morningStart)?morningStart+45*60*1000:NaN;
+  const milestoneClock=['08:05','08:15','08:30'];
+  const eightClockMilestones=Object.fromEntries(milestoneClock.map(clock=>[clock,{responses:0,ready:0,validSixPlusSix:0,distinctTwelve:0}]));
+  const afterEight=Number.isFinite(morningStart)?morningStart+15*60*1000:NaN;
+  const milestoneTimes=milestoneClock.map(clock=>Number.isFinite(afterEight)?afterEight+
+    (Number(clock.slice(0,2))*60+Number(clock.slice(3))-(8*60))*60000:NaN);
+
   const durations={ready:[],notReady:[],networkTimeout:[],otherFailure:[]};
   const attemptStats={firstAttempts:0,secondAttempts:0,firstAttemptTimeouts:0,secondAttemptTimeouts:0,firstAttemptHttpSuccess:0,secondAttemptHttpSuccess:0,firstAttemptOtherErrors:0,secondAttemptOtherErrors:0};
   const missingInputLabels={};
@@ -47,6 +53,9 @@ export function summarizeCapture(data) {
     }
     const start=validTime(record.requestedAt),end=validTime(record.receivedAt);
     const elapsed=start!==null&&end!==null&&end>=start?(end-start)/1000:null;
+    const milestones=end===null||!Number.isFinite(afterEight)?[]:milestoneClock.filter((clock,i)=>end>=afterEight&&end<=milestoneTimes[i]);
+    for(const clock of milestones)eightClockMilestones[clock].responses++;
+
     const bucket=record.error?(/timeout|timed out/i.test(record.error)?'networkTimeout':'otherFailure'):
       record.httpStatus===200?(record.response?.ready===true?'ready':'notReady'):'otherFailure';
     if(elapsed!==null)durations[bucket].push(elapsed);
@@ -90,16 +99,18 @@ export function summarizeCapture(data) {
       counts.httpFailure++;group.httpFailure++;
     } else if(record.response?.ready===true) {
       counts.ready++;group.ready++;raceGroup.ready++;
+      for(const clock of milestones)eightClockMilestones[clock].ready++;
       if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningRace.readyInWindow++;
       if(end===null||!Number.isFinite(morningStart))readyResponseTimeUnknown++;
       else if(end>=morningStart&&end<=morningEnd)readyResponseWithinMorningWindow++;
       else readyResponseOutsideMorningWindow++;
       if(validSix(record.response.main)&&validSix(record.response.upset)) {
         validSixPlusSix++;
+        for(const clock of milestones)eightClockMilestones[clock].validSixPlusSix++;
         if(end!==null&&Number.isFinite(morningStart)&&end>=morningStart&&end<=morningEnd)morningRace.usableSixPlusSixInWindow++;
         const mainKeys=new Set(record.response.main.map(p=>p.join('-')));
         if(record.response.upset.some(p=>mainKeys.has(p.join('-'))))overlappingMainUpsetTickets++;
-        else fullyDistinctTwelveTickets++;
+        else {fullyDistinctTwelveTickets++;for(const clock of milestones)eightClockMilestones[clock].distinctTwelve++;}
         if(end===null||!Number.isFinite(morningStart))usablePicksTimeUnknown++;
         else if(end>=morningStart&&end<=morningEnd)usablePicksWithinMorningWindow++;
         else usablePicksOutsideMorningWindow++;
@@ -150,7 +161,7 @@ export function summarizeCapture(data) {
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,morningByRace,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,morningByRace,eightClockMilestones,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
