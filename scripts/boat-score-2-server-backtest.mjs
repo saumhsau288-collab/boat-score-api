@@ -1,4 +1,5 @@
 import { verifiedVenueCandidates } from './verified-venue-candidates.mjs';
+import { validTrifectaPicks, verifiedPodium, comparisonHoldReasons } from './backtest-comparison-eligibility.mjs';
 import fs from 'node:fs';
 const date=process.env.BACKTEST_DATE||'20261116';
 const selectedVenue=Number(process.env.BACKTEST_VENUE||0);
@@ -46,12 +47,12 @@ const records=await pool(targets,3,async({venue,race},i)=>{
  const query='?'+new URLSearchParams({date,venue,race});
  // The deployed Boat Score 2 predictor, NOT a duplicate model.
  const [prediction,result]=await Promise.all([get('/api/predict/selected-race'+query+'&mode=beforeinfo'),get('/api/official/result'+query,25000)]);
- const actual=result.verified===true&&Array.isArray(result.finishOrder)&&result.finishOrder.length===6?result.finishOrder.slice(0,3).join('-'):null;
- const valid=arr=>Array.isArray(arr)&&arr.length===6&&arr.every(x=>Array.isArray(x)&&x.length===3&&new Set(x).size===3&&x.every(n=>Number.isInteger(n)&&n>=1&&n<=6));
+ const actual=verifiedPodium(result);
+ const valid=validTrifectaPicks;
  const ready=prediction.ready===true&&valid(prediction.main)&&valid(prediction.upset)&&actual!==null;
  const main=valid(prediction.main)?prediction.main.map(x=>x.join('-')):[];
  const upset=valid(prediction.upset)?prediction.upset.map(x=>x.join('-')):[];
- const holdReasons=[...(prediction.ready===true?[]:['prediction_not_ready']),...(valid(prediction.main)?[]:['invalid_main_picks']),...(valid(prediction.upset)?[]:['invalid_upset_picks']),...(actual!==null?[]:['unverified_or_missing_result'])];
+ const holdReasons=comparisonHoldReasons(prediction,result);
  const record={date,venue,race,status:ready?'compared':'held',holdReasons,actual,main,upset,mainHit:ready?main.includes(actual):null,upsetHit:ready?upset.includes(actual):null,predictionReason:prediction.reason||prediction.error||null,resultReason:result.reason||result.error||null,missingInputs:prediction.missingInputs||[],predictionMode:'existing_Boat_Score_2_selected_race'};
  console.log((i+1)+'/'+targets.length,venue+'-'+race,record.status,'holdReasons='+JSON.stringify(record.holdReasons),actual||'-',ready?('main='+record.mainHit+' upset='+record.upsetHit):'', 'predictionReason='+JSON.stringify(record.predictionReason), 'resultReason='+JSON.stringify(record.resultReason), 'missingInputs='+JSON.stringify(record.missingInputs), 'predictionReady='+JSON.stringify(prediction.ready), 'predictionKeys='+JSON.stringify(Object.keys(prediction)), 'resultKeys='+JSON.stringify(Object.keys(result)));
  return record;
