@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {extractOfficialCutoffCandidate} from './extract-official-cutoff-candidate.mjs';
 import {inspectOfficialPageIdentity} from './inspect-official-page-identity.mjs';
+import {classifyOfficialResponseSource} from './classify-official-response-source.mjs';
 const files=fs.readdirSync('prediction-captures').filter(n=>/^20\d{6}-[^/]+\.json$/.test(n));
 const rows=[];
 const targets=[];
@@ -24,10 +25,12 @@ async function collect({date,venue,race}){
   try{
    const res=await fetch(url,{signal:AbortSignal.timeout(12000),headers:{'User-Agent':'Mozilla/5.0 (compatible; BoatScore2Research/1.0)'}});
    const body=await res.text();
-   const candidate=res.ok?extractOfficialCutoffCandidate(body,{date,venue,race}):{status:'official_http_error'};
-   const identity=res.ok?inspectOfficialPageIdentity(body,{date,venue,race}):{status:'official_http_error',verified:false};
+   const sourceCheck=classifyOfficialResponseSource({requestedUrl:url.toString(),responseUrl:res.url,httpStatus:res.status,contentType:res.headers.get('content-type')});
+   const eligible=sourceCheck.status==='official_html_source_consistent_not_authenticated';
+   const candidate=eligible?extractOfficialCutoffCandidate(body,{date,venue,race}):{status:'official_source_not_eligible'};
+   const identity=eligible?inspectOfficialPageIdentity(body,{date,venue,race}):{status:'official_source_not_eligible',verified:false};
    rows.push({date,venue,race,requestedAt,receivedAt:new Date().toISOString(),
-    cutoffCandidate:candidate,pageIdentity:identity,sourceUrl:url.toString(),httpStatus:res.status,contentType:res.headers.get('content-type'),
+    cutoffCandidate:candidate,pageIdentity:identity,sourceCheck,finalUrl:res.url,sourceUrl:url.toString(),httpStatus:res.status,contentType:res.headers.get('content-type'),
     responseSha256:crypto.createHash('sha256').update(body).digest('hex'),
     htmlLength:body.length,htmlSample:body.slice(0,3000),
     verified:false,officialCutoffAt:null,
