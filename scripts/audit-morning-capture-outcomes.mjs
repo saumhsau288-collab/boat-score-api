@@ -19,6 +19,7 @@ export function summarizeCapture(data) {
   let responseWithinMorningWindow=0,responseOutsideMorningWindow=0,responseTimeUnknown=0;
   let readyResponseWithinMorningWindow=0,readyResponseOutsideMorningWindow=0,readyResponseTimeUnknown=0;
   let usablePicksWithinMorningWindow=0,usablePicksOutsideMorningWindow=0,usablePicksTimeUnknown=0;
+  let validSixPlusSix=0,overlappingMainUpsetTickets=0,fullyDistinctTwelveTickets=0;
   const validPick=p=>Array.isArray(p)&&p.length===3&&p.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(p).size===3;
   const validSix=p=>Array.isArray(p)&&p.length===6&&p.every(validPick)&&new Set(p.map(x=>x.join('-'))).size===6;
   const morningStart=typeof data.date==='string'&&/^20\d{6}$/.test(data.date)?Date.parse(data.date.slice(0,4)+'-'+data.date.slice(4,6)+'-'+data.date.slice(6,8)+'T07:45:00+09:00'):NaN;
@@ -89,6 +90,10 @@ export function summarizeCapture(data) {
       else if(end>=morningStart&&end<=morningEnd)readyResponseWithinMorningWindow++;
       else readyResponseOutsideMorningWindow++;
       if(validSix(record.response.main)&&validSix(record.response.upset)) {
+        validSixPlusSix++;
+        const mainKeys=new Set(record.response.main.map(p=>p.join('-')));
+        if(record.response.upset.some(p=>mainKeys.has(p.join('-'))))overlappingMainUpsetTickets++;
+        else fullyDistinctTwelveTickets++;
         if(end===null||!Number.isFinite(morningStart))usablePicksTimeUnknown++;
         else if(end>=morningStart&&end<=morningEnd)usablePicksWithinMorningWindow++;
         else usablePicksOutsideMorningWindow++;
@@ -131,7 +136,7 @@ export function summarizeCapture(data) {
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,timing,coverage,latencySeconds,attemptStats,missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,timing,coverage,latencySeconds,attemptStats,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
