@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {extractOfficialCutoffCandidate as parse} from './extract-official-cutoff-candidate.mjs';
+const id={date:'20261118',venue:2,race:3};
+const ok=parse('<div>締切予定時刻 14:35</div>',id);
+assert.equal(ok.status,'candidate_needs_official_page_identity_verification');
+assert.equal(ok.cutoffAt,'2026-11-18T05:35:00.000Z');
+assert.equal(ok.verified,false);
+assert.equal(parse('<div>展示タイム 6.75</div>',id).status,'cutoff_not_found');
+assert.equal(parse('<div>締切予定 14:35 投票締切時刻 14:40</div>',id).status,'ambiguous_cutoff');
+assert.equal(parse('<script>締切予定 14:35</script>',id).status,'cutoff_not_found');
+assert.equal(parse('<div>締切予定 25:00</div>',id).status,'cutoff_not_found');
+console.log('Official cutoff candidate parser tests passed');
