@@ -40,6 +40,8 @@ on:
       - 'scripts/capture-existing-boat-score-2-predictions.mjs'
       - 'scripts/validate-morning-capture.mjs'
       - 'scripts/test-validate-morning-capture.mjs'
+      - 'scripts/audit-morning-input-coverage.mjs'
+      - 'scripts/test-audit-morning-input-coverage.mjs'
       - '.github/workflows/boat-score-2-capture-morning-predictions.yml'
       - '.github/workflows/boat-score-2-all-venue-methods.yml'
 concurrency:
@@ -74,6 +76,7 @@ jobs:
           node --check scripts/capture-existing-boat-score-2-predictions.mjs
           node --check scripts/validate-morning-capture.mjs
           node scripts/test-validate-morning-capture.mjs
+          node scripts/test-audit-morning-input-coverage.mjs
       - name: Install archive extractor
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
       - name: Download daily official B/K archives
