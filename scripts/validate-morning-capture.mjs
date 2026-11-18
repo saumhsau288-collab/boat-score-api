@@ -17,7 +17,15 @@ for(const row of data.records){
  if(row.date!==data.date||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12)throw new Error('Invalid race identity');
  if(!row.requestedAt||!row.receivedAt||!Number.isFinite(Date.parse(row.requestedAt))||!Number.isFinite(Date.parse(row.receivedAt))||Date.parse(row.requestedAt)>Date.parse(row.receivedAt))throw new Error('Invalid capture timestamps');
  stats.attempted++;
- if(row.error){stats.errors++;continue;}
+ if(row.error){
+   if(row.httpStatus!==undefined || row.response!==undefined)
+     throw new Error('Network error row cannot also claim HTTP success or response');
+   stats.errors++;continue;
+ }
+ if(!Number.isInteger(row.httpStatus)||row.httpStatus<100||row.httpStatus>599)
+   throw new Error('Missing or invalid HTTP status');
+ if(row.response?.ready===true&&row.httpStatus!==200)
+   throw new Error('Ready prediction requires HTTP 200');
  if(row.httpStatus===200)stats.httpSuccess++;
  if(row.response?.ready===true){
    stats.ready++;
