@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {auditRecent50SourceReadiness} from './audit-recent50-source-readiness.mjs';
+const official=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i)}));
+const recent50=official.map(r=>({racerId:r.racerId,verified:true,winRate:50,sourceUrl:'https://example.org/record/'+r.racerId,observedAt:'2026-11-18T00:00:00Z'}));
+const ready=auditRecent50SourceReadiness({official,recent50});
+assert.equal(ready.readyForVerifiedSourceReview,true);
+assert.equal(ready.matchedById,6);
+const noEvidence=auditRecent50SourceReadiness({official,recent50:recent50.map(({sourceUrl,observedAt,...r})=>r)});
+assert.equal(noEvidence.readyForVerifiedSourceReview,false);
+assert.equal(noEvidence.missingSourceEvidence.length,6);
+assert.equal(auditRecent50SourceReadiness({official,recent50:recent50.map((r,i)=>i===0?{...r,racerId:'9999'}:r)}).readyForVerifiedSourceReview,false);
+assert.equal(auditRecent50SourceReadiness({official,recent50:recent50.slice(1)}).readyForVerifiedSourceReview,false);
+assert.equal(auditRecent50SourceReadiness({official,recent50:recent50.map((r,i)=>i===0?{...r,winRate:null}:r)}).readyForVerifiedSourceReview,false);
+console.log('Recent50 provenance readiness audit tests passed');
