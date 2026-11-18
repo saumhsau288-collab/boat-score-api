@@ -26,18 +26,28 @@ async function capture({venue,race}) {
   const url = new URL('/api/predict/selected-race',base);
   url.search = new URLSearchParams({date,venue:String(venue),race:String(race),mode:'beforeinfo'}).toString();
   const requestedAt = new Date().toISOString();
-  try {
-    const response = await fetch(url,{signal:AbortSignal.timeout(20000),headers:{'Accept':'application/json'}});
-    const responseText = await response.text();
-    const receivedAt = new Date().toISOString();
-    let payload;
-    try { payload = JSON.parse(responseText); } catch { payload = null; }
-    return {date,venue,race,requestedAt,receivedAt,httpStatus:response.status,
-      responseSha256:crypto.createHash('sha256').update(responseText).digest('hex'),
-      response:payload,rawResponseNonJson:payload===null,source:'existing_deployed_Boat_Score_2_selected_race'};
-  } catch(e) {
-    return {date,venue,race,requestedAt,receivedAt:new Date().toISOString(),
-      error:String(e?.message||e),source:'existing_deployed_Boat_Score_2_selected_race'};
+  const attempts = [];
+  // Retry only transport failures once; never retry a valid not-ready response.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const startedAt = new Date().toISOString();
+    try {
+      const response = await fetch(url,{signal:AbortSignal.timeout(20000),headers:{'Accept':'application/json'}});
+      const responseText = await response.text();
+      const receivedAt = new Date().toISOString();
+      let payload;
+      try { payload = JSON.parse(responseText); } catch { payload = null; }
+      attempts.push({attempt,startedAt,receivedAt,httpStatus:response.status});
+      return {date,venue,race,requestedAt,receivedAt,httpStatus:response.status,
+        responseSha256:crypto.createHash('sha256').update(responseText).digest('hex'),
+        response:payload,rawResponseNonJson:payload===null,attempts,
+        source:'existing_deployed_Boat_Score_2_selected_race'};
+    } catch(e) {
+      const receivedAt = new Date().toISOString();
+      const error = String(e?.message||e);
+      attempts.push({attempt,startedAt,receivedAt,error});
+      if (attempt===2) return {date,venue,race,requestedAt,receivedAt,error,attempts,
+        source:'existing_deployed_Boat_Score_2_selected_race'};
+    }
   }
 }
 await Promise.all(Array.from({length:3},async()=>{while(cursor<tasks.length){const index=cursor++;rows[index]=await capture(tasks[index]);}}));
