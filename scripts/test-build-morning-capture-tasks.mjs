@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {buildCaptureTasks} from './build-morning-capture-tasks.mjs';
+const venues=Array.from({length:24},(_,i)=>i+1);
+const tasks=buildCaptureTasks(venues,12);
+assert.equal(tasks.length,288);
+assert.deepEqual(tasks.slice(0,24),venues.map(venue=>({venue,race:1})));
+assert.deepEqual(tasks.slice(24,48),venues.map(venue=>({venue,race:2})));
+assert.deepEqual(tasks.at(-1),{venue:24,race:12});
+assert.equal(new Set(tasks.map(t=>t.venue+':'+t.race)).size,288);
+assert.deepEqual(buildCaptureTasks([3,8],2),[{venue:3,race:1},{venue:8,race:1},{venue:3,race:2},{venue:8,race:2}]);
+assert.throws(()=>buildCaptureTasks([1,1],12));
+assert.throws(()=>buildCaptureTasks([1],13));
+console.log('Fair morning capture ordering tests passed');
