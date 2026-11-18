@@ -7,7 +7,7 @@ assert.ok(workflow.includes("name => /^20\\d{6}-\\d+\\.json$/.test(name)"),'Raw 
 const loops=[...workflow.matchAll(/for file in prediction-captures\/\*\.json; do([\s\S]*?)done/g)];
 assert.ok(loops.length>=6,'Expected all morning audit loops');
 for(const [index,match] of loops.entries()){
- assert.ok(match[1].includes('20??????-[0-9]*.json'),'Audit loop '+index+' must skip non-dated artifacts');
+ assert.ok(match[1].includes('[[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\\.json$ ]] || continue'),'Audit loop '+index+' must strictly select raw dated captures');
 }
 assert.ok(workflow.includes('*-source-evidence.json'),'Official source evidence must be excluded from audits');
 const examples=['20261118-12345.json','official-cutoff-source-evidence.json','20261118-12345-quality.json','20261118-12345-cutoff-audit.json'];
