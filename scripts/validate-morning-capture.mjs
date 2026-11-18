@@ -26,6 +26,13 @@ for(const row of data.records){
    throw new Error('Missing or invalid HTTP status');
  if(row.response?.ready===true&&row.httpStatus!==200)
    throw new Error('Ready prediction requires HTTP 200');
+ if(row.responseSha256!==undefined &&
+    (typeof row.responseSha256!=='string'||!/^[0-9a-f]{64}$/.test(row.responseSha256)))
+   throw new Error('Invalid raw response digest');
+ if(row.httpStatus===200 && row.rawResponseNonJson===true && row.response!==null)
+   throw new Error('Non-JSON response flag contradicts parsed response');
+ if(row.response?.ready===true && row.rawResponseNonJson===true)
+   throw new Error('Ready prediction cannot be a non-JSON response');
  if(row.httpStatus===200)stats.httpSuccess++;
  if(row.response?.ready===true){
    stats.ready++;

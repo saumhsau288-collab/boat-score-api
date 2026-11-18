@@ -29,6 +29,9 @@ try {
  assert.notEqual(run({...base,records:[{...row,receivedAt:'2026-11-17T22:59:59Z'}]}).status,0);
  assert.notEqual(run({...base,authenticatedBeforeRace:true}).status,0);
  assert.notEqual(run({...base,ready:0}).status,0);
+ assert.notEqual(run({...base,records:[{...row,responseSha256:'not-a-sha256'}]}).status,0);
+ assert.notEqual(run({...base,records:[{...row,rawResponseNonJson:true}]}).status,0);
+ assert.equal(run({...base,records:[{...row,responseSha256:'a'.repeat(64),rawResponseNonJson:false}]}).status,0);
  assert.notEqual(run({...base,records:[{...row,httpStatus:503}]}).status,0);
  assert.notEqual(run({...base,records:[{...row,httpStatus:undefined}]}).status,0);
  assert.notEqual(run({...base,records:[{...row,error:'timeout'}]}).status,0);
