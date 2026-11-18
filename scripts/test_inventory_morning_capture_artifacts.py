@@ -80,6 +80,20 @@ class InventoryTests(unittest.TestCase):
         self.assertNotIn('secret', str(result))
         self.assertNotIn('private', str(result))
 
+    def test_joint_verification_flags_are_aggregated(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200,
+             'response': {'ready': False, 'officialVerified': False, 'statsVerified': False}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200,
+             'response': {'ready': False, 'officialVerified': True, 'statsVerified': True}},
+            {'venue': 1, 'race': 3, 'httpStatus': 200,
+             'response': {'ready': False, 'officialVerified': False, 'statsVerified': True}},
+            {'venue': 1, 'race': 4, 'httpStatus': 200,
+             'response': {'ready': False, 'officialVerified': None, 'statsVerified': False}}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['verificationPairs'],
+                         {'both_false': 1, 'both_true': 1, 'mixed_or_unknown': 2})
+
     def test_rejects_invalid_captured_identity(self):
         with self.assertRaisesRegex(ValueError, 'Invalid captured venue/race'):
             diagnose_capture({'authenticatedBeforeRace': False, 'records': [
