@@ -122,6 +122,7 @@ export function summarizeCapture(data) {
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
+    captureTrigger:data.run?.trigger||null,scheduledWorkflowTrigger:data.run?.trigger==='schedule',
     counts,byVenue,byRace,timing,coverage,latencySeconds,missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
