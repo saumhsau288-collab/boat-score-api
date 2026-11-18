@@ -43,6 +43,8 @@ on:
       - 'scripts/test_combine_race_score_method_evidence.py'
       - 'scripts/run_offline_race_evidence.py'
       - 'scripts/test_run_offline_race_evidence.py'
+      - 'scripts/official_race_offline_evidence.py'
+      - 'scripts/test_official_race_offline_evidence.py'
       - 'scripts/audit_official_score_input_coverage.py'
       - 'scripts/test_audit_official_score_input_coverage.py'
       - 'scripts/audit_prediction_snapshot_evidence.py'
@@ -109,6 +111,7 @@ jobs:
           node scripts/test-partial-score-evidence.mjs
           node scripts/test-score-uncertainty-bounds.mjs
           python3 -m unittest discover -s scripts -p 'test_run_offline_race_evidence.py'
+          python3 -m unittest discover -s scripts -p 'test_official_race_offline_evidence.py'
           node scripts/test-audit-capture-score-inputs.mjs
       - name: Install archive extractor
         run: sudo apt-get update -qq && sudo apt-get install -y libarchive-tools
