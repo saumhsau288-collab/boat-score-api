@@ -44,7 +44,7 @@ async function capture({venue,race}) {
     response:payload,rawResponseNonJson:payload===null,source:'existing_deployed_Boat_Score_2_selected_race'};
 }
 await Promise.all(Array.from({length:3},async()=>{while(cursor<tasks.length){const index=cursor++;rows[index]=await capture(tasks[index]);}}));
-const summary={date,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,run,base,attempted:rows.length,
+const summary={date,requestedVenues:venues,requestedMaxRaces:maxRaces,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,run,base,attempted:rows.length,
   httpSuccess:rows.filter(x=>x.httpStatus===200).length,ready:rows.filter(x=>x.response?.ready===true).length,
   records:rows,authenticatedBeforeRace:false,
   warning:'Raw server-observed responses only. Matching JST date and 08:00 capture window are timing checks, not proof of pre-race capture. No verified official start times, model provenance, or independently authenticated pre-race snapshots. Do not calculate prediction accuracy from this file without further validation.'};
