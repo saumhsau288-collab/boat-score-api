@@ -36,10 +36,14 @@ export async function collectOfficialResultEvidence(capture,{fetchImpl=fetch,max
   try{
    const res=await fetchImpl(url.toString(),{signal:AbortSignal.timeout(12000),headers:{'User-Agent':'Mozilla/5.0 (compatible; BoatScore2Research/1.0)'}});
    const body=await res.text();
+   const sourceCheck=checkOfficialResultResponse({requestedUrl:url.toString(),responseUrl:res.url,httpStatus:res.status,contentType:res.headers.get('content-type')});
+   const sourceConsistent=sourceCheck.status==='official_result_page_candidate_not_authenticated';
    Object.assign(row,{receivedAt:new Date().toISOString(),httpStatus:res.status,finalUrl:res.url,
-    sourceCheck:checkOfficialResultResponse({requestedUrl:url.toString(),responseUrl:res.url,httpStatus:res.status,contentType:res.headers.get('content-type')}),
-    responseSha256:crypto.createHash('sha256').update(body).digest('hex'),htmlLength:body.length,
-    htmlSample:body.slice(0,3000)});
+    sourceCheck,responseSha256:crypto.createHash('sha256').update(body).digest('hex'),
+    htmlLength:body.length,htmlSample:body.slice(0,3000),
+    // Preserve full candidate HTML for offline parsing only when it fits; never mark it verified.
+    htmlSnapshot:sourceConsistent&&body.length<=200000?body:null,
+    htmlSnapshotComplete:sourceConsistent&&body.length<=200000});
   }catch(e){row.error=String(e?.message||e);}
   rows[index]=row;
  }
