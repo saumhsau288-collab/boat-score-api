@@ -5,7 +5,7 @@ import path from 'node:path';
 
 export function summarizeCapture(data) {
   if (!Array.isArray(data?.records)) throw new Error('Capture records missing');
-  const counts={attempted:data.records.length,networkTimeout:0,otherNetworkError:0,httpFailure:0,notReady:0,ready:0,readyWithMissingInputs:0,readyWithNoReportedMissingInputs:0};
+  const counts={attempted:data.records.length,networkTimeout:0,otherNetworkError:0,httpFailure:0,notReady:0,ready:0,readyWithMissingInputs:0,readyWithNoReportedMissingInputs:0,retried:0,recoveredAfterRetry:0};
   const byVenue={};
   const missingInputLabels={};
   const notReadyReasons={};
@@ -14,6 +14,10 @@ export function summarizeCapture(data) {
     const venueKey=Number.isInteger(venue)&&venue>=1&&venue<=24?String(venue):'unknown';
     const group=byVenue[venueKey]??={attempted:0,networkTimeout:0,otherNetworkError:0,httpFailure:0,notReady:0,ready:0};
     group.attempted++;
+    if(Array.isArray(record.attempts)&&record.attempts.length>1) {
+      counts.retried++;
+      if(record.httpStatus===200) counts.recoveredAfterRetry++;
+    }
     if(record.error) {
       if(/timeout|timed out/i.test(record.error)) {counts.networkTimeout++;group.networkTimeout++;}
       else {counts.otherNetworkError++;group.otherNetworkError++;}
