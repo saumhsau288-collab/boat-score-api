@@ -71,6 +71,8 @@ jobs:
           node --check scripts/capture-official-cutoff-source.mjs
           node --check scripts/extract-official-finish-candidate.mjs
           node --check scripts/test-extract-official-finish-candidate.mjs
+          node --check scripts/inspect-saved-tickets-vs-result-candidates.mjs
+          node --check scripts/test-inspect-saved-tickets-vs-result-candidates.mjs
           node --check scripts/collect-official-result-evidence.mjs
           node --check scripts/test-collect-official-result-evidence.mjs
       - name: Test capture validation with offline fixtures
@@ -98,6 +100,7 @@ jobs:
           node scripts/test-audit-capture-response-shapes.mjs
           node scripts/test-audit-morning-official-cutoffs.mjs
           node scripts/test-extract-official-finish-candidate.mjs
+          node scripts/test-inspect-saved-tickets-vs-result-candidates.mjs
           node scripts/test-collect-official-result-evidence.mjs
           node scripts/test-summarize-cutoff-candidates.mjs
       - name: Check live deployed predictor reachability (read only)
@@ -156,6 +159,16 @@ jobs:
             [ -f "$file" ] || continue
             [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             node scripts/collect-official-result-evidence.mjs "$file" > "${file%.json}-official-result-candidates.json"
+          done
+      - name: Compare saved tickets to unverified official result candidates (diagnostic only)
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            result_file="${file%.json}-official-result-candidates.json"
+            [ -f "$result_file" ] || continue
+            node scripts/inspect-saved-tickets-vs-result-candidates.mjs "$file" "$result_file" > "${file%.json}-result-candidate-diagnostics.json"
           done
       - name: Summarize official venue activity evidence without filtering unverified venues
         if: always()
