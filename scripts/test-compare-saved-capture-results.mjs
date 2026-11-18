@@ -21,4 +21,9 @@ assert.equal(compare(capture,[{...result,officialCutoffAt:'2026-11-17T23:59:00Z'
 assert.equal(compare(capture,[{...result,verified:false}]).compared,0);
 assert.equal(compare(capture,[result,result]).compared,0);
 assert.equal(compare(capture,[{...result,sourceUrl:undefined}]).compared,0);
+const duplicated=compare({...capture,records:[capture.records[0],{...capture.records[0]}]},[result]);
+assert.equal(duplicated.compared,0);
+assert.equal(duplicated.held,2);
+assert.equal(duplicated.mainHitRate,null);
+assert.equal(duplicated.holdReasons.duplicate_saved_capture_race,2);
 console.log('Saved capture / official result comparison eligibility tests passed');
