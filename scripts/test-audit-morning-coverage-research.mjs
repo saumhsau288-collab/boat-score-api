@@ -8,6 +8,8 @@ const r=auditMorningCoverage({captureStart:'2026-11-17T23:00:00.000Z',records:[
 ]});
 assert.equal(r.inMorningWindow,true);
 assert.equal(r.authenticatedBeforeRace,false);
+assert.equal(r.recordsRequestedInMorningWindow,0);
+assert.equal(r.captureDateMatchesJst,false);
 assert.equal(r.byVenue[2].ready,2);
 assert.equal(r.byVenue[2].timeout,1);
 assert.deepEqual(r.duplicates,['2:1']);
