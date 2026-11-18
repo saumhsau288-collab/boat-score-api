@@ -34,6 +34,17 @@ try {
  assert.equal(timed.scheduledMorningWindow,true);
  const scoped={...base,requestedVenues:[1],requestedMaxRaces:1};
  assert.equal(run(scoped).status,0);
+ const attemptOne={attempt:1,requestedAt:row.requestedAt,receivedAt:row.receivedAt,httpStatus:200};
+ assert.equal(run({...base,records:[{...row,attempts:[attemptOne]}]}).status,0);
+ assert.notEqual(run({...base,records:[{...row,attempts:[{...attemptOne,httpStatus:503}]}]}).status,0);
+ assert.notEqual(run({...base,records:[{...row,attempts:[{...attemptOne,attempt:2}]}]}).status,0);
+ assert.notEqual(run({...base,records:[{...row,attempts:[{...attemptOne,receivedAt:'2026-11-17T23:00:03Z'}]}]}).status,0);
+ const retryRow={...row,receivedAt:'2026-11-17T23:00:04Z',attempts:[
+  {attempt:1,requestedAt:'2026-11-17T23:00:00Z',receivedAt:'2026-11-17T23:00:02Z',error:'timeout'},
+  {attempt:2,requestedAt:'2026-11-17T23:00:02Z',receivedAt:'2026-11-17T23:00:04Z',httpStatus:200}]};
+ assert.equal(run({...base,records:[retryRow]}).status,0);
+ assert.notEqual(run({...base,records:[{...retryRow,attempts:[{...retryRow.attempts[0],error:'connection reset'},retryRow.attempts[1]]}]}).status,0);
+
  assert.notEqual(run({...scoped,requestedMaxRaces:2}).status,0);
  assert.notEqual(run({...scoped,requestedVenues:[2]}).status,0);
  assert.notEqual(run({...scoped,requestedVenues:[1,1]}).status,0);
