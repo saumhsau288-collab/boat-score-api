@@ -35,4 +35,7 @@ const duplicateCapture={...capture,records:[...capture.records,...capture.record
 const duplicateResult=inspect(duplicateCapture,evidence);
 assert.equal(duplicateResult.counts.duplicatePredictions,2);
 assert.equal(duplicateResult.counts.candidatePresent,0);
+const overlap=structuredClone(capture);
+overlap.records[0].response.upset[0]=overlap.records[0].response.main[0];
+assert.equal(inspect(overlap,evidence).counts.invalidPicks,1);
 console.log('Unverified candidate matching diagnostics tests passed');
