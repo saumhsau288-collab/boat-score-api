@@ -130,13 +130,21 @@ export function summarizeCapture(data) {
     missingPairsWithinRequestedVenues:expectedPairs?.filter(pair=>!uniquePairs.has(pair))??null,
     unexpectedPairsOutsideScope:scopeKnown?[...uniquePairs].filter(pair=>!expectedPairs.includes(pair)):null,
     warning:scopeKnown?'Coverage uses explicitly requested venues and race scope, not verified active racing venues.':'Capture scope unavailable; cannot assert missing records.'};
+  const rankedBlockers=[
+    {code:'networkTimeout',races:counts.networkTimeout,action:'Investigate predictor latency and retry recoveries'},
+    {code:'officialSixBoatUnverified',races:notReadyReasons.official_six_boat_stats_unverified||0,action:'Verify six-boat official input source; do not synthesize missing values'},
+    {code:'otherNotReady',races:counts.notReady-(notReadyReasons.official_six_boat_stats_unverified||0),action:'Inspect API not-ready reasons'},
+    {code:'httpFailure',races:counts.httpFailure,action:'Inspect non-200 responses'},
+    {code:'otherNetworkError',races:counts.otherNetworkError,action:'Inspect connection and transport errors'}
+  ].sort((a,b)=>b.races-a.races||a.code.localeCompare(b.code));
+  const topBlocker=rankedBlockers.find(b=>b.races>0)||null;
   const latencySeconds=Object.fromEntries(Object.entries(durations).map(([key,values])=>{
     values.sort((a,b)=>a-b);
     const percentile=p=>values.length?Math.round(values[Math.ceil(values.length*p)-1]*10)/10:null;
     return [key,{samples:values.length,p50:percentile(.5),p95:percentile(.95),max:values.length?Math.round(values.at(-1)*10)/10:null}];
   }));
   return {date:data.date||null,captureTimeJst:data.captureTimeJst||null,scheduledMorningWindow:data.scheduledMorningWindow===true,
-    counts,byVenue,byRace,timing,coverage,latencySeconds,attemptStats,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
+    counts,byVenue,byRace,timing,coverage,latencySeconds,attemptStats,rankedBlockers,topBlocker,ticketDistinctness:{validSixPlusSix,overlappingMainUpsetTickets,fullyDistinctTwelveTickets},missingInputLabels,notReadyReasons,
     authenticatedBeforeRace:false,accuracyCalculationPermitted:false,
     warning:'Read-only capture outcomes are not prediction accuracy or verified pre-race evidence. Missing labels are self-reported and do not prove every input was used.'};
 }
