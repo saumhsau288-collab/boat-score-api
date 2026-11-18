@@ -43,6 +43,8 @@ jobs:
           node --check scripts/audit-recent50-source-readiness.mjs
           node --check scripts/audit-explicit-score-exclusions.mjs
           node --check scripts/audit-morning-capture-outcomes.mjs
+          node --check scripts/research-capture-retry-policies.mjs
+          node --check scripts/test-research-capture-retry-policies.mjs
           node --check scripts/fetch-with-timeout-retry.mjs
           node --check scripts/build-morning-capture-tasks.mjs
           node --check scripts/capture-existing-boat-score-2-predictions.mjs
@@ -63,6 +65,7 @@ jobs:
         run: |
           node scripts/test-summarize-official-venue-activity.mjs
           node scripts/test-build-morning-capture-tasks.mjs
+          node scripts/test-research-capture-retry-policies.mjs
           node scripts/test-fetch-with-timeout-retry.mjs
           node scripts/test-audit-base-vs-adjusted.mjs
           node scripts/test-audit-applied-adjustments.mjs
