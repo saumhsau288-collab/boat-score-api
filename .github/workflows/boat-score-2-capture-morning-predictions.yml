@@ -37,10 +37,13 @@ jobs:
           node --check scripts/test-validate-morning-capture.mjs
           node --check scripts/audit-morning-input-coverage.mjs
           node --check scripts/test-audit-morning-input-coverage.mjs
+          node --check scripts/classify-morning-capture-quality.mjs
+          node --check scripts/test-classify-morning-capture-quality.mjs
       - name: Test capture validation with offline fixtures
         run: |
           node scripts/test-validate-morning-capture.mjs
           node scripts/test-audit-morning-input-coverage.mjs
+          node scripts/test-classify-morning-capture-quality.mjs
       - name: Capture existing deployed predictor responses without altering app
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
@@ -58,6 +61,13 @@ jobs:
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
             node scripts/audit-morning-input-coverage.mjs "$file"
+          done
+      - name: Classify raw prediction quality for later review
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            node scripts/classify-morning-capture-quality.mjs "$file" > "${file%.json}-quality.json"
           done
       - name: Fail closed when no usable morning predictions were captured
         run: |
