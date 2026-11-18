@@ -25,7 +25,6 @@ export function tuneDeployedBaseTwelveTickets(rows,{minTrain=30,minTest=15}={}){
   const national=5+delta,motor=3-delta;
   if(motor>=0&&national>=0)weights.push({...DEPLOYED_BASE_WEIGHTS,national,motor});
  }
- const metric=x=>x.baseline.eitherHits;
  const candidates=weights.map(w=>({weights:w,train:compareDeployedBaseWeightVariants(train,w)}))
   .map(x=>({...x,trainHits:x.train.candidate.eitherHits,trainMainHits:x.train.candidate.mainHits,trainUpsetHits:x.train.candidate.upsetHits}))
   .sort((a,b)=>b.trainHits-a.trainHits||b.trainMainHits-a.trainMainHits||b.trainUpsetHits-a.trainUpsetHits||
