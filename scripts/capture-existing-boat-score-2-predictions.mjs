@@ -4,7 +4,13 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 
 const base = process.env.BOAT_SCORE_URL || 'https://boat-score-2-preview.saumh-sau-288.workers.dev';
-const date = process.env.CAPTURE_DATE || new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','');
+function jstDate(now) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(now).filter(p => p.type !== 'literal').map(p => [p.type, p.value]));
+  return parts.year + parts.month + parts.day;
+}
+const date = process.env.CAPTURE_DATE || jstDate(new Date());
 if (!/^20\d{6}$/.test(date)) throw new Error('Invalid capture date');
 const venues = (process.env.CAPTURE_VENUES || '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24').split(',').map(Number);
 if (venues.length === 0 || venues.some(v => !Number.isInteger(v) || v < 1 || v > 24) || new Set(venues).size !== venues.length) throw new Error('Invalid venues');
