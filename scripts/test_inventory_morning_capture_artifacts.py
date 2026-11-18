@@ -1,6 +1,6 @@
 import unittest
 import urllib.request
-from inventory_morning_capture_artifacts import summarize_capture, SafeArtifactRedirect
+from inventory_morning_capture_artifacts import summarize_capture, diagnose_capture, SafeArtifactRedirect
 
 
 class InventoryTests(unittest.TestCase):
@@ -21,6 +21,24 @@ class InventoryTests(unittest.TestCase):
         redirected = SafeArtifactRedirect().redirect_request(
             source, None, 302, 'Found', {}, 'https://api.github.com/b')
         self.assertIn('Authorization', redirected.headers)
+
+    def test_diagnoses_http_and_readiness_states(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200, 'response': {'ready': True}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200, 'response': {'ready': False}},
+            {'venue': 2, 'race': 1, 'httpStatus': 404, 'response': {'error': 'missing'}},
+            {'venue': 2, 'race': 2, 'error': 'timeout'},
+            {'venue': 3, 'race': 1, 'httpStatus': 200, 'response': None}]
+        result = diagnose_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['states'], {'http200_non_json': 1, 'http_404': 1,
+                                            'not_ready': 1, 'ready': 1, 'transport_error': 1})
+        self.assertEqual(result['readyRaceIdentities'], [{'venue': 1, 'race': 1}])
+        self.assertEqual(result['byVenue']['1'], {'ready': 1, 'not_ready': 1})
+
+    def test_rejects_invalid_captured_identity(self):
+        with self.assertRaisesRegex(ValueError, 'Invalid captured venue/race'):
+            diagnose_capture({'authenticatedBeforeRace': False, 'records': [
+                {'venue': True, 'race': 1, 'httpStatus': 200, 'response': {'ready': True}}]})
 
     def test_counts_only_raw_usable_responses(self):
         six = [[1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1]]
