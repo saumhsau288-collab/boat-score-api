@@ -24,6 +24,8 @@ def summarize_capture(payload):
                         and len(set(p)) == 3 for p in picks)
                 and len({tuple(p) for p in picks}) == 6)
     for row in records:
+        if not isinstance(row, dict):
+            raise ValueError('Invalid capture row')
         if row.get('httpStatus') == 200:
             counts['http200'] += 1
             response = row.get('response')
@@ -65,6 +67,9 @@ def diagnose_capture(payload):
     transport_causes = Counter()
     missing_input_shapes = Counter()
     verification_flags = Counter()
+    missing_input_lengths = Counter()
+    retry_types = Counter()
+    verification_pairs = Counter()
     for row in records:
         if not isinstance(row, dict):
             raise ValueError('Invalid capture row')
@@ -96,11 +101,23 @@ def diagnose_capture(payload):
                 missing_shape = 'object:' + ','.join(sorted(k for k in missing if isinstance(k, str)))[:200]
             elif isinstance(missing, list):
                 missing_shape = 'list'
+                missing_input_lengths[str(len(missing))] += 1
             elif missing is None:
                 missing_shape = 'null'
             else:
                 missing_shape = 'other'
             missing_input_shapes[missing_shape] += 1
+            retry = response.get('officialStatsRetry')
+            retry_types[('null' if retry is None else 'boolean' if type(retry) is bool
+                         else 'string' if isinstance(retry, str) else 'object' if isinstance(retry, dict)
+                         else 'list' if isinstance(retry, list) else 'number' if type(retry) in (int, float)
+                         else 'other')] += 1
+            official = response.get('officialVerified')
+            stats = response.get('statsVerified')
+            pair = ('both_true' if official is True and stats is True
+                    else 'both_false' if official is False and stats is False
+                    else 'mixed_or_unknown')
+            verification_pairs[pair] += 1
             for field in ('officialVerified', 'statsVerified', 'officialStatsRetry'):
                 value = response.get(field)
                 state_name = 'true' if value is True else 'false' if value is False else 'other'
@@ -119,7 +136,10 @@ def diagnose_capture(payload):
             'notReadyResponseFieldSets': dict(sorted(not_ready_shapes.items())),
             'transportErrorCategories': dict(sorted(transport_causes.items())),
             'missingInputStructures': dict(sorted(missing_input_shapes.items())),
-            'verificationFlagCounts': dict(sorted(verification_flags.items()))}
+            'verificationFlagCounts': dict(sorted(verification_flags.items())),
+            'missingInputListLengths': dict(sorted(missing_input_lengths.items(), key=lambda x: int(x[0]))),
+            'officialStatsRetryTypes': dict(sorted(retry_types.items())),
+            'verificationPairs': dict(sorted(verification_pairs.items()))}
 
 def api(path, token, binary=False):
     request = urllib.request.Request(
@@ -137,7 +157,7 @@ def inventory(repository, token):
                                   'http200': 0, 'ready': 0, 'usableSixPlusSix': 0})
     errors = []
     inspected = 0
-    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter()})
+    diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter(), 'missingInputListLengths': Counter(), 'officialStatsRetryTypes': Counter(), 'verificationPairs': Counter()})
     for page in range(1, 11):
         response = api(f'repos/{repository}/actions/artifacts?per_page=100&page={page}', token)
         artifacts = response.get('artifacts', [])
@@ -171,6 +191,9 @@ def inventory(repository, token):
                     bucket['transportErrorCategories'].update(diagnostic['transportErrorCategories'])
                     bucket['missingInputStructures'].update(diagnostic['missingInputStructures'])
                     bucket['verificationFlagCounts'].update(diagnostic['verificationFlagCounts'])
+                    bucket['missingInputListLengths'].update(diagnostic['missingInputListLengths'])
+                    bucket['officialStatsRetryTypes'].update(diagnostic['officialStatsRetryTypes'])
+                    bucket['verificationPairs'].update(diagnostic['verificationPairs'])
                     totals[date]['artifacts'] += 1
                     for key, value in counts.items():
                         totals[date][key] += value
@@ -188,7 +211,10 @@ def inventory(repository, token):
             'notReadyResponseFieldSets': dict(sorted(bucket['notReadyResponseFieldSets'].items())),
             'transportErrorCategories': dict(sorted(bucket['transportErrorCategories'].items())),
             'missingInputStructures': dict(sorted(bucket['missingInputStructures'].items())),
-            'verificationFlagCounts': dict(sorted(bucket['verificationFlagCounts'].items()))}
+            'verificationFlagCounts': dict(sorted(bucket['verificationFlagCounts'].items())),
+            'missingInputListLengths': dict(sorted(bucket['missingInputListLengths'].items(), key=lambda x: int(x[0]))),
+            'officialStatsRetryTypes': dict(sorted(bucket['officialStatsRetryTypes'].items())),
+            'verificationPairs': dict(sorted(bucket['verificationPairs'].items()))}
     return {'byCaptureDate': dict(sorted(totals.items())),
             'diagnosticsByDate': diagnostic_output, 'artifactsInspected': inspected,
             'errors': errors, 'officialResultOverlap': None,
@@ -208,32 +234,41 @@ if __name__ == '__main__':
     summary = os.environ.get('GITHUB_STEP_SUMMARY')
     if summary:
         with open(summary, 'a', encoding='utf-8') as f:
-            f.write('## Stored Boat Score 2 morning raw captures\\n\\n')
-            f.write('| Date JST | Artifacts | Attempts | HTTP 200 | Ready | 6+6 format |\\n')
-            f.write('|---|---:|---:|---:|---:|---:|\\n')
+            f.write('## Stored Boat Score 2 morning raw captures\n\n')
+            f.write('| Date JST | Artifacts | Attempts | HTTP 200 | Ready | 6+6 format |\n')
+            f.write('|---|---:|---:|---:|---:|---:|\n')
             for day, c in result['byCaptureDate'].items():
-                f.write(f"| {day} | {c['artifacts']} | {c['captured']} | {c['http200']} | {c['ready']} | {c['usableSixPlusSix']} |\\n")
+                f.write(f"| {day} | {c['artifacts']} | {c['captured']} | {c['http200']} | {c['ready']} | {c['usableSixPlusSix']} |\n")
             for day, diagnostic in result['diagnosticsByDate'].items():
-                f.write(f'\\n### {day}: response diagnostics\\n\\n')
-                f.write('| Response state | Count |\\n|---|---:|\\n')
+                f.write(f'\n### {day}: response diagnostics\n\n')
+                f.write('| Response state | Count |\n|---|---:|\n')
                 for state, count in diagnostic['states'].items():
-                    f.write(f'| {state} | {count} |\\n')
-                f.write('\\nReady venue/race IDs (not verified pre-race predictions): ')
+                    f.write(f'| {state} | {count} |\n')
+                f.write('\nReady venue/race IDs (not verified pre-race predictions): ')
                 f.write(', '.join(f"{r['venue']}-{r['race']}" for r in diagnostic['readyRaceIdentities']) or 'none')
-                f.write('\\n\\nNot-ready response field sets (field names only):\\n')
+                f.write('\n\nNot-ready response field sets (field names only):\n')
                 for fields, count in diagnostic['notReadyResponseFieldSets'].items():
-                    f.write(f'- {fields}: {count}\\n')
-                f.write('\\nMissing input structures (no values):\\n')
+                    f.write(f'- {fields}: {count}\n')
+                f.write('\nMissing input structures (no values):\n')
                 for shape, count in diagnostic['missingInputStructures'].items():
-                    f.write(f'- {shape}: {count}\\n')
-                f.write('\\nVerification flags:\\n')
+                    f.write(f'- {shape}: {count}\n')
+                f.write('\nVerification flags:\n')
                 for flag, count in diagnostic['verificationFlagCounts'].items():
-                    f.write(f'- {flag}: {count}\\n')
-                f.write('\\nTransport error categories:\\n')
+                    f.write(f'- {flag}: {count}\n')
+                f.write('\nMissing input list lengths (counts only):\n')
+                for length, count in diagnostic['missingInputListLengths'].items():
+                    f.write(f'- {length} missing inputs: {count}\n')
+                f.write('\nOfficial/statistics verification pairs:\n')
+                for pair, count in diagnostic['verificationPairs'].items():
+                    f.write(f'- {pair}: {count}\n')
+                f.write('\nOfficial retry types (no values):\n')
+                for kind, count in diagnostic['officialStatsRetryTypes'].items():
+                    f.write(f'- {kind}: {count}\n')
+                f.write('\nTransport error categories:\n')
                 for category, count in diagnostic['transportErrorCategories'].items():
-                    f.write(f'- {category}: {count}\\n')
-            f.write('\\nRaw captures are not authenticated forecasts; no accuracy metrics.\\n')
+                    f.write(f'- {category}: {count}\n')
+            f.write('\nRaw captures are not authenticated forecasts; no accuracy metrics.\n')
             if result['errors']:
-                f.write(f"\\nUnreadable artifacts: {len(result['errors'])} (inspect job log).\\n")
+                f.write(f"\nUnreadable artifacts: {len(result['errors'])} (inspect job log).\n")
     if result['errors']:
         sys.exit(1)
