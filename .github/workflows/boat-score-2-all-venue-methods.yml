@@ -208,7 +208,7 @@ jobs:
           if not selected:raise SystemExit('No official verified race to exercise')
           Path('reports/official-race-smoke-selection.json').write_text(
             json.dumps({'source':str(selected[0]),'venue':selected[1],'race':selected[2],
-              'retrospectiveOnly':True},ensure_ascii=False,indent=2)+'\\n')
+              'retrospectiveOnly':True},ensure_ascii=False,indent=2))
           print('Selected verified retrospective race:',selected)
           PY
           python3 - <<'PY'
