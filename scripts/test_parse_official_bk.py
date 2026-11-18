@@ -1,5 +1,5 @@
 import unittest
-from parse_official_bk import parse_b,parse_k,join,venue_section
+from parse_official_bk import parse_b,parse_k,join,venue_section,parse_k_incident_evidence
 class Tests(unittest.TestCase):
  def test_venue_isolation(self):
   s='STARTB\n24BBGN\nOMURA\n1R\n23BBGN\nKARATSU\n1R'
@@ -63,4 +63,24 @@ class Tests(unittest.TestCase):
   self.assertEqual(result['records'][0]['winningMethod'],'逃げ')
   self.assertEqual(result['records'][0]['racers'][0]['motorTwoWinRate'],30.11)
   self.assertFalse(result['records'][0]['capturedBeforeStart'])
+
+ def test_incident_rows_not_header_legend(self):
+  k="""  1R  1-2-3 940
+   1R 一般 H1800m
+  着 艇 登番 選手名 ﾚｰｽﾀｲﾑ 逃げ F 転覆 返還
+  F  2 4321 選手
+  転 4 4567 選手
+   2R 一般 H1800m
+  着 艇 登番 選手名 F 転覆 返還"""
+  evidence=parse_k_incident_evidence(k)
+  self.assertEqual([e['kind'] for e in evidence[1]],['flying_start','capsize'])
+  self.assertNotIn(2,evidence)
+ def test_incident_evidence_kept_separate_from_join_failure(self):
+  b={1:[{'boat':i,'racerId':str(4000+i)} for i in range(1,7)]}
+  evidence={1:[{'kind':'flying_start','statusCode':'F','boat':2,'racerId':'4002'}]}
+  result=join(b,{},'20261116',1,evidence)
+  self.assertEqual(result['rejectionDetails'][0]['incidentStatus'],'explicit_result_row')
+  self.assertEqual(result['rejectionDetails'][0]['reason'],'missing_valid_result')
+  self.assertEqual(result['rejectionDetails'][0]['incidentEvidence'],evidence[1])
+  self.assertEqual(result['matchedRaces'],0)
 if __name__=='__main__':unittest.main()

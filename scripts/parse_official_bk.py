@@ -37,6 +37,32 @@ def parse_b(text):
         if not 0<=racer['nationalWinRate']<=10 or not 0<=racer['localWinRate']<=10 or not 0<=racer['motorTwoWinRate']<=100:continue
         races[current].append(racer)
     return {r:sorted(v,key=lambda x:x['boat']) for r,v in races.items() if len(v)==6 and {x['boat'] for x in v}==set(range(1,7)) and len({x['racerId'] for x in v})==6}
+
+# Only explicit result-row incident status is evidence. Header legends are not.
+K_INCIDENT_ROW=re.compile(r'^\\s*(F|L|転|転覆|沈|沈没|落|落水|妨|妨害|失|失格)\\s+([1-6])\\s+(\\d{4})\\s')
+K_INCIDENT_KIND={'F':'flying_start','L':'late_start','転':'capsize','転覆':'capsize','沈':'sinking','沈没':'sinking','落':'overboard','落水':'overboard','妨':'disqualification','妨害':'disqualification','失':'disqualification','失格':'disqualification'}
+
+
+def parse_k_incident_evidence(text):
+    """Audit explicit incident rows in each race, without inferring refund or exclusion."""
+    incidents={};current=None
+    for line in text.splitlines():
+        match=K_RACE.match(line)
+        if match:
+            current=int(match.group(1))
+            incidents.setdefault(current,[])
+            continue
+        if current is None:
+            continue
+        match=K_INCIDENT_ROW.match(line)
+        if match:
+            code,boat,racer_id=match.groups()
+            evidence={'kind':K_INCIDENT_KIND[code], 'statusCode':code,
+                      'boat':int(boat),'racerId':racer_id}
+            if evidence not in incidents[current]:
+                incidents[current].append(evidence)
+    return {race:rows for race,rows in incidents.items() if rows}
+
 def parse_k(text):
     races={};current=None;pay={};courses={};methods={}
     for line in text.splitlines():
@@ -62,15 +88,17 @@ def parse_k(text):
         verified_courses=len(course_pairs)==6 and len({boat for boat,_ in course_pairs})==6 and {course for _,course in course_pairs}==set(range(1,7))
         valid[r]={'finishOrder':order,'racerIds':{boat:ident for _,boat,ident in v},'entryCourseByBoat':dict(course_pairs) if verified_courses else None,'entryCourseVerified':verified_courses,'winningMethod':methods.get(r),'winningMethodVerified':methods.get(r) in K_METHODS}
     return valid
-def join(b,k,date,venue):
+def join(b,k,date,venue,incident_evidence=None):
     if not re.fullmatch(r'20\d{6}',date) or not 1<=venue<=24:raise ValueError('invalid date/venue')
     out=[];rejected=[];rejection_details=[]
+    incident_evidence=incident_evidence or {}
     for r in sorted(set(b)|set(k)):
         if r not in b or r not in k or any(k[r]['racerIds'].get(x['boat'])!=x['racerId'] for x in b[r]):
             reason = ('missing_valid_program' if r not in b else
                       'missing_valid_result' if r not in k else 'racer_id_mismatch')
             rejected.append(r)
-            rejection_details.append({'race':r,'reason':reason,'incidentStatus':'unverified'})
+            evidence=incident_evidence.get(r,[])
+            rejection_details.append({'race':r,'reason':reason,'incidentStatus':'explicit_result_row' if evidence else 'unverified','incidentEvidence':evidence})
             continue
         out.append({'date':date,'venue':venue,'race':r,'racers':b[r],'finishOrder':k[r]['finishOrder'],
           'entryCourseByBoat':k[r].get('entryCourseByBoat'),'entryCourseVerified':k[r].get('entryCourseVerified',False),
@@ -84,7 +112,7 @@ def main():
     a=p.parse_args()
     b=Path(a.b).read_text(encoding='cp932');k=Path(a.k).read_text(encoding='cp932')
     b=venue_section(b,a.venue,'B');k=venue_section(k,a.venue,'K')
-    result=join(parse_b(b),parse_k(k),a.date,a.venue)
+    result=join(parse_b(b),parse_k(k),a.date,a.venue,parse_k_incident_evidence(k))
     dest=Path(a.output);dest.parent.mkdir(parents=True,exist_ok=True);dest.write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps({'matchedRaces':result['matchedRaces'],'rejectedRaces':result['rejectedRaces'],'weightCalibrationReady':False},ensure_ascii=False))
 if __name__=='__main__':main()
