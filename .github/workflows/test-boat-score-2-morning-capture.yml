@@ -17,6 +17,8 @@ on:
       - 'scripts/classify-official-response-source.mjs'
       - 'scripts/test-classify-official-response-source.mjs'
       - 'scripts/test-morning-capture-file-isolation.mjs'
+      - 'scripts/audit-morning-capture-outcomes.mjs'
+      - 'scripts/test-audit-morning-capture-outcomes.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -36,3 +38,4 @@ jobs:
       - run: node scripts/test-inspect-official-page-identity.mjs
       - run: node scripts/test-classify-official-response-source.mjs
       - run: node scripts/test-morning-capture-file-isolation.mjs
+      - run: node scripts/test-audit-morning-capture-outcomes.mjs
