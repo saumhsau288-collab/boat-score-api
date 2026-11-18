@@ -58,6 +58,8 @@ jobs:
           node --check scripts/test-replay-deployed-base-tickets.mjs
           node --check scripts/compare-deployed-base-weight-variants.mjs
           node --check scripts/test-compare-deployed-base-weight-variants.mjs
+          node --check scripts/tune-deployed-base-twelve-tickets.mjs
+          node --check scripts/test-tune-deployed-base-twelve-tickets.mjs
       - name: Run offline retry research regression
         run: |
           node scripts/test-research-capture-retry-policies.mjs
@@ -73,3 +75,4 @@ jobs:
           node scripts/test-calibrate-existing-boat-score-module.mjs
           node scripts/test-replay-deployed-base-tickets.mjs
           node scripts/test-compare-deployed-base-weight-variants.mjs
+          node scripts/test-tune-deployed-base-twelve-tickets.mjs
