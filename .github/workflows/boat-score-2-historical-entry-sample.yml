@@ -1,0 +1,30 @@
+name: Boat Score 2 historical official entry sample (research only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/fetch-historical-racelist-sample.mjs'
+      - '.github/workflows/boat-score-2-historical-entry-sample.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  archive-one-official-entry:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate sample collector
+        run: node --check scripts/fetch-historical-racelist-sample.mjs
+      - name: Fetch archived official entry HTML
+        run: |
+          mkdir -p research-historical
+          node scripts/fetch-historical-racelist-sample.mjs research-historical/20261118-tokuyama-2r-racelist.json
+      - name: Save original official source and fetch status
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-official-entry-sample-${{ github.run_id }}
+          path: research-historical/
+          retention-days: 30
+          if-no-files-found: error
