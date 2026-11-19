@@ -65,7 +65,8 @@ export default {async fetch(request){
    const indicators={hasHeatmapLabel:/ヒートマップ/.test(visibleText),hasRecent50Label:/直近\s*50\s*走|過去\s*50\s*走|50走/.test(visibleText),hasRegistrationId:/\b[3-5]\d{3}\b/.test(visibleText),hasLoginPrompt:/ログイン|会員登録|有料会員|新規登録/.test(visibleText)};
    const accessible=Boolean(page)&&indicators.hasHeatmapLabel&&!indicators.hasLoginPrompt;
    const readyForIdentityReview=accessible&&indicators.hasRecent50Label&&indicators.hasRegistrationId;
-   return reply({status:'not_integrated',date,venue,race,sourceUrl:url,httpStatus:response.status,pageAccessible:accessible&&!truncated,inspectionTruncated:truncated,indicators,readyForIdentityReview,recent50Ready:false,message:accessible?'まくらぼページへの接続は確認できましたが、6選手の直近50走の照合は未完了です。予想点には未反映です。':'まくらぼの対象ページを確認できません（非公開・ログイン・取得制限の可能性）。予想点には未反映です。'});
+   const structure={tableCount:(page.match(/<table\b/gi)??[]).length,rowCount:(page.match(/<tr\b/gi)??[]).length,scriptCount:(page.match(/<script\b/gi)??[]).length,hasNextData:page.includes('__NEXT_DATA__'),hasNuxtData:page.includes('__NUXT__'),hasEmbeddedJson:/type\s*=\s*["']application\/json["']/i.test(page),hasApiPath:/\/api\/|axios\.|fetch\(/i.test(page)};
+   return reply({status:'not_integrated',date,venue,race,sourceUrl:url,httpStatus:response.status,pageAccessible:accessible&&!truncated,inspectionTruncated:truncated,indicators,structure,readyForIdentityReview,recent50Ready:false,message:accessible?'まくらぼページへの接続は確認できましたが、6選手の直近50走の照合は未完了です。予想点には未反映です。':'まくらぼの対象ページを確認できません（非公開・ログイン・取得制限の可能性）。予想点には未反映です。'});
   }catch(e){return reply({status:'not_integrated',date,venue,race,recent50Ready:false,message:'まくらぼの取得に失敗しました。予想点には未反映です。',error:String(e.message).slice(0,120)});}
  }
  if(u.pathname!=='/api/predict')return reply({status:'not_found'},404);
