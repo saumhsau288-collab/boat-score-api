@@ -3,7 +3,7 @@ import fs from 'node:fs';
 export function compareExploratoryRankingModels(entryReport,resultReport){
  const byResult=new Map((resultReport?.rows??[]).map(r=>[r.date+':'+r.venue+':'+r.race,r]));
  const models=[{name:'winrate_only',w:1,s:0},{name:'average_st_only',w:0,s:1},{name:'equal_winrate_st',w:0.5,s:0.5},{name:'winrate_70_st_30',w:0.7,s:0.3},{name:'winrate_45_st_25_boat_15_normalized',w:0.45,s:0.25,c:0.15}];
- const out=models.map(m=>({model:m.name,eligibleRaces:0,winnerRankOne:0,winnerTopThree:0}));
+ const out=models.map(m=>({model:m.name,eligibleRaces:0,winnerRankOne:0,winnerTopThree:0,winnerRankSum:0,rankingChangedFromWinrateOnly:0}));
  for(const e of entryReport?.rows??[]){
   if(e.statsVerified!==true||e.racers?.length!==6||!e.racers.every(r=>Number.isFinite(r.averageWinRate)&&r.averageWinRate>=0&&r.averageWinRate<=10&&Number.isFinite(r.averageST)&&r.averageST>=0&&r.averageST<=1))continue;
   const res=byResult.get(e.date+':'+e.venue+':'+e.race);
@@ -13,11 +13,12 @@ export function compareExploratoryRankingModels(entryReport,resultReport){
   if(res.racers.filter(r=>r.finish===1).length!==1)continue;
   const winRates=e.racers.map(r=>r.averageWinRate),sts=e.racers.map(r=>r.averageST);
   const norm=(v,values,reverse=false)=>{const lo=Math.min(...values),hi=Math.max(...values);return hi===lo?0.5:reverse?(hi-v)/(hi-lo):(v-lo)/(hi-lo)};
+  const baseline=[...e.racers].sort((a,b)=>b.averageWinRate-a.averageWinRate||a.boat-b.boat).map(r=>r.boat).join(',');
   for(let i=0;i<models.length;i++){
    const m=models[i],row=out[i];
    const ranked=e.racers.map(r=>({boat:r.boat,score:m.w*norm(r.averageWinRate,winRates)+m.s*norm(r.averageST,sts,true)+(m.c??0)*(7-r.boat)/6})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
    const winnerRank=ranked.findIndex(r=>finish.get(r.boat).finish===1)+1;
-   row.eligibleRaces++;row.winnerRankOne+=Number(winnerRank===1);row.winnerTopThree+=Number(winnerRank<=3);
+   row.eligibleRaces++;row.winnerRankOne+=Number(winnerRank===1);row.winnerTopThree+=Number(winnerRank<=3);row.winnerRankSum+=winnerRank;row.rankingChangedFromWinrateOnly+=Number(ranked.map(r=>r.boat).join(',')!==baseline);
   }
  }
  return {researchOnly:true,eligibleForCalibration:0,warning:'Post-race-retrieved entry stats and unverified results. Boat number is a proxy, NOT verified pre-race entry course. In-sample descriptive model comparison, not prediction accuracy.',models:out};
