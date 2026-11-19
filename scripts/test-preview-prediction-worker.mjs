@@ -26,7 +26,7 @@ assert.equal(alias.status,200);
 const oldFetch=globalThis.fetch;
 try{
  let officialRequested='';
- globalThis.fetch=async url=>{officialRequested=String(url);return new Response(html,{status:200,headers:{'content-type':'text/html'}});};
+ globalThis.fetch=async (url,options)=>{officialRequested=String(url);assert.equal(options?.redirect,'follow','Cloudflare Workers supports redirect follow or manual only');return new Response(html,{status:200,headers:{'content-type':'text/html'}});};
  const good=await bundled.fetch(new Request('https://preview.example/api/predict?date=20261119&venue=18&race=2'));
  const json=await good.json();
  assert.equal(json.status,'experimental');
