@@ -13,6 +13,13 @@ let result=score(date,12,1,official(Array.from({length:6},(_,i)=>row(i+1))));
 assert.equal(result.ready,true);
 assert.equal(result.method,'average_national_local_winrate70_motor30_unvalidated');
 assert.equal(result.placeRateTieBreakVerified,true);
+assert.ok(result.missingInputs.includes('course'));
+assert.ok(result.missingInputs.includes('start'));
+assert.ok(result.missingInputs.includes('last50'));
+assert.ok(result.missingInputs.includes('weather'));
+// The provisional morning score is not a fully calibrated course/ST model.
+assert.match(result.method,/unvalidated/);
+
 assert.equal(result.rankedScores.length,6);
 // The average, not a sum of independent national/local rank points, controls the racer component.
 const avgRows=Array.from({length:6},(_,i)=>({...row(i+1),
