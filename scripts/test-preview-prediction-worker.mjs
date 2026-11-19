@@ -20,6 +20,10 @@ assert.equal(matchMakulaboByRegistration(parsed,parsed.map(r=>({racerId:r.racerI
 const evidence=parsed.map(r=>({racerId:r.racerId,winRate:50+r.boat,verified:true,sourceUrl:'https://makulabo-jp.com/data/18/2/heatmap?hd=20261119',observedAt:'2026-11-19T12:00:00Z'})).reverse();
 const comparison=compareVerifiedMakulaboScores(parsed,evidence);
 assert.equal(comparison.applied,true);
+assert.equal(compareVerifiedMakulaboScores(parsed,evidence,{date:'20261119',venue:18,race:2}).applied,true);
+assert.equal(compareVerifiedMakulaboScores(parsed,evidence,{date:'20261119',venue:18,race:3}).reason,'source_race_mismatch');
+assert.equal(compareVerifiedMakulaboScores(parsed,evidence,{date:'20261118',venue:18,race:2}).reason,'source_race_mismatch');
+assert.equal(compareVerifiedMakulaboScores(parsed,evidence,{date:'20261119',venue:19,race:2}).reason,'source_race_mismatch');
 assert.equal(comparison.adjusted.ranking.length,6);
 assert.equal(comparison.adjusted.main.length,6);
 assert.equal(comparison.adjusted.upset.length,6);
