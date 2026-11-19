@@ -3,9 +3,13 @@ import fs from 'node:fs';
 export function summarizeOfficialInsideCourses(report){
  if(!Array.isArray(report?.rows))throw Error('Expected parsed official rows');
  const out={total:report.rows.length,usable:0,blocked:0,insideWins:0,insidePodiumPlacements:0,insidePodiumSlots:0,insideWinsByCourse:{'1':0,'2':0,'3':0},podiumByCourse:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0},races:[],eligibleForWeightTuning:false,warning:'Post-race descriptive sample only; no verified pre-race prediction snapshots or independently authenticated results.'};
+ const seenRaces=new Set();
  for(const r of report.rows){
+  const raceKey=`${r?.date}:${r?.venue}:${r?.race}`;
+  const duplicate=seenRaces.has(raceKey);
+  seenRaces.add(raceKey);
   const racers=r?.racers;
-  const valid=r?.status==='parsed_needs_independent_review'&&Array.isArray(racers)&&racers.length===6&&
+  const valid=!duplicate&&/^20\d{6}$/.test(String(r?.date??''))&&Number.isInteger(r?.venue)&&r.venue>=1&&r.venue<=24&&Number.isInteger(r?.race)&&r.race>=1&&r.race<=12&&r?.status==='parsed_needs_independent_review'&&Array.isArray(racers)&&racers.length===6&&
    new Set(racers.map(x=>x.boat)).size===6&&new Set(racers.map(x=>x.actualEntryCourse)).size===6&&
    [1,2,3,4,5,6].every(boat=>racers.some(x=>x.boat===boat))&&
    [1,2,3].every(rank=>racers.filter(x=>x.finish===rank).length===1)&&
