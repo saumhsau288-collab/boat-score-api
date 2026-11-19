@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {normalizeHistoryRow,historicalCourseStats,summarizeVenueCourse} from './history-analysis.mjs';
+import {normalizeHistoryRow,historicalCourseStats,summarizeVenueCourse,splitHistoricalRacesByDate} from './history-analysis.mjs';
 const base={date:'20261101',venue:12,race:1,racerId:'4321',boat:1,course:1,finish:1,source:'official-result',verified:true};
 const rows=[
  base,
@@ -24,3 +24,10 @@ const v=venue.find(x=>x.venue===12&&x.course===1);
 assert.deepEqual([v.starts,v.wins,v.winPct],[2,1,50]);
 assert.equal(historicalCourseStats(rows,{beforeDate:'20261101'}).length,0);
 console.log('Historical stats checks passed');
+
+const split=splitHistoricalRacesByDate(rows,{tuningBefore:'20261105',holdoutFrom:'20261110'});
+assert.equal(split.tuning.length,6);
+assert.equal(split.holdout.length,1);
+assert.equal(split.excluded.length,2);
+assert.equal(split.eligibleForWeightTuning,false);
+assert.throws(()=>splitHistoricalRacesByDate(rows,{tuningBefore:'20261120',holdoutFrom:'20261110'}),/boundaries/);
