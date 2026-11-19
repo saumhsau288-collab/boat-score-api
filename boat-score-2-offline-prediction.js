@@ -13,6 +13,7 @@ export function predictExperimentalRace(racers,{weightStudy=null}={}){
  // date-separated eligible history. This is still research, not production.
  if(weightStudy!==null&&(
    weightStudy.status!=='research_only'||
+   weightStudy.improvedOnHoldout!==true||
    !Number.isInteger(weightStudy.trainingCount)||weightStudy.trainingCount<30||
    !Number.isInteger(weightStudy.holdoutCount)||weightStudy.holdoutCount<15||
    !weightStudy.candidateWeights||
