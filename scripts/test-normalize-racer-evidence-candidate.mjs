@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {normalizeRacerEvidenceCandidate} from './normalize-racer-evidence-candidate.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),values:{nationalWinRate:6,localWinRate:8,averageST:0.15,motorSecondPlaceRate:40,expectedEntryCourse:i+1,exhibitionTime:6.7}}));
+const sample={ready:true,racers};
+const out=normalizeRacerEvidenceCandidate(sample);
+assert.equal(out.ready,false);
+assert.equal(out.reason,'verified_weather_adjusted_exhibition_factor_required');
+assert.equal(out.partialRows.length,6);
+assert.equal(out.partialRows[0].racerWinRateAverage,0.7);
+assert.equal(out.partialRows[0].preRaceStartAbility,(0.25-0.15)/0.15);
+assert.equal(out.partialRows[0].expectedEntryCourse,1);
+assert.equal(out.partialRows[5].expectedEntryCourse,0);
+assert.equal(out.partialRows[0].verifiedExhibitionAndWeather,null);
+assert.equal(normalizeRacerEvidenceCandidate({...sample,racers:[...racers.slice(0,5),racers[0]]}).reason,'invalid_racer_identities');
+assert.equal(normalizeRacerEvidenceCandidate({...sample,racers:racers.map((r,i)=>i===0?{...r,values:{...r.values,averageST:'0.15'}}:r)}).reason,'missing_pre_race_measurements');
+console.log('Research candidate normalization safety tests passed');
