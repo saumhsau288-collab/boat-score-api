@@ -84,6 +84,11 @@ jobs:
           const report={target:'20261119 Tokuyama 2R',status:r.status,officialUrl:r.provenance?.officialUrl??null,htmlSha256:r.provenance?.htmlSha256??null,diagnostics:r.diagnostics??null,parsedRacerCount:r.ranking?.filter(x=>x.status==='evaluated').length??r.racers?.length??0,provisionalMainCount:r.main?.length??0,provisionalUpsetCount:r.upset?.length??0,main:r.main??[],upset:r.upset??[],ranking:r.ranking??[],entryCourses:r.entryCourses??null,entryScenario:r.entryScenario??null,preCutoffSnapshotAuthenticated:false,warning:'Historical snapshot and assumed entry; no authenticated pre-cutoff validation or result comparison'};
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## 公式出走表の実データ検証（過去レース・研究用）\n\n```json\n'+JSON.stringify(report,null,2)+'\n```\n\n※取得時点のアーカイブであり、締切前のデータとしては認証されていません。\n');
           console.log(JSON.stringify(report));
+          const {renderSelectedRaceHtml}=await import('./scripts/render-selected-race-html.mjs');
+          fs.mkdirSync('real-race-preview',{recursive:true});
+          fs.writeFileSync('real-race-preview/prediction.html',renderSelectedRaceHtml(r));
+          fs.writeFileSync('real-race-preview/prediction.json',JSON.stringify(r,null,2));
+          console.log('REAL_RACE_HTML_PREVIEW '+JSON.stringify({status:r.status,htmlGenerated:true,main:r.main?.length??0,upset:r.upset?.length??0}));
           // Independently fetch the corresponding official result page; no score tuning.
           const resultUrl='https://www.boatrace.jp/owpc/pc/race/raceresult?rno=2&jcd=18&hd=20261119';
           try {
@@ -109,3 +114,11 @@ jobs:
           } catch(error) { console.log('OFFICIAL_RESULT_COMPARISON '+JSON.stringify({resultPageFetched:false,error:String(error.message).slice(0,120)})); }
 
           JS
+
+      - name: Upload actual-racelist mobile prediction preview
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tokuyama-real-race-mobile-preview
+          path: real-race-preview/
+          if-no-files-found: warn
