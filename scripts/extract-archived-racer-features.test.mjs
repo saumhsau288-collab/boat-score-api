@@ -25,3 +25,12 @@ test('reports layout mismatch without fabricating racer metrics',()=>{
  assert.equal(r.diagnostics.fourRowBlockCandidates,0);
  assert.deepEqual(r.racers,[]);
 });
+
+test('counts partial four-row blocks but does not treat them as racers',()=>{
+ const html='<table><tr><td rowspan="4">1 枠</td><td rowspan="4">写真</td></tr></table>';
+ const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
+ assert.equal(r.status,'incomplete_six_racer_features');
+ assert.equal(r.diagnostics.rowsWithFourRowCells,1);
+ assert.equal(r.diagnostics.fourRowBlockCandidates,0);
+ assert.equal(r.racers.length,0);
+});
