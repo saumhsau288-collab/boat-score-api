@@ -13,4 +13,6 @@ assert.ok(html.includes('data.venue!==Number(chosen.venue)'),'Must reject mismat
 assert.ok(html.includes('data.race!==Number(chosen.race)'),'Must reject mismatched race');
 assert.ok(html.includes('requestVersion!==predictionRequestVersion'),'Stale API responses must be ignored');
 assert.ok(html.includes('predictionRequestVersion++'),'Changing selection must invalidate in-flight prediction');
+assert.ok(html.includes('new URL(location.origin)'),'Preview selector must call same-origin API');
+assert.ok(!html.includes('id="preview-api"'),'No manual API URL entry required');
 console.log('Mobile selector static regression passed');
