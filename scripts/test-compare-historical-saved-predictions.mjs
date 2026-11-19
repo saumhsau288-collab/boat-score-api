@@ -36,6 +36,13 @@ const morning={...s,phase:'morning_0800'};
 const cutoff={...s,phase:'pre_cutoff'};
 const both=compare([morning,cutoff],[r]);
 assert.equal(both.compared,2);
+assert.equal(both.byPhase.morning_0800.compared,1);
+assert.equal(both.byPhase.pre_cutoff.compared,1);
+assert.equal(both.byPhase.morning_0800.mainHits,1);
+assert.equal(both.byPhase.pre_cutoff.upsetHits,1);
+assert.equal(ok.byPhase.pre_cutoff.compared,0);
+assert.equal(ok.byPhase.pre_cutoff.mainHitRate,null);
+
 assert.deepEqual(both.rows.map(row=>row.phase),['morning_0800','pre_cutoff']);
 assert.equal(compare([morning,morning],[r]).compared,1);
 console.log('Saved historical prediction comparison tests passed (synthetic only)');
