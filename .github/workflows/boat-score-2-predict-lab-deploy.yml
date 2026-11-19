@@ -48,7 +48,7 @@ jobs:
         run: |
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
-          npx --yes wrangler@4 deploy research/boat-score-2-preview-worker.mjs --name boat-score-2-predict-lab --compatibility-date 2026-11-19 --workers-dev --assets ./isolated-preview-assets
+          npx --yes wrangler@4 deploy research/boat-score-2-preview-worker.mjs --name boat-score-2-predict-lab --compatibility-date 2026-11-19 --assets ./isolated-preview-assets
       - name: Verify deployed mobile page and API without wagering
         run: |
           BASE='https://boat-score-2-predict-lab.saumh-sau-288.workers.dev'
