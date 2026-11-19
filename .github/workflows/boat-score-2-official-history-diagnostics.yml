@@ -41,16 +41,16 @@ jobs:
           node scripts/test-compare-historical-saved-predictions.mjs
           node scripts/test-build-prerace-prediction-snapshot.mjs
           node scripts/test-compare-prerace-winrate-finishes.mjs
-      - name: Fetch full 12-race historical card (exploratory sample)
-        run: |
-          mkdir -p research-historical
-          node scripts/fetch-manual-official-historical-results.mjs 20261118 2 1,2,3,4,5,6,7,8,9,10,11,12 research-historical/manual.official-raw.json
       - name: Fetch historical entry lists for three races (research only)
         run: |
           node scripts/fetch-historical-official-entry-lists.mjs 20261118 2 1,2,3 research-historical/manual.official-entries.json
       - name: Report entry-list fetch status without pre-cutoff claims
         run: |
           node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.official-entries.json","utf8")); for(const p of d.pages) console.log(JSON.stringify({race:p.race,status:p.status,error:p.error??null,preCutoffSnapshotVerified:p.preCutoffSnapshotVerified,winRatesVerified:p.winRatesVerified}));'
+      - name: Fetch full 12-race historical card (exploratory sample)
+        run: |
+          mkdir -p research-historical
+          node scripts/fetch-manual-official-historical-results.mjs 20261118 2 1,2,3,4,5,6,7,8,9,10,11,12 research-historical/manual.official-raw.json
       - name: Print fetch attempts and errors per race
         run: |
           node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.official-raw.json","utf8")); for(const p of d.pages) console.log(JSON.stringify({date:p.date,venue:p.venue,race:p.race,status:p.status,attempts:p.attempts,error:p.error??null}));'
