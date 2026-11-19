@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {preparePredictionSnapshotBatch} from './prepare-prediction-snapshot-batch.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const mainSix=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
+const base={date:'20261119',venue:2,race:3,phase:'precutoff_10min',capturedAt:'2026-11-19T12:00:00+09:00',cutoffAt:'2026-11-19T12:10:00+09:00',source:'official_live_entry',captureProvenance:'server_timestamped',racers,prediction:{mainSix}};
+const morning={...base,phase:'morning_8am',capturedAt:'2026-11-19T08:00:00+09:00'};
+const batch=preparePredictionSnapshotBatch([base,morning,structuredClone(base)]);
+assert.equal(batch.accepted.length,2);
+assert.equal(batch.rejected.length,1);
+assert.deepEqual(batch.rejected[0].reasons,['already_recorded_phase']);
+const replay=preparePredictionSnapshotBatch([base,morning],batch.accepted);
+assert.equal(replay.accepted.length,0);
+assert.equal(replay.rejected.length,2);
+const invalid=preparePredictionSnapshotBatch([{...base,capturedAt:base.cutoffAt}]);
+assert.equal(invalid.accepted.length,0);
+console.log('Snapshot batch deduplication tests passed');
