@@ -1,0 +1,56 @@
+name: Boat Score 2 join saved predictions with parsed results (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      capture_run_id:
+        description: 'Archived prediction capture workflow run ID'
+        required: true
+        type: string
+      parsed_result_run_id:
+        description: 'Parsed official HTML workflow run ID'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  join-research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate research scripts and offline tests
+        run: |
+          node --check scripts/join-saved-predictions-official-html.mjs
+          node scripts/test-join-saved-predictions-official-html.mjs
+      - name: Download archived captures and parsed official HTML
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CAPTURE_RUN_ID: ${{ inputs.capture_run_id }}
+          PARSED_RESULT_RUN_ID: ${{ inputs.parsed_result_run_id }}
+        run: |
+          mkdir -p research-captures research-results
+          gh run download "$CAPTURE_RUN_ID" --dir research-captures
+          gh run download "$PARSED_RESULT_RUN_ID" --dir research-results
+      - name: Join saved evidence without accuracy claims
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p research-joined
+          mapfile -d '' captures < <(find research-captures -type f -regextype posix-extended -regex '.*/20[0-9]{6}-[0-9]+\.json' -print0)
+          mapfile -d '' results < <(find research-results -type f -name '*.official-raw.json.parsed.json' -print0)
+          if [ "${#captures[@]}" -ne 1 ] || [ "${#results[@]}" -ne 1 ]; then
+            echo "Expected exactly one raw capture and one parsed official report; got ${#captures[@]} captures and ${#results[@]} parsed reports"
+            exit 1
+          fi
+          node scripts/join-saved-predictions-official-html.mjs "${captures[0]}" "${results[0]}" > research-joined/joined-evidence.json
+          node -e 'const fs=require("node:fs");const r=JSON.parse(fs.readFileSync("research-joined/joined-evidence.json","utf8"));console.log(JSON.stringify({linked:r.linked,eligibleForAccuracy:r.eligibleForAccuracy,mainHitRate:r.mainHitRate,upsetHitRate:r.upsetHitRate,rows:r.rows.map(x=>({venue:x.venue,race:x.race,parsedPodium:x.parsedPodium,retrospectiveMainContainsPodium:x.retrospectiveMainContainsPodium,retrospectiveUpsetContainsPodium:x.retrospectiveUpsetContainsPodium,status:x.status,holdReasons:x.holdReasons}))}));'
+      - name: Upload research-only joined evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-research-join-${{ github.run_id }}
+          path: research-joined/
+          if-no-files-found: error
+          retention-days: 30
