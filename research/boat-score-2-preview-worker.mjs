@@ -20,7 +20,7 @@ export function parseRacers(html){
   const st=Number(clean(cells[3]).match(/(?:^|\s)(0\.\d{2})(?=\s|$)/)?.[1]);
   const national=Number(clean(cells[4]).match(/(?:^|\s)(\d{1,2}\.\d{2})(?=\s|$)/)?.[1]);
   const local=Number(clean(cells[5]).match(/(?:^|\s)(\d{1,2}\.\d{2})(?=\s|$)/)?.[1]);
-  if(!boat||!racerId||!Number.isFinite(st)||st<=0||st>0.5||!Number.isFinite(national)||national<=0||national>10||!Number.isFinite(local)||local<=0||local>10)continue;
+  if(!boat||!racerId||!Number.isFinite(st)||st<=0||st>0.5||!Number.isFinite(national)||national<=0||national>10||!Number.isFinite(local)||local<0||local>10)continue;
   racers.push({boat,racerId,name,averageStartTiming:st,nationalWinRate:national,localWinRate:local,entryCourse:boat,makulaboRecent50WinRate:null,motorSecondPlaceRate:null,exhibitionTime:null,verifiedEntryCourse:null});
  }
  return racers.length===6&&new Set(racers.map(r=>r.boat)).size===6&&new Set(racers.map(r=>r.racerId)).size===6?racers.sort((a,b)=>a.boat-b.boat):null;
