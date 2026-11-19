@@ -32,15 +32,11 @@ jobs:
           test -f research/boat-score-2-race-selector.html
           test "boat-score-2-predict-lab" != "rough-math-6d4c"
           test "boat-score-2-predict-lab" != "boat-score-2-preview"
-      - name: Prepare isolated mobile app assets
+      - name: Build standalone mobile page and API Worker
         run: |
-          mkdir -p isolated-preview-assets
-          cp research/boat-score-2-race-selector.html isolated-preview-assets/index.html
-      - name: Verify packaged mobile page and API paths
-        run: |
-          test -s isolated-preview-assets/index.html
-          grep -F 'new URL(location.origin)' isolated-preview-assets/index.html
-          grep -F "'/api/predict'" research/boat-score-2-preview-worker.mjs
+          node scripts/build-predict-lab-worker.mjs
+          node --check dist/boat-score-2-predict-lab.mjs
+          test -s dist/boat-score-2-predict-lab.mjs
       - name: Deploy isolated Worker and mobile selector
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
