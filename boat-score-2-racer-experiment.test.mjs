@@ -31,3 +31,10 @@ assert.equal(explainRacerComparison(base,{...base,averageStartTiming:null}).stat
 assert.equal(experimentalRaceRanking(racers.map((r,i)=>i===5?{...r,entryCourse:1}:r)).status,'invalid_entry_courses');
 assert.equal(experimentalRaceRanking(racers.map((r,i)=>i===5?{...r,entryCourse:null}:r)).status,'invalid_entry_courses');
 assert.equal(experimentalRaceRanking(racers.map((r,i)=>i===5?{...r,entryCourse:7}:r)).status,'invalid_entry_courses');
+
+const tiedRacers=Array.from({length:6},(_,i)=>({...base,boat:i+1,entryCourse:i+1,
+ nationalWinRate:5+i*2/7,localWinRate:5+i*2/7}));
+const tiedRanking=experimentalRaceRanking(tiedRacers);
+assert.equal(tiedRanking.status,'evaluated');
+assert.ok(Array.isArray(tiedRanking.ties));
+assert.equal(experimentalRaceRanking(racers).ties.length,0);
