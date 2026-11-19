@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {parseRacers,rankRace} from '../research/boat-score-2-preview-worker.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),averageStartTiming:.12+i*.01,nationalWinRate:6.8-i*.3,localWinRate:6.4-i*.2,entryCourse:i+1}));
+const html='<table>'+racers.map(r=>'<tr>'+[r.boat,'photo',r.racerId,'0.'+String(Math.round(r.averageStartTiming*100)).padStart(2,'0'),r.nationalWinRate.toFixed(2),r.localWinRate.toFixed(2)].map(v=>'<td rowspan="4">'+v+'</td>').join('')+'</tr>').join('')+'</table>';
+const parsed=parseRacers(html);
+assert.equal(parsed?.length,6,'Six unique boats and registration IDs required');
+assert.deepEqual(parsed.map(x=>x.racerId),racers.map(x=>x.racerId));
+const out=rankRace(parsed);
+assert.equal(out.ranking.length,6);
+assert.equal(out.main.length,6);
+assert.equal(out.upset.length,6);
+assert.equal(new Set([...out.main,...out.upset].map(x=>x.ticket)).size,12);
+assert.equal(parseRacers(html.replace('4001','4002')),null,'Duplicate registration must fail');
+assert.equal(parseRacers(html.replace('rowspan="4">6','rowspan="4">7')),null,'Invalid boat must fail');
+console.log('Preview Worker parsing and 6+6 ticket tests passed');
