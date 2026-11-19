@@ -16,8 +16,16 @@ export async function probeMakulaboPublicPage({date,venue,race,fetchImpl=fetch}=
   const tableShape={rowCellCounts:tableRows.slice(0,12).map(m=>(m[1].match(/<(?:td|th)\b/gi)??[]).length),headerCells:(html.match(/<th\b/gi)??[]).length,registrationLinkCount:(html.match(/racersearch\/profile\/\d{4,6}/gi)??[]).length,containsDataTable:/<table\b[^>]*\b(?:data-|id=|class=)/i.test(html)};
   const cells=[...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[...m[1].matchAll(/<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi)].map(x=>x[1]));
   const cellAudit={rowCount:cells.length,headerColumnCount:cells[0]?.length??0,bodyRowCount:Math.max(0,cells.length-1),headerLabels:(cells[0]??[]).map(x=>x.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,60)),bodyRowTextLengths:cells.slice(1,7).map(row=>row.map(x=>x.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().length)),bodyRowImageCounts:cells.slice(1,7).map(row=>row.reduce((n,x)=>n+(x.match(/<img\b/gi)??[]).length,0))};
+  // A table of counts is not automatically a last-50 sample. Audit row totals without exposing names.
+  const numericRows=cells.slice(1,7).map(row=>row.map(x=>x.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').trim()));
+  const countAudit=numericRows.map(row=>{
+   const finish=row.slice(2,8).map(v=>/^\d+$/.test(v)?Number(v):null);
+   const starts=/^\d+$/.test(row[8]??'')?Number(row[8]):null;
+   const sum=finish.every(Number.isInteger)?finish.reduce((a,b)=>a+b,0):null;
+   return {finishCountsNumeric:sum!==null,finishCountSum:sum,starts,countsEqualStarts:sum!==null&&starts!==null?sum===starts:null,exactly50Starts:starts===50};
+  });
   const js={scriptCount:html.split('<script').length-1,hasNextData:html.includes('__NEXT_DATA__'),hasNuxtData:html.includes('__NUXT__'),hasReactRoot:html.includes('id="root"')||html.includes('id="__next"'),hasVueRoot:html.includes('id="app"'),hasEmbeddedJson:html.includes('application/json'),hasApiPath:html.includes('/api/')||html.includes('axios.')};
-  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,cellAudit,js,warning:'Page labels are not authenticated six-racer recent50 win rates. No values extracted or applied.'};
+  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,cellAudit,countAudit,js,warning:'Page labels are not authenticated six-racer recent50 win rates. No values extracted or applied.'};
  }catch(e){return {status:'fetch_failed',url,recent50Ready:false,error:String(e.message).slice(0,120)};}
 }
 
