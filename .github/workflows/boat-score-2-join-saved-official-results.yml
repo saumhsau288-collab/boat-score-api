@@ -25,6 +25,8 @@ jobs:
         run: |
           node --check scripts/join-saved-predictions-official-html.mjs
           node scripts/test-join-saved-predictions-official-html.mjs
+          node --check scripts/summarize-research-join.mjs
+          node scripts/test-summarize-research-join.mjs
       - name: Download archived captures and parsed official HTML
         env:
           GH_TOKEN: ${{ github.token }}
@@ -47,6 +49,10 @@ jobs:
           fi
           node scripts/join-saved-predictions-official-html.mjs "${captures[0]}" "${results[0]}" > research-joined/joined-evidence.json
           node -e 'const fs=require("node:fs");const r=JSON.parse(fs.readFileSync("research-joined/joined-evidence.json","utf8"));console.log(JSON.stringify({linked:r.linked,eligibleForAccuracy:r.eligibleForAccuracy,mainHitRate:r.mainHitRate,upsetHitRate:r.upsetHitRate,rows:r.rows.map(x=>({venue:x.venue,race:x.race,parsedPodium:x.parsedPodium,retrospectiveMainContainsPodium:x.retrospectiveMainContainsPodium,retrospectiveUpsetContainsPodium:x.retrospectiveUpsetContainsPodium,status:x.status,holdReasons:x.holdReasons}))}));'
+      - name: Write mobile-friendly research summary
+        run: |
+          node scripts/summarize-research-join.mjs research-joined/joined-evidence.json research-joined/summary.md
+          cat research-joined/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Upload research-only joined evidence
         uses: actions/upload-artifact@v4
         with:
