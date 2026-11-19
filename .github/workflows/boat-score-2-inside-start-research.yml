@@ -8,6 +8,7 @@ on:
       - 'scripts/test-compare-inside-start-ticket-history.mjs'
       - 'scripts/audit-inside-start-history-readiness.mjs'
       - 'scripts/test-audit-inside-start-history-readiness.mjs'
+      - 'scripts/run-inside-start-history-research.mjs'
       - '.github/workflows/boat-score-2-inside-start-research.yml'
   pull_request:
     paths:
@@ -34,6 +35,7 @@ jobs:
           node --check scripts/test-compare-inside-start-ticket-history.mjs
           node --check scripts/audit-inside-start-history-readiness.mjs
           node --check scripts/test-audit-inside-start-history-readiness.mjs
+          node --check scripts/run-inside-start-history-research.mjs
       - name: Run synthetic research checks
         run: |
           node scripts/test-inside-start-historical-research.mjs
