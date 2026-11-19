@@ -1,5 +1,12 @@
 name: Boat Score 2 replay saved historical evidence
 on:
+  push:
+    branches:
+      - fix-boat-score-2-syntax-20261115
+    paths:
+      - '.github/workflows/boat-score-2-offline-replay.yml'
+      - 'scripts/compare-exploratory-winrates-results.mjs'
+      - 'scripts/test-compare-exploratory-winrates-results.mjs'
   workflow_dispatch:
 permissions:
   contents: read
