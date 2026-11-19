@@ -42,3 +42,13 @@ test('extracts racer identity from official profile link when displayed ID is ab
  assert.deepEqual(r.racers.map(x=>x.racerId),['4001','4002','4003','4004','4005','4006']);
  assert.equal(r.boatMappingVerified,true);
 });
+
+test('extracts win rates and average ST when values follow labels',()=>{
+ const html=Array.from({length:6},(_,i)=>block(i+1).replace('>0.15<','>平均ST 0.15<').replace('>6.20<','>全国 6.20<').replace('>5.40<','>当地 5.40<')).join('');
+ const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
+ assert.equal(r.status,'parsed_archival_features_unverified');
+ assert.equal(r.racers.length,6);
+ assert.equal(r.racers[0].averageStartTiming,0.15);
+ assert.equal(r.racers[0].nationalWinRate,6.2);
+ assert.equal(r.racers[0].localWinRate,5.4);
+});
