@@ -40,29 +40,29 @@ jobs:
         run: |
           mkdir -p research-historical
           for race in 1 2 3 4 5 6 7 8 9 10 11 12; do
-            node scripts/fetch-historical-racelist-sample.mjs "research-historical/${RACE_DATE}-${VENUE_CODE}-${race}r-racelist.json" "$RACE_DATE" "$VENUE_CODE" "$race"
+            node scripts/fetch-historical-racelist-sample.mjs "research-historical/20261118-tokuyama-${race}r-racelist.json" "$RACE_DATE" "$VENUE_CODE" "$race"
             sleep 1
           done
       - name: Fetch matching official race result and start order
         run: |
-          node scripts/fetch-manual-official-historical-results.mjs "$RACE_DATE" "$VENUE_CODE" 1,2,3,4,5,6,7,8,9,10,11,12 research-historical/${RACE_DATE}-${VENUE_CODE}-results-raw.json
-          node scripts/extract-official-result-racers.mjs research-historical/${RACE_DATE}-${VENUE_CODE}-results-raw.json research-historical/${RACE_DATE}-${VENUE_CODE}-results-parsed.json
+          node scripts/fetch-manual-official-historical-results.mjs "$RACE_DATE" "$VENUE_CODE" 1,2,3,4,5,6,7,8,9,10,11,12 research-historical/20261118-tokuyama-results-raw.json
+          node scripts/extract-official-result-racers.mjs research-historical/20261118-tokuyama-results-raw.json research-historical/20261118-tokuyama-results-parsed.json
       - name: Summarize real capture completeness
         run: |
           node --check scripts/summarize-official-historical-capture.mjs
-          node scripts/summarize-official-historical-capture.mjs research-historical research-historical/${RACE_DATE}-${VENUE_CODE}-completeness.json
+          node scripts/summarize-official-historical-capture.mjs research-historical research-historical/20261118-tokuyama-completeness.json
       - name: Join archived racer features to official results (research only)
         run: |
           node --check scripts/extract-archived-racer-features.mjs
-          node scripts/extract-archived-racer-features.mjs research-historical research-historical/${RACE_DATE}-${VENUE_CODE}-feature-joins.json
+          node scripts/extract-archived-racer-features.mjs research-historical research-historical/20261118-tokuyama-feature-joins.json
       - name: Compare research-only scores with actual finish
         run: |
           node --check scripts/evaluate-archived-racer-scores.mjs
-          node scripts/evaluate-archived-racer-scores.mjs research-historical/${RACE_DATE}-${VENUE_CODE}-feature-joins.json research-historical/${RACE_DATE}-${VENUE_CODE}-score-comparison.json
+          node scripts/evaluate-archived-racer-scores.mjs research-historical/20261118-tokuyama-feature-joins.json research-historical/20261118-tokuyama-score-comparison.json
       - name: Compare alternative score weights descriptively
         run: |
           node --check scripts/compare-archived-weight-candidates.mjs
-          node scripts/compare-archived-weight-candidates.mjs research-historical/${RACE_DATE}-${VENUE_CODE}-feature-joins.json research-historical/${RACE_DATE}-${VENUE_CODE}-weight-candidates.json
+          node scripts/compare-archived-weight-candidates.mjs research-historical/20261118-tokuyama-feature-joins.json research-historical/20261118-tokuyama-weight-candidates.json
       - name: Save original official source and fetch status
         uses: actions/upload-artifact@v4
         with:
