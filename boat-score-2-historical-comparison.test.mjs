@@ -37,3 +37,6 @@ assert.equal(split.holdout.eligible,1);
 assert.equal(compareChronologicalHoldout([row],'20261119').status,'insufficient_history');
 assert.equal(compareChronologicalHoldout([row,row],'20261119').status,'duplicate_races');
 assert.equal(compareChronologicalHoldout([row],'not-a-date').status,'invalid_input');
+
+assert.equal(compareHistoricalSet([row,{...row,preRaceSnapshot:false}]).status,'duplicate_races');
+assert.equal(compareChronologicalHoldout([row,{...row,resultVerified:false}],'20261119').status,'duplicate_races');
