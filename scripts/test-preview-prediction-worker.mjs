@@ -10,6 +10,13 @@ assert.equal(parsed?.length,6,'Six unique boats and registration IDs required');
 assert.deepEqual(parsed.map(x=>x.racerId),racers.map(x=>x.racerId));
 const out=rankRace(parsed);
 assert.equal(out.ranking.length,6);
+for(const racer of out.ranking){
+ assert.equal(racer.winRateAverage,(racer.nationalWinRate+racer.localWinRate)/2);
+ assert.ok(Math.abs(racer.score-(racer.scoreBreakdown.winRatePoints+racer.scoreBreakdown.startPoints+racer.scoreBreakdown.assumedCoursePoints))<0.002);
+ assert.equal(racer.scoreBreakdown.makulaboPoints,null);
+ assert.equal(racer.scoreBreakdown.motorPoints,null);
+ assert.equal(racer.scoreBreakdown.exhibitionPoints,null);
+}
 assert.equal(out.main.length,6);
 assert.equal(out.upset.length,6);
 assert.equal(new Set([...out.main,...out.upset].map(x=>x.ticket)).size,12);
