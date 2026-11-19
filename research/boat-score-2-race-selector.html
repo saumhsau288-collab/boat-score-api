@@ -24,7 +24,7 @@
 <option value="21">21 芦屋</option>
 <option value="22">22 福岡</option>
 <option value="23">23 唐津</option>
-<option value="24">24 大村</option></select><label for="race">レース</label><select id="race"><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="select">レースを選択</button><section aria-live="polite"><h2>選択結果</h2><pre id="result">開催場とレースを選んでください。</pre></section><small>注意：これは検証用の選択画面です。開催の有無・出走表・直前情報は未取得です。ここで買い目や実際の予想は表示されません。公開アプリとは独立しています。</small></main>
+<option value="24">24 大村</option></select><label for="race">レース</label><select id="race"><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="select">レースを選択</button><section aria-live="polite"><h2>選択結果</h2><pre id="result">開催場とレースを選んでください。</pre><a id="official" href="#" target="_blank" rel="noopener noreferrer" hidden>選択したレースの公式出走表を開く</a></section><small>注意：これは検証用の選択画面です。開催の有無・出走表・直前情報は未取得です。ここで買い目や実際の予想は表示されません。公開アプリとは独立しています。</small></main>
 <script>
 const date=document.querySelector('#date'),venue=document.querySelector('#venue'),race=document.querySelector('#race'),result=document.querySelector('#result');
 date.value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
@@ -33,6 +33,7 @@ document.querySelector('#select').addEventListener('click',()=>{
  const hd=date.value.replaceAll('-',''),jcd=venue.value,rno=race.value;
  const url=new URL('https://www.boatrace.jp/owpc/pc/race/racelist');
  url.searchParams.set('hd',hd);url.searchParams.set('jcd',jcd);url.searchParams.set('rno',rno);
+ const official=document.querySelector('#official');official.href=url.href;official.hidden=false;
  result.textContent=venue.options[venue.selectedIndex].text+' / '+race.value+'R / '+date.value+'\n公式出走表：'+url.href+'\n\n現在は選択と公式ページへの参照まで。自動予想は未接続です。';
 });
 </script></body></html>
