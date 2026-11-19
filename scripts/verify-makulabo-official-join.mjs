@@ -12,7 +12,16 @@ try{
  const payload=await apiResponse.json();
  if(payload?.officialRacersInspection?.verified!==true)throw Error('official_six_not_verified');
  const result=joinMakulaboWithOfficial(payload.officialRacersInspection.racers,extracted);
- if(!result.verified)throw Error(result.reason);
+ if(!result.verified && result.reason==='abbreviated_name_requires_review') {
+  const official=payload.officialRacersInspection.racers;
+  console.log(JSON.stringify({status:'identity_review_required',date,venue,race,reason:result.reason,
+   candidates:extracted.parsedRows.map(row=>({boat:row.boat,sourceName:row.name,
+    officialName:official.find(r=>r.boat===row.boat)?.name??null,
+    officialRacerId:official.find(r=>r.boat===row.boat)?.racerId??null})),
+   verified:false,scoreChangeApplied:false},null,2));
+  process.exitCode=0;
+ } else if(!result.verified)throw Error(result.reason);
+ if(!result.verified)process.exit();
  console.log(JSON.stringify({status:'official_makulabo_join_verified',date,venue,race,
   racers:result.racers.map(r=>({boat:r.boat,racerId:r.racerId,runs:r.runs,firstPlaceRate:r.firstPlaceRate,top2Rate:r.top2Rate,top3Rate:r.top3Rate,matchMethod:r.matchMethod})),
   scoreChangeApplied:false,warning:'Overall finish rates only; no course-specific rate or prediction score is asserted.'},null,2));
