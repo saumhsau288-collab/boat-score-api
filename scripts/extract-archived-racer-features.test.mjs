@@ -68,3 +68,11 @@ test('rejects impossible national win rates before prediction',()=>{
  assert.equal(r.racers.length,0);
  assert.equal(r.diagnostics.completeRacerBlocks,5);
 });
+
+test('accepts unquoted and whitespace-padded rowspan attributes',()=>{
+ const html=Array.from({length:6},(_,i)=>block(i+1).replaceAll('rowspan="4"',i%2?'rowspan = "4"':'rowspan=4')).join('');
+ const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
+ assert.equal(r.status,'parsed_archival_features_unverified');
+ assert.equal(r.boatMappingVerified,true);
+ assert.equal(r.racers.length,6);
+});
