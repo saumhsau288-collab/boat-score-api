@@ -37,10 +37,12 @@ export function compareHistoricalSet(rows){
   items.push(result);
  }
  const valid=items.filter(x=>x.status==='compared');
+ const excludedReasons={};
+ for(const item of items)if(item.status==='excluded')excludedReasons[item.reason]=(excludedReasons[item.reason]||0)+1;
  const totals=k=>({winnerHits:valid.filter(x=>x[k].winnerHit).length,
    podiumSetHits:valid.filter(x=>x[k].podiumSetHit).length});
  return {status:valid.length?'evaluated':'insufficient_history',total:rows.length,
-   eligible:valid.length,excluded:rows.length-valid.length,baseline:totals('old'),
+   eligible:valid.length,excluded:rows.length-valid.length,excludedReasons,baseline:totals('old'),
    experimental:totals('experimental'),
    warning:'Offline descriptive comparison only; not a validated out-of-sample gain.'};
 }
