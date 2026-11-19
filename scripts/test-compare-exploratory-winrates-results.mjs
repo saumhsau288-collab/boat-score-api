@@ -28,6 +28,12 @@ assert.equal(withCourses.winnerActualCourseCounts['2'],1);
 assert.equal(withCourses.racesWithSixAverageST,1);
 assert.equal(withCourses.rows[0].winnerAverageSTRank,4);
 assert.equal(withCourses.winnerWinRateAndSTTopThree,0);
+assert.equal(withCourses.winnerWinRateTopThreeInCompleteSTSample,1);
+assert.equal(withCourses.winnerSTTopThreeInCompleteSTSample,0);
+assert.equal(withCourses.winnerEitherWinRateOrSTTopThree,1);
+assert.equal(withCourses.racesEligibleForCombinedRankDescription,1);
+assert.equal(withCourses.winnerActualCourseCounts['2'],1);
+assert.equal(withCourses.eligibleForCalibration,0);
 assert.equal(compareExploratoryWinRateFinishes({rows:[{date:'20261118',venue:2,race:2,statsVerified:true,racers}]},
  {rows:[{date:'20261119',venue:2,race:2,status:'parsed_needs_independent_review',racers:resultRacers}]}).matchedRaces,0);
 assert.equal(compareExploratoryWinRateFinishes({rows:[{date:'20261118',venue:2,race:2,statsVerified:true,racers}]},
