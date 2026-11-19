@@ -1,0 +1,50 @@
+name: Boat Score 2 selected race provisional prediction
+on:
+  workflow_dispatch:
+    inputs:
+      race_date:
+        description: 'Race date YYYYMMDD'
+        required: true
+        default: '20261119'
+      venue_code:
+        description: 'Venue 1-24 (e.g. 18 Tokuyama)'
+        required: true
+        default: '18'
+      race_number:
+        description: 'Race 1-12'
+        required: true
+        default: '1'
+permissions:
+  contents: read
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment-racer-start-course-20261119
+          persist-credentials: false
+      - name: Validate inputs and predict with official racelist
+        env:
+          RACE_DATE: ${{ inputs.race_date }}
+          VENUE_CODE: ${{ inputs.venue_code }}
+          RACE_NUMBER: ${{ inputs.race_number }}
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import {predictSelectedRace} from './scripts/predict-selected-boat-race.mjs';
+          const date=process.env.RACE_DATE,venue=Number(process.env.VENUE_CODE),race=Number(process.env.RACE_NUMBER);
+          const result=await predictSelectedRace({date,venue,race});
+          fs.mkdirSync('selected-race-output',{recursive:true});
+          fs.writeFileSync('selected-race-output/prediction.json',JSON.stringify(result,null,2)+'\n');
+          console.log(JSON.stringify({status:result.status,date,venue,race,main:result.main?.length??0,upset:result.upset?.length??0,entryScenario:result.entryScenario??null}));
+          if(result.status!=='experimental')process.exitCode=1;
+          JS
+      - name: Upload result for review even if fetch failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selected-race-prediction
+          path: selected-race-output/
+          if-no-files-found: warn
