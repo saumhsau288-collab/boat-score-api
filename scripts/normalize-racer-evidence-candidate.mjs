@@ -2,10 +2,11 @@
 export function normalizeRacerEvidenceCandidate(snapshot){
  const fail=reason=>({ready:false,reason,eligibleForDeployment:false});
  if(snapshot?.ready!==true||!Array.isArray(snapshot.racers)||snapshot.racers.length!==6)return fail('six_verified_racers_required');
+ if(new Set(snapshot.racers.map(r=>r?.boat)).size!==6||!snapshot.racers.every(r=>Number.isInteger(r?.boat)&&r.boat>=1&&r.boat<=6&&/^\d{4}$/.test(String(r?.racerId??''))))return fail('invalid_racer_identities');
  const rows=[];
  for(const r of snapshot.racers){
   const v=r?.values??{};
-  if(![v.nationalWinRate,v.localWinRate,v.averageST,v.motorSecondPlaceRate,v.expectedEntryCourse,v.exhibitionTime].every(Number.isFinite))return fail('missing_pre_race_measurements');
+  if(![v.nationalWinRate,v.localWinRate,v.averageST,v.motorSecondPlaceRate,v.expectedEntryCourse,v.exhibitionTime].every(x=>typeof x==='number'&&Number.isFinite(x)))return fail('missing_pre_race_measurements');
   if(v.nationalWinRate<0||v.nationalWinRate>10||v.localWinRate<0||v.localWinRate>10||
     v.averageST<0||v.averageST>1||v.motorSecondPlaceRate<0||v.motorSecondPlaceRate>100||
     !Number.isInteger(v.expectedEntryCourse)||v.expectedEntryCourse<1||v.expectedEntryCourse>6||
