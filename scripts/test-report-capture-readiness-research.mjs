@@ -20,5 +20,7 @@ const validBoats=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:5,local
 const verifiedInputs=summarizeCaptureReadiness({records:[{venue:1,response:{ready:true,rankedScores:[1,2,3,4,5,6],scoreInputsByBoat:validBoats},receivedAt:'2026-11-17T23:00:00Z'}]});
 assert.equal(verifiedInputs.counts.missingSixOriginalInputs,0);
 assert.equal(verifiedInputs.eligibleForWeightTuning,0); // Inputs alone never prove timing or results.
+const previousDay=summarizeCaptureReadiness({date:'20261118',records:[{venue:1,response:{ready:true},receivedAt:'2026-11-16T23:00:00Z'}]});
+assert.equal(previousDay.counts.capturedOutsideMorningWindow,1); // 08:00 JST, wrong calendar day.
 assert.throws(()=>summarizeCaptureReadiness({}),/records/);
 console.log('Capture readiness research tests passed');
