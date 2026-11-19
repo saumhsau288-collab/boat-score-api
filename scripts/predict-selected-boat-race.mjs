@@ -12,7 +12,7 @@ export async function predictSelectedRace({date,venue,race,courses=null,venueHis
   message:'公式出走表の取得に失敗しました。開催日・開催場・レース番号と公式サイトの公開状況を確認してください。'};
  const provenance={officialUrl:entry.url,htmlSha256:entry.sha256??null,fetchedAt:entry.fetchedAt??null,preCutoffSnapshotAuthenticated:false};
  const features=extractArchivedRacerFeatures(entry);
- if(features.status!=='parsed_archival_features_unverified')return {status:'official_features_incomplete',date,venue,race,main:[],upset:[],provenance,
+ if(features.status!=='parsed_archival_features_unverified')return {status:'official_features_incomplete',date,venue,race,main:[],upset:[],provenance,diagnostics:features.diagnostics??null,
   message:'出走表から6人分の選手勝率・平均STを確認できないため、予想を保留しました。'};
  const usingAssumedEntry=courses===null;
  const selectedCourses=usingAssumedEntry?[1,2,3,4,5,6]:courses;
