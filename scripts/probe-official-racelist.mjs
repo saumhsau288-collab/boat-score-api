@@ -45,7 +45,32 @@ try{
   const tables=[...resultHtml.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map((m,i)=>({index:i,rows:[...m[1].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(r=>[...r[1].matchAll(/<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi)].map(x=>x[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim()))}));
   const tableShape={count:tables.length,firstTables:tables.slice(0,5).map(t=>({index:t.index,rows:t.rows.length,firstRows:t.rows.slice(0,3).map(row=>row.slice(0,7).map(x=>x.slice(0,30)))}))};
   const tableAudit=tables.map(t=>({index:t.index,rowCount:t.rows.length,headers:t.rows.slice(0,2).map(row=>row.map(x=>x.slice(0,25))),firstRows:t.rows.slice(1,7).map(row=>row.slice(0,4).map(x=>x.slice(0,25)))})).filter(t=>t.headers.some(row=>row.some(x=>/着順|艇番|選手名|レース結果/.test(x)))).slice(0,3);
-  resultAudit={status:resultResponse.ok?'page_fetched_not_yet_parsed':'http_error',httpStatus:resultResponse.status,htmlBytes:resultHtml.length,hasResultMarker:!!marker,tableShape,tableAudit,verifiedFinish:[],warning:'No finish order inferred from generic text; requires structural parsing and racer-ID verification'};
+  const finishTables=tables.filter(t=>t.rows[0]?.[0]==='着'&&t.rows[0]?.[1]==='枠'&&t.rows[0]?.[2]==='ボートレーサー');
+  const verifiedFinish=[];
+  if(finishTables.length===1&&racers?.length===6){
+   const used=new Set();
+   for(const row of finishTables[0].rows.slice(1)){
+    const place=Number((row[0]??'').normalize('NFKC'));
+    const boat=Number((row[1]??'').normalize('NFKC'));
+    const id=(row[2]??'').match(/(?:^|\s)(\\d{4})(?=\s|$)/)?.[1];
+    const racer=racers.find(r=>r.boat===boat&&r.racerId===id);
+    if(!Number.isInteger(place)||place<1||place>6||!Number.isInteger(boat)||boat<1||boat>6||!racer||used.has(boat))continue;
+    used.add(boat);
+    verifiedFinish.push({place,boat,racerId:id,name:racer.name});
+   }
+  }
+  verifiedFinish.sort((a,b)=>a.place-b.place);
+  const topThreeVerified=verifiedFinish.length>=3&&[1,2,3].every((place,i)=>verifiedFinish[i].place===place);
+  const actualTopThree=topThreeVerified?verifiedFinish.slice(0,3).map(r=>r.boat):[];
+  const predictionAudit=topThreeVerified&&crossSource.scoreComparison?{
+   actualTopThree,baselineRank:crossSource.scoreComparison.beforeRank.slice(0,3),adjustedRank:crossSource.scoreComparison.afterRank.slice(0,3),
+   baselineTopThreeSetHits:crossSource.scoreComparison.beforeRank.slice(0,3).filter(b=>actualTopThree.includes(b)).length,
+   adjustedTopThreeSetHits:crossSource.scoreComparison.afterRank.slice(0,3).filter(b=>actualTopThree.includes(b)).length,
+   baselineFirstCorrect:crossSource.scoreComparison.beforeRank[0]===actualTopThree[0],
+   adjustedFirstCorrect:crossSource.scoreComparison.afterRank[0]===actualTopThree[0],
+   warning:'Single-race exploratory comparison; ranking is not a trifecta ticket or a validated prediction rate.'
+  }:null;
+  resultAudit={status:resultResponse.ok?'page_fetched_not_yet_parsed':'http_error',httpStatus:resultResponse.status,htmlBytes:resultHtml.length,hasResultMarker:!!marker,tableShape,tableAudit,verifiedFinish,topThreeVerified,predictionAudit,warning:'No finish order inferred from generic text; requires structural parsing and racer-ID verification'};
  }catch(e){resultAudit={status:'fetch_error',error:String(e.message).slice(0,120),verifiedFinish:[]};}
  const audit={date,venue,race,httpStatus:res.status,htmlBytes:html.length,tableRows:(html.match(/<tr\b/gi)||[]).length,parsedSix:racers?.length===6,crossSource,resultAudit,names:racers?.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name}))??[],warning:'Public official racelist inspection only; no prediction or deploy'};
  console.log('OFFICIAL_RACELIST_PROBE',JSON.stringify(audit));
