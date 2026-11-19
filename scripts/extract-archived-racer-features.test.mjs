@@ -76,3 +76,10 @@ test('accepts unquoted and whitespace-padded rowspan attributes',()=>{
  assert.equal(r.boatMappingVerified,true);
  assert.equal(r.racers.length,6);
 });
+
+test('classifies layout mismatch separately from invalid metric values',()=>{
+ const layout=extractArchivedRacerFeatures({status:'raw_html_saved',html:'<table><tr><td>unknown layout</td></tr></table>'});
+ assert.equal(layout.diagnostics.failureCategory,'no_four_row_cells');
+ const invalid=extractArchivedRacerFeatures({status:'raw_html_saved',html:Array.from({length:6},(_,i)=>block(i+1).replace('>6.20<',i===0?'>12.20<':'>6.20<')).join('')});
+ assert.equal(invalid.diagnostics.failureCategory,'out_of_range_values');
+});
