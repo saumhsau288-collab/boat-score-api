@@ -11,5 +11,5 @@ assert.equal(out.main.length,6);
 assert.equal(out.upset.length,6);
 assert.equal(new Set([...out.main,...out.upset].map(x=>x.ticket)).size,12);
 assert.equal(parseRacers(html.replace('4001','4002')),null,'Duplicate registration must fail');
-assert.equal(parseRacers(html.replace('rowspan="4">6','rowspan="4">7')),null,'Invalid boat must fail');
+assert.equal(parseRacers(html.replace('<td rowspan="4">6</td>','<td rowspan="4">7</td>')),null,'Invalid boat must fail');
 console.log('Preview Worker parsing and 6+6 ticket tests passed');
