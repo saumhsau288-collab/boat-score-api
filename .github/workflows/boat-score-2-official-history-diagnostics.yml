@@ -43,6 +43,7 @@ jobs:
           node scripts/test-compare-prerace-winrate-finishes.mjs
       - name: Fetch historical entry lists for three races (research only)
         run: |
+          mkdir -p research-historical
           node scripts/fetch-historical-official-entry-lists.mjs 20261118 2 1,2,3 research-historical/manual.official-entries.json
       - name: Report entry-list fetch status without pre-cutoff claims
         run: |
