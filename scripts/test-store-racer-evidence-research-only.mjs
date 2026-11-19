@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {storeRacerEvidenceResearchOnly} from './store-racer-evidence-research-only.mjs';
-const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),values:{nationalWinRate:5,localWinRate:5,averageST:0.15,motorSecondPlaceRate:40,expectedEntryCourse:i+1,exhibitionTime:6.8,last50Score:50}}));
 const sample={ready:true,schemaVersion:1,date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T11:00:00+09:00',captureStatus:'server_timestamped_verified',source:'official_live_entry',racers};
 let writes=0;
 const kv={get:async()=>null,put:async()=>{writes++}};
