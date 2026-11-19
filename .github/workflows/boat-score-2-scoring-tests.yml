@@ -50,6 +50,8 @@ jobs:
           node --experimental-default-type=module boat-score-2-official-pipeline.test.mjs
           node --experimental-default-type=module --check boat-score-2-recent50-identity.js
           node --experimental-default-type=module boat-score-2-recent50-identity.test.mjs
+          node --experimental-default-type=module --check boat-score-2-makulabo-official-join.js
+          node --experimental-default-type=module boat-score-2-makulabo-official-join.test.mjs
           node --experimental-default-type=module --check boat-score-2-makulabo-source-table.js
           node --experimental-default-type=module boat-score-2-makulabo-source-table.test.mjs
           node --experimental-default-type=module --check boat-score-2-makulabo-finish-headers.js
