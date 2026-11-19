@@ -22,10 +22,10 @@ export async function probeMakulaboPublicPage({date,venue,race,fetchImpl=fetch}=
    const finish=row.slice(2,8).map(v=>/^\d+$/.test(v)?Number(v):null);
    const starts=/^\d+$/.test(row[8]??'')?Number(row[8]):null;
    const sum=finish.every(Number.isInteger)?finish.reduce((a,b)=>a+b,0):null;
-   return {finishCountsNumeric:sum!==null,finishCountSum:sum,starts,countsEqualStarts:sum!==null&&starts!==null?sum===starts:null,exactly50Starts:starts===50};
+   return {finishCountsNumeric:sum!==null,finishCountSum:sum,starts,countsEqualStarts:sum!==null&&starts!==null?sum===starts:null,exactly50Starts:starts===50,firstPlaceRatePct:sum!==null&&starts>0&&sum===starts?Number((finish[0]/starts*100).toFixed(2)):null,topThreeRatePct:sum!==null&&starts>0&&sum===starts?Number(((finish[0]+finish[1]+finish[2])/starts*100).toFixed(2)):null,verifiedRegistrationId:false};
   });
   const js={scriptCount:html.split('<script').length-1,hasNextData:html.includes('__NEXT_DATA__'),hasNuxtData:html.includes('__NUXT__'),hasReactRoot:html.includes('id="root"')||html.includes('id="__next"'),hasVueRoot:html.includes('id="app"'),hasEmbeddedJson:html.includes('application/json'),hasApiPath:html.includes('/api/')||html.includes('axios.')};
-  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,cellAudit,countAudit,js,warning:'Page labels are not authenticated six-racer recent50 win rates. No values extracted or applied.'};
+  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,cellAudit,countAudit,js,warning:'Finish-count rates are computed only from visible counts; no official registration-ID match, last-50-period verification, or score application.'};
  }catch(e){return {status:'fetch_failed',url,recent50Ready:false,error:String(e.message).slice(0,120)};}
 }
 
