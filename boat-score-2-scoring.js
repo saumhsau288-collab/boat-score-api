@@ -17,6 +17,8 @@ const LIMITS = Object.freeze({
   exhibitionScore: 100
 });
 export function evaluateRacer(input) {
+  // A reported local 0.00 is treated as no local sample; use national rate for scoring.
+  input = input && input.localWinRate === 0 && Number.isFinite(input.nationalWinRate) ? {...input,localWinRate:input.nationalWinRate} : input;
   const keys = Object.keys(SCORE_WEIGHTS);
   const missing = keys.filter(k => !Number.isFinite(input?.[k]));
   if (missing.length) return {status:'insufficient_data',missing,score:null};
