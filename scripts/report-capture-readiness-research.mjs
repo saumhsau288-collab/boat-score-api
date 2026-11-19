@@ -13,7 +13,7 @@ export function summarizeCaptureReadiness(capture) {
     row.attempted++;
     if(r.response?.ready!==true){counts.failedOrNotReady++;continue;}
     counts.ready++;row.ready++;
-    const received=Date.parse(r.receivedAt??'');
+    // Original feature vectors are not exposed by the archived capture contract.\n    counts.missingSixOriginalInputs++;\n    if(!Array.isArray(r.response.rankedScores)||r.response.rankedScores.length!==6)counts.missingRankedScores++;\n    const received=Date.parse(r.receivedAt??'');
     if(!Number.isFinite(received)){counts.missingReceiveTime++;continue;}
     const jst=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(received));
     if(jst<'07:45'||jst>'08:30')counts.capturedOutsideMorningWindow++;
