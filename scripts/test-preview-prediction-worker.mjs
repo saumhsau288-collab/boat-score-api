@@ -1,3 +1,6 @@
+import {execFileSync} from 'node:child_process';
+import {pathToFileURL} from 'node:url';
+import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import worker,{parseRacers,rankRace} from '../research/boat-score-2-preview-worker.mjs';
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),averageStartTiming:.12+i*.01,nationalWinRate:6.8-i*.3,localWinRate:6.4-i*.2,entryCourse:i+1}));
@@ -12,11 +15,19 @@ assert.equal(out.upset.length,6);
 assert.equal(new Set([...out.main,...out.upset].map(x=>x.ticket)).size,12);
 assert.equal(parseRacers(html.replace('4001','4002')),null,'Duplicate registration must fail');
 assert.equal(parseRacers(html.replace('<td rowspan="4">6</td>','<td rowspan="4">7</td>')),null,'Invalid boat must fail');
+execFileSync(process.execPath,[fileURLToPath(new URL('./build-predict-lab-worker.mjs',import.meta.url))],{stdio:'pipe'});
+const bundled=(await import(new URL('../dist/boat-score-2-predict-lab.mjs',import.meta.url))).default;
+const homepage=await bundled.fetch(new Request('https://preview.example/'));
+assert.equal(homepage.status,200);
+assert.match(homepage.headers.get('content-type')??'',/text\/html/);
+assert.ok((await homepage.text()).includes('id="predict-direct"'));
+const alias=await bundled.fetch(new Request('https://preview.example/index.html'));
+assert.equal(alias.status,200);
 const oldFetch=globalThis.fetch;
 try{
  let officialRequested='';
  globalThis.fetch=async url=>{officialRequested=String(url);return new Response(html,{status:200,headers:{'content-type':'text/html'}});};
- const good=await worker.fetch(new Request('https://preview.example/api/predict?date=20261119&venue=18&race=2'));
+ const good=await bundled.fetch(new Request('https://preview.example/api/predict?date=20261119&venue=18&race=2'));
  const json=await good.json();
  assert.equal(json.status,'experimental');
  assert.equal(json.date,'20261119');
