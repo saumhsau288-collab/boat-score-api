@@ -31,12 +31,17 @@ export function compareExploratoryWinRateFinishes(entryReport,resultReport){
    winnerBoat:joined.find(r=>r.finish===1)?.boat??null,
    winnerAverageWinRate:joined.find(r=>r.finish===1)?.averageWinRate??null,
    winnerAverageWinRateRank:ranked.findIndex(r=>r.finish===1)>=0?ranked.findIndex(r=>r.finish===1)+1:null,
+   winnerAverageSTRank:joined.find(r=>r.finish===1&&Number.isFinite(r.averageST))?([...joined].filter(r=>Number.isFinite(r.averageST)).sort((a,b)=>a.averageST-b.averageST||a.boat-b.boat).findIndex(r=>r.finish===1)+1):null,
+   availableAverageSTCount:joined.filter(r=>Number.isFinite(r.averageST)).length,
    racerStats:ranked.map(r=>({boat:r.boat,racerId:r.racerId,averageWinRate:r.averageWinRate,finish:r.finish})),
    exploratoryOnly:true,eligibleForCalibration:false});
  }
  return {matchedRaces:rows.length,highestWinRateRacerWon:rows.filter(r=>r.highestAverageWinRateWon).length,
   highestWinRateRacerPodium:rows.filter(r=>r.highestAverageWinRatePodium).length,
   winnerWinRateRankCounts:Object.fromEntries([1,2,3,4,5,6].map(rank=>[rank,rows.filter(r=>r.winnerAverageWinRateRank===rank).length])),
+  winnerAverageSTRankCounts:Object.fromEntries([1,2,3,4,5,6].map(rank=>[rank,rows.filter(r=>r.winnerAverageSTRank===rank).length])),
+  racesWithWinnerAverageST:rows.filter(r=>r.winnerAverageSTRank!==null).length,
+  racesWithSixAverageST:rows.filter(r=>r.availableAverageSTCount===6).length,
   topWinRateActualInside:{races:rows.filter(r=>r.highestAverageWinRateActualCourseInside===true).length,wins:rows.filter(r=>r.highestAverageWinRateActualCourseInside===true&&r.highestAverageWinRateWon).length,podiums:rows.filter(r=>r.highestAverageWinRateActualCourseInside===true&&r.highestAverageWinRatePodium).length},
   topWinRateActualOutside:{races:rows.filter(r=>r.highestAverageWinRateActualCourseInside===false).length,wins:rows.filter(r=>r.highestAverageWinRateActualCourseInside===false&&r.highestAverageWinRateWon).length,podiums:rows.filter(r=>r.highestAverageWinRateActualCourseInside===false&&r.highestAverageWinRatePodium).length},
   topWinRateInside:{races:rows.filter(r=>r.highestAverageWinRateBoatInside).length,wins:rows.filter(r=>r.highestAverageWinRateBoatInside&&r.highestAverageWinRateWon).length,podiums:rows.filter(r=>r.highestAverageWinRateBoatInside&&r.highestAverageWinRatePodium).length},
@@ -47,5 +52,5 @@ if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const [entries,results,output]=process.argv.slice(2);
  const report=compareExploratoryWinRateFinishes(JSON.parse(fs.readFileSync(entries,'utf8')),JSON.parse(fs.readFileSync(results,'utf8')));
  fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');
- console.log(JSON.stringify({matchedRaces:report.matchedRaces,highestWinRateRacerWon:report.highestWinRateRacerWon,highestWinRateRacerPodium:report.highestWinRateRacerPodium,winnerWinRateRankCounts:report.winnerWinRateRankCounts,topWinRateActualInside:report.topWinRateActualInside,topWinRateActualOutside:report.topWinRateActualOutside,topWinRateInside:report.topWinRateInside,topWinRateOutside:report.topWinRateOutside,eligibleForCalibration:0,rows:report.rows.map(r=>({race:r.race,highestAverageWinRateBoat:r.highestAverageWinRateBoat,highestAverageWinRateFinish:r.highestAverageWinRateFinish,winnerBoat:r.winnerBoat}))}));
+ console.log(JSON.stringify({matchedRaces:report.matchedRaces,highestWinRateRacerWon:report.highestWinRateRacerWon,highestWinRateRacerPodium:report.highestWinRateRacerPodium,winnerWinRateRankCounts:report.winnerWinRateRankCounts,winnerAverageSTRankCounts:report.winnerAverageSTRankCounts,racesWithWinnerAverageST:report.racesWithWinnerAverageST,racesWithSixAverageST:report.racesWithSixAverageST,topWinRateActualInside:report.topWinRateActualInside,topWinRateActualOutside:report.topWinRateActualOutside,topWinRateInside:report.topWinRateInside,topWinRateOutside:report.topWinRateOutside,eligibleForCalibration:0,rows:report.rows.map(r=>({race:r.race,highestAverageWinRateBoat:r.highestAverageWinRateBoat,highestAverageWinRateFinish:r.highestAverageWinRateFinish,winnerBoat:r.winnerBoat}))}));
 }
