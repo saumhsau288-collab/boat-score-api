@@ -6,7 +6,9 @@ export function comparePreRaceWinRates(records) {
   const valid=s?.verified===true&&r?.independentlyVerified===true&&s.date===r.date&&s.venue===r.venue&&s.race===r.race&&
    /^20\d{6}$/.test(String(s.date))&&Number.isFinite(Date.parse(s.capturedAt))&&Number.isFinite(Date.parse(s.cutoffAt))&&
    /[+-]\d{2}:\d{2}$/.test(s.capturedAt)&&/[+-]\d{2}:\d{2}$/.test(s.cutoffAt)&&
-   Date.parse(s.capturedAt)<Date.parse(s.cutoffAt)&&Array.isArray(sr)&&sr.length===6&&Array.isArray(rr)&&rr.length===6;
+   Date.parse(s.capturedAt)<Date.parse(s.cutoffAt)&&
+   new Date(Date.parse(s.capturedAt)+9*60*60*1000).toISOString().slice(0,10).replaceAll('-','')===s.date&&
+   new Date(Date.parse(s.cutoffAt)+9*60*60*1000).toISOString().slice(0,10).replaceAll('-','')===s.date&&Array.isArray(sr)&&sr.length===6&&Array.isArray(rr)&&rr.length===6;
   if(!valid){rejected++;continue;}
   const key=[s.date,s.venue,s.race].join(':');
   if(seenRaces.has(key)){rejected++;continue;}
