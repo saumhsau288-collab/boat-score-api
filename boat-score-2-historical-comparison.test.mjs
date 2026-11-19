@@ -20,3 +20,8 @@ assert.equal(report.eligible,1);
 assert.equal(report.excluded,2);
 assert.equal(report.excludedReasons.unverified_provenance_or_cutoff,1);
 assert.equal(report.excludedReasons.unverified_or_invalid_race,1);
+
+assert.equal(compareHistoricalRace(row).experimental.winnerRank,1);
+assert.equal(compareHistoricalRace(row).experimental.winnerTopThree,true);
+assert.equal(compareHistoricalSet([row]).experimental.winnerTopThreeHits,1);
+assert.equal(compareHistoricalSet([row]).experimental.winnerRankSum,1);
