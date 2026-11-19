@@ -10,6 +10,24 @@ assert.equal(report.matchedRaces,1);
 assert.equal(report.highestWinRateRacerWon,1);
 assert.equal(report.rows[0].highestAverageWinRateBoat,4);
 assert.equal(report.eligibleForCalibration,0);
+assert.deepEqual(report.winnerWinRateRankCounts,{'1':1,'2':0,'3':0,'4':0,'5':0,'6':0});
+assert.equal(report.racesWithSixAverageST,0);
+assert.equal(report.racesEligibleForCombinedRankDescription,0);
+assert.equal(report.winnerWinRateAndSTTopThree,0);
+assert.equal(report.racesWithWinnerAverageST,0);
+assert.equal(report.rows[0].winnerAverageSTRank,null);
+assert.equal(report.topWinRateActualInside.races,0);
+assert.equal(report.topWinRateActualOutside.races,0);
+const withCourses=compareExploratoryWinRateFinishes(
+ {rows:[{date:'20261118',venue:2,race:2,statsVerified:true,racers:racers.map((r,i)=>({...r,averageST:0.11+i*0.01}))}]},
+ {rows:[{date:'20261118',venue:2,race:2,status:'parsed_needs_independent_review',racers:resultRacers.map((r,i)=>({...r,actualEntryCourse:i===3?2:i===1?4:i+1}))}]}
+);
+assert.equal(withCourses.topWinRateActualInside.races,1);
+assert.equal(withCourses.topWinRateInside.races,0);
+assert.equal(withCourses.winnerActualCourseCounts['2'],1);
+assert.equal(withCourses.racesWithSixAverageST,1);
+assert.equal(withCourses.rows[0].winnerAverageSTRank,4);
+assert.equal(withCourses.winnerWinRateAndSTTopThree,0);
 assert.equal(compareExploratoryWinRateFinishes({rows:[{date:'20261118',venue:2,race:2,statsVerified:true,racers}]},
  {rows:[{date:'20261119',venue:2,race:2,status:'parsed_needs_independent_review',racers:resultRacers}]}).matchedRaces,0);
 assert.equal(compareExploratoryWinRateFinishes({rows:[{date:'20261118',venue:2,race:2,statsVerified:true,racers}]},
