@@ -62,10 +62,10 @@ try{
   verifiedFinish.sort((a,b)=>a.place-b.place);
   const topThreeVerified=verifiedFinish.length>=3&&[1,2,3].every((place,i)=>verifiedFinish[i].place===place);
   const actualTopThree=topThreeVerified?verifiedFinish.slice(0,3).map(r=>r.boat):[];
-  const sensitivityBacktest=topThreeVerified&&crossSource.scoreComparison?.sensitivity?.map(item=>{
+  const sensitivityBacktest=topThreeVerified?(crossSource.scoreComparison?.sensitivity?.map(item=>{
    const predictedTopThree=item.rank.slice(0,3);
    return {weightPct:item.weightPct,predictedTopThree,actualTopThree,firstPlaceCorrect:predictedTopThree[0]===actualTopThree[0],topThreeSetHits:predictedTopThree.filter(boat=>actualTopThree.includes(boat)).length,exactTopThreeOrder:predictedTopThree.join('-')===actualTopThree.join('-')};
-  })??null;
+  })??null):null;
   const predictionAudit=topThreeVerified&&crossSource.scoreComparison?{
    actualTopThree,sensitivityBacktest,baselineRank:crossSource.scoreComparison.beforeRank.slice(0,3),adjustedRank:crossSource.scoreComparison.afterRank.slice(0,3),
    baselineTopThreeSetHits:crossSource.scoreComparison.beforeRank.slice(0,3).filter(b=>actualTopThree.includes(b)).length,
