@@ -1,3 +1,4 @@
+import {auditRacerEvidenceForStorage} from './audit-racer-evidence-for-storage.mjs';
 // Research-only KV write planner. No network or storage side effects.
 // Storage key is namespaced away from existing morning:YYYYMMDD records.
 export function planRacerEvidenceKvWrite(snapshot,{existingRecord=null}={}){
@@ -11,6 +12,8 @@ export function planRacerEvidenceKvWrite(snapshot,{existingRecord=null}={}){
  if(snapshot.source!=='official_live_entry')return fail('official_source_required');
  if(!Array.isArray(snapshot.racers)||snapshot.racers.length!==6||
   new Set(snapshot.racers.map(r=>r.boat)).size!==6||new Set(snapshot.racers.map(r=>r.racerId)).size!==6)return fail('six_racer_identities_required');
+ const audit=auditRacerEvidenceForStorage(snapshot);
+ if(!audit.storageEligible)return fail('incomplete_or_invalid_racer_evidence');
  const key=`racer-evidence:v1:${date}:${String(venue).padStart(2,'0')}:${String(race).padStart(2,'0')}:${new Date(t).toISOString()}`;
  if(existingRecord!==null)return fail('immutable_record_already_exists');
  return {ready:true,writeAllowed:true,key,value:JSON.stringify(snapshot),ttlSeconds:7776000,
