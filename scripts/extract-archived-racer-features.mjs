@@ -25,7 +25,7 @@ export function joinArchivedRace(entry,result){
  if(e.status!=='parsed_archival_features_unverified'||result?.status!=='parsed_needs_independent_review'||!result.entryCoursesExtracted)return base;
  const byId=new Map(e.racers.map(x=>[x.racerId,x]));
  const racers=result.racers.map(r=>({...byId.get(String(r.racerId)),boat:r.boat,racerId:r.racerId,entryCourse:r.actualEntryCourse,finish:r.finish}));
- if(racers.length!==6||racers.some(r=>!Number.isFinite(r.nationalWinRate)||!Number.isFinite(r.localWinRate)||!Number.isFinite(r.averageStartTiming)||!Number.isInteger(r.entryCourse)))return base;
+ if(racers.length!==6||racers.some(r=>!Number.isInteger(r.boat)||r.boat<1||r.boat>6||!Number.isFinite(r.nationalWinRate)||r.nationalWinRate<0||r.nationalWinRate>10||!Number.isFinite(r.localWinRate)||r.localWinRate<0||r.localWinRate>10||!Number.isFinite(r.averageStartTiming)||r.averageStartTiming<0||r.averageStartTiming>0.5||!Number.isInteger(r.entryCourse)||r.entryCourse<1||r.entryCourse>6||!Number.isInteger(r.finish)||r.finish<1||r.finish>6)||new Set(racers.map(r=>r.boat)).size!==6||new Set(racers.map(r=>r.entryCourse)).size!==6||new Set(racers.map(r=>r.finish)).size!==6)return base;
  return {...base,status:'research_only_joined_postrace_archive',racers};
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
