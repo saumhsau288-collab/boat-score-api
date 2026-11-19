@@ -21,6 +21,9 @@ const evidence=parsed.map(r=>({racerId:r.racerId,winRate:50+r.boat,verified:true
 const comparison=compareVerifiedMakulaboScores(parsed,evidence);
 assert.equal(comparison.applied,true);
 assert.equal(comparison.adjusted.ranking.length,6);
+assert.equal(comparison.adjusted.main.length,6);
+assert.equal(comparison.adjusted.upset.length,6);
+assert.equal(new Set([...comparison.adjusted.main,...comparison.adjusted.upset].map(x=>x.ticket)).size,12);
 for(const r of comparison.adjusted.ranking){
  const before=comparison.baseline.ranking.find(x=>x.boat===r.boat);
  assert.equal(r.score,Number((before.score*.9+(50+r.boat)*.1).toFixed(3)));
