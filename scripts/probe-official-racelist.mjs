@@ -15,7 +15,20 @@ try{
    const recent=rows.slice(1,7).map(row=>({boat:/^[1-6]$/.test(row[0])?Number(row[0]):null,name:row[1],finishCounts:row.slice(2,8).map(Number),starts:Number(row[8])}));
    const {matchMakulaboByName}=await import('../research/boat-score-2-preview-worker.mjs');
    const match=matchMakulaboByName(racers,recent);
-   crossSource={status:match.verified?'six_name_and_boat_matches':'identity_unverified',reason:match.reason??null,registrationVerified:false,matches:match.matches.map(x=>({boat:x.boat,racerId:x.racerId,nameMatch:x.nameMatch,starts:x.record.starts,firstPlaceRatePct:Number((x.record.finishCounts[0]/x.record.starts*100).toFixed(2))}))};
+   // Research-only before/after simulation; no verified 50-race window, never publish as live prediction.
+   if(match.verified){
+    const {rankRace}=await import('../research/boat-score-2-preview-worker.mjs');
+    const baseline=rankRace(racers);
+    const byBoat=new Map(match.matches.map(x=>[x.boat,x.record]));
+    const weight=10;
+    const adjusted=baseline.ranking.map(r=>{
+     const row=byBoat.get(r.boat);
+     const rate=row.finishCounts[0]/row.starts*100;
+     return {boat:r.boat,beforeScore:r.score,publicCountFirstRatePct:Number(rate.toFixed(2)),afterScore:Number((r.score*(1-weight/100)+rate*weight/100).toFixed(3))};
+    }).sort((a,b)=>b.afterScore-a.afterScore||a.boat-b.boat);
+    crossSource.scoreComparison={status:'provisional_research_only',weightPct:weight,beforeRank:baseline.ranking.map(r=>r.boat),afterRank:adjusted.map(r=>r.boat),scores:adjusted,warning:'Visible first-place counts are not independently verified as last 50 races; scores are not applied to the app.'};
+   }
+   crossSource={...crossSource,status:match.verified?'six_name_and_boat_matches':'identity_unverified',reason:match.reason??null,registrationVerified:false,matches:match.matches.map(x=>({boat:x.boat,racerId:x.racerId,nameMatch:x.nameMatch,starts:x.record.starts,firstPlaceRatePct:Number((x.record.finishCounts[0]/x.record.starts*100).toFixed(2))}))};
   }else crossSource={status:'makulabo_or_official_unavailable',httpStatus:mak.status,matches:[]};
  }catch(e){crossSource={status:'fetch_error',error:String(e.message).slice(0,120),matches:[]};}
  const audit={date,venue,race,httpStatus:res.status,htmlBytes:html.length,tableRows:(html.match(/<tr\b/gi)||[]).length,parsedSix:racers?.length===6,crossSource,names:racers?.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name}))??[],warning:'Public official racelist inspection only; no prediction or deploy'};
