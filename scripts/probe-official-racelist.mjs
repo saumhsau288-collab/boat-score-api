@@ -52,7 +52,7 @@ try{
    for(const row of finishTables[0].rows.slice(1)){
     const place=Number((row[0]??'').normalize('NFKC'));
     const boat=Number((row[1]??'').normalize('NFKC'));
-    const id=(row[2]??'').match(/(?:^|\s)(\\d{4})(?=\s|$)/)?.[1];
+    const id=(row[2]??'').match(/(?:^|\s)(\d{4})(?=\s|$)/)?.[1];
     const racer=racers.find(r=>r.boat===boat&&r.racerId===id);
     if(!Number.isInteger(place)||place<1||place>6||!Number.isInteger(boat)||boat<1||boat>6||!racer||used.has(boat))continue;
     used.add(boat);
