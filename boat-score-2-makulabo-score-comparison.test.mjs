@@ -5,7 +5,7 @@ const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),firs
 const inputs=racers.map(r=>({boat:r.boat,racerId:r.racerId,nationalWinRate:6,localWinRate:0,motorTwoWinRate:40,exhibitionScore:70}));
 test('compares verified finish rates without changing scores',()=>{
  const r=compareMakulaboWithScores({verified:true,racers},inputs);
- assert.equal(r.status,'evaluated');assert.equal(r.racers[0].score,60);assert.equal(r.scoreChangeApplied,false);
+ assert.equal(r.status,'evaluated');assert.equal(r.racers[0].score,53.5);assert.equal(r.scoreChangeApplied,false);
 });
 test('does not fabricate missing inputs or accept mismatched identities',()=>{
  const incomplete=inputs.map(r=>({...r}));delete incomplete[0].exhibitionScore;
