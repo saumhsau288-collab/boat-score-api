@@ -65,5 +65,6 @@ test('rejects impossible national win rates before prediction',()=>{
  const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
  assert.equal(r.status,'incomplete_six_racer_features');
  assert.equal(r.diagnostics.outOfRangeBlocks,1);
- assert.equal(r.racers.length,5);
+ assert.equal(r.racers.length,0);
+ assert.equal(r.diagnostics.completeRacerBlocks,5);
 });
