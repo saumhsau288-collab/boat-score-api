@@ -11,4 +11,7 @@ assert.equal(out.racers[0].values.averageST,null);
 assert.equal(out.racers[0].values.exhibitionTime,null);
 assert.equal(out.scoringReady,false);
 assert.equal(adaptOfficialRaceEntryToEvidence({...input,official:{...input.official,statsVerified:false}}).ready,false);
+assert.equal(adaptOfficialRaceEntryToEvidence({...input,official:{...input.official,statsByBoat:stats.map((s,i)=>i===0?{...s,racerId:'9999'}:s)}}).reason,'official_racer_identity_mismatch');
+assert.equal(adaptOfficialRaceEntryToEvidence({...input,official:{...input.official,racersByBoat:identities.map((r,i)=>i===0?{...r,boat:2}:r)}}).reason,'official_racer_identity_mismatch');
+assert.equal(adaptOfficialRaceEntryToEvidence({...input,official:{...input.official,statsByBoat:stats.map((s,i)=>i===0?{...s,boat:2}:s)}}).reason,'official_racer_identity_mismatch');
 console.log('Official racer entry evidence adapter tests passed');
