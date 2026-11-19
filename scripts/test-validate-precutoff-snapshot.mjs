@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {validatePreCutoffSnapshot} from './validate-precutoff-snapshot.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const valid={date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T12:00:00+09:00',cutoffAt:'2026-11-19T12:10:00+09:00',source:'official_live_entry',captureProvenance:'server_timestamped',racers};
+assert.equal(validatePreCutoffSnapshot(valid).eligible,true);
+const rejected=(patch,error)=>{const result=validatePreCutoffSnapshot({...valid,...patch});assert.equal(result.eligible,false);assert.ok(result.errors.includes(error),JSON.stringify(result));};
+rejected({capturedAt:valid.cutoffAt},'not_before_cutoff');
+rejected({capturedAt:'2026-11-19T12:11:00+09:00'},'not_before_cutoff');
+rejected({capturedAt:'2026-11-19T12:00:00'},'invalid_timestamp');
+rejected({source:'historical_entry_html'},'unverified_source');
+rejected({captureProvenance:'user_claimed'},'capture_not_proven');
+rejected({racers:[...racers.slice(0,5),{...racers[5],racerId:racers[0].racerId}]},'invalid_racers');
+rejected({racers:racers.slice(0,5)},'invalid_racers');
+rejected({race:13},'invalid_race');
+assert.equal(validatePreCutoffSnapshot(null).eligible,false);
+console.log('Pre-cutoff snapshot eligibility tests passed');
