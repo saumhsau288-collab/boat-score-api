@@ -18,9 +18,9 @@ export function summarizeCapture(entries,results){
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const [directory,output]=process.argv.slice(2);if(!directory||!output)throw Error('Expected directory and output');
- const entries=fs.readdirSync(directory).filter(n=>/-racelist\\.json$/.test(n)).map(n=>JSON.parse(fs.readFileSync(directory+'/'+n,'utf8')));
+ const entries=fs.readdirSync(directory).filter(n=>/-racelist\.json$/.test(n)).map(n=>JSON.parse(fs.readFileSync(directory+'/'+n,'utf8')));
  const results=JSON.parse(fs.readFileSync(directory+'/20261118-tokuyama-results-parsed.json','utf8'));
  const report=summarizeCapture(entries,results);
- fs.writeFileSync(output,JSON.stringify(report,null,2)+'\\n');
+ fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify({targets:report.targets,entryHtmlSaved:report.entryHtmlSaved,resultParsed:report.resultParsed,entryAndResultMatched:report.entryAndResultMatched,eligibleForWeightTuning:0}));
 }
