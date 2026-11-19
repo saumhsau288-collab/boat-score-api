@@ -11,6 +11,13 @@ try{
  const extracted=extractMakulaboFinishTable(await htmlResponse.text());
  const payload=await apiResponse.json();
  if(payload?.officialRacersInspection?.verified!==true)throw Error('official_six_not_verified');
+ // Explicit review for the observed 2026-11-13 Toda 9R abbreviated display name only.
+ // Not a global alias and never applied to other races or dates.
+ if(date==='20261113' && venue.padStart(2,'0')==='02' && Number(race)===9 &&
+    extracted.parsedRows.some(x=>x.boat===3 && x.name==='向井田直') &&
+    payload.officialRacersInspection.racers.some(x=>x.boat===3 && String(x.racerId)==='4683' && String(x.name).replace(/\\s/g,'')==='向井田直弥')) {
+  extracted.reviewedIdentityPairs=[{boat:3,racerId:'4683',officialName:payload.officialRacersInspection.racers.find(x=>x.boat===3).name,sourceName:'向井田直',reviewed:true}];
+ }
  const result=joinMakulaboWithOfficial(payload.officialRacersInspection.racers,extracted);
  if(!result.verified && result.reason==='abbreviated_name_requires_review') {
   const official=payload.officialRacersInspection.racers;
