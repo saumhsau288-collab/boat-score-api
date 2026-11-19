@@ -48,6 +48,7 @@ jobs:
             `取得HTML SHA-256: ${result.provenance?.htmlSha256??'未取得'}`,
             `本命: ${result.main?.length??0}点 / 穴: ${result.upset?.length??0}点`,
             `艇番・選手対応: ${result.status==='boat_mapping_unverified'?'未確認':result.status==='experimental'?'解析済み':'未判定'}`,
+            `解析診断: ${result.diagnostics?JSON.stringify(result.diagnostics):'該当なし'}`,
             result.message??result.inputCaveat??'',
             '',
             '※暫定シナリオであり、直前情報・進入の確認済み予想ではありません。'
