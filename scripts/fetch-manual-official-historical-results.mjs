@@ -7,6 +7,17 @@ const validDate=s=>{
  const y=+s.slice(0,4),m=+s.slice(4,6),d=+s.slice(6),v=new Date(Date.UTC(y,m-1,d));
  return v.getUTCFullYear()===y&&v.getUTCMonth()+1===m&&v.getUTCDate()===d;
 };
+export function parseExplicitRaceSelection(value){
+ if(typeof value!=='string')throw Error('Invalid explicit historical race selection');
+ const tokens=value.split(',').map(x=>x.trim());
+ // Ignore only empty values at the end of the input, e.g. '2,3,'.
+ while(tokens.length>0&&tokens.at(-1)==='')tokens.pop();
+ if(tokens.length===0||tokens.some(x=>!/^\d{1,2}$/.test(x)))throw Error('Invalid explicit historical race selection');
+ const races=tokens.map(Number);
+ if(races.length>12||races.some(n=>n<1||n>12)||new Set(races).size!==races.length)
+  throw Error('Invalid explicit historical race selection');
+ return races;
+}
 export async function fetchManualOfficialHistoricalResults({date,venue,races},{fetchImpl=fetch,timeoutMs=10000}={}){
  if(!validDate(date)||!Number.isInteger(venue)||venue<1||venue>24||
   !Array.isArray(races)||races.length<1||races.length>12||
@@ -34,7 +45,7 @@ export async function fetchManualOfficialHistoricalResults({date,venue,races},{f
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const [date,venue,racesArg,output]=process.argv.slice(2);
  if(!output)throw Error('Usage: node scripts/fetch-manual-official-historical-results.mjs YYYYMMDD VENUE RACES_CSV OUTPUT');
- const report=await fetchManualOfficialHistoricalResults({date,venue:Number(venue),races:racesArg.split(',').map(Number)});
+ const report=await fetchManualOfficialHistoricalResults({date,venue:Number(venue),races:parseExplicitRaceSelection(racesArg)});
  fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify({targets:report.targets,saved:report.pages.filter(p=>p.status==='raw_html_saved').length,failed:report.pages.filter(p=>p.status==='fetch_failed').length,verifiedResults:0}));
 }

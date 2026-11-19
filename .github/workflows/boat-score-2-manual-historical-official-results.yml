@@ -11,7 +11,7 @@ on:
         required: true
         type: string
       races:
-        description: 'Comma-separated races, e.g. 1,2,3'
+        description: 'Comma-separated races, e.g. 1,2,3 (trailing comma tolerated)'
         required: true
         type: string
 permissions:
