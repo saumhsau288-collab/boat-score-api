@@ -13,6 +13,7 @@ export function extractMakulaboFinishTable(html) {
   const parsed=annotateMakulaboFinishRows(cells[headerIndex],rows);
   if(!parsed.verified)return parsed;
   if(parsed.rows.length!==6 || new Set(parsed.rows.map(r=>r.boat)).size!==6 ||
+    parsed.rows.some(r=>!r.name.trim()) ||
     parsed.rows.some(r=>!Number.isInteger(r.boat)||r.boat<1||r.boat>6))
    return {verified:false,reason:'six_distinct_boats_required'};
   return {verified:true,headers:cells[headerIndex],rows,parsedRows:parsed.rows};
