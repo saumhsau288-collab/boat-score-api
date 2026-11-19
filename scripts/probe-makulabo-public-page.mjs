@@ -31,8 +31,12 @@ export async function probeMakulaboPublicPage({date,venue,race,fetchImpl=fetch}=
    const hrefs=[...raw.matchAll(/href\s*=\s*["']([^"']+)["']/gi)].map(m=>m[1]);
    return {boat:i+1,playerText:visible.slice(0,50),containsFourDigitId:/\b\d{4}\b/.test(visible),linkCount:hrefs.length,linkPathSamples:hrefs.map(x=>x.replace(/\?.*$/,'').slice(0,100)).slice(0,2)};
   });
+  const names=identityAudit.map(x=>x.playerText.normalize('NFKC').replace(/[\s\u3000]/g,''));
+  const sixRowIdentityReady=cells.length===7&&identityAudit.length===6&&identityAudit.every((x,i)=>x.boat===i+1&&names[i].length>=2)&&new Set(names).size===6;
+  const sixRowCountsReady=countAudit.length===6&&countAudit.every(x=>x.finishCountsNumeric&&x.countsEqualStarts&&x.starts>0&&x.starts<=50);
+  const sixRowExtractable=sixRowIdentityReady&&sixRowCountsReady;
   const js={scriptCount:html.split('<script').length-1,hasNextData:html.includes('__NEXT_DATA__'),hasNuxtData:html.includes('__NUXT__'),hasReactRoot:html.includes('id="root"')||html.includes('id="__next"'),hasVueRoot:html.includes('id="app"'),hasEmbeddedJson:html.includes('application/json'),hasApiPath:html.includes('/api/')||html.includes('axios.')};
-  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,cellAudit,countAudit,identityAudit,js,warning:'Finish-count rates are computed only from visible counts; no official registration-ID match, last-50-period verification, or score application.'};
+  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,cellAudit,countAudit,identityAudit,sixRowIdentityReady,sixRowCountsReady,sixRowExtractable,js,warning:'Finish-count rates are computed only from visible counts; no official registration-ID match, last-50-period verification, or score application.'};
  }catch(e){return {status:'fetch_failed',url,recent50Ready:false,error:String(e.message).slice(0,120)};}
 }
 
