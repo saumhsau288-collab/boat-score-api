@@ -82,10 +82,12 @@ try{
  assert.equal(publicStatus.indicators.hasHeatmapLabel,true);
  assert.equal(publicStatus.indicators.hasRecent50Label,true);
  assert.equal(publicStatus.indicators.hasRegistrationId,true);
+ assert.equal(publicStatus.readyForIdentityReview,true,'Page indicators allow further identity review only');
  assert.equal(publicStatus.recent50Ready,false,'Visible labels do not prove six verified recent-50 records');
  globalThis.fetch=async()=>new Response('<html>ヒートマップ ログイン</html>',{status:200,headers:{'content-type':'text/html'}});
  const gated=await (await worker.fetch(new Request('https://preview.example/api/makulabo-status?date=20261119&venue=18&race=2'))).json();
  assert.equal(gated.pageAccessible,false,'Login-gated pages must not be treated as public');
+ assert.equal(gated.readyForIdentityReview,false,'Login-gated page must not enter identity review');
  const noRoute=await worker.fetch(new Request('https://preview.example/api/unknown'));
  assert.equal(noRoute.status,404);
  const options=await worker.fetch(new Request('https://preview.example/api/predict',{method:'OPTIONS'}));
