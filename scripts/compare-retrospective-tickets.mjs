@@ -1,7 +1,7 @@
 // Post-race diagnostic ONLY: compare stored ticket strings with separately obtained finishing orders.
 // This is not a prospective hit-rate test; requests made after the race can leak results.
 const key=r=>[r?.date,r?.venue,r?.race].join(':');
-const validKey=r=>/^20\\d{6}$/.test(String(r?.date))&&Number.isInteger(Number(r?.venue))&&Number(r.venue)>=1&&Number(r.venue)<=24&&Number.isInteger(Number(r?.race))&&Number(r.race)>=1&&Number(r.race)<=12;
+const validKey=r=>/^20\d{6}$/.test(String(r?.date))&&Number.isInteger(Number(r?.venue))&&Number(r.venue)>=1&&Number(r.venue)<=24&&Number.isInteger(Number(r?.race))&&Number(r.race)>=1&&Number(r.race)<=12;
 const validPodium=p=>Array.isArray(p)&&p.length===3&&new Set(p).size===3&&p.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
 const validTickets=p=>Array.isArray(p)&&p.length===6&&p.every(validPodium);
 export function compareRetrospectiveTickets(capture,officialRows){
