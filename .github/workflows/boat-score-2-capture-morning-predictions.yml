@@ -543,6 +543,14 @@ jobs:
           NODE
             done
           fi
+      - name: Audit strict capture readiness (research only)
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            node scripts/report-capture-readiness-research.mjs "$file" > "${file%.json}-readiness.json"
+          done
       - name: Upload timestamped raw responses
         if: always()
         uses: actions/upload-artifact@v4
