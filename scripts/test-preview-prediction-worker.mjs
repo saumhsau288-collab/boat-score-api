@@ -35,6 +35,8 @@ try{
  assert.equal(json.race,2);
  assert.equal(json.main.length,6);
  assert.equal(json.upset.length,6);
+ assert.deepEqual(json.dataCompleteness,{officialRacelist:true,verifiedEntry:false,exhibition:false,motor:false,makulaboRecent50:false});
+ assert.equal(json.ranking.every(r=>r.racerId&&Number.isFinite(r.score)),true);
  assert.ok(officialRequested.includes('hd=20261119'));
  assert.ok(officialRequested.includes('jcd=18'));
  assert.ok(officialRequested.includes('rno=2'));
@@ -54,6 +56,12 @@ try{
  globalThis.fetch=async()=>{throw Error('network disconnected')};
  const disconnected=await (await worker.fetch(new Request('https://preview.example/api/predict?date=20261119&venue=18&race=2'))).json();
  assert.equal(disconnected.status,'official_fetch_failed');
+ const makulaboInvalid=await worker.fetch(new Request('https://preview.example/api/makulabo-status?date=bad&venue=18&race=2'));
+ assert.equal(makulaboInvalid.status,400);
+ globalThis.fetch=async()=>new Response('login required',{status:403});
+ const makulaboUnavailable=await (await worker.fetch(new Request('https://preview.example/api/makulabo-status?date=20261119&venue=18&race=2'))).json();
+ assert.equal(makulaboUnavailable.recent50Ready,false);
+ assert.equal(makulaboUnavailable.status,'not_integrated');
  const noRoute=await worker.fetch(new Request('https://preview.example/api/unknown'));
  assert.equal(noRoute.status,404);
  const options=await worker.fetch(new Request('https://preview.example/api/predict',{method:'OPTIONS'}));
