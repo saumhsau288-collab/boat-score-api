@@ -62,5 +62,7 @@ jobs:
           node --experimental-default-type=module boat-score-2-makulabo-labelled-matrix.test.mjs
           node --experimental-default-type=module --check boat-score-2-course-evidence-comparison.js
           node --experimental-default-type=module boat-score-2-course-evidence-comparison.test.mjs
+          node --experimental-default-type=module --check boat-score-2-start-course-comparison.js
+          node --experimental-default-type=module boat-score-2-start-course-comparison.test.mjs
           node --experimental-default-type=module boat-score-2-local-rate-fallback.test.mjs
           node --experimental-default-type=module boat-score-2-html-diagnostics.test.mjs
