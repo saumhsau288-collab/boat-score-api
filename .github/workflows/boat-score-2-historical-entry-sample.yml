@@ -18,12 +18,12 @@ on:
         type: string
 permissions:
   contents: read
+concurrency:
+  group: historical-archive-research-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 jobs:
   archive-one-official-entry:
     timeout-minutes: 12
-    concurrency:
-      group: historical-archive-research-${{ github.head_ref || github.ref }}
-      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
         run: |
           mkdir -p research-historical
           for race in 1 2 3 4 5 6 7 8 9 10 11 12; do
-            node scripts/fetch-historical-racelist-sample.mjs "research-historical/20261118-tokuyama-${race}r-racelist.json" "$RACE_DATE" "$VENUE_CODE" "$race"
+            timeout 12s node scripts/fetch-historical-racelist-sample.mjs "research-historical/20261118-tokuyama-${race}r-racelist.json" "$RACE_DATE" "$VENUE_CODE" "$race" || echo "{\"status\":\"fetch_failed\",\"date\":\"$RACE_DATE\",\"venue\":$((10#$VENUE_CODE)),\"race\":$race,\"error\":\"timeout_or_failure\"}" > "research-historical/20261118-tokuyama-${race}r-racelist.json"
             sleep 1
           done
       - name: Fetch matching official race result and start order
