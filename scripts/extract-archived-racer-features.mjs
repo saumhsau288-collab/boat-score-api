@@ -28,6 +28,7 @@ export function extractArchivedRacerFeatures(entry){
   if(!national)diagnostics.missingFields.nationalWinRate++;
   if(!local)diagnostics.missingFields.localWinRate++;
   if(!racerId||!st||!national||!local)continue;
+  if(Number(st)<0||Number(st)>0.5||Number(national)<0||Number(national)>10||Number(local)<0||Number(local)>10){diagnostics.outOfRangeBlocks=(diagnostics.outOfRangeBlocks??0)+1;continue;}
   diagnostics.completeRacerBlocks++;
   racers.push({boat:boat?Number(boat):null,racerId,nationalWinRate:Number(national),localWinRate:Number(local),averageStartTiming:Number(st)});
  }
