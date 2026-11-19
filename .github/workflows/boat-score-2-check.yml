@@ -23,6 +23,8 @@ jobs:
         run: node history-analysis.test.mjs
       - name: Validate provisional ranking and missing-data handling
         run: node ranking.test.mjs
+      - name: Validate historical course and start diagnostics
+        run: node scripts/test-course-start-evaluation.mjs
       - name: Verify Boat Score 2 endpoints and isolation
         run: |
           node --input-type=module <<'NODE'
