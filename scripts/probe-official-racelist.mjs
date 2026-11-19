@@ -43,8 +43,9 @@ try{
   const visible=resultHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
   const marker=visible.match(/(?:着順|レース結果|競走結果)/);
   const tables=[...resultHtml.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map((m,i)=>({index:i,rows:[...m[1].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(r=>[...r[1].matchAll(/<(?:td|th)\b[^>]*>([\s\S]*?)<\/(?:td|th)>/gi)].map(x=>x[1].replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim()))}));
+  const tableShape={count:tables.length,firstTables:tables.slice(0,5).map(t=>({index:t.index,rows:t.rows.length,firstRows:t.rows.slice(0,3).map(row=>row.slice(0,7).map(x=>x.slice(0,30)))}))};
   const tableAudit=tables.map(t=>({index:t.index,rowCount:t.rows.length,headers:t.rows.slice(0,2).map(row=>row.map(x=>x.slice(0,25))),firstRows:t.rows.slice(1,7).map(row=>row.slice(0,4).map(x=>x.slice(0,25)))})).filter(t=>t.headers.some(row=>row.some(x=>/着順|艇番|選手名|レース結果/.test(x)))).slice(0,3);
-  resultAudit={status:resultResponse.ok?'page_fetched_not_yet_parsed':'http_error',httpStatus:resultResponse.status,htmlBytes:resultHtml.length,hasResultMarker:!!marker,tableAudit,verifiedFinish:[],warning:'No finish order inferred from generic text; requires structural parsing and racer-ID verification'};
+  resultAudit={status:resultResponse.ok?'page_fetched_not_yet_parsed':'http_error',httpStatus:resultResponse.status,htmlBytes:resultHtml.length,hasResultMarker:!!marker,tableShape,tableAudit,verifiedFinish:[],warning:'No finish order inferred from generic text; requires structural parsing and racer-ID verification'};
  }catch(e){resultAudit={status:'fetch_error',error:String(e.message).slice(0,120),verifiedFinish:[]};}
  const audit={date,venue,race,httpStatus:res.status,htmlBytes:html.length,tableRows:(html.match(/<tr\b/gi)||[]).length,parsedSix:racers?.length===6,crossSource,resultAudit,names:racers?.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name}))??[],warning:'Public official racelist inspection only; no prediction or deploy'};
  console.log('OFFICIAL_RACELIST_PROBE',JSON.stringify(audit));
