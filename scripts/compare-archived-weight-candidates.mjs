@@ -11,13 +11,13 @@ export const CANDIDATES=[
 ];
 export function describeWeightCandidates(joined){
  if(!Array.isArray(joined?.rows))throw Error('Expected archived joined rows');
- const eligible=joined.rows.filter(r=>r.status==='research_only_joined_postrace_archive'&&Array.isArray(r.racers)&&r.racers.length===6&&r.racers.every(x=>Number.isFinite(x.nationalWinRate)&&Number.isFinite(x.localWinRate)&&Number.isFinite(x.averageStartTiming)&&Number.isInteger(x.entryCourse)&&Number.isInteger(x.finish)));
+ const eligible=joined.rows.filter(r=>r.status==='research_only_joined_postrace_archive'&&Array.isArray(r.racers)&&r.racers.length===6&&r.racers.every(x=>Number.isFinite(x.nationalWinRate)&&Number.isFinite(x.localWinRate)&&Number.isFinite(x.averageStartTiming)&&Number.isInteger(x.entryCourse)&&x.entryCourse>=1&&x.entryCourse<=6&&Number.isInteger(x.finish)&&x.finish>=1&&x.finish<=6)&&new Set(r.racers.map(x=>x.boat)).size===6&&new Set(r.racers.map(x=>x.entryCourse)).size===6&&new Set(r.racers.map(x=>x.finish)).size===6);
  const rows=CANDIDATES.map(w=>{
   let topOne=0,exactTopThree=0,podiumOverlap=0;
   for(const race of eligible){
    const sorted=[...race.racers].sort((a,b)=>{
     const score=x=>((x.nationalWinRate+x.localWinRate)/2)/10*w.ability+clamp((.30-x.averageStartTiming)/.30,0,1)*w.start+(6-x.entryCourse)/5*w.course;
-    return score(b)-score(a)||a.boat-b.boat;
+    return Math.round(score(b)*100)-Math.round(score(a)*100)||a.boat-b.boat;
    });
    const actual=[...race.racers].sort((a,b)=>a.finish-b.finish);
    if(sorted[0].boat===actual[0].boat)topOne++;
