@@ -27,3 +27,10 @@ test('post-race start data cannot count as verified',()=>{
  assert.equal(result.status,'evidence_incomplete');
  assert.equal(result.verifiedStartCount,5);
 });
+
+test('rejects duplicated or missing registration numbers before comparison',()=>{
+ const duplicated=racers.map((r,i)=>i===1?{...r,racerId:racers[0].racerId}:r);
+ assert.equal(comparePreRaceEvidence(duplicated,evidence).status,'invalid_race');
+ const missing=racers.map((r,i)=>i===0?{...r,racerId:null}:r);
+ assert.equal(comparePreRaceEvidence(missing,evidence).status,'invalid_race');
+});
