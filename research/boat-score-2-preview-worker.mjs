@@ -48,12 +48,17 @@ export function matchMakulaboByRegistration(official,recent){
  return {verified:true,matches:official.map(r=>({boat:r.boat,racerId:r.racerId,record:byId.get(String(r.racerId))}))};
 }
 // Research-only comparison. Never call this with unverified scraped labels.
-export function compareVerifiedMakulaboScores(official,recent,{weight=10}={}){
+export function compareVerifiedMakulaboScores(official,recent,{weight=10,date,venue,race}={}){
  const baseline=Array.isArray(official)&&official.length===6?rankRace(official):null;
  const identity=matchMakulaboByRegistration(official,recent);
  if(!baseline||!identity.verified)return {applied:false,reason:identity.reason??'invalid_official_six',baseline};
  if(typeof weight!=='number'||!Number.isFinite(weight)||weight<0||weight>20)return {applied:false,reason:'invalid_weight',baseline};
  if(identity.matches.some(m=>m.record.verified!==true||typeof m.record.sourceUrl!=='string'||!/^https:\/\/makulabo-jp\.com\//.test(m.record.sourceUrl)||typeof m.record.observedAt!=='string'||!Number.isFinite(Date.parse(m.record.observedAt))))return {applied:false,reason:'source_evidence_incomplete',baseline};
+ if(date!==undefined||venue!==undefined||race!==undefined){
+  if(!/^20\d{6}$/.test(String(date))||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return {applied:false,reason:'invalid_race_context',baseline};
+  const expected='https://makulabo-jp.com/data/'+String(venue).padStart(2,'0')+'/'+race+'/heatmap?hd='+date;
+  if(identity.matches.some(m=>m.record.sourceUrl!==expected))return {applied:false,reason:'source_race_mismatch',baseline};
+ }
  const rates=new Map(identity.matches.map(m=>[m.boat,m.record.winRate]));
  const ranking=baseline.ranking.map(r=>({...r,makulaboRecent50WinRate:rates.get(r.boat),score:Number((r.score*(1-weight/100)+rates.get(r.boat)*weight/100).toFixed(3))})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
  const all=[];
