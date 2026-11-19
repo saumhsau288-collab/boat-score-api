@@ -16,6 +16,8 @@ on:
       - 'scripts/fetch-manual-official-historical-results.mjs'
       - 'scripts/test-fetch-manual-official-historical-results.mjs'
       - '.github/workflows/boat-score-2-manual-historical-official-results.yml'
+      - 'scripts/extract-official-result-racers.mjs'
+      - 'scripts/test-extract-official-result-racers.mjs'
       - 'scripts/build-historical-racer-course-profiles.mjs'
       - 'scripts/test-build-historical-racer-course-profiles.mjs'
       - 'scripts/review-historical-finish-orders.mjs'
@@ -60,6 +62,8 @@ jobs:
         run: |
           node --check scripts/fetch-manual-official-historical-results.mjs
           node --check scripts/test-fetch-manual-official-historical-results.mjs
+          node --check scripts/extract-official-result-racers.mjs
+          node --check scripts/test-extract-official-result-racers.mjs
           node --check scripts/build-historical-racer-course-profiles.mjs
           node --check scripts/test-build-historical-racer-course-profiles.mjs
           node --check scripts/review-historical-finish-orders.mjs
@@ -117,6 +121,7 @@ jobs:
       - name: Run offline retry research regression
         run: |
           node scripts/test-fetch-manual-official-historical-results.mjs
+          node scripts/test-extract-official-result-racers.mjs
           node scripts/test-build-historical-racer-course-profiles.mjs
           node scripts/test-review-historical-finish-orders.mjs
           node scripts/test-summarize-research-join.mjs
