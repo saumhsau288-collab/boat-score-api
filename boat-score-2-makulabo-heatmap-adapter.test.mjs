@@ -45,3 +45,11 @@ test('unverified headers cannot create finish rates',()=>{
  assert.equal(result.racers[0].top2Rate,null);
  assert.equal(result.racers[0].top3Rate,null);
 });
+
+test('rejects malformed source run totals',()=>{
+ const rows=heatmap.map(r=>({...r}));
+ rows[0].runs='4';
+ assert.equal(reconcileMakulaboHeatmap(official,rows).reason,'run_count_conflict');
+ rows[0].runs=4.5;
+ assert.equal(reconcileMakulaboHeatmap(official,rows).reason,'run_count_conflict');
+});
