@@ -28,6 +28,17 @@ export function rankRace(racers){
 export default {async fetch(request){
  if(request.method==='OPTIONS')return new Response(null,{headers:cors});
  const u=new URL(request.url);
+ if(u.pathname==='/api/makulabo-status'){
+  const date=u.searchParams.get('date')??'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
+  if(!/^20\\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply({status:'invalid_selection'},400);
+  const url='https://makulabo-jp.com/data/'+String(venue).padStart(2,'0')+'/'+race+'/heatmap?hd='+date;
+  try{
+   const response=await fetch(url,{headers:{accept:'text/html'},redirect:'follow',signal:AbortSignal.timeout(10000)});
+   const page=response.ok?(await response.text()).slice(0,200000):'';
+   const accessible=response.ok&&!/ログイン|会員登録|login|sign.in/i.test(page);
+   return reply({status:'not_integrated',date,venue,race,sourceUrl:url,httpStatus:response.status,pageAccessible:accessible,recent50Ready:false,message:accessible?'まくらぼページへの接続は確認できましたが、6選手の直近50走の照合は未完了です。予想点には未反映です。':'まくらぼの対象ページを確認できません（非公開・ログイン・取得制限の可能性）。予想点には未反映です。'});
+  }catch(e){return reply({status:'not_integrated',date,venue,race,recent50Ready:false,message:'まくらぼの取得に失敗しました。予想点には未反映です。',error:String(e.message).slice(0,120)});}
+ }
  if(u.pathname!=='/api/predict')return reply({status:'not_found'},404);
  const date=u.searchParams.get('date')??'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
  if(!/^20\d{6}$/.test(date)||!u.searchParams.has('venue')||!u.searchParams.has('race')||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply({status:'invalid_selection'},400);
