@@ -1,0 +1,22 @@
+name: Inspect official racer identity (isolated research)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment-racer-start-course-20261119
+    paths:
+      - 'scripts/probe-official-racelist.mjs'
+      - '.github/workflows/boat-score-2-official-racelist-probe.yml'
+permissions:
+  contents: read
+jobs:
+  official-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify official racer IDs and names from live public page
+        run: node scripts/probe-official-racelist.mjs
