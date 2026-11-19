@@ -2,7 +2,10 @@
 // Never derives features from finish order or changes production weights.
 import {comparePreRaceEvidence} from './boat-score-2-pre-race-evidence.js';
 export function compareHistoricalRace(snapshot) {
- if(!snapshot || snapshot.preRaceSnapshot!==true || snapshot.resultVerified!==true ||
+ if(!snapshot || !/^20\d{6}$/.test(String(snapshot.date)) ||
+   !Number.isInteger(snapshot.venue)||snapshot.venue<1||snapshot.venue>24||
+   !Number.isInteger(snapshot.race)||snapshot.race<1||snapshot.race>12||
+   snapshot.preRaceSnapshot!==true || snapshot.resultVerified!==true ||
    !Array.isArray(snapshot.finishOrder)||snapshot.finishOrder.length!==6 ||
    new Set(snapshot.finishOrder).size!==6 ||
    snapshot.finishOrder.some(b=>!Number.isInteger(b)||b<1||b>6))
