@@ -14,6 +14,8 @@ on:
       - 'scripts/test-validate-historical-prerace-snapshot.mjs'
       - 'scripts/compare-historical-saved-predictions.mjs'
       - 'scripts/test-compare-historical-saved-predictions.mjs'
+      - 'scripts/build-prerace-prediction-snapshot.mjs'
+      - 'scripts/test-build-prerace-prediction-snapshot.mjs'
       - 'scripts/test-extract-official-result-diagnostics.mjs'
   workflow_dispatch:
 permissions:
@@ -34,6 +36,7 @@ jobs:
           node scripts/test-summarize-official-inside-courses.mjs
           node scripts/test-validate-historical-prerace-snapshot.mjs
           node scripts/test-compare-historical-saved-predictions.mjs
+          node scripts/test-build-prerace-prediction-snapshot.mjs
       - name: Fetch full 12-race historical card (exploratory sample)
         run: |
           mkdir -p research-historical
