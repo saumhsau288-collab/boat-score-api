@@ -1,0 +1,26 @@
+name: Inspect public Makulabo page metadata (research only)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - experiment-racer-start-course-20261119
+    paths:
+      - 'scripts/probe-makulabo-public-page.mjs'
+      - '.github/workflows/boat-score-2-makulabo-public-probe.yml'
+permissions:
+  contents: read
+jobs:
+  public-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect public source structure (no credentials, no page archive)
+        env:
+          MAKULABO_DATE: '20261119'
+          MAKULABO_VENUE: '18'
+          MAKULABO_RACE: '2'
+        run: node scripts/probe-makulabo-public-page.mjs
