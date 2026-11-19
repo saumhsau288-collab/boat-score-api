@@ -13,3 +13,12 @@ assert.ok(result.upset.every(x=>x.boats[0]!==result.ranking[0].boat));
 assert.equal(predictExperimentalRace(racers.slice(0,5)).status,'invalid_race');
 assert.equal(predictExperimentalRace(racers.map((r,i)=>i===5?{...r,averageStartTiming:null}:r)).status,'insufficient_data');
 console.log('Experimental offline ticket generation structural tests passed (synthetic data only)');
+
+assert.equal(predictExperimentalRace(racers,{weightStudy:{status:'insufficient_verified_history'}}).status,'uncalibrated_history');
+assert.equal(predictExperimentalRace(racers,{weightStudy:{status:'research_only',trainingCount:29,holdoutCount:15,candidateWeights:{ability:75,start:20,course:5}}}).status,'uncalibrated_history');
+const eligibleStudy={status:'research_only',trainingCount:30,holdoutCount:15,candidateWeights:{ability:75,start:20,course:5}};
+const weighted=predictExperimentalRace(racers,{weightStudy:eligibleStudy});
+assert.equal(weighted.status,'experimental');
+assert.equal(weighted.weightsApplied.ability,75);
+assert.equal(weighted.main.length,6);
+assert.equal(weighted.upset.length,6);
