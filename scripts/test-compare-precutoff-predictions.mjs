@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {comparePreCutoffPredictions} from './compare-precutoff-predictions.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const snapshot={date:'20261119',venue:2,race:1,capturedAt:'2026-11-19T12:00:00+09:00',cutoffAt:'2026-11-19T12:10:00+09:00',source:'official_live_entry',captureProvenance:'server_timestamped',racers,prediction:{mainSix:[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]}};
+const result={date:'20261119',venue:2,race:1,status:'independently_verified',racers:racers.map((r,i)=>({...r,finish:i+1}))};
+const ok=comparePreCutoffPredictions([snapshot],[result]);
+assert.equal(ok.eligibleRaces,1);assert.equal(ok.mainSixExactHits,1);
+assert.equal(ok.rows[0].winnerInMainFirstChoices,true);
+const badTime=comparePreCutoffPredictions([{...snapshot,capturedAt:snapshot.cutoffAt}],[result]);
+assert.equal(badTime.eligibleRaces,0);
+const unverified=comparePreCutoffPredictions([snapshot],[{...result,status:'parsed_needs_independent_review'}]);
+assert.equal(unverified.eligibleRaces,0);
+const mismatched=structuredClone(result);mismatched.racers[0].racerId='9999';
+assert.equal(comparePreCutoffPredictions([snapshot],[mismatched]).eligibleRaces,0);
+const missingPicks=comparePreCutoffPredictions([{...snapshot,prediction:{mainSix:[]}}],[result]);
+assert.equal(missingPicks.eligibleRaces,0);
+console.log('Pre-cutoff prediction and finish join tests passed');
