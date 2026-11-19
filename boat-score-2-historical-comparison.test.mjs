@@ -14,3 +14,9 @@ console.log('Historical comparison structural tests passed (synthetic data only)
 
 assert.equal(compareHistoricalRace({...row,preRaceCapturedAt:'2026-11-18T11:00:00+09:00'}).reason,'unverified_provenance_or_cutoff');
 assert.equal(compareHistoricalRace({...row,preRaceSourceVerified:false}).status,'excluded');
+
+const report=compareHistoricalSet([row,{...row,race:2,preRaceSourceVerified:false},{...row,race:3,preRaceSnapshot:false}]);
+assert.equal(report.eligible,1);
+assert.equal(report.excluded,2);
+assert.equal(report.excludedReasons.unverified_provenance_or_cutoff,1);
+assert.equal(report.excludedReasons.unverified_or_invalid_race,1);
