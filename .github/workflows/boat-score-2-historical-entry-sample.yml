@@ -20,6 +20,10 @@ permissions:
   contents: read
 jobs:
   archive-one-official-entry:
+    timeout-minutes: 12
+    concurrency:
+      group: historical-archive-research-${{ github.head_ref || github.ref }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
