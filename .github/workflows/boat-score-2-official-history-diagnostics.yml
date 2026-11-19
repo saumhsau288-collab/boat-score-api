@@ -42,6 +42,7 @@ jobs:
           node scripts/test-compare-historical-saved-predictions.mjs
           node scripts/test-build-prerace-prediction-snapshot.mjs
           node scripts/test-compare-prerace-winrate-finishes.mjs
+          node scripts/test-compare-exploratory-winrates-results.mjs
       - name: Fetch historical entry lists for three races (research only)
         run: |
           mkdir -p research-historical
