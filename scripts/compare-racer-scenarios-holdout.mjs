@@ -19,7 +19,13 @@ export function compareRacerScenariosOnHoldout(races,candidates=[]){
   accepted.push({baseline:makeRace(comparison.baseline.rankedScores),scenarios:comparison.scenarios.map(s=>({id:s.id,race:makeRace(s.rankedScores)}))});
  }
  const baseline=evaluateRacerScoreQuality(accepted.map(x=>x.baseline));
- const scenarios=(candidates??[]).map(c=>({id:c.id,weights:{...c.weights},quality:evaluateRacerScoreQuality(accepted.map(x=>x.scenarios.find(s=>s.id===c.id).race))}));
- return {researchOnly:true,eligibleForDeployment:false,eligibleRaces:accepted.length,rejectedRaces:rejected.length,baseline,scenarios,
+ const comparableMetrics=['pairwiseAccuracy','tieNeutralTopRatedWinRate','tieNeutralTopRatedPodiumRate','tieNeutralTopThreePodiumOverlapRate','meanAbsoluteRankError'];
+ const scenarios=(candidates??[]).map(c=>{
+  const quality=evaluateRacerScoreQuality(accepted.map(x=>x.scenarios.find(s=>s.id===c.id).race));
+  const deltaFromBaseline=Object.fromEntries(comparableMetrics.map(k=>[k,quality[k]===null||baseline[k]===null?null:quality[k]-baseline[k]]));
+  return {id:c.id,weights:{...c.weights},quality,deltaFromBaseline};
+ });
+ return {researchOnly:true,eligibleForDeployment:false,eligibleRaces:accepted.length,rejectedRaces:rejected.length,baseline,scenarios,comparisonMetrics:comparableMetrics,
+  comparisonStatus:accepted.length?'descriptive_holdout_only':'no_eligible_verified_races',
   warning:'Synthetic tests do not establish predictive improvement. Verified, timestamped pre-race inputs and independent outcomes are required; do not automatically change production weights.'};
 }
