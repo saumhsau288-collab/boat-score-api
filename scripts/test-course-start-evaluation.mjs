@@ -4,6 +4,18 @@ const rows=Array.from({length:6},(_,i)=>({date:'20261118',venue:1,race:1,course:
 const r=compareCourseAndStart(rows);
 assert.equal(r.eligibleRaces,1);assert.equal(r.innerWins,1);assert.equal(r.fastestStartWins,1);assert.equal(r.innerTop3Rate,1);
 assert.equal(compareCourseAndStart(rows.slice(0,5)).eligibleRaces,0);
+const close=rows.map((x,i)=>({...x,st:0.12+i*0.005}));
+const closeResult=compareCourseAndStart(close);
+assert.equal(closeResult.closeStartRaces,1);
+assert.equal(closeResult.closeStartInnerWins,1);
+assert.equal(closeResult.closeStartInnerWinRate,1);
+assert.equal(r.closeStartRaces,0);
+assert.equal(r.closeStartInnerWinRate,null);
+const outerWinner=close.map(x=>({...x,finish:x.course===4?1:x.course<4?x.course+1:x.course}));
+const outerResult=compareCourseAndStart(outerWinner);
+assert.equal(outerResult.closeStartRaces,1);
+assert.equal(outerResult.closeStartInnerWins,0);
+
 const tied=rows.map((x,i)=>({...x,st:i<2?0.12:x.st}));
 const t=compareCourseAndStart(tied);
 assert.equal(t.eligibleRaces,1);
