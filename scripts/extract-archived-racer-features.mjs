@@ -1,6 +1,6 @@
 // Research-only extraction from archived official racelist HTML. Never certifies pre-cutoff provenance.
 import fs from 'node:fs';
-const clean=s=>s.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
+const clean=s=>s.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').replace(/\s+/g,' ').trim();
 const firstDecimal=(s,pattern)=>clean(s).match(pattern)?.[1]??null;
 const racerIdFromCell=s=>clean(s).match(/(?:^|\s)(\d{4,6})(?=\s|$)/)?.[1]??s.match(/racersearch\/profile\/(\d{4,6})(?:[/?#"']|$)/i)?.[1]??s.match(/racersearch\/profile[^"']*[?&](?:toban|racerid|id)=(\d{4,6})(?:[&#"']|$)/i)?.[1]??null;
 export function extractArchivedRacerFeatures(entry){
@@ -12,7 +12,7 @@ export function extractArchivedRacerFeatures(entry){
  for(const tr of entry.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
   diagnostics.totalTableRows++;
   if(/racersearch\/profile/i.test(tr[1]))diagnostics.rowsWithRacerProfileLinks++;
-  const cells=[...tr[1].matchAll(/<td\b(?=[^>]*\browspan=["']4["'])[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>x[1]);
+  const cells=[...tr[1].matchAll(/<td\b(?=[^>]*\browspan\s*=\s*(?:["']4["']|4(?=\s|>)))[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>x[1]);
   if(cells.length>0)diagnostics.rowsWithFourRowCells++;
   if(cells.length<6)continue;
   diagnostics.fourRowBlockCandidates++;
