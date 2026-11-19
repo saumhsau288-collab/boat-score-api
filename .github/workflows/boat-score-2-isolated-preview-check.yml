@@ -7,6 +7,8 @@ on:
       - 'research/boat-score-2-race-selector.html'
       - 'scripts/test-preview-prediction-worker.mjs'
       - 'scripts/test-mobile-race-selector.mjs'
+      - 'scripts/probe-makulabo-public-page.mjs'
+      - 'scripts/test-probe-makulabo-public-page.mjs'
       - '.github/workflows/boat-score-2-isolated-preview-check.yml'
 permissions:
   contents: read
@@ -24,6 +26,7 @@ jobs:
           node --check research/boat-score-2-preview-worker.mjs
           node scripts/test-preview-prediction-worker.mjs
           node scripts/test-mobile-race-selector.mjs
+          node scripts/test-probe-makulabo-public-page.mjs
       - name: Confirm production is untouched
         run: |
           test -f research/boat-score-2-preview-worker.mjs
