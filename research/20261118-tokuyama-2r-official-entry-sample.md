@@ -17,3 +17,12 @@ Archived in GitHub Actions run 44518789985, artifact 14527595838, original HTML 
 **This is a genuine historical official entry-sheet capture, not a pre-race snapshot.** No actual entry-course evidence or independently reviewed result is included. Boat number is not assumed to be entry course. Do not use this sample to tune weights or claim retrospective predictive accuracy until official results, actual start order, and pre-cutoff data provenance are independently established.
 
 The six-racer entry table exists and contains the national/local win rates and average ST needed for the experimental scorer. This establishes that extraction from historical official pages is feasible, but not yet that these data can be used without hindsight bias.
+
+## Official result matched (retrieved after race)
+- Run: https://github.com/saumhsau288-collab/boat-score-api/actions/runs/44519316225
+- Artifact: 14526473543, `20261118-tokuyama-2r-result-raw.json` and `20261118-tokuyama-2r-result-parsed.json`.
+- Raw official result HTML SHA-256: `655c9cb569007055a39668266566ff717785405ee61f202110424c098e827cfa`.
+- Parsed six racer IDs match all six IDs in entry sheet.
+- Official finish order by boat: **1,2,3,5,4,6**; podium **1-2-3**.
+- Extracted actual start order by boat: **1,2,3,4,5,6**.
+- Parser status: `parsed_needs_independent_review`; `racerFinishIndependentlyVerified=false`; `actualEntryCoursesVerified=false`. No eligibility for score changes until independent provenance and pre-cutoff feature values are verified.
