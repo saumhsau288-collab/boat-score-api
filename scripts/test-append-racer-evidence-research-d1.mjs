@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {planRacerEvidenceKvWrite} from './plan-racer-evidence-kv-write.mjs';
+import {appendRacerEvidenceToResearchD1} from './append-racer-evidence-research-d1.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const sample={ready:true,schemaVersion:1,date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T11:00:00+09:00',captureStatus:'server_timestamped_verified',source:'official_live_entry',racers};
+const plan=planRacerEvidenceKvWrite(sample);
+let writes=0;
+const db={prepare(sql){assert.match(sql,/^INSERT INTO/);return {bind(...args){assert.equal(args.length,7);return {async run(){writes++;return {success:true,meta:{changes:1}}}}}}}};
+assert.equal((await appendRacerEvidenceToResearchD1(plan,{db})).reason,'research_d1_writes_disabled');
+assert.equal(writes,0);
+assert.equal((await appendRacerEvidenceToResearchD1(plan,{enabled:true})).reason,'dedicated_research_d1_binding_missing');
+assert.equal((await appendRacerEvidenceToResearchD1(plan,{db,enabled:true})).stored,true);
+assert.equal(writes,1);
+const duplicate={prepare(){return {bind(){return {async run(){throw Error('UNIQUE constraint failed: racer_evidence_events.event_key')}}}}}};
+assert.equal((await appendRacerEvidenceToResearchD1(plan,{db:duplicate,enabled:true})).reason,'duplicate_event_key');
+assert.equal((await appendRacerEvidenceToResearchD1({ready:false},{db,enabled:true})).stored,false);
+console.log('Research D1 writer opt-in and duplicate rejection tests passed');
