@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {joinSavedPredictionsToParsedOfficialHtml as join} from './join-saved-predictions-official-html.mjs';
 const row={date:'20261118',venue:2,race:3,httpStatus:200,
- response:{ready:true,main:[[6,2,3],[1,2,3]],upset:[[3,2,6],[2,1,3]]}};
+ response:{ready:true,main:[[6,2,3],[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2]],upset:[[3,2,6],[2,1,3],[3,1,2],[2,3,1],[1,3,2],[1,2,3]]}};
 const official={date:'20261118',venue:2,race:3,status:'parsed_needs_independent_review',podium:[6,2,3],resultVerified:false,officialCutoffVerified:false};
 const r=join({authenticatedBeforeRace:false,records:[row]},{rows:[official]});
 assert.equal(r.linked,1);
