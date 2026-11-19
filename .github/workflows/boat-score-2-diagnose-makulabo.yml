@@ -36,6 +36,12 @@ jobs:
           VENUE: ${{ inputs.venue || '02' }}
           RACE: ${{ inputs.race || '9' }}
         run: node scripts/check-makulabo-public-source.mjs "$RACE_DATE" "$VENUE" "$RACE"
+      - name: Inspect heatmap column headings and sample rows
+        env:
+          RACE_DATE: ${{ inputs.date || '20261113' }}
+          VENUE: ${{ inputs.venue || '02' }}
+          RACE: ${{ inputs.race || '9' }}
+        run: node scripts/inspect-makulabo-heatmap-structure.mjs "$RACE_DATE" "$VENUE" "$RACE"
       - name: Validate inputs and fetch public API
         env:
           RACE_DATE: ${{ inputs.date || '20261113' }}
