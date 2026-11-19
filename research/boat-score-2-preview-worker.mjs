@@ -10,11 +10,15 @@ export function parseRacers(html){
   if(cells.length<6)continue;
   const boat=Number(clean(cells[0]).normalize('NFKC').match(/^([1-6])(?:\s|$)/)?.[1]);
   const racerId=clean(cells[2]).match(/(?:^|\s)(\d{4,6})(?=\s|$)/)?.[1]??cells[2].match(/racersearch\/profile\/(\d{4,6})/)?.[1];
+  // A name must be explicitly present in the official racer cell. Never infer it from boat order.
+  const racerCellText=clean(cells[2]).normalize('NFKC');
+  const nameCandidates=[...racerCellText.matchAll(/[一-龯々〆ヵヶぁ-ゖァ-ヺー]{2,}(?:[\\s\\u3000]+[一-龯々〆ヵヶぁ-ゖァ-ヺー]{1,})*/g)].map(m=>m[0].replace(/[\\s\\u3000]/g,''));
+  const name=nameCandidates.find(n=>n.length>=2&&!/^(?:登録|選手|級別|支部|出身|年齢)$/.test(n))??null;
   const st=Number(clean(cells[3]).match(/(?:^|\s)(0\.\d{2})(?=\s|$)/)?.[1]);
   const national=Number(clean(cells[4]).match(/(?:^|\s)(\d{1,2}\.\d{2})(?=\s|$)/)?.[1]);
   const local=Number(clean(cells[5]).match(/(?:^|\s)(\d{1,2}\.\d{2})(?=\s|$)/)?.[1]);
   if(!boat||!racerId||!Number.isFinite(st)||st<=0||st>0.5||!Number.isFinite(national)||national<=0||national>10||!Number.isFinite(local)||local<=0||local>10)continue;
-  racers.push({boat,racerId,averageStartTiming:st,nationalWinRate:national,localWinRate:local,entryCourse:boat,makulaboRecent50WinRate:null,motorSecondPlaceRate:null,exhibitionTime:null,verifiedEntryCourse:null});
+  racers.push({boat,racerId,name,averageStartTiming:st,nationalWinRate:national,localWinRate:local,entryCourse:boat,makulaboRecent50WinRate:null,motorSecondPlaceRate:null,exhibitionTime:null,verifiedEntryCourse:null});
  }
  return racers.length===6&&new Set(racers.map(r=>r.boat)).size===6&&new Set(racers.map(r=>r.racerId)).size===6?racers.sort((a,b)=>a.boat-b.boat):null;
 }
