@@ -15,6 +15,8 @@ export function compareHistoricalRace(row){
     typeof row.officialResultSourceUrl!=='string'||!row.officialResultSourceUrl.startsWith('https://www.boatrace.jp/')||
     !Number.isFinite(captured)||!Number.isFinite(cutoff)||captured>=cutoff)
    return {status:'excluded',reason:'unverified_provenance_or_cutoff'};
+ if(!Array.isArray(row.racers)||row.racers.length!==6)
+   return {status:'excluded',reason:'missing_pre_race_features'};
  // Do not substitute lane/boat number for independently established entry course.
  // Historical average ST must be captured before the cutoff, never taken from race results.
  if(row.entryCourseSource!=='verified_pre_race'||
