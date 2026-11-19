@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {auditHistoricalCourseInputs as audit} from './audit-historical-course-input.mjs';
+const make=(date,race)=>Array.from({length:6},(_,i)=>({date,venue:1,race,boat:i+1,course:i+1,racerId:String(4000+i),finish:6-i,historicalRecordVerified:true,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult'}));
+const rows=[...make('20261101',1),...make('20261102',2).map((r,i)=>i===0?{...r,course:2}:r),...make('20261119',3)];
+const result=audit(rows,{asOfDate:'20261119'});
+assert.equal(result.summary.races,2);
+assert.equal(result.summary.complete,1);
+assert.equal(result.summary.incomplete,1);
+assert.equal(result.summary.rejected.notEarlier,6);
+assert(result.races[1].missing.includes('six_distinct_actual_entry_courses'));
+assert.equal(result.eligibleForScoreChange,false);
+assert.throws(()=>audit([],{asOfDate:'20261131'}));
+console.log('Historical racer-course input audit tests passed');
