@@ -8,6 +8,13 @@ export function compareHistoricalRace(row){
     !/^20\d{6}$/.test(String(row.date))||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||
     !Number.isInteger(row.race)||row.race<1||row.race>12||
     !validOrder(row.finishOrder))return {status:'excluded',reason:'unverified_or_invalid_race'};
+ // Explicit evidence and pre-cutoff capture are mandatory; boolean flags alone are insufficient.
+ const captured=Date.parse(row.preRaceCapturedAt),cutoff=Date.parse(row.officialCutoffAt);
+ if(row.preRaceSourceVerified!==true||row.officialResultSourceVerified!==true||
+    typeof row.preRaceSourceUrl!=='string'||!row.preRaceSourceUrl.startsWith('https://')||
+    typeof row.officialResultSourceUrl!=='string'||!row.officialResultSourceUrl.startsWith('https://www.boatrace.jp/')||
+    !Number.isFinite(captured)||!Number.isFinite(cutoff)||captured>=cutoff)
+   return {status:'excluded',reason:'unverified_provenance_or_cutoff'};
  const old=evaluateRace(row.racers);
  const next=experimentalRaceRanking(row.racers);
  if(old.status!=='evaluated'||next.status!=='evaluated')
