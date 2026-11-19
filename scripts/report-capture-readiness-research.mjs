@@ -26,8 +26,15 @@ export function summarizeCaptureReadiness(capture) {
     if(!Array.isArray(r.response.rankedScores)||r.response.rankedScores.length!==6)counts.missingRankedScores++;
     const received=Date.parse(r.receivedAt??'');
     if(!Number.isFinite(received)){counts.missingReceiveTime++;continue;}
-    const jst=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(received));
-    if(jst<'07:45'||jst>'08:30')counts.capturedOutsideMorningWindow++;
+    const receivedDate=new Date(received);
+    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{
+      timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).formatToParts(receivedDate).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+    const jstDate=parts.year+parts.month+parts.day;
+    const jstTime=parts.hour+':'+parts.minute;
+    if(jstDate!==String(capture.date)||jstTime<'07:45'||jstTime>'08:30')
+      counts.capturedOutsideMorningWindow++;
   }
   return {date:capture.date??null,counts,byVenue,verifiedPreRace:0,eligibleForWeightTuning:0,
     warning:'Read-only capture diagnostics. Morning clock timing does not authenticate official race cutoffs; rankedScores cannot reconstruct original feature inputs. No hit-rate or calibration claims.'};
