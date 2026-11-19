@@ -40,6 +40,8 @@ export function matchMakulaboByRegistration(official,recent){
  for(const row of recent){
   const id=String(row?.racerId??'');
   if(!/^\d{4}$/.test(id)||byId.has(id))return {verified:false,reason:'duplicate_or_invalid_recent_identity',matches:[]};
+  const rate=row?.winRate;
+  if(typeof rate!=='number'||!Number.isFinite(rate)||rate<0||rate>100)return {verified:false,reason:'invalid_recent50_win_rate',matches:[]};
   byId.set(id,row);
  }
  if(byId.size!==6||ids.some(id=>!byId.has(id)))return {verified:false,reason:'registration_mismatch',matches:[]};
