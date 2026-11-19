@@ -76,6 +76,16 @@ try{
  const makulaboUnavailable=await (await worker.fetch(new Request('https://preview.example/api/makulabo-status?date=20261119&venue=18&race=2'))).json();
  assert.equal(makulaboUnavailable.recent50Ready,false);
  assert.equal(makulaboUnavailable.status,'not_integrated');
+ globalThis.fetch=async()=>new Response('<html><body>ヒートマップ 直近50走 登録番号 4001</body></html>',{status:200,headers:{'content-type':'text/html'}});
+ const publicStatus=await (await worker.fetch(new Request('https://preview.example/api/makulabo-status?date=20261119&venue=18&race=2'))).json();
+ assert.equal(publicStatus.pageAccessible,true);
+ assert.equal(publicStatus.indicators.hasHeatmapLabel,true);
+ assert.equal(publicStatus.indicators.hasRecent50Label,true);
+ assert.equal(publicStatus.indicators.hasRegistrationId,true);
+ assert.equal(publicStatus.recent50Ready,false,'Visible labels do not prove six verified recent-50 records');
+ globalThis.fetch=async()=>new Response('<html>ヒートマップ ログイン</html>',{status:200,headers:{'content-type':'text/html'}});
+ const gated=await (await worker.fetch(new Request('https://preview.example/api/makulabo-status?date=20261119&venue=18&race=2'))).json();
+ assert.equal(gated.pageAccessible,false,'Login-gated pages must not be treated as public');
  const noRoute=await worker.fetch(new Request('https://preview.example/api/unknown'));
  assert.equal(noRoute.status,404);
  const options=await worker.fetch(new Request('https://preview.example/api/predict',{method:'OPTIONS'}));
