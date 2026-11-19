@@ -19,6 +19,8 @@ on:
       - 'scripts/test-format-prediction-snapshot.mjs'
       - 'scripts/prepare-prediction-snapshot-batch.mjs'
       - 'scripts/test-prepare-prediction-snapshot-batch.mjs'
+      - 'scripts/audit-existing-morning-record.mjs'
+      - 'scripts/test-audit-existing-morning-record.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -49,6 +51,8 @@ jobs:
           node scripts/compare-exploratory-winrates-results.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-comparison.json
       - name: Verify pre-cutoff snapshot eligibility rules
         run: node scripts/test-validate-precutoff-snapshot.mjs
+      - name: Test legacy morning snapshot eligibility audit
+        run: node scripts/test-audit-existing-morning-record.mjs
       - name: Test append-only snapshot batch preparation
         run: node scripts/test-prepare-prediction-snapshot-batch.mjs
       - name: Test prediction snapshot record format
