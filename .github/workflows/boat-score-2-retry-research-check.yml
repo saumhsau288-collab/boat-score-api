@@ -13,6 +13,8 @@ on:
       - 'scripts/classify-daily-venue-evidence.mjs'
       - 'scripts/test-classify-daily-venue-evidence.mjs'
       - 'scripts/test-report-morning-coverage-research.mjs'
+      - 'scripts/fetch-official-result-pages-research.mjs'
+      - 'scripts/test-fetch-official-result-pages-research.mjs'
       - 'scripts/build-official-result-request-manifest.mjs'
       - 'scripts/test-build-official-result-request-manifest.mjs'
       - 'scripts/audit-morning-official-cutoffs.mjs'
@@ -40,6 +42,8 @@ jobs:
           node-version: '22'
       - name: Check research scripts syntax
         run: |
+          node --check scripts/fetch-official-result-pages-research.mjs
+          node --check scripts/test-fetch-official-result-pages-research.mjs
           node --check scripts/build-official-result-request-manifest.mjs
           node --check scripts/test-build-official-result-request-manifest.mjs
           node --check scripts/audit-morning-official-cutoffs.mjs
@@ -84,6 +88,7 @@ jobs:
           node --check scripts/test-summarize-cutoff-candidates.mjs
       - name: Run offline retry research regression
         run: |
+          node scripts/test-fetch-official-result-pages-research.mjs
           node scripts/test-build-official-result-request-manifest.mjs
           node scripts/test-audit-morning-official-cutoffs.mjs
           node scripts/test-audit-saved-comparison-evidence.mjs
