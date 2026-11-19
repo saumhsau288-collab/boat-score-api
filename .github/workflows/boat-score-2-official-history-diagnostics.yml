@@ -10,6 +10,8 @@ on:
       - 'scripts/test-fetch-manual-official-historical-results.mjs'
       - 'scripts/summarize-official-inside-courses.mjs'
       - 'scripts/test-summarize-official-inside-courses.mjs'
+      - 'scripts/validate-historical-prerace-snapshot.mjs'
+      - 'scripts/test-validate-historical-prerace-snapshot.mjs'
       - 'scripts/test-extract-official-result-diagnostics.mjs'
   workflow_dispatch:
 permissions:
@@ -28,6 +30,7 @@ jobs:
           node scripts/test-extract-official-result-diagnostics.mjs
           node scripts/test-fetch-manual-official-historical-results.mjs
           node scripts/test-summarize-official-inside-courses.mjs
+          node scripts/test-validate-historical-prerace-snapshot.mjs
       - name: Fetch full 12-race historical card (exploratory sample)
         run: |
           mkdir -p research-historical
