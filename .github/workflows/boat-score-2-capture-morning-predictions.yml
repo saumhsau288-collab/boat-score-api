@@ -548,7 +548,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\\.json$ ]] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             node scripts/report-capture-readiness-research.mjs "$file" > "${file%.json}-readiness.json"
           done
       - name: Upload timestamped raw responses
