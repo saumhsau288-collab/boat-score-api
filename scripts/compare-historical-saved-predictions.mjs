@@ -35,7 +35,23 @@ export function compareHistoricalSavedPredictions(snapshots, results){
   const phaseMainHits=valid.filter(r=>r.mainHit).length,phaseUpsetHits=valid.filter(r=>r.upsetHit).length;
   return [phase,{checked:phaseRows.length,compared:valid.length,held:phaseRows.length-valid.length,mainHits:phaseMainHits,upsetHits:phaseUpsetHits,mainHitRate:valid.length?phaseMainHits/valid.length:null,upsetHitRate:valid.length?phaseUpsetHits/valid.length:null}];
  }));
- return {method:'saved_prerace_predictions_vs_independently_verified_results',checked:snapshots.length,compared:compared.length,held:rows.length-compared.length,mainHits,upsetHits,mainHitRate:compared.length?mainHits/compared.length:null,upsetHitRate:compared.length?upsetHits/compared.length:null,byPhase,eligibleForWeightTuning:false,warning:'Descriptive comparison only; sample adequacy and independent verification must be reviewed before tuning.',rows};
+ const pairedByRace=new Map();
+ for(const r of compared){
+  const key=[r.date,r.venue,r.race].join(':');
+  if(!pairedByRace.has(key))pairedByRace.set(key,{});
+  pairedByRace.get(key)[r.phase]=r;
+ }
+ const pairs=[...pairedByRace.values()].filter(p=>p.morning_0800&&p.pre_cutoff);
+ const pairedComparison={races:pairs.length,
+  morningMainHits:pairs.filter(p=>p.morning_0800.mainHit).length,
+  preCutoffMainHits:pairs.filter(p=>p.pre_cutoff.mainHit).length,
+  morningUpsetHits:pairs.filter(p=>p.morning_0800.upsetHit).length,
+  preCutoffUpsetHits:pairs.filter(p=>p.pre_cutoff.upsetHit).length,
+  mainImproved:pairs.filter(p=>!p.morning_0800.mainHit&&p.pre_cutoff.mainHit).length,
+  mainWorsened:pairs.filter(p=>p.morning_0800.mainHit&&!p.pre_cutoff.mainHit).length,
+  upsetImproved:pairs.filter(p=>!p.morning_0800.upsetHit&&p.pre_cutoff.upsetHit).length,
+  upsetWorsened:pairs.filter(p=>p.morning_0800.upsetHit&&!p.pre_cutoff.upsetHit).length};
+ return {method:'saved_prerace_predictions_vs_independently_verified_results',checked:snapshots.length,compared:compared.length,held:rows.length-compared.length,mainHits,upsetHits,mainHitRate:compared.length?mainHits/compared.length:null,upsetHitRate:compared.length?upsetHits/compared.length:null,byPhase,pairedComparison,eligibleForWeightTuning:false,warning:'Descriptive comparison only; sample adequacy and independent verification must be reviewed before tuning.',rows};
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const [snapshotsPath,resultsPath]=process.argv.slice(2);
