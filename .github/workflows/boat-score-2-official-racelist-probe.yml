@@ -12,11 +12,20 @@ permissions:
 jobs:
   official-probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        race: [1, 2, 3]
+    env:
+      PROBE_DATE: '20261119'
+      PROBE_VENUE: '18'
+      PROBE_RACE: ${{ matrix.race }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify official racer IDs and names from live public page
+      - name: Verify official racer IDs, Makulabo matching, and actual result for race ${{ matrix.race }}
         run: node scripts/probe-official-racelist.mjs
