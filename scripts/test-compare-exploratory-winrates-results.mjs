@@ -12,6 +12,7 @@ assert.equal(report.rows[0].highestAverageWinRateBoat,4);
 assert.equal(report.eligibleForCalibration,0);
 assert.deepEqual(report.winnerWinRateRankCounts,{'1':1,'2':0,'3':0,'4':0,'5':0,'6':0});
 assert.equal(report.racesWithSixAverageST,0);
+assert.deepEqual(report.topThreeOverlapDistribution,{'0':0,'1':0,'2':0,'3':0});
 assert.equal(report.racesEligibleForCombinedRankDescription,0);
 assert.equal(report.winnerWinRateAndSTTopThree,0);
 assert.equal(report.racesWithWinnerAverageST,0);
@@ -25,6 +26,10 @@ const withCourses=compareExploratoryWinRateFinishes(
 assert.equal(withCourses.topWinRateActualInside.races,1);
 assert.equal(withCourses.topWinRateInside.races,0);
 assert.equal(withCourses.winnerActualCourseCounts['2'],1);
+assert.deepEqual(withCourses.topThreeOverlapDistribution,{'0':0,'1':0,'2':1,'3':0});
+assert.deepEqual(withCourses.rows[0].topThreeWinRateBoats,[4,1,2]);
+assert.deepEqual(withCourses.rows[0].topThreeSTBoats,[1,2,3]);
+assert.equal(withCourses.rows[0].topThreeOverlapCount,2);
 assert.equal(withCourses.racesWithSixAverageST,1);
 assert.equal(withCourses.rows[0].winnerAverageSTRank,4);
 assert.equal(withCourses.winnerWinRateAndSTTopThree,0);
