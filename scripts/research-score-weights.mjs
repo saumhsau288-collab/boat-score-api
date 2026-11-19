@@ -50,6 +50,6 @@ export function scoreVerifiedPreRaceFactors(rows,weights=researchWeightCandidate
  if(!rows.every(r=>r?.preRaceVerified===true&&factors.every(k=>Number.isFinite(r[k])&&r[k]>=0&&r[k]<=1)))
   return {ready:false,reason:'all_verified_pre_race_factors_required'};
  return {ready:true,method:'research_candidate_not_calibrated',rankedScores:rows.map(r=>({
-  boat:r.boat,score:factors.reduce((sum,k)=>sum+weights[k]*r[k],0)
+  boat:r.boat,score:factors.reduce((sum,k)=>sum+weights[k]*r[k],0),factorPoints:Object.fromEntries(factors.map(k=>[k,weights[k]*r[k]]))
  })).sort((a,b)=>b.score-a.score||a.boat-b.boat),eligibleForDeployment:false};
 }
