@@ -1,13 +1,21 @@
 // Descriptive post-race study only: do not call these saved-after-race stats a pre-race backtest.
 import fs from 'node:fs';
 export function compareExploratoryWinRateFinishes(entryReport,resultReport){
- const byRace=new Map((resultReport.rows||[]).map(r=>[r.date+':'+r.venue+':'+r.race,r]));
+ const resultRows=Array.isArray(resultReport?.rows)?resultReport.rows:[];
+ const keys=resultRows.map(r=>r.date+':'+r.venue+':'+r.race);
+ if(new Set(keys).size!==keys.length)throw Error('Duplicate result race identity');
+ const byRace=new Map(resultRows.map(r=>[r.date+':'+r.venue+':'+r.race,r]));
+ const entryRows=Array.isArray(entryReport?.rows)?entryReport.rows:[];
+ const entryKeys=entryRows.map(r=>r.date+':'+r.venue+':'+r.race);
+ if(new Set(entryKeys).size!==entryKeys.length)throw Error('Duplicate entry race identity');
  const rows=[];
- for(const entry of entryReport.rows||[]){
+ for(const entry of entryRows){
   if(entry.statsVerified!==true||entry.racers?.length!==6)continue;
   const result=byRace.get(entry.date+':'+entry.venue+':'+entry.race);
   if(!result||result.status!=='parsed_needs_independent_review'||result.racers?.length!==6)continue;
   const finishes=new Map(result.racers.map(r=>[r.boat,r]));
+  if(finishes.size!==6||new Set(result.racers.map(r=>r.racerId)).size!==6||new Set(entry.racers.map(r=>r.racerId)).size!==6)continue;
+  if(entry.racers.some(r=>!Number.isFinite(r.averageWinRate)||r.averageWinRate<0||r.averageWinRate>10))continue;
   if(entry.racers.some(r=>finishes.get(r.boat)?.racerId!==r.racerId))continue;
   const joined=entry.racers.map(r=>({...r,finish:finishes.get(r.boat).finish}));
   const ranked=[...joined].sort((a,b)=>b.averageWinRate-a.averageWinRate||a.boat-b.boat);
