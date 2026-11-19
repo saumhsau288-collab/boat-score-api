@@ -26,3 +26,18 @@ export function experimentalRaceRanking(racers){
  if(scored.some(r=>r.status!=='evaluated'))return {status:'insufficient_data',scored};
  return {status:'evaluated',ranked:scored.sort((a,b)=>b.score-a.score||a.boat-b.boat)};
 }
+
+/**
+ * Compare score components without using finishing order.
+ * Positive difference means the first racer scores higher.
+ */
+export function explainRacerComparison(first,second){
+ const a=experimentalRacerScore(first),b=experimentalRacerScore(second);
+ if(a.status!=='evaluated'||b.status!=='evaluated')
+   return {status:'insufficient_data'};
+ const diff=k=>Math.round((a.components[k]-b.components[k])*100)/100;
+ return {status:'evaluated',scoreDifference:Math.round((a.score-b.score)*100)/100,
+   componentDifferences:{ability:diff('ability'),start:diff('start'),course:diff('course')},
+   winner:a.score===b.score?'tie':a.score>b.score?'first':'second',
+   note:'Offline explanatory score decomposition, not empirical race-win probability.'};
+}
