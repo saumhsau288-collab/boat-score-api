@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {compareRacerCourseToHistoricalBaseline as compare} from './compare-racer-course-baselines.mjs';
+const row=(racerId,race,finish,date='20261101')=>({date,venue:1,race,racerId,course:4,finish,historicalRecordVerified:true,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult'});
+const rows=[row('4001',1,1),row('4001',2,2),row('4002',1,3),row('4002',2,1),row('4001',3,1,'20261119')];
+const result=compare(rows,{asOfDate:'20261119',minRacerStarts:2,minCourseStarts:4});
+assert.equal(result.rows.length,2);
+assert.equal(result.rows[0].courseStarts,4);
+assert.equal(result.rows[0].courseFirstRate,0.5);
+assert.equal(result.rows[0].racerFirstRate,0.5);
+assert.equal(result.rows[0].firstRateDifference,0);
+assert.equal(result.rejected.notEarlier,1);
+assert.equal(result.eligibleForScoreChange,false);
+const insufficient=compare(rows,{asOfDate:'20261119',minRacerStarts:3,minCourseStarts:5});
+assert.equal(insufficient.rows[0].firstRateDifference,null);
+assert.throws(()=>compare(rows,{asOfDate:'20261119',minRacerStarts:0}));
+console.log('Historical course-baseline comparison tests passed');
