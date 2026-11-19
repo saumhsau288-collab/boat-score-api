@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {auditEvidenceForFiveFactorScoring} from './audit-evidence-for-five-factor-scoring.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),values:{nationalWinRate:6,averageST:0.14,motorSecondPlaceRate:35,expectedEntryCourse:null,exhibitionTime:null}}));
+const base={ready:true,racers};
+const audit=auditEvidenceForFiveFactorScoring(base);
+assert.equal(audit.readyForFiveFactorScoring,false);
+assert.ok(audit.missing.includes('verified_entry_course'));
+assert.ok(audit.missing.includes('verified_exhibition'));
+assert.ok(audit.missing.includes('verified_normalization_rules'));
+assert.equal(auditEvidenceForFiveFactorScoring({...base,racers:racers.map(r=>({...r,values:{...r.values,averageST:null}}))}).missing.includes('pre_race_average_st'),true);
+assert.equal(auditEvidenceForFiveFactorScoring({...base,racers:racers.map(r=>({...r,factorNormalizationVerified:true,values:{...r.values,expectedEntryCourse:r.boat,exhibitionTime:6.7}}))}).readyForFiveFactorScoring,true);
+console.log('Five-factor evidence readiness gate tests passed');
