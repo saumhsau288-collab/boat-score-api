@@ -24,7 +24,7 @@
 <option value="21">21 芦屋</option>
 <option value="22">22 福岡</option>
 <option value="23">23 唐津</option>
-<option value="24">24 大村</option></select><label for="race">レース</label><select id="race"><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="select">レースを選択</button><button id="workflow" type="button" style="background:#1f7a52">GitHubで暫定予想を実行</button><button id="copy" type="button" style="background:#516475">選択内容をコピー</button><section aria-live="polite"><h2>選択結果</h2><pre id="result">開催場とレースを選んでください。</pre><a id="official" href="#" target="_blank" rel="noopener noreferrer" hidden>選択したレースの公式出走表を開く</a></section><small>注意：これは検証用の選択画面です。開催の有無・出走表・直前情報は未取得です。ここで買い目や実際の予想は表示されません。公開アプリとは独立しています。</small></main>
+<option value="24">24 大村</option></select><label for="race">レース</label><select id="race"><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="select">レースを選択</button><button id="workflow" type="button" style="background:#1f7a52">GitHubで暫定予想を実行</button><button id="copy" type="button" style="background:#516475">選択内容をコピー</button><section><h2>予想結果ファイルを表示</h2><p>GitHubの検証結果（prediction.json）を選ぶと、この画面に本命・穴・選手評価を表示します。</p><input id="prediction-file" type="file" accept=".json,application/json"><div id="prediction-view" aria-live="polite"></div></section><section aria-live="polite"><h2>選択結果</h2><pre id="result">開催場とレースを選んでください。</pre><a id="official" href="#" target="_blank" rel="noopener noreferrer" hidden>選択したレースの公式出走表を開く</a></section><small>注意：これは検証用の選択画面です。開催の有無・出走表・直前情報は未取得です。ここで買い目や実際の予想は表示されません。公開アプリとは独立しています。</small></main>
 <script>
 const date=document.querySelector('#date'),venue=document.querySelector('#venue'),race=document.querySelector('#race'),result=document.querySelector('#result');
 date.value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
@@ -38,5 +38,27 @@ document.querySelector('#select').addEventListener('click',()=>{
  url.searchParams.set('hd',hd);url.searchParams.set('jcd',jcd);url.searchParams.set('rno',rno);
  const official=document.querySelector('#official');official.href=url.href;official.hidden=false;
  result.textContent=venue.options[venue.selectedIndex].text+' / '+race.value+'R / '+date.value+'\n公式出走表：'+url.href+'\n\n現在は選択と公式ページへの参照まで。自動予想は未接続です。';
+});
+document.querySelector('#prediction-file').addEventListener('change',async event=>{
+ const view=document.querySelector('#prediction-view');view.replaceChildren();
+ const file=event.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>2000000)throw Error('ファイルが大きすぎます');
+  const data=JSON.parse(await file.text());
+  if(!/^20\\d{6}$/.test(String(data.date))||!Number.isInteger(data.venue)||!Number.isInteger(data.race)||!Array.isArray(data.main)||!Array.isArray(data.upset))throw Error('予想結果ファイルの形式が違います');
+  const title=document.createElement('h3');title.textContent=data.date+' / '+data.venue+'場 / '+data.race+'R';view.append(title);
+  const warning=document.createElement('p');warning.textContent='検証用：進入と締切前データは未確認。まくらぼ反映の有無も確認してください。';view.append(warning);
+  function list(label,items){
+   const h=document.createElement('h3');h.textContent=label;view.append(h);
+   const ol=document.createElement('ol');
+   for(const item of items){const li=document.createElement('li');li.textContent=String(item.ticket??'不明');ol.append(li);}
+   view.append(ol);
+  }
+  list('本命（反映前）',data.main);list('穴（反映前）',data.upset);
+  const ranking=document.createElement('p');ranking.textContent='評価順位：'+(data.ranking??[]).map(x=>x.boat+'号艇 '+x.score+'点').join(' / ');view.append(ranking);
+  const m=data.makulaboComparison;
+  if(m?.applied===true){list('まくらぼ反映後・本命',m.adjusted.main);list('まくらぼ反映後・穴',m.adjusted.upset);}
+  else {const p=document.createElement('p');p.textContent='まくらぼ：未反映（'+(m?.reason??'実データ未取得')+'）';view.append(p);}
+ }catch(error){view.textContent='表示できません：'+error.message;}
 });
 </script></body></html>
