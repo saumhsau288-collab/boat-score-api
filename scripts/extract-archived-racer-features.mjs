@@ -9,15 +9,18 @@ export function extractArchivedRacerFeatures(entry){
  for(const tr of entry.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
   const cells=[...tr[1].matchAll(/<td\b(?=[^>]*\browspan=["']4["'])[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>x[1]);
   if(cells.length<6)continue;
+  const boatText=clean(cells[0]);
+  const boat=boatText.match(/^([1-6])(?:\\s|$)/)?.[1];
   const racerId=clean(cells[2]).match(/^(\d{4,6})\b/)?.[1];
   const st=clean(cells[3]).match(/(?:^|\s)(0\.\d{2})(?:\s|$)/);
   const national=clean(cells[4]).match(/^(\d{1,2}\.\d{2})(?:\s|$)/);
   const local=clean(cells[5]).match(/^(\d{1,2}\.\d{2})(?:\s|$)/);
   if(!racerId||!st||!national||!local)continue;
-  racers.push({racerId,nationalWinRate:Number(national[1]),localWinRate:Number(local[1]),averageStartTiming:Number(st[1])});
+  racers.push({boat:boat?Number(boat):null,racerId,nationalWinRate:Number(national[1]),localWinRate:Number(local[1]),averageStartTiming:Number(st[1])});
  }
  if(racers.length!==6||new Set(racers.map(x=>x.racerId)).size!==6)return {...base,status:'incomplete_six_racer_features',found:racers.length};
- return {...base,status:'parsed_archival_features_unverified',racers};
+ const boatMappingVerified=racers.every((r,i)=>r.boat===i+1);
+ return {...base,status:'parsed_archival_features_unverified',boatMappingVerified,racers};
 }
 export function joinArchivedRace(entry,result){
  const e=extractArchivedRacerFeatures(entry);
