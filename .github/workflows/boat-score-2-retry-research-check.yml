@@ -13,6 +13,8 @@ on:
       - 'scripts/classify-daily-venue-evidence.mjs'
       - 'scripts/test-classify-daily-venue-evidence.mjs'
       - 'scripts/test-report-morning-coverage-research.mjs'
+      - 'scripts/compare-racer-course-baselines.mjs'
+      - 'scripts/test-compare-racer-course-baselines.mjs'
       - 'scripts/build-historical-racer-course-profiles.mjs'
       - 'scripts/test-build-historical-racer-course-profiles.mjs'
       - 'scripts/review-historical-finish-orders.mjs'
@@ -55,6 +57,8 @@ jobs:
           node-version: '22'
       - name: Check research scripts syntax
         run: |
+          node --check scripts/compare-racer-course-baselines.mjs
+          node --check scripts/test-compare-racer-course-baselines.mjs
           node --check scripts/build-historical-racer-course-profiles.mjs
           node --check scripts/test-build-historical-racer-course-profiles.mjs
           node --check scripts/review-historical-finish-orders.mjs
@@ -111,6 +115,7 @@ jobs:
           node --check scripts/test-summarize-cutoff-candidates.mjs
       - name: Run offline retry research regression
         run: |
+          node scripts/test-compare-racer-course-baselines.mjs
           node scripts/test-build-historical-racer-course-profiles.mjs
           node scripts/test-review-historical-finish-orders.mjs
           node scripts/test-summarize-research-join.mjs
