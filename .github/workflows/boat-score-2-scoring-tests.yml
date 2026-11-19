@@ -88,6 +88,10 @@ jobs:
           fs.mkdirSync('real-race-preview',{recursive:true});
           fs.writeFileSync('real-race-preview/prediction.html',renderSelectedRaceHtml(r));
           fs.writeFileSync('real-race-preview/prediction.json',JSON.stringify(r,null,2));
+          const {probeMakulaboPublicPage}=await import('./scripts/probe-makulabo-public-page.mjs');
+          const makulaboProbe=await probeMakulaboPublicPage({date:'20261119',venue:18,race:2});
+          console.log('MAKULABO_PUBLIC_PROBE '+JSON.stringify(makulaboProbe));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## まくらぼ公開ページ確認\n\n```json\n'+JSON.stringify(makulaboProbe,null,2)+'\n```\n');
           console.log('REAL_RACE_HTML_PREVIEW '+JSON.stringify({status:r.status,htmlGenerated:true,main:r.main?.length??0,upset:r.upset?.length??0}));
           // Independently fetch the corresponding official result page; no score tuning.
           const resultUrl='https://www.boatrace.jp/owpc/pc/race/raceresult?rno=2&jcd=18&hd=20261119';
