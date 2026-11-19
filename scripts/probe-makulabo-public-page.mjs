@@ -12,8 +12,10 @@ export async function probeMakulaboPublicPage({date,venue,race,fetchImpl=fetch}=
   const text=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ');
   const indicators={hasHeatmap:/ヒートマップ/.test(text),hasLast50Label:/直近\s*50\s*走|過去\s*50\s*走|50走/.test(text),hasLoginPrompt:/ログイン|会員登録|有料会員|新規登録/.test(text),hasRacerRegistrationId:/\b[3-5]\d{3}\b/.test(text),htmlBytes:html.length};
   const structure={tableCount:(html.match(/<table\b/gi)??[]).length,rowCount:(html.match(/<tr\b/gi)??[]).length,heatmapLabelCount:(text.match(/ヒートマップ/g)??[]).length,last50LabelCount:(text.match(/50走/g)??[]).length,visibleRacerNameLabels:(text.match(/選手名/g)??[]).length,visibleRegistrationLabels:(text.match(/登録番号|登録No/g)??[]).length,sourceHasDataAttributes:/data-(?:racer|player|boat|waku)/i.test(html),sourceHasPlayerLinks:/player|racer|toban|register/i.test(html)};
+  const tableRows=[...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)];
+  const tableShape={rowCellCounts:tableRows.slice(0,12).map(m=>(m[1].match(/<(?:td|th)\b/gi)??[]).length),headerCells:(html.match(/<th\b/gi)??[]).length,registrationLinkCount:(html.match(/racersearch\/profile\/\d{4,6}/gi)??[]).length,containsDataTable:/<table\b[^>]*\b(?:data-|id=|class=)/i.test(html)};
   const js={scriptCount:html.split('<script').length-1,hasNextData:html.includes('__NEXT_DATA__'),hasNuxtData:html.includes('__NUXT__'),hasReactRoot:html.includes('id="root"')||html.includes('id="__next"'),hasVueRoot:html.includes('id="app"'),hasEmbeddedJson:html.includes('application/json'),hasApiPath:html.includes('/api/')||html.includes('axios.')};
-  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,js,warning:'Page labels are not authenticated six-racer recent50 win rates. No values extracted or applied.'};
+  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,js,warning:'Page labels are not authenticated six-racer recent50 win rates. No values extracted or applied.'};
  }catch(e){return {status:'fetch_failed',url,recent50Ready:false,error:String(e.message).slice(0,120)};}
 }
 
