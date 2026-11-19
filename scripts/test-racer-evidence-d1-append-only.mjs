@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {planRacerEvidenceKvWrite} from './plan-racer-evidence-kv-write.mjs';
+import {RACER_EVIDENCE_D1_SCHEMA,buildRacerEvidenceD1Insert} from './racer-evidence-d1-append-only.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const sample={ready:true,schemaVersion:1,date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T11:00:00+09:00',captureStatus:'server_timestamped_verified',source:'official_live_entry',racers};
+const plan=planRacerEvidenceKvWrite(sample);
+const insert=buildRacerEvidenceD1Insert(plan);
+assert.equal(insert.ready,true);
+assert.equal(insert.params.length,7);
+assert.equal(insert.params[0],plan.key);
+assert.match(insert.sql,/^INSERT INTO/);
+assert.doesNotMatch(insert.sql,/REPLACE|IGNORE/i);
+assert.match(RACER_EVIDENCE_D1_SCHEMA,/PRIMARY KEY/);
+assert.equal(buildRacerEvidenceD1Insert({ready:false}).ready,false);
+console.log('Append-only racer evidence D1 schema and insert tests passed');
