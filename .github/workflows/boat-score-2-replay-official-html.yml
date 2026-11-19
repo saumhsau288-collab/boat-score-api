@@ -1,0 +1,49 @@
+name: Boat Score 2 replay saved official result HTML (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      result_run_id:
+        description: 'Workflow run ID containing saved raw official HTML'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  parse-results:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate offline parser
+        run: |
+          node --check scripts/parse-saved-official-result-pages.mjs
+          node scripts/test-parse-saved-official-result-pages.mjs
+      - name: Download raw official HTML artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT_RUN_ID: ${{ inputs.result_run_id }}
+        run: |
+          mkdir -p research-input
+          gh run download "$RESULT_RUN_ID" --dir research-input
+      - name: Replay parser on archived HTML
+        run: |
+          mkdir -p research-reports
+          count=0
+          while IFS= read -r -d '' file; do
+            node scripts/parse-saved-official-result-pages.mjs "$file" > "research-reports/$(basename "$file").parsed.json"
+            count=$((count+1))
+          done < <(find research-input -type f -name '*.official-raw.json' -print0)
+          if [ "$count" -eq 0 ]; then echo 'No archived official HTML JSON found'; exit 1; fi
+          for file in research-reports/*.json; do
+            node -e 'const fs=require("fs");const r=JSON.parse(fs.readFileSync(process.argv[1]));console.log(JSON.stringify({parsed:r.parsed,verifiedResults:r.verifiedResults,eligibleForAccuracy:r.eligibleForAccuracy,rows:r.rows.map(x=>({race:x.race,status:x.status,podium:x.podium??null,reason:x.reason??null}))}))' "$file"
+          done
+      - name: Upload offline parse reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-official-html-parse-${{ github.run_id }}
+          path: research-reports/
+          if-no-files-found: error
+          retention-days: 30
