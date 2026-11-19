@@ -9,6 +9,8 @@ on:
       - 'scripts/test-compare-exploratory-winrates-results.mjs'
       - 'scripts/compare-exploratory-ranking-models.mjs'
       - 'scripts/test-compare-exploratory-ranking-models.mjs'
+      - 'scripts/validate-precutoff-snapshot.mjs'
+      - 'scripts/test-validate-precutoff-snapshot.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,6 +39,8 @@ jobs:
         run: |
           node scripts/test-compare-exploratory-winrates-results.mjs
           node scripts/compare-exploratory-winrates-results.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-comparison.json
+      - name: Verify pre-cutoff snapshot eligibility rules
+        run: node scripts/test-validate-precutoff-snapshot.mjs
       - name: Test experimental ranking comparison integrity
         run: node scripts/test-compare-exploratory-ranking-models.mjs
       - name: Compare four experimental ranking weight sets offline
