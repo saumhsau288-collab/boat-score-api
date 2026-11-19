@@ -50,3 +50,22 @@ export function summarizeVenueCourse(rawRows,{beforeDate,fromDate}={}) {
   return [...map.values()].map(g=>({...g,winPct:+(g.wins/g.starts*100).toFixed(2),
     top2Pct:+(g.top2/g.starts*100).toFixed(2),top3Pct:+(g.top3/g.starts*100).toFixed(2)}));
 }
+
+/**
+ * Chronological partition for offline research. A single race must never appear
+ * in both tuning and holdout sets. Excludes unknown dates and boundary dates.
+ * This does not establish that features were available before race cutoff.
+ */
+export function splitHistoricalRacesByDate(rawRows,{tuningBefore,holdoutFrom}={}){
+ const validDate=d=>typeof d==='string'&&/^20\d{6}$/.test(d)&&Number.isFinite(Date.parse(d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)+'T00:00:00Z'))&&new Date(d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)+'T00:00:00Z').toISOString().slice(0,10).replaceAll('-','')===d;
+ if(!validDate(tuningBefore)||!validDate(holdoutFrom)||tuningBefore>holdoutFrom)throw Error('Invalid chronological split boundaries');
+ const tuning=[],holdout=[],excluded=[];
+ for(const row of rawRows||[]){
+  const d=String(row?.date??'');
+  if(!validDate(d)){excluded.push(row);continue;}
+  if(d<tuningBefore)tuning.push(row);
+  else if(d>=holdoutFrom)holdout.push(row);
+  else excluded.push(row);
+ }
+ return {tuning,holdout,excluded,method:'chronological_race_date_split',eligibleForWeightTuning:false};
+}
