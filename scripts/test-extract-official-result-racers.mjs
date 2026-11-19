@@ -14,6 +14,17 @@ assert.deepEqual(out.rows[0].podium,[1,2,3]);
 assert.deepEqual(out.rows[0].racers.map(r=>r.racerId),['5194','4940','4843','5373','4987','5439']);
 assert(out.rows[0].racers.every(r=>r.actualEntryCourse===null));
 assert.equal(out.eligibleForHistoricalProfile,0);
+const startTable=order=>'<table class="is-w495"><thead><tr><th>スタート情報</th></tr></thead><tbody>'+
+ order.map(boat=>'<tr><td><span class="table1_boatImage1Number is-type'+boat+'">'+boat+'</span></td></tr>').join('')+'</tbody></table>';
+const ordered=extract({pages:[{...page,html:html+startTable([2,1,3,4,5,6])}]}).rows[0];
+assert.equal(ordered.entryCoursesExtracted,true);
+assert.deepEqual(ordered.startOrderBoats,[2,1,3,4,5,6]);
+assert.deepEqual(ordered.racers.map(r=>r.actualEntryCourse),[2,1,3,4,5,6]);
+assert.equal(ordered.actualEntryCoursesVerified,false);
+const duplicateStart=extract({pages:[{...page,html:html+startTable([1,1,3,4,5,6])}]}).rows[0];
+assert.equal(duplicateStart.entryCoursesExtracted,false);
+assert(duplicateStart.racers.every(r=>r.actualEntryCourse===null));
+
 assert.equal(extract({pages:[{...page,html:html.replace('5439','5194')}]}).parsedRaces,0);
 assert.equal(extract({pages:[{...page,url:page.url.replace('jcd=02','jcd=03')}]}).rows[0].status,'invalid_official_identity');
 assert.equal(extract({pages:[{...page,status:'fetch_failed'}]}).rows[0].status,'not_saved');
