@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {validateHistoricalPreRaceSnapshot as check} from './validate-historical-prerace-snapshot.mjs';
+const picks=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
+const snapshot={source:'existing_Boat_Score_2_selected_race',captureKind:'saved_before_cutoff',date:'20261118',venue:2,race:1,savedAt:'2026-11-18T03:00:00Z',cutoffAt:'2026-11-18T03:05:00Z',inputsCapturedBeforeCutoff:true,main:picks,upset:picks};
+const result={date:'20261118',venue:2,race:1,independentlyVerified:true};
+assert.equal(check(snapshot,result).eligible,true);
+assert.ok(check({...snapshot,savedAt:snapshot.cutoffAt},result).issues.includes('captured_at_or_after_cutoff'));
+assert.ok(check({...snapshot,captureKind:'post_race_replay'},result).issues.includes('not_saved_before_cutoff'));
+assert.ok(check(snapshot,{...result,independentlyVerified:false}).issues.includes('result_not_independently_verified'));
+assert.ok(check({...snapshot,inputsCapturedBeforeCutoff:false},result).issues.includes('prerace_inputs_unverified'));
+assert.ok(check({...snapshot,main:[[1,1,3],...picks.slice(1)]},result).issues.includes('invalid_prediction_picks'));
+assert.ok(check(snapshot,{...result,race:2}).issues.includes('result_identity_mismatch'));
+assert.equal(check(null,result).eligible,false);
+console.log('Historical pre-race snapshot eligibility tests passed (synthetic only)');
