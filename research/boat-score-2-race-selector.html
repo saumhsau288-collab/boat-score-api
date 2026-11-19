@@ -47,6 +47,7 @@ document.querySelector('#prediction-file').addEventListener('change',async event
  try{
   if(file.size>2000000)throw Error('ファイルが大きすぎます');
   const data=JSON.parse(await file.text());
+  if(data.status!=='experimental')throw Error('公式出走表の検証が完了していないため予想を表示できません');
   if(!/^20\d{6}$/.test(String(data.date))||!Number.isInteger(data.venue)||!Number.isInteger(data.race)||!Array.isArray(data.main)||!Array.isArray(data.upset))throw Error('予想結果ファイルの形式が違います');
   const chosen=selection();
   if(data.date!==chosen.date.replaceAll('-','')||data.venue!==Number(chosen.venue)||data.race!==Number(chosen.race))throw Error('読み込んだ予想は現在選択している開催日・開催場・レースと一致しません');
@@ -61,7 +62,7 @@ document.querySelector('#prediction-file').addEventListener('change',async event
   list('本命（反映前）',data.main);list('穴（反映前）',data.upset);
   const ranking=document.createElement('p');ranking.textContent='評価順位：'+(data.ranking??[]).map(x=>x.boat+'号艇 '+x.score+'点').join(' / ');view.append(ranking);
   const m=data.makulaboComparison;
-  if(m?.applied===true){list('まくらぼ反映後・本命',m.adjusted.main);list('まくらぼ反映後・穴',m.adjusted.upset);}
+  if(m?.applied===true&&Array.isArray(m.adjusted?.main)&&Array.isArray(m.adjusted?.upset)){list('まくらぼ反映後・本命',m.adjusted.main);list('まくらぼ反映後・穴',m.adjusted.upset);}
   else {const p=document.createElement('p');p.textContent='まくらぼ：未反映（'+(m?.reason??'実データ未取得')+'）';view.append(p);}
  }catch(error){view.textContent='表示できません：'+error.message;}
 });
