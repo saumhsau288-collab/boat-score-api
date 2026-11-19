@@ -26,6 +26,9 @@ export function compareHistoricalRace(snapshot) {
 }
 export function summarizeHistoricalComparisons(snapshots) {
  if(!Array.isArray(snapshots))return {status:'invalid_input'};
+ const keys=snapshots.map(s=>s&&/^20\\d{6}$/.test(String(s.date))&&Number.isInteger(s.venue)&&Number.isInteger(s.race)?[s.date,s.venue,s.race].join(':'):null);
+ const known=keys.filter(Boolean);
+ if(new Set(known).size!==known.length)return {status:'duplicate_races',total:snapshots.length,scoreChangeApplied:false};
  const evaluated=snapshots.map(compareHistoricalRace).filter(x=>x.status==='evaluated');
  const n=evaluated.length;
  return {status:n?'evaluated':'no_eligible_races',total:snapshots.length,eligible:n,
