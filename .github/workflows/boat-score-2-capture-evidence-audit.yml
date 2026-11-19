@@ -39,13 +39,14 @@ jobs:
           shopt -s globstar nullglob
           files=(research-input/**/*-*.json)
           count=0
+          mkdir -p research-reports
           echo "## Saved capture readiness (research only)" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           for file in "${files[@]}"; do
             if [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]]; then
               count=$((count+1))
               output=$(node scripts/report-capture-readiness-research.mjs "$file")
-              printf '%s\n' "$output" > "${file%.json}-readiness.json"
+              printf '%s\n' "$output" > "research-reports/${file##*/}.readiness.json"
               echo "### ${file##*/}" >> "$GITHUB_STEP_SUMMARY"
               echo '~~~json' >> "$GITHUB_STEP_SUMMARY"
               printf '%s\n' "$output" >> "$GITHUB_STEP_SUMMARY"
@@ -57,6 +58,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: capture-evidence-audit-${{ github.run_id }}
-          path: research-input/
+          path: research-reports/
           if-no-files-found: error
           retention-days: 30
