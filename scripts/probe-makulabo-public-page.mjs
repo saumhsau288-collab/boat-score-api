@@ -24,8 +24,15 @@ export async function probeMakulaboPublicPage({date,venue,race,fetchImpl=fetch}=
    const sum=finish.every(Number.isInteger)?finish.reduce((a,b)=>a+b,0):null;
    return {finishCountsNumeric:sum!==null,finishCountSum:sum,starts,countsEqualStarts:sum!==null&&starts!==null?sum===starts:null,exactly50Starts:starts===50,firstPlaceRatePct:sum!==null&&starts>0&&sum===starts?Number((finish[0]/starts*100).toFixed(2)):null,topThreeRatePct:sum!==null&&starts>0&&sum===starts?Number(((finish[0]+finish[1]+finish[2])/starts*100).toFixed(2)):null,verifiedRegistrationId:false};
   });
+  // Determine whether the four-digit player cell is a registration number or just a short name.
+  const identityAudit=cells.slice(1,7).map((row,i)=>{
+   const raw=row[1]??'';
+   const visible=raw.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
+   const hrefs=[...raw.matchAll(/href\s*=\s*["']([^"']+)["']/gi)].map(m=>m[1]);
+   return {boat:i+1,playerText:visible.slice(0,50),containsFourDigitId:/\b\d{4}\b/.test(visible),linkCount:hrefs.length,linkPathSamples:hrefs.map(x=>x.replace(/\?.*$/,'').slice(0,100)).slice(0,2)};
+  });
   const js={scriptCount:html.split('<script').length-1,hasNextData:html.includes('__NEXT_DATA__'),hasNuxtData:html.includes('__NUXT__'),hasReactRoot:html.includes('id="root"')||html.includes('id="__next"'),hasVueRoot:html.includes('id="app"'),hasEmbeddedJson:html.includes('application/json'),hasApiPath:html.includes('/api/')||html.includes('axios.')};
-  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,cellAudit,countAudit,js,warning:'Finish-count rates are computed only from visible counts; no official registration-ID match, last-50-period verification, or score application.'};
+  return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,tableShape,cellAudit,countAudit,identityAudit,js,warning:'Finish-count rates are computed only from visible counts; no official registration-ID match, last-50-period verification, or score application.'};
  }catch(e){return {status:'fetch_failed',url,recent50Ready:false,error:String(e.message).slice(0,120)};}
 }
 
