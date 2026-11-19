@@ -2,6 +2,13 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {parseExplicitRaceSelection} from './fetch-manual-official-historical-results.mjs';
+export function summarizeHistoricalEntryEvidence(report){
+ const pages=Array.isArray(report?.pages)?report.pages:[];
+ return {targets:pages.length,saved:pages.filter(p=>p.status==='raw_historical_entry_html').length,
+  failed:pages.filter(p=>p.status==='fetch_failed').length,
+  racerWinRatesVerified:0,eligibleForCalibration:0,
+  warning:'Raw historical entry HTML is not a verified pre-cutoff racer win-rate snapshot.'};
+}
 export async function fetchHistoricalEntryLists({date,venue,races},{fetchImpl=fetch,timeoutMs=9000}={}){
  if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||
  !Array.isArray(races)||races.length<1||races.length>12||new Set(races).size!==races.length||
@@ -24,5 +31,5 @@ if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  if(!output)throw Error('Usage: YYYYMMDD VENUE RACES_CSV OUTPUT');
  const report=await fetchHistoricalEntryLists({date,venue:Number(venue),races:parseExplicitRaceSelection(racesArg)});
  fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');
- console.log(JSON.stringify({targets:report.pages.length,saved:report.pages.filter(p=>p.status==='raw_historical_entry_html').length,failed:report.pages.filter(p=>p.status==='fetch_failed').length,eligibleForCalibration:0}));
+ console.log(JSON.stringify(summarizeHistoricalEntryEvidence(report)));
 }
