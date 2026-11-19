@@ -1,5 +1,9 @@
 name: Diagnose Makulabo historical API (read-only)
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/boat-score-2-diagnose-makulabo.yml'
   workflow_dispatch:
     inputs:
       date:
@@ -28,15 +32,15 @@ jobs:
       - name: Check Makulabo public source independently
         continue-on-error: true
         env:
-          RACE_DATE: ${{ inputs.date }}
-          VENUE: ${{ inputs.venue }}
-          RACE: ${{ inputs.race }}
+          RACE_DATE: ${{ inputs.date || '20261113' }}
+          VENUE: ${{ inputs.venue || '02' }}
+          RACE: ${{ inputs.race || '9' }}
         run: node scripts/check-makulabo-public-source.mjs "$RACE_DATE" "$VENUE" "$RACE"
       - name: Validate inputs and fetch public API
         env:
-          RACE_DATE: ${{ inputs.date }}
-          VENUE: ${{ inputs.venue }}
-          RACE: ${{ inputs.race }}
+          RACE_DATE: ${{ inputs.date || '20261113' }}
+          VENUE: ${{ inputs.venue || '02' }}
+          RACE: ${{ inputs.race || '9' }}
         run: |
           set -euo pipefail
           [[ "$RACE_DATE" =~ ^20[0-9]{6}$ ]] || exit 2
