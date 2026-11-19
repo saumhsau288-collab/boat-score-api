@@ -30,9 +30,10 @@ export function studyRacerWeights(rows,{minTrain=30,minHoldout=15}={}){
   return {status:'invalid_input'};
  const seen=new Set(),eligible=[],excludedReasons={};
  for(const row of rows){
-  const key=row&&[row.date,row.venue,row.race].join(':');
-  if(seen.has(key))return {status:'duplicate_races',key};
-  seen.add(key);
+  const hasIdentity=row&&/^20\\d{6}$/.test(String(row.date))&&Number.isInteger(row.venue)&&Number.isInteger(row.race);
+  const key=hasIdentity?[row.date,row.venue,row.race].join(':'):null;
+  if(key!==null&&seen.has(key))return {status:'duplicate_races',key};
+  if(key!==null)seen.add(key);
   const audit=compareHistoricalRace(row);
   if(audit.status==='compared')eligible.push(row);
   else excludedReasons[audit.reason]=(excludedReasons[audit.reason]||0)+1;
