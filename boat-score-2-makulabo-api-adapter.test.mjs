@@ -20,3 +20,22 @@ test('rejects missing heatmap rows and mismatched names',()=>{
  bad[0].name='不明な選手';
  assert.equal(inspectMakulaboApiResponse({...payload,heatmapRows:bad}).status,'unverified');
 });
+
+const headers=['枠','選手','1 着','2 着','3 着','4 着','5 着','6 着','走','平均'];
+const finishTable={headers,rows:rows.map(r=>[String(r.boat),r.name,...r.counts.map(String),'6','3.50'])};
+test('bridges labelled finish columns into matched racer rates',()=>{
+ const result=inspectMakulaboApiResponse({...payload,finishTable});
+ assert.equal(result.status,'heatmap_matched');
+ assert.equal(result.racers[0].firstPlaceRate,16.67);
+ assert.equal(result.racers[0].top2Rate,33.33);
+ assert.equal(result.racers[0].top3Rate,50);
+ assert.equal(result.recent50Ready,false);
+});
+test('rejects mislabeled or contradictory source table',()=>{
+ const reordered={...finishTable,headers:[...headers.slice(0,2),'2 着','1 着',...headers.slice(4)]};
+ assert.equal(inspectMakulaboApiResponse({...payload,finishTable:reordered}).reason,'unverified_finish_headers');
+ const wrong={...finishTable,rows:finishTable.rows.map(r=>[...r])};
+ wrong.rows[0][2]='2';
+ wrong.rows[0][8]='7';
+ assert.equal(inspectMakulaboApiResponse({...payload,finishTable:wrong}).reason,'labelled_row_mismatch');
+});
