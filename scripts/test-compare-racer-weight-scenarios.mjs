@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {compareRacerWeightScenarios} from './compare-racer-weight-scenarios.mjs';
+import {researchWeightCandidate} from './research-score-weights.mjs';
+const factors=Object.keys(researchWeightCandidate);
+const rows=Array.from({length:6},(_,i)=>({boat:i+1,preRaceVerified:true,
+ racerWinRateAverage:i===3?1:i===0?0.1:0.5,preRaceStartAbility:0.5,expectedEntryCourse:i===0?1:i===3?0.2:0.5,motorPerformance:0.5,verifiedExhibitionAndWeather:0.5}));
+const alternative={racerWinRateAverage:35,preRaceStartAbility:25,expectedEntryCourse:25,motorPerformance:10,verifiedExhibitionAndWeather:5};
+const before=JSON.stringify(rows),weightsBefore=JSON.stringify(researchWeightCandidate);
+const result=compareRacerWeightScenarios(rows,[{id:'course_25',weights:alternative}]);
+assert.equal(result.ready,true);
+assert.equal(result.eligibleForDeployment,false);
+assert.equal(result.baseline.rankedScores[0].boat,4);
+assert.equal(result.scenarios.length,1);
+assert.equal(result.scenarios[0].rankChanges.length,6);
+assert.equal(JSON.stringify(rows),before);
+assert.equal(JSON.stringify(researchWeightCandidate),weightsBefore);
+assert.equal(result.scenarios[0].weights.expectedEntryCourse,25);
+assert.throws(()=>compareRacerWeightScenarios(rows,[{id:'bad',weights:{...alternative,expectedEntryCourse:26}}]));
+assert.throws(()=>compareRacerWeightScenarios(rows,[{id:'same',weights:alternative},{id:'same',weights:alternative}]));
+assert.equal(compareRacerWeightScenarios(rows.map((r,i)=>i===0?{...r,preRaceVerified:false}:r)).ready,false);
+console.log('Research-only racer weight scenario comparison tests passed');
