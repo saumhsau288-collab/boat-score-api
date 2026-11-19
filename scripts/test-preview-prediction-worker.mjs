@@ -85,6 +85,9 @@ try{
  assert.equal(publicStatus.indicators.hasHeatmapLabel,true);
  assert.equal(publicStatus.indicators.hasRecent50Label,true);
  assert.equal(publicStatus.indicators.hasRegistrationId,true);
+ assert.equal(publicStatus.structure.tableCount,0);
+ assert.equal(publicStatus.structure.rowCount,0);
+ assert.equal(publicStatus.structure.hasNextData,false);
  assert.equal(publicStatus.readyForIdentityReview,true,'Page indicators allow further identity review only');
  assert.equal(publicStatus.recent50Ready,false,'Visible labels do not prove six verified recent-50 records');
  globalThis.fetch=async()=>new Response('<html>ヒートマップ ログイン</html>',{status:200,headers:{'content-type':'text/html'}});
