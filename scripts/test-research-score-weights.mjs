@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {researchWeightCandidate,researchTarget,validateResearchWeights,evaluateSixTicketHoldout} from './research-score-weights.mjs';
+import {researchWeightCandidate,researchTarget,validateResearchWeights,evaluateSixTicketHoldout,scoreVerifiedPreRaceFactors} from './research-score-weights.mjs';
 assert.equal(validateResearchWeights(),true);
 assert.equal(validateResearchWeights({...researchWeightCandidate,racerWinRateAverage:50}),false);
 assert.equal(researchTarget.targetRate,0.60);
@@ -16,4 +16,12 @@ assert.equal(evaluateSixTicketHoldout([{...base,chronologicalHoldout:false}]).el
 assert.equal(evaluateSixTicketHoldout([{...base,preRaceSnapshotVerified:false}]).eligibleRaces,0);
 assert.equal(evaluateSixTicketHoldout([{...base,tickets:['123','123','132','134','142','143']}]).eligibleRaces,0);
 assert.equal(evaluateSixTicketHoldout([{...base,actualTrifecta:'456'}]).hitRate,0);
+const factorRows=Array.from({length:6},(_,i)=>({boat:i+1,preRaceVerified:true,racerWinRateAverage:i===3?1:i===0?0.1:0.5,preRaceStartAbility:0.5,expectedEntryCourse:i===0?1:i===3?0.2:0.5,motorPerformance:0.5,verifiedExhibitionAndWeather:0.5}));
+const weighted=scoreVerifiedPreRaceFactors(factorRows);
+assert.equal(weighted.ready,true);
+assert.equal(weighted.rankedScores[0].boat,4,'Racer strength must outweigh inside-course advantage in this fixture');
+assert.equal(weighted.eligibleForDeployment,false);
+assert.equal(scoreVerifiedPreRaceFactors(factorRows.map((r,i)=>i===0?{...r,preRaceVerified:false}:r)).ready,false);
+assert.equal(scoreVerifiedPreRaceFactors(factorRows.map((r,i)=>i===0?{...r,preRaceStartAbility:null}:r)).ready,false);
+assert.equal(scoreVerifiedPreRaceFactors([...factorRows.slice(0,5),factorRows[0]]).ready,false);
 console.log('Research score weight and holdout checks passed (synthetic only)');
