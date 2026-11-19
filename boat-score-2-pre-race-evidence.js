@@ -4,7 +4,7 @@ import {compareCourseEvidence} from './boat-score-2-course-evidence-comparison.j
 import {compareStartAndCourse} from './boat-score-2-start-course-comparison.js';
 export function comparePreRaceEvidence(racers, evidenceByRacerId) {
  if(!Array.isArray(racers)||racers.length!==6||
-   racers.some(r=>!/^\\d{4}$/.test(String(r?.racerId??'')))||
+   racers.some(r=>!/^\d{4}$/.test(String(r?.racerId??'')))||
    new Set(racers.map(r=>String(r.racerId))).size!==6)
   return {status:'invalid_race',racers:[],scoreChangeApplied:false};
  const course=compareCourseEvidence(racers,evidenceByRacerId);
