@@ -1,6 +1,17 @@
 name: Validate isolated Boat Score 2 prediction preview (no deploy)
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - experiment-racer-start-course-20261119
+    paths:
+      - 'research/boat-score-2-preview-worker.mjs'
+      - 'research/boat-score-2-race-selector.html'
+      - 'scripts/test-preview-prediction-worker.mjs'
+      - 'scripts/test-mobile-race-selector.mjs'
+      - 'scripts/probe-makulabo-public-page.mjs'
+      - 'scripts/test-probe-makulabo-public-page.mjs'
+      - '.github/workflows/boat-score-2-isolated-preview-check.yml'
   pull_request:
     paths:
       - 'research/boat-score-2-preview-worker.mjs'
