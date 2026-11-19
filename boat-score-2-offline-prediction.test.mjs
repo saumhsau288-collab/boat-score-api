@@ -16,9 +16,11 @@ console.log('Experimental offline ticket generation structural tests passed (syn
 
 assert.equal(predictExperimentalRace(racers,{weightStudy:{status:'insufficient_verified_history'}}).status,'uncalibrated_history');
 assert.equal(predictExperimentalRace(racers,{weightStudy:{status:'research_only',trainingCount:29,holdoutCount:15,candidateWeights:{ability:75,start:20,course:5}}}).status,'uncalibrated_history');
-const eligibleStudy={status:'research_only',trainingCount:30,holdoutCount:15,candidateWeights:{ability:75,start:20,course:5}};
+const eligibleStudy={status:'research_only',trainingCount:30,holdoutCount:15,improvedOnHoldout:true,candidateWeights:{ability:75,start:20,course:5}};
 const weighted=predictExperimentalRace(racers,{weightStudy:eligibleStudy});
 assert.equal(weighted.status,'experimental');
 assert.equal(weighted.weightsApplied.ability,75);
 assert.equal(weighted.main.length,6);
 assert.equal(weighted.upset.length,6);
+
+assert.equal(predictExperimentalRace(racers,{weightStudy:{...eligibleStudy,improvedOnHoldout:false}}).status,'uncalibrated_history');
