@@ -16,6 +16,8 @@ assert.equal(matchMakulaboByName(officialNamed,recentNamed.map((r,i)=>i===0?{...
 const html='<table>'+racers.map(r=>'<tr>'+[r.boat,'photo',r.racerId,'0.'+String(Math.round(r.averageStartTiming*100)).padStart(2,'0'),r.nationalWinRate.toFixed(2),r.localWinRate.toFixed(2)].map(v=>'<td rowspan="4">'+v+'</td>').join('')+'</tr>').join('')+'</table>';
 const namedHtml='<table>'+racers.map((r,i)=>'<tr>'+[r.boat,'photo',r.racerId+' '+['倉持 莉々','為本智也','仁科さや','生方靖亜','鳥居塚孝','篠崎仁志'][i],'0.'+String(Math.round(r.averageStartTiming*100)).padStart(2,'0'),r.nationalWinRate.toFixed(2),r.localWinRate.toFixed(2)].map(v=>'<td rowspan="4">'+v+'</td>').join('')+'</tr>').join('')+'</table>';
 const parsedNamed=parseRacers(namedHtml);
+const liveLikeHtml='<table>'+racers.map((r,i)=>'<tr>'+[r.boat,'photo',r.racerId+' '+['倉持莉々東京','為本智也福井','仁科さやか長崎','生方靖亜群馬','鳥居塚孝博群馬','篠崎仁志福岡'][i],'0.'+String(Math.round(r.averageStartTiming*100)).padStart(2,'0'),r.nationalWinRate.toFixed(2),r.localWinRate.toFixed(2)].map(v=>'<td rowspan="4">'+v+'</td>').join('')+'</tr>').join('')+'</table>';
+assert.deepEqual(parseRacers(liveLikeHtml)?.map(r=>r.name),['倉持莉々','為本智也','仁科さやか','生方靖亜','鳥居塚孝博','篠崎仁志']);
 assert.deepEqual(parsedNamed?.map(r=>r.name),['倉持莉々','為本智也','仁科さや','生方靖亜','鳥居塚孝','篠崎仁志']);
 assert.equal(matchMakulaboByName(parsedNamed,recentNamed).verified,true,'Six official names must match independent Makulabo rows');
 const parsed=parseRacers(html);
