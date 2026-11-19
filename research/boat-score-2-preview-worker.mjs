@@ -27,11 +27,12 @@ export function parseRacers(html){
 }
 export function rankRace(racers){
  const ranking=racers.map(r=>{
-  const winRateAverage=(r.nationalWinRate+r.localWinRate)/2;
+  const effectiveLocalWinRate=r.localWinRate===0?r.nationalWinRate:r.localWinRate;
+  const winRateAverage=(r.nationalWinRate+effectiveLocalWinRate)/2;
   const winRatePoints=Number((winRateAverage/10*70).toFixed(3));
   const startPoints=Number((Math.max(0,Math.min(1,(0.30-r.averageStartTiming)/0.30))*20).toFixed(3));
   const assumedCoursePoints=Number(((6-r.entryCourse)/5*10).toFixed(3));
-  return {...r,winRateAverage,scoreBreakdown:{winRatePoints,startPoints,assumedCoursePoints,makulaboPoints:null,motorPoints:null,exhibitionPoints:null},score:Number((winRatePoints+startPoints+assumedCoursePoints).toFixed(3))};
+  return {...r,effectiveLocalWinRate,localWinRateSubstituted:r.localWinRate===0,winRateAverage,scoreBreakdown:{winRatePoints,startPoints,assumedCoursePoints,makulaboPoints:null,motorPoints:null,exhibitionPoints:null},score:Number((winRatePoints+startPoints+assumedCoursePoints).toFixed(3))};
  }).sort((a,b)=>b.score-a.score||a.boat-b.boat);
  const all=[];
  for(const a of ranking)for(const b of ranking)for(const c of ranking)if(a.boat!==b.boat&&a.boat!==c.boat&&b.boat!==c.boat)all.push({ticket:[a.boat,b.boat,c.boat].join('-'),heuristic:Number((a.score*.5+b.score*.3+c.score*.2).toFixed(2))});
