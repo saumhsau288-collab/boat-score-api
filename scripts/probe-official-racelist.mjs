@@ -26,7 +26,11 @@ try{
      const rate=row.finishCounts[0]/row.starts*100;
      return {boat:r.boat,beforeScore:r.score,publicCountFirstRatePct:Number(rate.toFixed(2)),afterScore:Number((r.score*(1-weight/100)+rate*weight/100).toFixed(3))};
     }).sort((a,b)=>b.afterScore-a.afterScore||a.boat-b.boat);
-    crossSource.scoreComparison={status:'provisional_research_only',weightPct:weight,beforeRank:baseline.ranking.map(r=>r.boat),afterRank:adjusted.map(r=>r.boat),scores:adjusted,warning:'Visible first-place counts are not independently verified as last 50 races; scores are not applied to the app.'};
+    const sensitivity=[0,5,10,15,20].map(w=>{
+     const scores=baseline.ranking.map(r=>({boat:r.boat,score:Number((r.score*(1-w/100)+(byBoat.get(r.boat).finishCounts[0]/byBoat.get(r.boat).starts*100)*w/100).toFixed(3))})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
+     return {weightPct:w,rank:scores.map(r=>r.boat),topBoat:scores[0].boat,topScore:scores[0].score};
+    });
+    crossSource.scoreComparison={status:'provisional_research_only',weightPct:weight,sensitivity,beforeRank:baseline.ranking.map(r=>r.boat),afterRank:adjusted.map(r=>r.boat),scores:adjusted,warning:'Visible first-place counts are not independently verified as last 50 races; scores are not applied to the app.'};
    }
    crossSource={...crossSource,status:match.verified?'six_name_and_boat_matches':'identity_unverified',reason:match.reason??null,registrationVerified:false,matches:match.matches.map(x=>({boat:x.boat,racerId:x.racerId,nameMatch:x.nameMatch,starts:x.record.starts,firstPlaceRatePct:Number((x.record.finishCounts[0]/x.record.starts*100).toFixed(2))}))};
   }else crossSource={status:'makulabo_or_official_unavailable',httpStatus:mak.status,matches:[]};
