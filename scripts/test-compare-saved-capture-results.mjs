@@ -40,4 +40,11 @@ assert.equal(invalidKey.compared,0);
 assert.equal(invalidKey.holdReasons.invalid_saved_capture_race_key,1);
 const normalizedOfficial=compare(capture,[{...result,venue:'01',race:'01'}]);
 assert.equal(normalizedOfficial.compared,1);
+for(const badTime of ['2026-11-18T00:00:00','2026-11-18 00:00:00','2026-11-18T00:00:00+99:00',null]){
+ const badCapture=compare({...capture,records:[{...capture.records[0],receivedAt:badTime}]},[result]);
+ assert.equal(badCapture.compared,0,'Ambiguous capture timestamp must be held');
+ const badCutoff=compare(capture,[{...result,officialCutoffAt:badTime}]);
+ assert.equal(badCutoff.compared,0,'Ambiguous official cutoff timestamp must be held');
+}
+assert.equal(compare({...capture,records:[{...capture.records[0],receivedAt:'2026-11-18T09:00:00+09:00'}]},[result]).compared,1);
 console.log('Saved capture / official result comparison eligibility tests passed');
