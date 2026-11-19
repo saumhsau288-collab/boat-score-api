@@ -1,6 +1,7 @@
 // Research-only extraction from archived official racelist HTML. Never certifies pre-cutoff provenance.
 import fs from 'node:fs';
 const clean=s=>s.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
+const firstDecimal=(s,pattern)=>clean(s).match(pattern)?.[1]??null;
 const racerIdFromCell=s=>clean(s).match(/(?:^|\s)(\d{4,6})(?=\s|$)/)?.[1]??s.match(/racersearch\/profile\/(\d{4,6})(?:[/?#"']|$)/i)?.[1]??null;
 export function extractArchivedRacerFeatures(entry){
  const base={date:entry?.date,venue:entry?.venue,race:entry?.race,status:'not_parsed',preCutoffSnapshotAuthenticated:false,eligibleForWeightTuning:false,racers:[]};
@@ -18,9 +19,9 @@ export function extractArchivedRacerFeatures(entry){
   const boatText=clean(cells[0]);
   const boat=boatText.match(/^([1-6])(?:\s|$)/)?.[1];
   const racerId=racerIdFromCell(cells[2]);
-  const st=clean(cells[3]).match(/(?:^|\s)(0\.\d{2})(?:\s|$)/);
-  const national=clean(cells[4]).match(/^(\d{1,2}\.\d{2})(?:\s|$)/);
-  const local=clean(cells[5]).match(/^(\d{1,2}\.\d{2})(?:\s|$)/);
+  const st=firstDecimal(cells[3],/(?:^|\s)(0\.\d{2})(?=\s|$)/);
+  const national=firstDecimal(cells[4],/(?:^|\s)(\d{1,2}\.\d{2})(?=\s|$)/);
+  const local=firstDecimal(cells[5],/(?:^|\s)(\d{1,2}\.\d{2})(?=\s|$)/);
   if(boat)diagnostics.boatNumberRecognized++;
   if(!racerId)diagnostics.missingFields.racerId++;
   if(!st)diagnostics.missingFields.averageStartTiming++;
@@ -28,7 +29,7 @@ export function extractArchivedRacerFeatures(entry){
   if(!local)diagnostics.missingFields.localWinRate++;
   if(!racerId||!st||!national||!local)continue;
   diagnostics.completeRacerBlocks++;
-  racers.push({boat:boat?Number(boat):null,racerId,nationalWinRate:Number(national[1]),localWinRate:Number(local[1]),averageStartTiming:Number(st[1])});
+  racers.push({boat:boat?Number(boat):null,racerId,nationalWinRate:Number(national),localWinRate:Number(local),averageStartTiming:Number(st)});
  }
  if(racers.length!==6||new Set(racers.map(x=>x.racerId)).size!==6)return {...base,status:'incomplete_six_racer_features',found:racers.length,diagnostics};
  const boatMappingVerified=racers.every((r,i)=>r.boat===i+1);
