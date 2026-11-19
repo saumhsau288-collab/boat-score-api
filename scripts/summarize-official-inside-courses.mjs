@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 export function summarizeOfficialInsideCourses(report){
  if(!Array.isArray(report?.rows))throw Error('Expected parsed official rows');
- const out={total:report.rows.length,usable:0,blocked:0,insideWins:0,insidePodiumPlacements:0,insidePodiumSlots:0,insideWinsByCourse:{'1':0,'2':0,'3':0},podiumByCourse:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0},races:[],eligibleForWeightTuning:false,warning:'Post-race descriptive sample only; no verified pre-race prediction snapshots or independently authenticated results.'};
+ const out={total:report.rows.length,usable:0,blocked:0,insideWins:0,insidePodiumPlacements:0,insidePodiumSlots:0,insideWinsByCourse:{'1':0,'2':0,'3':0},winsByCourse:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0},podiumByCourse:{'1':0,'2':0,'3':0,'4':0,'5':0,'6':0},races:[],eligibleForWeightTuning:false,warning:'Post-race descriptive sample only; no verified pre-race prediction snapshots or independently authenticated results.'};
  const seenRaces=new Set();
  for(const r of report.rows){
   const raceKey=`${r?.date}:${r?.venue}:${r?.race}`;
@@ -20,6 +20,7 @@ export function summarizeOfficialInsideCourses(report){
   const inside=podium.filter(x=>x.actualEntryCourse<=3).length;
   const winner=podium.find(x=>x.finish===1);
   out.usable++;out.insideWins+=Number(winner.actualEntryCourse<=3);out.insidePodiumPlacements+=inside;out.insidePodiumSlots+=3;
+  out.winsByCourse[String(winner.actualEntryCourse)]++;
   if(winner.actualEntryCourse<=3)out.insideWinsByCourse[String(winner.actualEntryCourse)]++;
   for(const p of podium)out.podiumByCourse[String(p.actualEntryCourse)]++;
   out.races.push({date:r.date,venue:r.venue,race:r.race,insideWinner:winner.actualEntryCourse<=3,insidePodiumPlacements:inside,independentlyVerified:false});
