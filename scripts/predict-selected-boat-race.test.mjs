@@ -26,7 +26,7 @@ test('explicit inward entry scenario changes entry warning',async()=>{
 });
 
 test('missing official boat numbers prevents ticket generation',async()=>{
- const broken=html.replace(/<td rowspan="4">([1-6])<\\/td>/g,'<td rowspan="4">?</td>');
+ const broken=html.replace(/<td rowspan="4">([1-6])<\/td>/g,'<td rowspan="4">?</td>');
  const fetchImpl=async()=>({ok:true,headers:{get:()=> 'text/html'},text:async()=>broken});
  const r=await predictSelectedRace({date:'20261119',venue:18,race:2,fetchImpl});
  assert.equal(r.status,'boat_mapping_unverified');assert.equal(r.main.length,0);assert.equal(r.upset.length,0);
