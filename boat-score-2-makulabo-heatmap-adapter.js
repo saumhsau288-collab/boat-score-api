@@ -1,5 +1,6 @@
 // Boat Score 2 research-only adapter. Does not modify deployed Worker.
-// Heatmap finishing-position counts are not automatically a verified recent-50 rate.
+// Makulabo heatmap is course-by-finishing-position data; a flattened six-number row
+// lacks the course axis and cannot establish a course-specific finish rate.
 import {matchRecent50Racers} from './boat-score-2-recent50-identity.js';
 export function reconcileMakulaboHeatmap(official, heatmapRows) {
   if (!Array.isArray(heatmapRows) || heatmapRows.length !== 6)
@@ -21,8 +22,9 @@ export function reconcileMakulaboHeatmap(official, heatmapRows) {
     racers.push({boat:match.boat,racerId:official.find(r=>r.boat===match.boat).racerId,
       name:official.find(r=>r.boat===match.boat).name,counts:[...counts],runs,
       firstColumnShare:runs>0?Math.round(counts[0]/runs*10000)/100:null,
-      firstPlaceRate:null, finishingPositionSemanticsVerified:false,
+      firstPlaceRate:null, courseFinishMatrixVerified:false,
+      eligibleForCourseSpecificScoring:false,
       eligibleAsVerifiedRecent50:false});
   }
-  return {verified:true,reason:null,racers,warning:'Heatmap column semantics and 50-race sample have not been verified; first-place rate must not be inferred.'};
+  return {verified:true,reason:null,racers,warning:'Course-by-finishing-position matrix and 50-race sample have not been verified; do not infer a first-place or course-specific rate from flattened counts.'};
 }
