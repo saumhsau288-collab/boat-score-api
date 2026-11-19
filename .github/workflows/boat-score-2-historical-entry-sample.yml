@@ -1,9 +1,5 @@
 name: Boat Score 2 historical official entry sample (research only)
 on:
-  pull_request:
-    paths:
-      - 'scripts/fetch-historical-racelist-sample.mjs'
-      - '.github/workflows/boat-score-2-historical-entry-sample.yml'
   workflow_dispatch:
     inputs:
       race_date:
