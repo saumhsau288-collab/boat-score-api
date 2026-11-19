@@ -16,6 +16,11 @@ export function compareHistoricalScoreLeaderRaces(input){
   if(r?.preRaceSnapshotVerified!==true)hold.push('pre_race_snapshot_not_verified');
   if(r?.officialResultVerified!==true)hold.push('official_result_not_verified');
   if(r?.scoreMethodVerified!==true)hold.push('score_method_not_verified');
+  if(typeof r?.preRaceSnapshotSourceUrl!=='string'||!/^https:\/\//.test(r.preRaceSnapshotSourceUrl))hold.push('missing_pre_race_source');
+  if(typeof r?.officialResultSourceUrl!=='string'||!/^https:\/\/www\\.boatrace\\.jp\//.test(r.officialResultSourceUrl))hold.push('missing_official_result_source');
+  const captured=Date.parse(r?.preRaceCapturedAt),cutoff=Date.parse(r?.officialCutoffAt);
+  if(!Number.isFinite(captured)||!Number.isFinite(cutoff)||captured>=cutoff||
+   !String(r?.preRaceCapturedAt).endsWith('Z')||!String(r?.officialCutoffAt).endsWith('Z'))hold.push('pre_race_cutoff_not_proven');
   const prediction=splitScoreLeaderTickets(r?.scores);
   if(!prediction.ready)hold.push('missing_or_invalid_scores');
   const podium=r?.actualPodium;
