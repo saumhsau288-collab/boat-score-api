@@ -39,15 +39,12 @@ export function compareHistoricalSet(rows){
  const seen=new Set(),items=[];
  for(const row of rows){
   // Reject duplicate race identities even if one record is excluded.
-  if(row && /^20\\d{6}$/.test(String(row.date)) && Number.isInteger(row.venue) && Number.isInteger(row.race)){
+  if(row && /^20\d{6}$/.test(String(row.date)) && Number.isInteger(row.venue) && Number.isInteger(row.race)){
    const key=[row.date,row.venue,row.race].join(':');
    if(seen.has(key))return {status:'duplicate_races',key};
    seen.add(key);
   }
   const result=compareHistoricalRace(row);
-  if(result.status==='compared'){
-
-  }
   items.push(result);
  }
  const valid=items.filter(x=>x.status==='compared');
