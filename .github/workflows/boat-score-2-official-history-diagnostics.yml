@@ -17,6 +17,8 @@ on:
       - 'scripts/build-prerace-prediction-snapshot.mjs'
       - 'scripts/test-build-prerace-prediction-snapshot.mjs'
       - 'scripts/test-extract-official-result-diagnostics.mjs'
+      - 'scripts/compare-prerace-winrate-finishes.mjs'
+      - 'scripts/test-compare-prerace-winrate-finishes.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,6 +39,7 @@ jobs:
           node scripts/test-validate-historical-prerace-snapshot.mjs
           node scripts/test-compare-historical-saved-predictions.mjs
           node scripts/test-build-prerace-prediction-snapshot.mjs
+          node scripts/test-compare-prerace-winrate-finishes.mjs
       - name: Fetch full 12-race historical card (exploratory sample)
         run: |
           mkdir -p research-historical
