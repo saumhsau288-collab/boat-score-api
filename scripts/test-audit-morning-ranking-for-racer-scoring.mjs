@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {auditMorningRankingForRacerScoring} from './audit-morning-ranking-for-racer-scoring.mjs';
+const legacy={ready:true,officialVerified:true,statsVerified:true,method:'average_national_local_winrate70_motor30_unvalidated',rankedScores:Array.from({length:6},(_,i)=>({boat:i+1,score:50-i}))};
+const report=auditMorningRankingForRacerScoring(legacy);
+assert.equal(report.legacyRankingReusable,true);
+assert.equal(report.fiveFactorScoringReady,false);
+assert.ok(report.missing.includes('five_verified_normalized_factors'));
+assert.ok(report.missing.includes('six_verified_racer_identities'));
+assert.equal(auditMorningRankingForRacerScoring({...legacy,statsVerified:false}).legacyRankingReusable,false);
+console.log('Morning legacy scoring readiness audit tests passed');
