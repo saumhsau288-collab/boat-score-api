@@ -19,6 +19,8 @@ assert.ok(html.includes('id="morning"'),'Morning ranking status must be visible'
 assert.ok(!html.includes('id="workflow"')&&!html.includes('id="prediction-file"')&&!html.includes('id="copy"'),'Unneeded workflow, file and copy controls must be removed');
 assert.equal((html.match(/<button id="select"/g)??[]).length,1,'Only one primary prediction button');
 assert.ok(html.includes('id="racer-table"'),'Six-racer comparison table must be present');
+assert.ok(html.includes('id="beforeinfo"')&&html.includes('/owpc/pc/race/beforeinfo'),'Official pre-race information link must match selection');
+assert.ok(html.includes('beforeinfo.search=url.search'),'Official racelist and beforeinfo must use the same race parameters');
 for(const column of ['全国勝率','当地勝率','まくらぼ50走勝率','モーター2連対率','平均ST','展示タイム','直前進入','評価点'])assert.ok(html.includes(column),'Missing comparison column '+column);
 assert.ok(html.includes("sort((a,b)=>a.boat-b.boat)"),'Comparison table must use boat order');
 assert.ok(html.includes("typeof value==='number'&&Number.isFinite(value)"),'Missing values must not become zero');
