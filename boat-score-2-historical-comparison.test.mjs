@@ -40,3 +40,7 @@ assert.equal(compareChronologicalHoldout([row],'not-a-date').status,'invalid_inp
 
 assert.equal(compareHistoricalSet([row,{...row,preRaceSnapshot:false}]).status,'duplicate_races');
 assert.equal(compareChronologicalHoldout([row,{...row,resultVerified:false}],'20261119').status,'duplicate_races');
+
+assert.equal(compareHistoricalRace({...row,racers:null}).reason,'missing_pre_race_features');
+assert.equal(compareHistoricalRace({...row,racers:{}}).reason,'missing_pre_race_features');
+assert.equal(compareHistoricalRace({...row,racers:racers.slice(0,5)}).reason,'missing_pre_race_features');
