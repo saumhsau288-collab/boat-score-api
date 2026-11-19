@@ -1,0 +1,36 @@
+name: Boat Score 2 replay saved historical evidence
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download saved official evidence from successful six-race study
+        uses: actions/download-artifact@v4
+        with:
+          name: boat-score-2-official-history-diagnostics-44484960101
+          run-id: 44484960101
+          github-token: ${{ github.token }}
+          path: research-historical
+      - name: Confirm evidence files exist
+        run: |
+          test -s research-historical/manual.official-entry-stats.json
+          test -s research-historical/manual.racer-finishes.json
+      - name: Recompute exploratory win-rate and actual-course comparison offline
+        run: |
+          node scripts/test-compare-exploratory-winrates-results.mjs
+          node scripts/compare-exploratory-winrates-results.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-comparison.json
+      - name: Upload replayed comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-offline-replay-${{ github.run_id }}
+          path: research-historical/manual.replayed-comparison.json
+          retention-days: 14
