@@ -11,4 +11,6 @@ assert.ok(html.includes('data.status!==\'experimental\''),'Must reject unavailab
 assert.ok(html.includes('data.date!==chosen.date'),'Must reject mismatched date');
 assert.ok(html.includes('data.venue!==Number(chosen.venue)'),'Must reject mismatched venue');
 assert.ok(html.includes('data.race!==Number(chosen.race)'),'Must reject mismatched race');
+assert.ok(html.includes('requestVersion!==predictionRequestVersion'),'Stale API responses must be ignored');
+assert.ok(html.includes('predictionRequestVersion++'),'Changing selection must invalidate in-flight prediction');
 console.log('Mobile selector static regression passed');
