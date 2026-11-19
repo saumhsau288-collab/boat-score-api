@@ -22,6 +22,11 @@ export function experimentalRaceRanking(racers){
     new Set(racers.map(r=>r.boat)).size!==6||
     racers.some(r=>!Number.isInteger(r.boat)||r.boat<1||r.boat>6))
     return {status:'invalid_race'};
+ // A six-racer entry order cannot contain duplicate courses. Do not silently
+ // accept a boat-number proxy or malformed course assignment as a valid race.
+ if(racers.some(r=>!Number.isInteger(r.entryCourse)||r.entryCourse<1||r.entryCourse>6)||
+    new Set(racers.map(r=>r.entryCourse)).size!==6)
+   return {status:'invalid_entry_courses'};
  const scored=racers.map(r=>({boat:r.boat,...experimentalRacerScore(r)}));
  if(scored.some(r=>r.status!=='evaluated'))return {status:'insufficient_data',scored};
  return {status:'evaluated',ranked:scored.sort((a,b)=>b.score-a.score||a.boat-b.boat)};
