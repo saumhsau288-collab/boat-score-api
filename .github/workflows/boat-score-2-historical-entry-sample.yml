@@ -34,8 +34,10 @@ jobs:
           [[ "$VENUE" =~ ^(0[1-9]|1[0-9]|2[0-4])$ ]] || exit 1
           echo "RACE_DATE=$DATE" >> "$GITHUB_ENV"
           echo "VENUE_CODE=$VENUE" >> "$GITHUB_ENV"
-      - name: Validate sample collector
-        run: node --check scripts/fetch-historical-racelist-sample.mjs
+      - name: Validate sample collector and score comparison tests
+        run: |
+          node --check scripts/fetch-historical-racelist-sample.mjs
+          node --test scripts/compare-archived-weight-candidates.test.mjs
       - name: Fetch archived official entry HTML
         run: |
           mkdir -p research-historical
