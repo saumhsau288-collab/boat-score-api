@@ -27,3 +27,10 @@ test('reports exclusions rather than inventing accuracy',()=>{
  assert.equal(r.winnerRate,1);
  assert.equal(summarizeHistoricalComparisons([]).winnerRate,null);
 });
+
+test('rejects duplicate dated venue/race snapshots to avoid inflated accuracy',()=>{
+ const dated={...snapshot,date:'20261113',venue:2,race:9};
+ const r=summarizeHistoricalComparisons([dated,{...dated}]);
+ assert.equal(r.status,'duplicate_races');
+ assert.equal(r.scoreChangeApplied,false);
+});
