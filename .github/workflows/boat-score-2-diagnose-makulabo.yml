@@ -4,6 +4,9 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/boat-score-2-diagnose-makulabo.yml'
+      - 'scripts/inspect-makulabo-heatmap-structure.mjs'
+      - 'scripts/check-makulabo-public-source.mjs'
+      - 'scripts/diagnose-makulabo-response.mjs'
   workflow_dispatch:
     inputs:
       date:
