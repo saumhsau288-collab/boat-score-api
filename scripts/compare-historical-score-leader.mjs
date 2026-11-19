@@ -2,7 +2,7 @@
 // Missing evidence must remain excluded from any claimed accuracy.
 import fs from 'node:fs';
 import {splitScoreLeaderTickets,compareScoreLeaderTickets} from './score-leader-favorite-upset.mjs';
-const dateOK=s=>typeof s==='string'&&/^20\d{6}$/.test(s)&&!Number.isNaN(Date.parse(s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8)));
+const dateOK=s=>{if(typeof s!=='string'||!/^20\d{6}$/.test(s))return false;const y=+s.slice(0,4),m=+s.slice(4,6),d=+s.slice(6,8),v=new Date(Date.UTC(y,m-1,d));return v.getUTCFullYear()===y&&v.getUTCMonth()+1===m&&v.getUTCDate()===d;};
 export function compareHistoricalScoreLeaderRaces(input){
  if(!Array.isArray(input?.races))throw Error('Expected races array');
  const seen=new Set();
