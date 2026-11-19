@@ -24,6 +24,8 @@ test('reports exclusions rather than inventing accuracy',()=>{
  const r=summarizeHistoricalComparisons([snapshot,{...snapshot,race:10,resultVerified:false}]);
  assert.equal(r.eligible,1);
  assert.equal(r.excluded,1);
+ assert.equal(r.excludedReasons.unverified_result,1);
+ assert.equal(r.evidenceComplete,0);
  assert.equal(r.winnerRate,1);
  assert.equal(summarizeHistoricalComparisons([]).winnerRate,null);
 });
