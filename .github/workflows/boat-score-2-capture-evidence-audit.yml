@@ -1,0 +1,63 @@
+name: Boat Score 2 capture evidence audit (research only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      capture_run_id:
+        description: 'Existing GitHub Actions run ID containing the raw capture artifact'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate audit logic
+        run: |
+          node --check scripts/report-capture-readiness-research.mjs
+          node scripts/test-report-capture-readiness-research.mjs
+      - name: Download previously saved raw capture artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.capture_run_id }}
+        run: |
+          case "$RUN_ID" in *[!0-9]*|'') echo "Invalid run ID"; exit 1;; esac
+          mkdir -p research-input
+          gh run download "$RUN_ID" --dir research-input
+      - name: Summarize real capture evidence without accuracy claims
+        shell: bash
+        run: |
+          shopt -s globstar nullglob
+          files=(research-input/**/*-*.json)
+          count=0
+          mkdir -p research-reports
+          echo "## Saved capture readiness (research only)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          for file in "${files[@]}"; do
+            if [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]]; then
+              count=$((count+1))
+              output=$(node scripts/report-capture-readiness-research.mjs "$file")
+              printf '%s\n' "$output" > "research-reports/${file##*/}.readiness.json"
+              echo "### ${file##*/}" >> "$GITHUB_STEP_SUMMARY"
+              echo '~~~json' >> "$GITHUB_STEP_SUMMARY"
+              printf '%s\n' "$output" >> "$GITHUB_STEP_SUMMARY"
+              echo '~~~' >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+          if (( count == 0 )); then echo "No raw dated capture JSON found" >&2; exit 1; fi
+      - name: Upload research audit only
+        uses: actions/upload-artifact@v4
+        with:
+          name: capture-evidence-audit-${{ github.run_id }}
+          path: research-reports/
+          if-no-files-found: error
+          retention-days: 30
