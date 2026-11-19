@@ -37,6 +37,7 @@ try{
  assert.equal(json.upset.length,6);
  assert.deepEqual(json.dataCompleteness,{officialRacelist:true,verifiedEntry:false,exhibition:false,motor:false,makulaboRecent50:false});
  assert.equal(json.ranking.every(r=>r.racerId&&Number.isFinite(r.score)),true);
+ for(const racer of json.ranking){for(const key of ['makulaboRecent50WinRate','motorSecondPlaceRate','exhibitionTime','verifiedEntryCourse'])assert.equal(racer[key],null,'Unverified '+key+' must be null, never zero');}
  assert.ok(officialRequested.includes('hd=20261119'));
  assert.ok(officialRequested.includes('jcd=18'));
  assert.ok(officialRequested.includes('rno=2'));
