@@ -41,18 +41,27 @@ export function rankRace(racers){
 // Strict public-name matching is a research fallback only, never proof of registration identity.
 export function matchMakulaboByName(official,recent){
  if(!Array.isArray(official)||official.length!==6||!Array.isArray(recent)||recent.length!==6)return {verified:false,reason:'six_racers_required',matches:[]};
- const norm=s=>typeof s==='string'?s.normalize('NFKC').replace(/[\s\u3000]/g,''):''; 
+ const norm=s=>typeof s==='string'?s.normalize('NFKC').replace(/[\s\u3000]/g,''):'';
  const names=official.map(r=>norm(r.name));
- if(names.some(n=>n.length<2)||new Set(names).size!==6)return {verified:false,reason:'official_names_incomplete',matches:[]};
- const byName=new Map();
- for(const row of recent){
-  const n=norm(row?.name);
-  if(n.length<2||byName.has(n))return {verified:false,reason:'recent_names_incomplete_or_duplicate',matches:[]};
+ if(names.some(n=>n.length<2)||new Set(names).size!==6||new Set(official.map(r=>r.boat)).size!==6)return {verified:false,reason:'official_names_incomplete',matches:[]};
+ const normalized=recent.map(row=>({row,name:norm(row?.name)}));
+ if(normalized.some(x=>x.name.length<2)||new Set(normalized.map(x=>x.name)).size!==6)return {verified:false,reason:'recent_names_incomplete_or_duplicate',matches:[]};
+ for(const {row} of normalized){
   if(!Number.isInteger(row?.starts)||row.starts<1||row.starts>50||!Array.isArray(row?.finishCounts)||row.finishCounts.length!==6||row.finishCounts.some(v=>!Number.isInteger(v)||v<0)||row.finishCounts.reduce((a,b)=>a+b,0)!==row.starts)return {verified:false,reason:'invalid_finish_counts',matches:[]};
-  byName.set(n,row);
  }
- if(names.some(n=>!byName.has(n)))return {verified:false,reason:'name_mismatch',matches:[]};
- return {verified:true,identityMethod:'exact_normalized_name_only',registrationVerified:false,matches:official.map(r=>({boat:r.boat,racerId:r.racerId,record:byName.get(norm(r.name))}))};
+ const matches=[];
+ for(const r of official){
+  const n=norm(r.name);
+  // Truncated display names must have >=3 characters and the same explicitly recorded boat.
+  // A prefix alone, or merely the order of rows, is never sufficient.
+  const candidates=normalized.filter(x=>x.name===n||(x.name.length>=3&&n.startsWith(x.name)&&x.row.boat===r.boat));
+  if(candidates.length!==1)return {verified:false,reason:'name_mismatch_or_ambiguous',matches:[]};
+  const match=candidates[0];
+  if(match.name!==n&&match.row.boat!==r.boat)return {verified:false,reason:'boat_mismatch',matches:[]};
+  matches.push({boat:r.boat,racerId:r.racerId,record:match.row,nameMatch:match.name===n?'exact':'truncated_same_boat'});
+ }
+ if(new Set(matches.map(m=>m.record)).size!==6)return {verified:false,reason:'identity_collision',matches:[]};
+ return {verified:true,identityMethod:'exact_or_truncated_same_boat_name',registrationVerified:false,matches};
 }
 // Makulabo identity matching: exact registration IDs only; no inferred boat order.
 export function matchMakulaboByRegistration(official,recent){
