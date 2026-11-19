@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {compareExploratoryWinRateFinishes} from './compare-exploratory-winrates-results.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4100+i),averageWinRate:i===3?8:4}));
+const resultRacers=racers.map((r,i)=>({boat:r.boat,racerId:r.racerId,finish:i===3?1:i<3?i+2:i===3?1:i+1}));
+const report=compareExploratoryWinRateFinishes(
+ {rows:[{date:'20261118',venue:2,race:2,statsVerified:true,racers}]},
+ {rows:[{date:'20261118',venue:2,race:2,status:'parsed_needs_independent_review',racers:resultRacers}]}
+);
+assert.equal(report.matchedRaces,1);
+assert.equal(report.highestWinRateRacerWon,1);
+assert.equal(report.rows[0].highestAverageWinRateBoat,4);
+assert.equal(report.eligibleForCalibration,0);
+assert.equal(compareExploratoryWinRateFinishes({rows:[{date:'20261118',venue:2,race:2,statsVerified:true,racers}]},
+ {rows:[{date:'20261119',venue:2,race:2,status:'parsed_needs_independent_review',racers:resultRacers}]}).matchedRaces,0);
+assert.equal(compareExploratoryWinRateFinishes({rows:[{date:'20261118',venue:2,race:2,statsVerified:true,racers}]},
+ {rows:[{date:'20261118',venue:2,race:2,status:'parsed_needs_independent_review',racers:resultRacers.map((r,i)=>i===0?{...r,racerId:'9999'}:r)}]}).matchedRaces,0);
+console.log('Exploratory win-rate finish matching checks passed (synthetic only)');
