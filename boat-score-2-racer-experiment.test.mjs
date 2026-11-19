@@ -27,3 +27,7 @@ assert.equal(explanation.winner,'first');
 assert.ok(explanation.componentDifferences.ability>0);
 assert.ok(explanation.componentDifferences.course<0);
 assert.equal(explainRacerComparison(base,{...base,averageStartTiming:null}).status,'insufficient_data');
+
+assert.equal(experimentalRaceRanking(racers.map((r,i)=>i===5?{...r,entryCourse:1}:r)).status,'invalid_entry_courses');
+assert.equal(experimentalRaceRanking(racers.map((r,i)=>i===5?{...r,entryCourse:null}:r)).status,'invalid_entry_courses');
+assert.equal(experimentalRaceRanking(racers.map((r,i)=>i===5?{...r,entryCourse:7}:r)).status,'invalid_entry_courses');
