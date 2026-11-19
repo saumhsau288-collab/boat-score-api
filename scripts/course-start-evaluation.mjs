@@ -1,8 +1,9 @@
 // Offline diagnostics only. Do not deploy or treat as calibrated probability.
 // Uses actual entry course, not boat number. Lower ST seconds is faster.
+// IMPORTANT: actual race ST is post-start information; diagnostics must NOT be used as pre-race features.
 export function compareCourseAndStart(rows){
  if(!Array.isArray(rows))throw Error('rows required');
- const valid=rows.filter(r=>r?.verified===true&&Number.isInteger(r.course)&&r.course>=1&&r.course<=6&&Number.isFinite(r.st)&&r.st>=0&&r.st<=1&&Number.isInteger(r.finish)&&r.finish>=1&&r.finish<=6);
+ const valid=rows.filter(r=>r?.verified===true&&/^20[0-9]{6}$/.test(String(r.date))&&Number.isInteger(r.venue)&&r.venue>=1&&r.venue<=24&&Number.isInteger(r.race)&&r.race>=1&&r.race<=12&&Number.isInteger(r.course)&&r.course>=1&&r.course<=6&&Number.isFinite(r.st)&&r.st>=0&&r.st<=1&&Number.isInteger(r.finish)&&r.finish>=1&&r.finish<=6);
  const groups=new Map();
  for(const r of valid){const key=[r.date,r.venue,r.race].join(':');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);}
  const result={eligibleRaces:0,innerWins:0,fastestStartWins:0,innerTop3:0,excludedRaces:groups.size};
