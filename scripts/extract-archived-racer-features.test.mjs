@@ -83,3 +83,12 @@ test('classifies layout mismatch separately from invalid metric values',()=>{
  const invalid=extractArchivedRacerFeatures({status:'raw_html_saved',html:Array.from({length:6},(_,i)=>block(i+1).replace('>6.20<',i===0?'>12.20<':'>6.20<')).join('')});
  assert.equal(invalid.diagnostics.failureCategory,'out_of_range_values');
 });
+
+test('verifies full-width boat numbers found in real official racelists',()=>{
+ const full=['１','２','３','４','５','６'];
+ const html=Array.from({length:6},(_,i)=>block(i+1).replace(`>${i+1} 枠<`,`>${full[i]}<`)).join('');
+ const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
+ assert.equal(r.status,'parsed_archival_features_unverified');
+ assert.equal(r.boatMappingVerified,true);
+ assert.deepEqual(r.racers.map(x=>x.boat),[1,2,3,4,5,6]);
+});
