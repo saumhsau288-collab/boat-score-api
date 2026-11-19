@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 const clean=s=>s.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
 const firstDecimal=(s,pattern)=>clean(s).match(pattern)?.[1]??null;
-const racerIdFromCell=s=>clean(s).match(/(?:^|\s)(\d{4,6})(?=\s|$)/)?.[1]??s.match(/racersearch\/profile\/(\d{4,6})(?:[/?#"']|$)/i)?.[1]??null;
+const racerIdFromCell=s=>clean(s).match(/(?:^|\s)(\d{4,6})(?=\s|$)/)?.[1]??s.match(/racersearch\/profile\/(\d{4,6})(?:[/?#"']|$)/i)?.[1]??s.match(/racersearch\/profile[^"']*[?&](?:toban|racerid|id)=(\d{4,6})(?:[&#"']|$)/i)?.[1]??null;
 export function extractArchivedRacerFeatures(entry){
  const base={date:entry?.date,venue:entry?.venue,race:entry?.race,status:'not_parsed',preCutoffSnapshotAuthenticated:false,eligibleForWeightTuning:false,racers:[]};
  if(entry?.status!=='raw_html_saved'||typeof entry.html!=='string')return base;
