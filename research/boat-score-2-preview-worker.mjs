@@ -33,7 +33,7 @@ export default {async fetch(request){
  if(!/^20\d{6}$/.test(date)||!u.searchParams.has('venue')||!u.searchParams.has('race')||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply({status:'invalid_selection'},400);
  const officialUrl='https://www.boatrace.jp/owpc/pc/race/racelist?'+new URLSearchParams({hd:date,jcd:String(venue).padStart(2,'0'),rno:String(race)});
  try{
-  const res=await fetch(officialUrl,{headers:{accept:'text/html'},signal:AbortSignal.timeout(12000),redirect:'error'});
+  const res=await fetch(officialUrl,{headers:{accept:'text/html'},signal:AbortSignal.timeout(12000),redirect:'follow'});
   if(!res.ok)return reply({status:'official_fetch_failed',httpStatus:res.status,date,venue,race});
   const size=Number(res.headers.get('content-length')??0);if(size>2000000)return reply({status:'official_page_too_large',date,venue,race});
   const html=await res.text();
