@@ -20,11 +20,14 @@ jobs:
       - name: Fetch archived official entry HTML
         run: |
           mkdir -p research-historical
-          node scripts/fetch-historical-racelist-sample.mjs research-historical/20261118-tokuyama-2r-racelist.json
+          for race in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            node scripts/fetch-historical-racelist-sample.mjs "research-historical/20261118-tokuyama-${race}r-racelist.json" 20261118 18 "$race"
+            sleep 1
+          done
       - name: Fetch matching official race result and start order
         run: |
-          node scripts/fetch-manual-official-historical-results.mjs 20261118 18 2 research-historical/20261118-tokuyama-2r-result-raw.json
-          node scripts/extract-official-result-racers.mjs research-historical/20261118-tokuyama-2r-result-raw.json research-historical/20261118-tokuyama-2r-result-parsed.json
+          node scripts/fetch-manual-official-historical-results.mjs 20261118 18 1,2,3,4,5,6,7,8,9,10,11,12 research-historical/20261118-tokuyama-results-raw.json
+          node scripts/extract-official-result-racers.mjs research-historical/20261118-tokuyama-results-raw.json research-historical/20261118-tokuyama-results-parsed.json
       - name: Save original official source and fetch status
         uses: actions/upload-artifact@v4
         with:
