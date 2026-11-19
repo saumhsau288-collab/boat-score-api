@@ -6,6 +6,8 @@ on:
       - '.github/workflows/boat-score-2-diagnose-makulabo.yml'
       - 'scripts/inspect-makulabo-heatmap-structure.mjs'
       - 'scripts/verify-makulabo-finish-table.mjs'
+      - 'scripts/verify-makulabo-official-join.mjs'
+      - 'boat-score-2-makulabo-official-join.js'
       - 'boat-score-2-makulabo-source-table.js'
       - 'boat-score-2-makulabo-finish-headers.js'
       - 'scripts/check-makulabo-public-source.mjs'
@@ -54,6 +56,12 @@ jobs:
           VENUE: ${{ inputs.venue || '02' }}
           RACE: ${{ inputs.race || '9' }}
         run: node --experimental-default-type=module scripts/verify-makulabo-finish-table.mjs "$RACE_DATE" "$VENUE" "$RACE"
+      - name: Join real Makulabo finish rates to official racer IDs
+        env:
+          RACE_DATE: ${{ inputs.date || '20261113' }}
+          VENUE: ${{ inputs.venue || '02' }}
+          RACE: ${{ inputs.race || '9' }}
+        run: node --experimental-default-type=module scripts/verify-makulabo-official-join.mjs "$RACE_DATE" "$VENUE" "$RACE"
       - name: Validate inputs and fetch public API
         env:
           RACE_DATE: ${{ inputs.date || '20261113' }}
