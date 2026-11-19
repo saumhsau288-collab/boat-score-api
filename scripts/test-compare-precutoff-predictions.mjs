@@ -6,6 +6,10 @@ const result={date:'20261119',venue:2,race:1,status:'independently_verified',rac
 const ok=comparePreCutoffPredictions([snapshot],[result]);
 assert.equal(ok.eligibleRaces,1);assert.equal(ok.mainSixExactHits,1);
 assert.equal(ok.rows[0].winnerInMainFirstChoices,true);
+const duplicates=comparePreCutoffPredictions([snapshot,structuredClone(snapshot)],[result]);
+assert.equal(duplicates.eligibleRaces,1);
+assert.equal(duplicates.mainSixExactHits,1);
+assert.ok(duplicates.rejections.some(r=>r.reasons.includes('duplicate_race_snapshot')));
 const badTime=comparePreCutoffPredictions([{...snapshot,capturedAt:snapshot.cutoffAt}],[result]);
 assert.equal(badTime.eligibleRaces,0);
 const unverified=comparePreCutoffPredictions([snapshot],[{...result,status:'parsed_needs_independent_review'}]);
