@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {experimentalRacerScore,experimentalRaceRanking} from './boat-score-2-racer-experiment.js';
+const base={nationalWinRate:6,localWinRate:8,averageStartTiming:0.15,entryCourse:1};
+const a=experimentalRacerScore(base);
+assert.equal(a.status,'evaluated');
+assert.equal(a.components.winRateMean,7);
+assert.equal(a.score,69);
+assert.ok(experimentalRacerScore({...base,averageStartTiming:0.12}).score>a.score);
+assert.ok(experimentalRacerScore({...base,entryCourse:2}).score<a.score);
+assert.equal(experimentalRacerScore({...base,averageStartTiming:null}).status,'insufficient_or_invalid_data');
+const racers=Array.from({length:6},(_,i)=>({...base,boat:i+1,entryCourse:i+1}));
+assert.equal(experimentalRaceRanking(racers).ranked[0].boat,1);
+console.log('Offline racer experiment passed');
