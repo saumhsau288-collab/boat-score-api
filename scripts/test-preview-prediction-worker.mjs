@@ -8,6 +8,14 @@ const officialNamed=racers.map((r,i)=>({...r,name:['倉持 莉々','為本智也
 const recentNamed=officialNamed.map((r,i)=>({name:r.name.replace(/ /g,''),starts:i===1?49:50,finishCounts:i===1?[10,10,10,10,5,4]:[10,10,10,10,5,5]})).reverse();
 const nameMatch=matchMakulaboByName(officialNamed,recentNamed);
 assert.equal(nameMatch.verified,true);
+const fullNamed=officialNamed.map((r,i)=>({...r,name:i===2?'仁科さやか':i===4?'鳥居塚孝博':r.name}));
+const shortNamed=recentNamed.map(r=>({...r,boat:fullNamed.find(x=>x.name.replace(/ /g,'').startsWith(r.name))?.boat}));
+const shortenedMatch=matchMakulaboByName(fullNamed,shortNamed);
+assert.equal(shortenedMatch.verified,true);
+assert.equal(shortenedMatch.matches.filter(m=>m.nameMatch==='truncated_same_boat').length,2);
+assert.equal(shortenedMatch.registrationVerified,false);
+assert.equal(matchMakulaboByName(fullNamed,shortNamed.map((r,i)=>r.name==='仁科さや'?{...r,boat:6}:r)).verified,false,'Shortened name with wrong boat must fail');
+assert.equal(matchMakulaboByName(fullNamed,shortNamed.map(r=>r.name==='仁科さや'?{...r,name:'仁科'}:r)).verified,false,'Too-short name must fail');
 assert.equal(nameMatch.registrationVerified,false,'Name match alone never verifies registration IDs');
 assert.deepEqual(nameMatch.matches.map(m=>m.boat),[1,2,3,4,5,6]);
 assert.equal(matchMakulaboByName(officialNamed,recentNamed.map((r,i)=>i===0?{...r,name:'別人'}:r)).verified,false);
