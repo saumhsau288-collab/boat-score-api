@@ -56,7 +56,12 @@ export function compareVerifiedMakulaboScores(official,recent,{weight=10}={}){
  if(identity.matches.some(m=>m.record.verified!==true||typeof m.record.sourceUrl!=='string'||!/^https:\/\/makulabo-jp\.com\//.test(m.record.sourceUrl)||typeof m.record.observedAt!=='string'||!Number.isFinite(Date.parse(m.record.observedAt))))return {applied:false,reason:'source_evidence_incomplete',baseline};
  const rates=new Map(identity.matches.map(m=>[m.boat,m.record.winRate]));
  const ranking=baseline.ranking.map(r=>({...r,makulaboRecent50WinRate:rates.get(r.boat),score:Number((r.score*(1-weight/100)+rates.get(r.boat)*weight/100).toFixed(3))})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
- return {applied:true,baseline,adjusted:{ranking},weight,warning:'Research comparison only. Source metadata and verified flags are claims; underlying 50 races have not been independently authenticated.'};
+ const all=[];
+ for(const a of ranking)for(const b of ranking)for(const c of ranking)if(a.boat!==b.boat&&a.boat!==c.boat&&b.boat!==c.boat)all.push({ticket:[a.boat,b.boat,c.boat].join('-'),heuristic:Number((a.score*.5+b.score*.3+c.score*.2).toFixed(2))});
+ all.sort((a,b)=>b.heuristic-a.heuristic||a.ticket.localeCompare(b.ticket));
+ const favorite=ranking[0].boat;
+ const adjusted={ranking,main:all.filter(x=>x.ticket.startsWith(favorite+'-')).slice(0,6),upset:all.filter(x=>!x.ticket.startsWith(favorite+'-')).slice(0,6)};
+ return {applied:true,baseline,adjusted,weight,warning:'Research comparison only. Source metadata and verified flags are claims; underlying 50 races have not been independently authenticated.'};
 }
 export default {async fetch(request){
  if(request.method==='OPTIONS')return new Response(null,{headers:cors});
