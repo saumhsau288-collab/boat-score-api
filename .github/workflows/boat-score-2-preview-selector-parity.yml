@@ -1,0 +1,26 @@
+name: Boat Score 2 preview selector parity (research only)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/compare-preview-leader-tickets.mjs'
+      - 'scripts/test-compare-preview-leader-tickets.mjs'
+      - 'scripts/score-leader-favorite-upset.mjs'
+      - '.github/workflows/boat-score-2-preview-selector-parity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  selector-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: |
+          node --check scripts/compare-preview-leader-tickets.mjs
+          node --check scripts/test-compare-preview-leader-tickets.mjs
+          node scripts/test-compare-preview-leader-tickets.mjs

@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {previewTicketSelection,comparePreviewAndLeaderSelection} from './compare-preview-leader-tickets.mjs';
+const scores=[{boat:1,score:60},{boat:2,score:50},{boat:3,score:40},{boat:4,score:30},{boat:5,score:20},{boat:6,score:10}];
+const a=previewTicketSelection(scores),b=comparePreviewAndLeaderSelection(scores);
+assert.equal(a.ready,true);assert.equal(a.main.length,6);assert.equal(a.upset.length,6);
+assert(a.upset.every(x=>x[0]>=4));assert.equal(b.highestScoreBoat,1);
+assert(b.scoreLeader.main.every(x=>x[0]===1));
+assert(b.scoreLeader.upset.every(x=>x[0]!==1));
+assert.equal(b.scoreLeader.upset.filter(x=>x.includes(1)).length,3);
+assert.equal(b.scoreLeader.upset.filter(x=>!x.includes(1)).length,3);
+assert.equal(b.liveDeploymentVerified,false);assert.equal(b.scoreWeightsChanged,false);
+assert.deepEqual(previewTicketSelection([...scores].reverse()),a);
+assert.equal(previewTicketSelection(scores.slice(1)).ready,false);
+assert.equal(comparePreviewAndLeaderSelection(scores.map((x,i)=>({...x,boat:i===5?1:x.boat}))).ready,false);
+console.log('Preview vs score-leader selection comparison tests passed');
