@@ -21,7 +21,7 @@ export async function predictSelectedRace({date,venue,race,courses=null,venueHis
  // Current parser extracts six racer rows but does not independently prove each boat-to-racer mapping.
  // Do not turn positional parsing into real ticket recommendations without that proof.
  if(features.boatMappingVerified!==true)return {status:'boat_mapping_unverified',date,venue,race,
-  main:[],upset:[],provenance,racers:features.racers,entryScenario:usingAssumedEntry?'boat_order_assumption':'user_supplied_entry_scenario',
+  main:[],upset:[],provenance,diagnostics:features.diagnostics??null,racers:features.racers,entryScenario:usingAssumedEntry?'boat_order_assumption':'user_supplied_entry_scenario',
   message:'Six racer features found, but official boat-number mapping has not been independently verified. Tickets withheld.'};
  const racers=features.racers.map((x,i)=>({...x,boat:i+1,entryCourse:selectedCourses[i]}));
  const venueTendency=summarizeVenueTendencies(venueHistory).find(x=>x.venue===venue)??null;
