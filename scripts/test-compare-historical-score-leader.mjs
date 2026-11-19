@@ -24,4 +24,6 @@ assert.equal(duplicates.totals.evidenceReady,1);
 assert.deepEqual(duplicates.rows[1].holdReasons,['duplicate_race']);
 assert.equal(compare({races:[{...ready,scores:[]}]}).totals.evidenceReady,0);
 assert.equal(compare({races:[{...ready,actualPodium:[1,1,3]}]}).totals.evidenceReady,0);
+assert.equal(compare({races:[{...ready,date:'20260230'}]}).totals.evidenceReady,0);
+assert.equal(compare({races:[{...ready,date:'20261131'}]}).totals.evidenceReady,0);
 console.log('Historical score leader comparison tests passed');
