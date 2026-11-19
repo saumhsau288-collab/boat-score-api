@@ -16,7 +16,7 @@ else {
    heatmapCount:payload?.heatmapRows?.length??0,
    matchedCount:result.racers?.length??0,
    recent50Ready:result.recent50Ready===true,
-   boats:(result.racers??[]).map(r=>({boat:r.boat,racerId:r.racerId,runs:r.runs,firstPlaceRate:r.firstPlaceRate}))
+   boats:(result.racers??[]).map(r=>({boat:r.boat,racerId:r.racerId,runs:r.runs,firstColumnShare:r.firstColumnShare,firstPlaceRate:r.firstPlaceRate}))
   };
   console.log(JSON.stringify(summary,null,2));
   if(result.status!=='heatmap_matched')process.exitCode=1;
