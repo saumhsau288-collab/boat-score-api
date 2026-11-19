@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {evaluateRacer} from './boat-score-2-scoring.js';
+import {morningRacerScore} from './boat-score-2-morning.js';
+import {scoreRacer} from './boat-score-2-calibration.js';
+const base={nationalWinRate:6.5,localWinRate:0,motorTwoWinRate:40,recent50WinRate:30,exhibitionScore:60};
+const equivalent={...base,localWinRate:6.5};
+const unchanged={...base,localWinRate:5.2};
+assert.deepEqual(evaluateRacer(base),evaluateRacer(equivalent));
+assert.deepEqual(morningRacerScore(base),morningRacerScore(equivalent));
+assert.equal(scoreRacer(base),scoreRacer(equivalent));
+assert.notEqual(scoreRacer(unchanged),scoreRacer(equivalent));
+assert.equal(base.localWinRate,0);
+assert.equal(evaluateRacer({...base,nationalWinRate:NaN}).status,'insufficient_data');
+console.log('local win rate fallback tests passed');
