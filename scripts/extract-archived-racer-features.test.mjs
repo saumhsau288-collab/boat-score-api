@@ -59,3 +59,11 @@ test('extracts racer ID from profile query parameter',()=>{
  assert.equal(r.status,'parsed_archival_features_unverified');
  assert.deepEqual(r.racers.map(x=>x.racerId),['4001','4002','4003','4004','4005','4006']);
 });
+
+test('rejects impossible national win rates before prediction',()=>{
+ const html=Array.from({length:6},(_,i)=>block(i+1).replace('>6.20<',i===0?'>12.20<':'>6.20<')).join('');
+ const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
+ assert.equal(r.status,'incomplete_six_racer_features');
+ assert.equal(r.diagnostics.outOfRangeBlocks,1);
+ assert.equal(r.racers.length,5);
+});
