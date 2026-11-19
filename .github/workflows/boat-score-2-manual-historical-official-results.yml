@@ -1,0 +1,45 @@
+name: Boat Score 2 manual historical official result fetch (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Historical date YYYYMMDD'
+        required: true
+        type: string
+      venue:
+        description: 'Venue number 1-24'
+        required: true
+        type: string
+      races:
+        description: 'Comma-separated races, e.g. 1,2,3'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  fetch-historical-results:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test offline fetching logic
+        run: |
+          node --check scripts/fetch-manual-official-historical-results.mjs
+          node scripts/test-fetch-manual-official-historical-results.mjs
+      - name: Fetch explicitly selected public official result pages
+        env:
+          DATE: ${{ inputs.date }}
+          VENUE: ${{ inputs.venue }}
+          RACES: ${{ inputs.races }}
+        run: |
+          mkdir -p research-historical
+          node scripts/fetch-manual-official-historical-results.mjs "$DATE" "$VENUE" "$RACES" "research-historical/manual.official-raw.json"
+      - name: Upload raw research artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-manual-historical-official-${{ github.run_id }}
+          path: research-historical/
+          retention-days: 30
+          if-no-files-found: error
