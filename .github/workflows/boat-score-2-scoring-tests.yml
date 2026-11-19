@@ -59,3 +59,5 @@ jobs:
           node --experimental-default-type=module boat-score-2-offline-prediction.test.mjs
           node --experimental-default-type=module --check boat-score-2-racer-weight-study.js
           node --experimental-default-type=module boat-score-2-racer-weight-study.test.mjs
+          node --experimental-default-type=module --check boat-score-2-archived-capture-audit.js
+          node --experimental-default-type=module boat-score-2-archived-capture-audit.test.mjs
