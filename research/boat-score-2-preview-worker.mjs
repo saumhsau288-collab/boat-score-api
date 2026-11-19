@@ -60,7 +60,7 @@ export function compareVerifiedMakulaboScores(official,recent,{weight=10,date,ve
   if(identity.matches.some(m=>m.record.sourceUrl!==expected))return {applied:false,reason:'source_race_mismatch',baseline};
  }
  const rates=new Map(identity.matches.map(m=>[m.boat,m.record.winRate]));
- const ranking=baseline.ranking.map(r=>({...r,makulaboRecent50WinRate:rates.get(r.boat),score:Number((r.score*(1-weight/100)+rates.get(r.boat)*weight/100).toFixed(3))})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
+ const ranking=baseline.ranking.map(r=>{const baseFactor=1-weight/100;const makulaboPoints=Number((rates.get(r.boat)*weight/100).toFixed(3));return {...r,makulaboRecent50WinRate:rates.get(r.boat),scoreBreakdown:{...r.scoreBreakdown,winRatePoints:Number((r.scoreBreakdown.winRatePoints*baseFactor).toFixed(3)),startPoints:Number((r.scoreBreakdown.startPoints*baseFactor).toFixed(3)),assumedCoursePoints:Number((r.scoreBreakdown.assumedCoursePoints*baseFactor).toFixed(3)),makulaboPoints},score:Number((r.score*baseFactor+makulaboPoints).toFixed(3))};}).sort((a,b)=>b.score-a.score||a.boat-b.boat);
  const all=[];
  for(const a of ranking)for(const b of ranking)for(const c of ranking)if(a.boat!==b.boat&&a.boat!==c.boat&&b.boat!==c.boat)all.push({ticket:[a.boat,b.boat,c.boat].join('-'),heuristic:Number((a.score*.5+b.score*.3+c.score*.2).toFixed(2))});
  all.sort((a,b)=>b.heuristic-a.heuristic||a.ticket.localeCompare(b.ticket));
