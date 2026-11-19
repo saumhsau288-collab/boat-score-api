@@ -13,6 +13,7 @@ assert.equal(d.insideWins,2);
 assert.equal(d.insidePodiumPlacements,4);
 assert.equal(d.insidePodiumSlots,6);
 assert.deepEqual(d.insideWinsByCourse,{'1':0,'2':0,'3':2});
+assert.deepEqual(d.winsByCourse,{'1':0,'2':0,'3':2,'4':0,'5':0,'6':0});
 assert.deepEqual(d.podiumByCourse,{'1':1,'2':1,'3':2,'4':1,'5':0,'6':1});
 assert.equal(d.eligibleForWeightTuning,false);
 const invalid=summarizeOfficialInsideCourses({rows:[
@@ -31,4 +32,5 @@ assert.equal(repeated.usable,2);
 assert.equal(repeated.blocked,1);
 assert.equal(repeated.insideWins,2);
 assert.equal(repeated.insidePodiumPlacements,6);
+assert.deepEqual(repeated.winsByCourse,{'1':1,'2':0,'3':1,'4':0,'5':0,'6':0});
 console.log('Inner-course descriptive summary tests passed (synthetic only)');
