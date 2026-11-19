@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {adaptOfficialBeforeinfoToRacerFields} from './adapt-official-beforeinfo-racer-fields.mjs';
+const startExhibition={verified:true,rows:Array.from({length:6},(_,i)=>({boat:i+1,course:i+1,startTiming:0.1}))};
+const exhibition={verified:true,rows:Array.from({length:6},(_,i)=>({boat:i+1,exhibitionTime:6.7+i/100}))};
+const weather={verified:true,windDirectionVerified:true,windDirection:'北',windSpeed:3,waveHeight:2};
+const out=adaptOfficialBeforeinfoToRacerFields({startExhibition,exhibition,weather});
+assert.equal(out.ready,true);
+assert.equal(out.byBoat.length,6);
+assert.equal(out.byBoat[0].expectedEntryCourse,1);
+assert.equal(out.byBoat[0].exhibitionTime,6.7);
+assert.equal(out.verifiedExhibitionAndWeather,null);
+assert.equal(adaptOfficialBeforeinfoToRacerFields({startExhibition,exhibition,weather:{verified:false}}).weatherVerified,false);
+assert.equal(adaptOfficialBeforeinfoToRacerFields({startExhibition:{...startExhibition,rows:startExhibition.rows.map((r,i)=>i===0?{...r,course:2}:r)},exhibition,weather}).ready,false);
+console.log('Official beforeinfo racer field adapter tests passed');
