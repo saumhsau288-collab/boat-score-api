@@ -5,22 +5,30 @@ export function extractArchivedRacerFeatures(entry){
  const base={date:entry?.date,venue:entry?.venue,race:entry?.race,status:'not_parsed',preCutoffSnapshotAuthenticated:false,eligibleForWeightTuning:false,racers:[]};
  if(entry?.status!=='raw_html_saved'||typeof entry.html!=='string')return base;
  const racers=[];
+ const diagnostics={fourRowBlockCandidates:0,completeRacerBlocks:0,boatNumberRecognized:0,missingFields:{racerId:0,averageStartTiming:0,nationalWinRate:0,localWinRate:0}};
  // Each racer starts a four-row block: boat, photo, racer identity, ST, national, local.
  for(const tr of entry.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
   const cells=[...tr[1].matchAll(/<td\b(?=[^>]*\browspan=["']4["'])[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>x[1]);
   if(cells.length<6)continue;
+  diagnostics.fourRowBlockCandidates++;
   const boatText=clean(cells[0]);
   const boat=boatText.match(/^([1-6])(?:\s|$)/)?.[1];
   const racerId=clean(cells[2]).match(/^(\d{4,6})\b/)?.[1];
   const st=clean(cells[3]).match(/(?:^|\s)(0\.\d{2})(?:\s|$)/);
   const national=clean(cells[4]).match(/^(\d{1,2}\.\d{2})(?:\s|$)/);
   const local=clean(cells[5]).match(/^(\d{1,2}\.\d{2})(?:\s|$)/);
+  if(boat)diagnostics.boatNumberRecognized++;
+  if(!racerId)diagnostics.missingFields.racerId++;
+  if(!st)diagnostics.missingFields.averageStartTiming++;
+  if(!national)diagnostics.missingFields.nationalWinRate++;
+  if(!local)diagnostics.missingFields.localWinRate++;
   if(!racerId||!st||!national||!local)continue;
+  diagnostics.completeRacerBlocks++;
   racers.push({boat:boat?Number(boat):null,racerId,nationalWinRate:Number(national[1]),localWinRate:Number(local[1]),averageStartTiming:Number(st[1])});
  }
- if(racers.length!==6||new Set(racers.map(x=>x.racerId)).size!==6)return {...base,status:'incomplete_six_racer_features',found:racers.length};
+ if(racers.length!==6||new Set(racers.map(x=>x.racerId)).size!==6)return {...base,status:'incomplete_six_racer_features',found:racers.length,diagnostics};
  const boatMappingVerified=racers.every((r,i)=>r.boat===i+1);
- return {...base,status:'parsed_archival_features_unverified',boatMappingVerified,racers};
+ return {...base,status:'parsed_archival_features_unverified',boatMappingVerified,racers,diagnostics};
 }
 export function joinArchivedRace(entry,result){
  const e=extractArchivedRacerFeatures(entry);
