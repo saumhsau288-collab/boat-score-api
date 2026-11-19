@@ -2,7 +2,8 @@
 import {compareRacerWeightScenarios} from './compare-racer-weight-scenarios.mjs';
 import {evaluateRacerScoreQuality} from './evaluate-racer-score-quality.mjs';
 import {auditRacerHoldoutProvenance} from './audit-racer-holdout-provenance.mjs';
-export function compareRacerScenariosOnHoldout(races,candidates=[]){
+export function compareRacerScenariosOnHoldout(races,candidates=[],{minimumHoldoutRaces=100}={}){
+ if(!Number.isInteger(minimumHoldoutRaces)||minimumHoldoutRaces<1)throw Error('Invalid minimum holdout races');
  const seen=new Set(),accepted=[],rejected=[];
  for(const race of races??[]){
   const key=[race?.date,race?.venue,race?.race].join(':');
@@ -26,6 +27,7 @@ export function compareRacerScenariosOnHoldout(races,candidates=[]){
   return {id:c.id,weights:{...c.weights},quality,deltaFromBaseline};
  });
  return {researchOnly:true,eligibleForDeployment:false,eligibleRaces:accepted.length,rejectedRaces:rejected.length,baseline,scenarios,comparisonMetrics:comparableMetrics,
-  comparisonStatus:accepted.length?'descriptive_holdout_only':'no_eligible_verified_races',
-  warning:'Synthetic tests do not establish predictive improvement. Verified, timestamped pre-race inputs and independent outcomes are required; do not automatically change production weights.'};
+  comparisonStatus:accepted.length===0?'no_eligible_verified_races':accepted.length<minimumHoldoutRaces?'insufficient_holdout_sample':'descriptive_holdout_only',
+  minimumHoldoutRaces,sufficientSample:accepted.length>=minimumHoldoutRaces,
+  warning:'A sufficient sample does not establish predictive improvement without independent source validation, chronological separation and uncertainty analysis. Synthetic tests do not establish predictive improvement. Verified, timestamped pre-race inputs and independent outcomes are required; do not automatically change production weights.'};
 }
