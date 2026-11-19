@@ -4,7 +4,7 @@ import {compareHistoricalRace,summarizeHistoricalComparisons} from './boat-score
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),predictedCourse:i+1,
  nationalWinRate:8-i,localWinRate:0,motorTwoWinRate:40,recent50WinRate:20,exhibitionScore:60,
  averageST:0.15,startTimingVerified:true,startTimingPreRace:true}));
-const snapshot={preRaceSnapshot:true,resultVerified:true,racers,finishOrder:[1,2,3,4,5,6],evidenceByRacerId:{}};
+const snapshot={date:'20261113',venue:2,race:9,preRaceSnapshot:true,resultVerified:true,racers,finishOrder:[1,2,3,4,5,6],evidenceByRacerId:{}};
 test('checks historical finish without using it to modify the score',()=>{
  const r=compareHistoricalRace(snapshot);
  assert.equal(r.status,'evaluated');
@@ -33,4 +33,10 @@ test('rejects duplicate dated venue/race snapshots to avoid inflated accuracy',(
  const r=summarizeHistoricalComparisons([dated,{...dated}]);
  assert.equal(r.status,'duplicate_races');
  assert.equal(r.scoreChangeApplied,false);
+});
+
+test('rejects historical snapshots with missing or invalid race identity',()=>{
+ assert.equal(compareHistoricalRace({...snapshot,date:null}).status,'unverified_result');
+ assert.equal(compareHistoricalRace({...snapshot,venue:25}).status,'unverified_result');
+ assert.equal(compareHistoricalRace({...snapshot,race:13}).status,'unverified_result');
 });
