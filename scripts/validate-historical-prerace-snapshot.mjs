@@ -18,7 +18,8 @@ export function validateHistoricalPreRaceSnapshot(snapshot, result){
  if(!result||result.date!==snapshot.date||result.venue!==snapshot.venue||result.race!==snapshot.race)issues.push('result_identity_mismatch');
  if(result?.independentlyVerified!==true)issues.push('result_not_independently_verified');
  if(snapshot.inputsCapturedBeforeCutoff!==true)issues.push('prerace_inputs_unverified');
- const validPicks=a=>Array.isArray(a)&&a.length===6&&a.every(p=>Array.isArray(p)&&p.length===3&&new Set(p).size===3&&p.every(n=>integer(n,1,6)));
+ const validPicks=a=>Array.isArray(a)&&a.length===6&&a.every(p=>Array.isArray(p)&&p.length===3&&new Set(p).size===3&&p.every(n=>integer(n,1,6)))&&new Set(a.map(p=>p.join('-'))).size===6;
  if(!validPicks(snapshot.main)||!validPicks(snapshot.upset))issues.push('invalid_prediction_picks');
+ if(!['morning_0800','pre_cutoff'].includes(snapshot.phase))issues.push('invalid_prediction_phase');
  return {eligible:issues.length===0,issues};
 }
