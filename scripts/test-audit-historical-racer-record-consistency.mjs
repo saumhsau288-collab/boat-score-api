@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {auditHistoricalRacerRecordConsistency as audit} from './audit-historical-racer-record-consistency.mjs';
+const race=(date,number)=>Array.from({length:6},(_,i)=>({date,venue:1,race:number,boat:i+1,course:i+1,racerId:String(4000+i),finish:6-i,historicalRecordVerified:true,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult'}));
+const data=[...race('20261101',1),...race('20261102',2).map((r,i)=>i===0?{...r,racerId:'4001'}:r),...race('20261119',3)];
+const report=audit(data,{asOfDate:'20261119'});
+assert.equal(report.races.length,2);
+assert.equal(report.consistentRaces,1);
+assert(report.races[1].issues.includes('unique_racer_ids'));
+assert.equal(report.rejected.notEarlier,6);
+assert.equal(report.eligibleForScoreChange,false);
+assert.throws(()=>audit(data,{asOfDate:'20261131'}));
+console.log('Historical racer record consistency tests passed');
