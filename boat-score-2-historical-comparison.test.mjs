@@ -4,7 +4,7 @@ const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:6,localWinR
  motorTwoWinRate:50,recent50WinRate:20,exhibitionScore:50,
  averageStartTiming:0.15,entryCourse:i+1}));
 const row={date:'20261118',venue:1,race:1,preRaceSnapshot:true,resultVerified:true,
- racers,finishOrder:[1,2,3,4,5,6],preRaceSourceVerified:true,officialResultSourceVerified:true,preRaceSourceUrl:'https://example.org/pre',officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult',preRaceCapturedAt:'2026-11-18T09:00:00+09:00',officialCutoffAt:'2026-11-18T10:00:00+09:00'};
+ racers,finishOrder:[1,2,3,4,5,6],entryCourseSource:'verified_pre_race',averageStartTimingSource:'historical_pre_race',preRaceSourceVerified:true,officialResultSourceVerified:true,preRaceSourceUrl:'https://example.org/pre',officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult',preRaceCapturedAt:'2026-11-18T09:00:00+09:00',officialCutoffAt:'2026-11-18T10:00:00+09:00'};
 assert.equal(compareHistoricalRace(row).status,'compared');
 assert.equal(compareHistoricalSet([row]).eligible,1);
 assert.equal(compareHistoricalSet([row,row]).status,'duplicate_races');
@@ -25,3 +25,7 @@ assert.equal(compareHistoricalRace(row).experimental.winnerRank,1);
 assert.equal(compareHistoricalRace(row).experimental.winnerTopThree,true);
 assert.equal(compareHistoricalSet([row]).experimental.winnerTopThreeHits,1);
 assert.equal(compareHistoricalSet([row]).experimental.winnerRankSum,1);
+
+assert.equal(compareHistoricalRace({...row,entryCourseSource:'boat_number_proxy'}).reason,'unverified_course_or_start_source');
+assert.equal(compareHistoricalRace({...row,averageStartTimingSource:'post_race'}).reason,'unverified_course_or_start_source');
+assert.equal(compareHistoricalRace({...row,racers:racers.map(r=>({...r,entryCourse:1}))}).status,'excluded');
