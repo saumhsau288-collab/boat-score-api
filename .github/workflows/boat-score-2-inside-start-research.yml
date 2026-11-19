@@ -1,0 +1,30 @@
+name: Boat Score 2 inside course and ST research
+on:
+  push:
+    paths:
+      - 'scripts/inside-start-historical-research.mjs'
+      - 'scripts/test-inside-start-historical-research.mjs'
+      - '.github/workflows/boat-score-2-inside-start-research.yml'
+  pull_request:
+    paths:
+      - 'scripts/inside-start-historical-research.mjs'
+      - 'scripts/test-inside-start-historical-research.mjs'
+      - '.github/workflows/boat-score-2-inside-start-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax
+        run: |
+          node --check scripts/inside-start-historical-research.mjs
+          node --check scripts/test-inside-start-historical-research.mjs
+      - name: Run synthetic research checks
+        run: node scripts/test-inside-start-historical-research.mjs
