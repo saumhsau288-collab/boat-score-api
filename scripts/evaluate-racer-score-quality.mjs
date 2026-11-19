@@ -1,7 +1,7 @@
 // Research-only evaluation of individual racer score quality.
 // Finish positions are outcome labels for validation, never scoring inputs.
 export function evaluateRacerScoreQuality(races){
- const report={eligibleRaces:0,eligibleRacers:0,rejectedRaces:0,topRatedWins:0,topRatedPodiums:0,topThreeRatedPodiumPlaces:0,pairwiseCorrect:0,pairwiseTotal:0,pairwiseTies:0,meanAbsoluteRankError:null,byBoat:Object.fromEntries(Array.from({length:6},(_,i)=>[i+1,{samples:0,rankErrorSum:0,overrated:0,underrated:0,exactRank:0}]))};
+ const report={eligibleRaces:0,eligibleRacers:0,rejectedRaces:0,topRatedWins:0,topRatedPodiums:0,topThreeRatedPodiumPlaces:0,pairwiseCorrect:0,pairwiseTotal:0,pairwiseTies:0,tiedTopRaces:0,tiedTopThreeBoundaryRaces:0,topRatedWinCredit:0,topRatedPodiumCredit:0,topThreePodiumCredit:0,meanAbsoluteRankError:null,byBoat:Object.fromEntries(Array.from({length:6},(_,i)=>[i+1,{samples:0,rankErrorSum:0,overrated:0,underrated:0,exactRank:0}]))};
  let errorSum=0;const seen=new Set();
  for(const race of races??[]){
   const key=[race?.date,race?.venue,race?.race].join(':');
@@ -11,6 +11,16 @@ export function evaluateRacerScoreQuality(races){
   seen.add(key);
   const ranked=rows.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
   report.eligibleRaces++;report.eligibleRacers+=6;
+  const topGroup=ranked.filter(r=>Math.abs(r.score-ranked[0].score)<1e-9);
+  if(topGroup.length>1)report.tiedTopRaces++;
+  report.topRatedWinCredit+=topGroup.filter(r=>r.finish===1).length/topGroup.length;
+  report.topRatedPodiumCredit+=topGroup.filter(r=>r.finish<=3).length/topGroup.length;
+  const thirdScore=ranked[2].score;
+  const definitelyAbove=ranked.filter(r=>r.score>thirdScore+1e-9);
+  const boundary=ranked.filter(r=>Math.abs(r.score-thirdScore)<1e-9);
+  const slots=3-definitelyAbove.length;
+  if(boundary.length>slots)report.tiedTopThreeBoundaryRaces++;
+  report.topThreePodiumCredit+=definitelyAbove.filter(r=>r.finish<=3).length+boundary.filter(r=>r.finish<=3).length*slots/boundary.length;
   report.topRatedWins+=Number(ranked[0].finish===1);
   report.topRatedPodiums+=Number(ranked[0].finish<=3);
   report.topThreeRatedPodiumPlaces+=ranked.slice(0,3).filter(r=>r.finish<=3).length;
@@ -33,7 +43,10 @@ export function evaluateRacerScoreQuality(races){
  for(const stats of Object.values(report.byBoat))stats.meanAbsoluteRankError=stats.samples?stats.rankErrorSum/stats.samples:null;
  report.meanAbsoluteRankError=report.eligibleRacers?errorSum/report.eligibleRacers:null;
  report.pairwiseAccuracy=report.pairwiseTotal?report.pairwiseCorrect/report.pairwiseTotal:null;
+ report.tieNeutralTopRatedWinRate=report.eligibleRaces?report.topRatedWinCredit/report.eligibleRaces:null;
+ report.tieNeutralTopRatedPodiumRate=report.eligibleRaces?report.topRatedPodiumCredit/report.eligibleRaces:null;
+ report.tieNeutralTopThreePodiumOverlapRate=report.eligibleRaces?report.topThreePodiumCredit/(3*report.eligibleRaces):null;
  report.topThreePodiumOverlapRate=report.eligibleRaces?report.topThreeRatedPodiumPlaces/(3*report.eligibleRaces):null;
- report.researchOnly=true;report.note='Pairwise ties are excluded rather than broken by boat number. Top-rated and rank-error metrics still use boat-number tie breaking and must be interpreted cautiously. No weights are updated automatically.';
+ report.researchOnly=true;report.note='Pairwise ties are excluded rather than broken by boat number. Tie-neutral top-rated and top-three metrics use fractional credit at score boundaries; legacy top-rated and rank-error metrics still break ties by boat number and must be interpreted cautiously. No weights are updated automatically.';
  return report;
 }
