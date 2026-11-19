@@ -54,6 +54,7 @@ jobs:
           node --check scripts/fetch-with-timeout-retry.mjs
           node --check scripts/build-morning-capture-tasks.mjs
           node --check scripts/capture-existing-boat-score-2-predictions.mjs
+          node --check scripts/report-capture-readiness-research.mjs
           node --check scripts/validate-morning-capture.mjs
           node --check scripts/test-validate-morning-capture.mjs
           node --check scripts/audit-morning-input-coverage.mjs
@@ -71,6 +72,7 @@ jobs:
           node --check scripts/capture-official-cutoff-source.mjs
       - name: Test capture validation with offline fixtures
         run: |
+          node scripts/test-report-capture-readiness-research.mjs
           node scripts/test-summarize-official-venue-activity.mjs
           node scripts/test-build-morning-capture-tasks.mjs
           node scripts/test-research-capture-retry-policies.mjs
