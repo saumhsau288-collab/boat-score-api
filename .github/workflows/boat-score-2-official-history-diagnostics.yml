@@ -30,6 +30,9 @@ jobs:
       - name: Report parsing status by race
         run: |
           node scripts/extract-official-result-racers.mjs research-historical/manual.official-raw.json research-historical/manual.racer-finishes.json
+      - name: Print per-race extraction evidence (no pre-race claims)
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.racer-finishes.json","utf8")); for(const r of d.rows) console.log(JSON.stringify({date:r.date,venue:r.venue,race:r.race,status:r.status,podium:r.podium,entryCoursesExtracted:r.entryCoursesExtracted,startOrderBoats:r.startOrderBoats,racers:r.racers.map(x=>({boat:x.boat,finish:x.finish,actualEntryCourse:x.actualEntryCourse})),independentlyVerified:r.racerFinishIndependentlyVerified}));'
       - name: Upload offline evidence for review
         if: always()
         uses: actions/upload-artifact@v4
