@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {joinSavedPredictionsToParsedOfficialHtml as join} from './join-saved-predictions-official-html.mjs';
+const row={date:'20261118',venue:2,race:3,httpStatus:200,
+ response:{ready:true,main:[[6,2,3],[1,2,3]],upset:[[3,2,6],[2,1,3]]}};
+const official={date:'20261118',venue:2,race:3,status:'parsed_needs_independent_review',podium:[6,2,3],resultVerified:false,officialCutoffVerified:false};
+const r=join({authenticatedBeforeRace:false,records:[row]},{rows:[official]});
+assert.equal(r.linked,1);
+assert.equal(r.eligibleForAccuracy,0);
+assert.equal(r.mainHitRate,null);
+assert.equal(r.rows[0].retrospectiveMainContainsPodium,true);
+assert.equal(r.rows[0].retrospectiveUpsetContainsPodium,false);
+assert.equal(r.rows[0].authenticatedHit,null);
+assert(r.rows[0].holdReasons.includes('pre_race_capture_not_authenticated'));
+assert(r.rows[0].holdReasons.includes('capture_before_cutoff_not_independently_authenticated'));
+const bad=join({authenticatedBeforeRace:true,records:[row]},{rows:[{...official,resultVerified:true,officialCutoffVerified:true}]});
+assert.equal(bad.eligibleForAccuracy,0);
+assert(bad.rows[0].holdReasons.includes('capture_before_cutoff_not_independently_authenticated'));
+const noResult=join({records:[row]},{rows:[{...official,status:'not_saved',podium:null}]});
+assert.equal(noResult.rows[0].retrospectiveMainContainsPodium,null);
+const duplicate=join({records:[row,row]},{rows:[official]});
+assert(duplicate.rows.every(x=>x.holdReasons.includes('duplicate_prediction_race')));
+console.log('Saved prediction + official HTML research join tests passed');
