@@ -5,7 +5,7 @@ export function compareExploratoryWinRateFinishes(entryReport,resultReport){
  const rows=[];
  for(const entry of entryReport.rows||[]){
   if(entry.statsVerified!==true||entry.racers?.length!==6)continue;
-  const result=byRace.get('20261118:2:'+entry.race);
+  const result=byRace.get(entry.date+':'+entry.venue+':'+entry.race);
   if(!result||result.status!=='parsed_needs_independent_review'||result.racers?.length!==6)continue;
   const finishes=new Map(result.racers.map(r=>[r.boat,r]));
   if(entry.racers.some(r=>finishes.get(r.boat)?.racerId!==r.racerId))continue;
