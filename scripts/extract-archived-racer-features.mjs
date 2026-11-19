@@ -7,7 +7,7 @@ export function extractArchivedRacerFeatures(entry){
  const base={date:entry?.date,venue:entry?.venue,race:entry?.race,status:'not_parsed',preCutoffSnapshotAuthenticated:false,eligibleForWeightTuning:false,racers:[]};
  if(entry?.status!=='raw_html_saved'||typeof entry.html!=='string')return base;
  const racers=[];
- const diagnostics={totalTableRows:0,rowsWithRacerProfileLinks:0,rowsWithFourRowCells:0,fourRowBlockCandidates:0,completeRacerBlocks:0,boatNumberRecognized:0,missingFields:{racerId:0,averageStartTiming:0,nationalWinRate:0,localWinRate:0}};
+ const diagnostics={totalTableRows:0,rowsWithRacerProfileLinks:0,rowsWithFourRowCells:0,fourRowBlockCandidates:0,completeRacerBlocks:0,boatNumberRecognized:0,missingFields:{racerId:0,averageStartTiming:0,nationalWinRate:0,localWinRate:0},failureCategory:null};
  // Each racer starts a four-row block: boat, photo, racer identity, ST, national, local.
  for(const tr of entry.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
   diagnostics.totalTableRows++;
@@ -32,7 +32,10 @@ export function extractArchivedRacerFeatures(entry){
   diagnostics.completeRacerBlocks++;
   racers.push({boat:boat?Number(boat):null,racerId,nationalWinRate:Number(national),localWinRate:Number(local),averageStartTiming:Number(st)});
  }
- if(racers.length!==6||new Set(racers.map(x=>x.racerId)).size!==6)return {...base,status:'incomplete_six_racer_features',found:racers.length,diagnostics};
+ if(racers.length!==6||new Set(racers.map(x=>x.racerId)).size!==6){
+  diagnostics.failureCategory=diagnostics.totalTableRows===0?'no_table_rows':diagnostics.rowsWithFourRowCells===0?'no_four_row_cells':diagnostics.fourRowBlockCandidates===0?'partial_racer_blocks':diagnostics.outOfRangeBlocks?'out_of_range_values':racers.length!==6?'missing_racer_metrics':'duplicate_racer_ids';
+  return {...base,status:'incomplete_six_racer_features',found:racers.length,diagnostics};
+ }
  const boatMappingVerified=racers.every((r,i)=>r.boat===i+1);
  diagnostics.mappingStatus=boatMappingVerified?'explicit_order_verified':'boat_number_mismatch_or_missing';
  return {...base,status:'parsed_archival_features_unverified',boatMappingVerified,racers,diagnostics};
