@@ -25,5 +25,9 @@ export function comparePreCutoffPredictions(snapshots,results){
   rows.push({key,phase:phase.phase,exactHit,winnerBoat:podium[0],winnerInMainFirstChoices:picks.some(p=>p[0]===podium[0])});
  }
  const byPhase=Object.fromEntries(['morning_8am','precutoff_10min'].map(phase=>{const selected=rows.filter(r=>r.phase===phase);return [phase,{eligibleRaces:selected.length,mainSixExactHits:selected.filter(r=>r.exactHit).length}];}));
- return {eligibleRaces:rows.length,mainSixExactHits:rows.filter(r=>r.exactHit).length,byPhase,rows,rejections};
+ const paired=new Map();
+ for(const row of rows){if(!paired.has(row.key))paired.set(row.key,{});paired.get(row.key)[row.phase]=row;}
+ const pairs=[...paired.entries()].filter(([,v])=>v.morning_8am&&v.precutoff_10min);
+ const phaseComparison={pairedRaces:pairs.length,improved:pairs.filter(([,v])=>!v.morning_8am.exactHit&&v.precutoff_10min.exactHit).length,worsened:pairs.filter(([,v])=>v.morning_8am.exactHit&&!v.precutoff_10min.exactHit).length,bothHit:pairs.filter(([,v])=>v.morning_8am.exactHit&&v.precutoff_10min.exactHit).length,bothMiss:pairs.filter(([,v])=>!v.morning_8am.exactHit&&!v.precutoff_10min.exactHit).length};
+ return {eligibleRaces:rows.length,mainSixExactHits:rows.filter(r=>r.exactHit).length,byPhase,phaseComparison,rows,rejections};
 }
