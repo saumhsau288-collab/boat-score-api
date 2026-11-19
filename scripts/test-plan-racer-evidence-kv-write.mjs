@@ -8,4 +8,5 @@ assert.ok(planned.key.startsWith('racer-evidence:v1:20261119:02:03:'));
 assert.equal(planRacerEvidenceKvWrite({...sample,captureStatus:'caller_supplied_unverified'}).writeAllowed,false);
 assert.equal(planRacerEvidenceKvWrite({...sample,capturedAt:'2026-11-19T12:00:00+09:00'}).writeAllowed,false);
 assert.equal(planRacerEvidenceKvWrite(sample,{existingRecord:{}}).writeAllowed,false);
+assert.equal(planRacerEvidenceKvWrite({...sample,racers:racers.map((r,i)=>i===0?{...r,values:{...r.values,averageST:null}}:r)}).reason,'incomplete_or_invalid_racer_evidence');
 console.log('Immutable racer evidence KV write planner tests passed');
