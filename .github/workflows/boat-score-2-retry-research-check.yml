@@ -27,6 +27,7 @@ on:
       - 'scripts/test-report-capture-readiness-research.mjs'
       - 'scripts/tune-historical-weights-research.mjs'
       - 'scripts/test-tune-historical-weights-research.mjs'
+      - '.github/workflows/boat-score-2-replay-official-html.yml'
       - '.github/workflows/boat-score-2-fetch-official-result-html.yml'
       - '.github/workflows/boat-score-2-retry-research-check.yml'
   workflow_dispatch:
