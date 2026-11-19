@@ -7,6 +7,11 @@ export function validateHistoricalPreRaceSnapshot(snapshot, result){
  if(snapshot.captureKind!=='saved_before_cutoff')issues.push('not_saved_before_cutoff');
  if(snapshot.savedAt===undefined||!Number.isFinite(Date.parse(snapshot.savedAt)))issues.push('missing_capture_timestamp');
  if(snapshot.cutoffAt===undefined||!Number.isFinite(Date.parse(snapshot.cutoffAt)))issues.push('missing_cutoff_timestamp');
+ const hasOffset=t=>typeof t==='string'&&/(Z|[+-]\\d{2}:\\d{2})$/i.test(t);
+ if(!hasOffset(snapshot.savedAt)||!hasOffset(snapshot.cutoffAt))issues.push('timestamp_timezone_missing');
+ const jstDate=t=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t)).replaceAll('-','');
+ if(hasOffset(snapshot.savedAt)&&hasOffset(snapshot.cutoffAt)&&Number.isFinite(Date.parse(snapshot.savedAt))&&Number.isFinite(Date.parse(snapshot.cutoffAt))&&
+    (jstDate(snapshot.savedAt)!==String(snapshot.date)||jstDate(snapshot.cutoffAt)!==String(snapshot.date)))issues.push('snapshot_jst_date_mismatch');
  if(Number.isFinite(Date.parse(snapshot.savedAt))&&Number.isFinite(Date.parse(snapshot.cutoffAt))&&
     Date.parse(snapshot.savedAt)>=Date.parse(snapshot.cutoffAt))issues.push('captured_at_or_after_cutoff');
  if(!integer(snapshot.venue,1,24)||!integer(snapshot.race,1,12)||!/^20\d{6}$/.test(String(snapshot.date??'')))issues.push('invalid_race_identity');
