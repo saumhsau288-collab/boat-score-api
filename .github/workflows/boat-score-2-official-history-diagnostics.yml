@@ -7,6 +7,7 @@ on:
       - '.github/workflows/boat-score-2-official-history-diagnostics.yml'
       - 'scripts/extract-official-result-racers.mjs'
       - 'scripts/fetch-historical-official-entry-lists.mjs'
+      - 'scripts/inspect-historical-entry-winrates.mjs'
       - 'scripts/fetch-manual-official-historical-results.mjs'
       - 'scripts/test-fetch-manual-official-historical-results.mjs'
       - 'scripts/summarize-official-inside-courses.mjs'
@@ -51,6 +52,9 @@ jobs:
       - name: Inspect racer IDs and win-rate labels in saved entry HTML
         run: |
           node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.official-entries.json","utf8")); for(const p of d.pages){if(!p.html){console.log(JSON.stringify({race:p.race,status:p.status}));continue;} const html=p.html; const ids=[...html.matchAll(/(?:toban=|toban%3D)([0-9]{4})/gi)].map(m=>m[1]); const unique=[...new Set(ids)]; const labels={national:html.includes("全国勝率"),local:html.includes("当地勝率"),nationalAlternate:html.includes("全国"),localAlternate:html.includes("当地")}; console.log(JSON.stringify({race:p.race,status:p.status,htmlBytes:html.length,uniqueRacerIds:unique.length,racerIds:unique.slice(0,12),labels,preCutoffSnapshotVerified:false,winRatesVerified:false}));}'
+      - name: Parse historical racer win rates with existing worker parser
+        run: |
+          node scripts/inspect-historical-entry-winrates.mjs research-historical/manual.official-entries.json worker.js research-historical/manual.official-entry-stats.json
       - name: Fetch full 12-race historical card (exploratory sample)
         run: |
           mkdir -p research-historical
