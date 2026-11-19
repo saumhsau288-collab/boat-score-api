@@ -19,12 +19,9 @@ export function parseSavedOfficialResultPages(report){
   const podium=finishes.filter(x=>x.rank>=1&&x.rank<=3).sort((a,b)=>a.rank-b.rank);
   if(podium.length!==3||podium.some((x,i)=>x.rank!==i+1)||new Set(podium.map(x=>x.boat)).size!==3)
    return {...base,status:'needs_review',reason:'podium_invalid'};
-  const payoutSection=h.match(/<td rowspan="2">3連単<\/td>([\s\S]*?)<\/tr>/)?.[1];
-  const numbers=payoutSection?[...payoutSection.matchAll(/class="numberSet1_number is-type[1-6]">([1-6])<\/span>/g)].map(m=>Number(m[1])):[];
-  const payout=payoutSection?.match(/class="is-payout1">(?:&yen;|¥)([\d,]+)<\/span>/)?.[1];
-  if(numbers.length!==3||numbers.some((n,i)=>n!==podium[i].boat)||!payout)
-   return {...base,status:'needs_review',reason:'trifecta_payout_mismatch'};
-  return {...base,status:'parsed_needs_independent_review',podium:podium.map(x=>x.boat),trifectaPayoutYen:Number(payout.replaceAll(',',''))};
+  // The finish table is the evidence needed for this phase; payout is irrelevant.
+  // Keep the result unverified pending independent race-identity review.
+  return {...base,status:'parsed_needs_independent_review',podium:podium.map(x=>x.boat)};
  });
  return {method:'official_html_parsed_not_independently_authenticated',rows,parsed:rows.filter(x=>x.status==='parsed_needs_independent_review').length,verifiedResults:0,eligibleForAccuracy:0};
 }
