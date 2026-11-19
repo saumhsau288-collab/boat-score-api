@@ -13,8 +13,16 @@ export function summarizeCaptureReadiness(capture) {
     row.attempted++;
     if(r.response?.ready!==true){counts.failedOrNotReady++;continue;}
     counts.ready++;row.ready++;
-    // Original feature vectors are not exposed by the archived capture contract.
-    counts.missingSixOriginalInputs++;
+    // Only explicit six-boat source fields count as input evidence.
+    const boats=r.response.scoreInputsByBoat;
+    const fields=['nationalWinRate','localWinRate','motorTwoWinRate','recent50WinRate','exhibitionScore'];
+    const limits=[10,10,100,100,100];
+    const complete=Array.isArray(boats)&&boats.length===6&&
+      new Set(boats.map(b=>b?.boat)).size===6&&
+      boats.every(b=>Number.isInteger(b?.boat)&&b.boat>=1&&b.boat<=6&&
+        fields.every((field,i)=>typeof b[field]==='number'&&Number.isFinite(b[field])&&
+          b[field]>=0&&b[field]<=limits[i]));
+    if(!complete)counts.missingSixOriginalInputs++;
     if(!Array.isArray(r.response.rankedScores)||r.response.rankedScores.length!==6)counts.missingRankedScores++;
     const received=Date.parse(r.receivedAt??'');
     if(!Number.isFinite(received)){counts.missingReceiveTime++;continue;}
