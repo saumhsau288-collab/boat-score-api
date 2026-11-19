@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {evaluateRacerScoreQuality} from './evaluate-racer-score-quality.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),finish:i+1,score:i<2?90:80-i}));
+const race={date:'20261119',venue:2,race:3,preRaceSnapshotVerified:true,resultIndependentlyVerified:true,chronologicalHoldout:true,racers};
+const report=evaluateRacerScoreQuality([race]);
+assert.equal(report.eligibleRaces,1);
+assert.equal(report.pairwiseTies,1);
+assert.equal(report.pairwiseTotal,14);
+assert.equal(report.pairwiseCorrect,14);
+const allTie=evaluateRacerScoreQuality([{...race,racers:racers.map(r=>({...r,score:50}))}]);
+assert.equal(allTie.pairwiseTies,15);
+assert.equal(allTie.pairwiseTotal,0);
+assert.equal(allTie.pairwiseAccuracy,null);
+console.log('Tied racer scores excluded from pairwise accuracy');
