@@ -82,4 +82,20 @@ jobs:
           const report={target:'20261119 Tokuyama 2R',status:r.status,officialUrl:r.provenance?.officialUrl??null,htmlSha256:r.provenance?.htmlSha256??null,diagnostics:r.diagnostics??null,parsedRacerCount:r.ranking?.filter(x=>x.status==='evaluated').length??r.racers?.length??0,provisionalMainCount:r.main?.length??0,provisionalUpsetCount:r.upset?.length??0,main:r.main??[],upset:r.upset??[],ranking:r.ranking??[],entryCourses:r.entryCourses??null,entryScenario:r.entryScenario??null,preCutoffSnapshotAuthenticated:false,warning:'Historical snapshot and assumed entry; no authenticated pre-cutoff validation or result comparison'};
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## 公式出走表の実データ検証（過去レース・研究用）\n\n```json\n'+JSON.stringify(report,null,2)+'\n```\n\n※取得時点のアーカイブであり、締切前のデータとしては認証されていません。\n');
           console.log(JSON.stringify(report));
+          // Independently fetch the corresponding official result page; no score tuning.
+          const resultUrl='https://www.boatrace.jp/owpc/pc/race/raceresult?rno=2&jcd=18&hd=20261119';
+          try {
+            const res=await fetch(resultUrl,{signal:AbortSignal.timeout(15000),headers:{accept:'text/html'}});
+            if(!res.ok)throw Error('HTTP '+res.status);
+            const html=await res.text();
+            const {extractOfficialResultRacers}=await import('./scripts/extract-official-result-racers.mjs');
+            const parsed=extractOfficialResultRacers({pages:[{date:'20261119',venue:18,race:2,url:resultUrl,status:'raw_html_saved',html}]});
+            const row=parsed.rows[0];
+            const finish=row.podium?.join('-')??null;
+            const predicted=[...(r.main??[]),...(r.upset??[])].map(t=>t.ticket);
+            const comparison={resultPageFetched:true,parseStatus:row.status,podium:finish,entryCoursesExtracted:row.entryCoursesExtracted??false,matchedTicket:finish&&predicted.includes(finish)?finish:null,matchedCategory:finish?(r.main??[]).some(t=>t.ticket===finish)?'main':(r.upset??[]).some(t=>t.ticket===finish)?'upset':'none':null,independentlyVerified:false,preCutoffSnapshotAuthenticated:false};
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## 確定結果との研究用照合\n\n```json\n'+JSON.stringify(comparison,null,2)+'\n```\n');
+            console.log('OFFICIAL_RESULT_COMPARISON '+JSON.stringify(comparison));
+          } catch(error) { console.log('OFFICIAL_RESULT_COMPARISON '+JSON.stringify({resultPageFetched:false,error:String(error.message).slice(0,120)})); }
+
           JS
