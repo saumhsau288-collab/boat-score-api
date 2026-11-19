@@ -11,11 +11,15 @@ const official=rows=>({verified:true,statsVerified:true,statsByBoat:rows});
 const date='20261116';
 let result=score(date,12,1,official(Array.from({length:6},(_,i)=>row(i+1))));
 assert.equal(result.ready,true);
-assert.equal(result.method,'weighted_national50_local20_motor30_unvalidated');
+assert.equal(result.method,'average_national_local_winrate70_motor30_unvalidated');
 assert.equal(result.placeRateTieBreakVerified,true);
 assert.equal(result.rankedScores.length,6);
+// National 8 and local 4 average to 6, rather than summing to 12.
+const avgRows=Array.from({length:6},(_,i)=>({...row(i+1),nationwide:{...row(i+1).nationwide,winRate:i===0?8:6},local:{winRate:i===0?4:6},motor:{secondPlaceRate:40}}));
+const avgResult=score(date,12,1,official(avgRows));
+assert.equal(avgResult.ready,true);
 result=score(date,12,1,official(Array.from({length:6},(_,i)=>row(i+1,i===0?null:6))));
-assert.equal(result.method,'weighted_racer70_motor30_screening_unvalidated');
+assert.equal(result.method,'national_winrate70_motor30_screening_unvalidated');
 assert.ok(result.missingInputs.includes('local'));
 result=score(date,12,1,official(Array.from({length:6},(_,i)=>({...row(i+1),nationwide:{...row(i+1).nationwide,thirdPlaceRate:i===0?null:51+i}}))));
 assert.equal(result.placeRateTieBreakVerified,false);
