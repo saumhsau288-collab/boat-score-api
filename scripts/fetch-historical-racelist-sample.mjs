@@ -14,8 +14,8 @@ export async function fetchHistoricalRacelistSample({date='20261118',venue=18,ra
  }catch(e){return {status:'fetch_failed',date,venue,race,url,error:String(e.message).slice(0,160),eligibleForWeightTuning:false};}
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
- const output=process.argv[2];if(!output)throw Error('Output file required');
- const data=await fetchHistoricalRacelistSample();
+ const [output,date='20261118',venue='18',race='2']=process.argv.slice(2);if(!output)throw Error('Output file required');
+ const data=await fetchHistoricalRacelistSample({date,venue:Number(venue),race:Number(race)});
  fs.writeFileSync(output,JSON.stringify(data,null,2)+'\n');
  console.log(JSON.stringify({status:data.status,sha256:data.sha256||null,error:data.error||null}));
 }
