@@ -7,7 +7,7 @@ export function extractArchivedRacerFeatures(entry){
  const racers=[];
  // Each racer starts a four-row block: boat, photo, racer identity, ST, national, local.
  for(const tr of entry.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
-  const cells=[...tr[1].matchAll(/<td\b[^>]*rowspan=["']4["'][^>]*>([\s\S]*?)<\/td>/gi)].map(x=>x[1]);
+  const cells=[...tr[1].matchAll(/<td\b(?=[^>]*\browspan=["']4["'])[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>x[1]);
   if(cells.length<6)continue;
   const racerId=clean(cells[2]).match(/^(\d{4,6})\b/)?.[1];
   const st=clean(cells[3]).match(/(?:^|\s)(0\.\d{2})(?:\s|$)/);
