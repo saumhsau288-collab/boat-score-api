@@ -38,6 +38,17 @@ jobs:
           const result=await predictSelectedRace({date,venue,race});
           fs.mkdirSync('selected-race-output',{recursive:true});
           fs.writeFileSync('selected-race-output/prediction.json',JSON.stringify(result,null,2)+'\n');
+          const summary=[
+            '# Boat Score 2 選択レース検証',
+            `対象: ${date} / 開催場 ${venue} / ${race}R`,
+            `取得結果: ${result.status}`,
+            `進入: ${result.entryScenario??'未確認'}`,
+            `本命: ${result.main?.length??0}点 / 穴: ${result.upset?.length??0}点`,
+            result.message??result.inputCaveat??'',
+            '',
+            '※暫定シナリオであり、直前情報・進入の確認済み予想ではありません。'
+          ].join('\\n');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,summary+'\\n');
           console.log(JSON.stringify({status:result.status,date,venue,race,main:result.main?.length??0,upset:result.upset?.length??0,entryScenario:result.entryScenario??null}));
           if(result.status!=='experimental')process.exitCode=1;
           JS
