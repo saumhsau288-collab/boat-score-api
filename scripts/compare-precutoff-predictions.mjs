@@ -1,3 +1,4 @@
+import {classifyPredictionPhase} from './classify-prediction-phase.mjs';
 import {validatePreCutoffSnapshot} from './validate-precutoff-snapshot.mjs';
 // Research-only: join saved predictions to separately verified race results.
 export function comparePreCutoffPredictions(snapshots,results){
@@ -5,10 +6,13 @@ export function comparePreCutoffPredictions(snapshots,results){
  const rows=[],rejections=[],seen=new Set();
  for(const snapshot of snapshots??[]){
   const key=snapshot?.date+':'+snapshot?.venue+':'+snapshot?.race;
+  const phase=classifyPredictionPhase(snapshot);
+  const uniqueKey=key+':'+(phase.phase??snapshot?.phase??'unknown');
   const eligibility=validatePreCutoffSnapshot(snapshot);
-  if(seen.has(key)){rejections.push({key,reasons:['duplicate_race_snapshot']});continue;}
-  seen.add(key);
+  if(seen.has(uniqueKey)){rejections.push({key,reasons:['duplicate_race_snapshot']});continue;}
+  seen.add(uniqueKey);
   if(!eligibility.eligible){rejections.push({key,reasons:eligibility.errors});continue;}
+  if(!phase.phase){rejections.push({key,reasons:[phase.reason]});continue;}
   const result=lookup.get(key);
   if(result?.status!=='independently_verified'||!Array.isArray(result.racers)||result.racers.length!==6){rejections.push({key,reasons:['unverified_result']});continue;}
   const official=new Map(result.racers.map(r=>[r.boat,r]));
@@ -18,7 +22,8 @@ export function comparePreCutoffPredictions(snapshots,results){
   const podium=[1,2,3].map(place=>result.racers.find(r=>r.finish===place)?.boat);
   if(podium.some(x=>x===undefined)){rejections.push({key,reasons:['incomplete_finish_order']});continue;}
   const exactHit=picks.some(p=>p.every((boat,i)=>boat===podium[i]));
-  rows.push({key,exactHit,winnerBoat:podium[0],winnerInMainFirstChoices:picks.some(p=>p[0]===podium[0])});
+  rows.push({key,phase:phase.phase,exactHit,winnerBoat:podium[0],winnerInMainFirstChoices:picks.some(p=>p[0]===podium[0])});
  }
- return {eligibleRaces:rows.length,mainSixExactHits:rows.filter(r=>r.exactHit).length,rows,rejections};
+ const byPhase=Object.fromEntries(['morning_8am','precutoff_10min'].map(phase=>{const selected=rows.filter(r=>r.phase===phase);return [phase,{eligibleRaces:selected.length,mainSixExactHits:selected.filter(r=>r.exactHit).length}];}));
+ return {eligibleRaces:rows.length,mainSixExactHits:rows.filter(r=>r.exactHit).length,byPhase,rows,rejections};
 }
