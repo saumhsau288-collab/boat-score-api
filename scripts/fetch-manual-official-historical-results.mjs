@@ -12,7 +12,7 @@ export function parseExplicitRaceSelection(value){
  const tokens=value.split(',').map(x=>x.trim());
  // Ignore only empty values at the end of the input, e.g. '2,3,'.
  while(tokens.length>0&&tokens.at(-1)==='')tokens.pop();
- if(tokens.length===0||tokens.some(x=>!/^\\d{1,2}$/.test(x)))throw Error('Invalid explicit historical race selection');
+ if(tokens.length===0||tokens.some(x=>!/^\d{1,2}$/.test(x)))throw Error('Invalid explicit historical race selection');
  const races=tokens.map(Number);
  if(races.length>12||races.some(n=>n<1||n>12)||new Set(races).size!==races.length)
   throw Error('Invalid explicit historical race selection');
