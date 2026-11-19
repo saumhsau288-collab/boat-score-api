@@ -9,7 +9,7 @@ export function validateHistoricalPreRaceSnapshot(snapshot, result){
  if(snapshot.cutoffAt===undefined||!Number.isFinite(Date.parse(snapshot.cutoffAt)))issues.push('missing_cutoff_timestamp');
  if(Number.isFinite(Date.parse(snapshot.savedAt))&&Number.isFinite(Date.parse(snapshot.cutoffAt))&&
     Date.parse(snapshot.savedAt)>=Date.parse(snapshot.cutoffAt))issues.push('captured_at_or_after_cutoff');
- if(!integer(snapshot.venue,1,24)||!integer(snapshot.race,1,12)||!/^20\\d{6}$/.test(String(snapshot.date??'')))issues.push('invalid_race_identity');
+ if(!integer(snapshot.venue,1,24)||!integer(snapshot.race,1,12)||!/^20\d{6}$/.test(String(snapshot.date??'')))issues.push('invalid_race_identity');
  if(!result||result.date!==snapshot.date||result.venue!==snapshot.venue||result.race!==snapshot.race)issues.push('result_identity_mismatch');
  if(result?.independentlyVerified!==true)issues.push('result_not_independently_verified');
  if(snapshot.inputsCapturedBeforeCutoff!==true)issues.push('prerace_inputs_unverified');
