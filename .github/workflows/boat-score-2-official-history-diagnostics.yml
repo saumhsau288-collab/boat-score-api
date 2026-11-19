@@ -28,6 +28,9 @@ jobs:
         run: |
           mkdir -p research-historical
           node scripts/fetch-manual-official-historical-results.mjs 20261118 2 2,3 research-historical/manual.official-raw.json
+      - name: Print fetch attempts and errors per race
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.official-raw.json","utf8")); for(const p of d.pages) console.log(JSON.stringify({date:p.date,venue:p.venue,race:p.race,status:p.status,attempts:p.attempts,error:p.error??null}));'
       - name: Report parsing status by race
         run: |
           node scripts/extract-official-result-racers.mjs research-historical/manual.official-raw.json research-historical/manual.racer-finishes.json
