@@ -16,7 +16,7 @@ export function extractArchivedRacerFeatures(entry){
   if(cells.length>0)diagnostics.rowsWithFourRowCells++;
   if(cells.length<6)continue;
   diagnostics.fourRowBlockCandidates++;
-  const boatText=clean(cells[0]);
+  const boatText=clean(cells[0]).normalize('NFKC');
   if(diagnostics.boatCellSamples.length<6)diagnostics.boatCellSamples.push({text:boatText.slice(0,60),markup:cells[0].slice(0,220)});
   const boat=boatText.match(/^([1-6])(?:\s|$)/)?.[1];
   const racerId=racerIdFromCell(cells[2]);
