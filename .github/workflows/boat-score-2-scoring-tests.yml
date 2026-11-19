@@ -93,7 +93,15 @@ jobs:
             const row=parsed.rows[0];
             const finish=row.podium?.join('-')??null;
             const predicted=[...(r.main??[]),...(r.upset??[])].map(t=>t.ticket);
-            const comparison={resultPageFetched:true,parseStatus:row.status,podium:finish,entryCoursesExtracted:row.entryCoursesExtracted??false,matchedTicket:finish&&predicted.includes(finish)?finish:null,matchedCategory:finish?(r.main??[]).some(t=>t.ticket===finish)?'main':(r.upset??[]).some(t=>t.ticket===finish)?'upset':'none':null,independentlyVerified:false,preCutoffSnapshotAuthenticated:false};
+            const actualCourses=row.entryCoursesExtracted?Array.from({length:6},(_,i)=>row.racers.find(x=>x.boat===i+1)?.actualEntryCourse??null):null;
+            const entryChanged=actualCourses?.some((course,i)=>course!==i+1)??null;
+            let actualEntryScenario=null;
+            if(actualCourses&&actualCourses.every(x=>Number.isInteger(x))){
+              const replay=await predictSelectedRace({date:'20261119',venue:18,race:2,courses:actualCourses});
+              const replayTickets=[...(replay.main??[]),...(replay.upset??[])].map(t=>t.ticket);
+              actualEntryScenario={courses:actualCourses,entryChanged,status:replay.status,mainCount:replay.main?.length??0,upsetCount:replay.upset?.length??0,matchedTicket:finish&&replayTickets.includes(finish)?finish:null,matchedCategory:finish?(replay.main??[]).some(t=>t.ticket===finish)?'main':(replay.upset??[]).some(t=>t.ticket===finish)?'upset':'none':null,warning:'Post-race actual entry is retrospective information and cannot be claimed as known pre-cutoff'};
+            }
+            const comparison={actualEntryScenario,resultPageFetched:true,parseStatus:row.status,podium:finish,entryCoursesExtracted:row.entryCoursesExtracted??false,matchedTicket:finish&&predicted.includes(finish)?finish:null,matchedCategory:finish?(r.main??[]).some(t=>t.ticket===finish)?'main':(r.upset??[]).some(t=>t.ticket===finish)?'upset':'none':null,independentlyVerified:false,preCutoffSnapshotAuthenticated:false};
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## 確定結果との研究用照合\n\n```json\n'+JSON.stringify(comparison,null,2)+'\n```\n');
             console.log('OFFICIAL_RESULT_COMPARISON '+JSON.stringify(comparison));
           } catch(error) { console.log('OFFICIAL_RESULT_COMPARISON '+JSON.stringify({resultPageFetched:false,error:String(error.message).slice(0,120)})); }
