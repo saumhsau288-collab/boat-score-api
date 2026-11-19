@@ -13,7 +13,8 @@ export function compareHistoricalSavedPredictions(snapshots, results){
   const key=[s?.date,s?.venue,s?.race,s?.phase??'legacy'].join(':');
   const duplicate=snapshotKeys.has(key);
   snapshotKeys.add(key);
-  const matches=resultKeys.get(key)||[];
+  const resultKey=[s?.date,s?.venue,s?.race].join(':');
+  const matches=resultKeys.get(resultKey)||[];
   const result=matches.length===1?matches[0]:null;
   const gate=validateHistoricalPreRaceSnapshot(s,result);
   const issues=[...gate.issues];
