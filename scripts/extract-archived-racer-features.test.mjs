@@ -52,3 +52,10 @@ test('extracts win rates and average ST when values follow labels',()=>{
  assert.equal(r.racers[0].nationalWinRate,6.2);
  assert.equal(r.racers[0].localWinRate,5.4);
 });
+
+test('extracts racer ID from profile query parameter',()=>{
+ const html=Array.from({length:6},(_,i)=>block(i+1).replace(`${4001+i} 選手`,`<a href="/owpc/pc/data/racersearch/profile?toban=${4001+i}">選手名</a>`)).join('');
+ const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
+ assert.equal(r.status,'parsed_archival_features_unverified');
+ assert.deepEqual(r.racers.map(x=>x.racerId),['4001','4002','4003','4004','4005','4006']);
+});
