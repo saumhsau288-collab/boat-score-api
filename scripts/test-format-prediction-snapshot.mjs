@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {formatPredictionSnapshot} from './format-prediction-snapshot.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const sample={date:'20261119',venue:2,race:3,phase:'precutoff_10min',capturedAt:'2026-11-19T12:00:00+09:00',cutoffAt:'2026-11-19T12:10:00+09:00',source:'official_live_entry',captureProvenance:'server_timestamped',racers,prediction:{mainSix:[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]}};
+const ok=formatPredictionSnapshot(sample);
+assert.equal(ok.accepted,true);assert.equal(ok.record.schemaVersion,1);assert.equal(ok.record.phase,'precutoff_10min');
+assert.equal(formatPredictionSnapshot({...sample,capturedAt:sample.cutoffAt}).accepted,false);
+assert.equal(formatPredictionSnapshot({...sample,phase:'morning_8am'}).accepted,false);
+assert.equal(formatPredictionSnapshot({...sample,prediction:{mainSix:Array(6).fill([1,2,3])}}).accepted,false);
+assert.equal(formatPredictionSnapshot({...sample,source:'historical_entry_html'}).accepted,false);
+console.log('Prediction snapshot record format tests passed');
