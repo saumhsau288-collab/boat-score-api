@@ -79,5 +79,5 @@ try{
  }catch(e){resultAudit={status:'fetch_error',error:String(e.message).slice(0,120),verifiedFinish:[]};}
  const audit={date,venue,race,httpStatus:res.status,htmlBytes:html.length,tableRows:(html.match(/<tr\b/gi)||[]).length,parsedSix:racers?.length===6,racerRowDiagnostics,crossSource,resultAudit,names:racers?.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name}))??[],warning:'Public official racelist inspection only; no prediction or deploy'};
  console.log('OFFICIAL_RACELIST_PROBE',JSON.stringify(audit));
- if(!res.ok||!racers)process.exitCode=1;
+ if(!res.ok||!racers||!resultAudit.topThreeVerified)process.exitCode=1;
 }catch(e){console.log('OFFICIAL_RACELIST_PROBE',JSON.stringify({status:'fetch_failed',error:String(e.message).slice(0,150)}));process.exitCode=1;}
