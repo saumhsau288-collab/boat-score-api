@@ -3,6 +3,8 @@ name: Boat Score 2 retry research checks
 on:
   pull_request:
     paths:
+      - 'scripts/score-leader-favorite-upset.mjs'
+      - 'scripts/test-score-leader-favorite-upset.mjs'
       - 'scripts/research-capture-retry-policies.mjs'
       - 'scripts/test-research-capture-retry-policies.mjs'
       - 'scripts/select-verified-active-venues.mjs'
@@ -60,6 +62,8 @@ jobs:
           node-version: '22'
       - name: Check research scripts syntax
         run: |
+          node --check scripts/score-leader-favorite-upset.mjs
+          node --check scripts/test-score-leader-favorite-upset.mjs
           node --check scripts/fetch-manual-official-historical-results.mjs
           node --check scripts/test-fetch-manual-official-historical-results.mjs
           node --check scripts/extract-official-result-racers.mjs
@@ -120,6 +124,7 @@ jobs:
           node --check scripts/test-summarize-cutoff-candidates.mjs
       - name: Run offline retry research regression
         run: |
+          node scripts/test-score-leader-favorite-upset.mjs
           node scripts/test-fetch-manual-official-historical-results.mjs
           node scripts/test-extract-official-result-racers.mjs
           node scripts/test-build-historical-racer-course-profiles.mjs
