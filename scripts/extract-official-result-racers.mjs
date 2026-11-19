@@ -21,16 +21,21 @@ export function extractOfficialResultRacers(report){
   for(const match of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
    const cells=[...match[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(m=>m[1]);
    if(cells.length!==4)continue;
-   const rank=num(text(cells[0]));
+   const rankText=text(cells[0]);
+   const rank=/^[１-６1-6]$/.test(rankText)?num(rankText):null;
+   const resultStatus=rank===null?rankText:null;
    const boat=num(text(cells[1]));
    const racerId=cells[2].match(/<span\b[^>]*class=["'][^"']*\bis-fs12\b[^"']*["'][^>]*>\s*(\d{4,6})\s*<\/span>/i)?.[1];
    const racerName=cells[2].match(/<span\b[^>]*class=["'][^"']*\bis-fs18\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)?.[1];
-   if(!Number.isInteger(rank)||!Number.isInteger(boat)||!racerId||!racerName)continue;
-   racers.push({finish:rank,boat,racerId,name:text(racerName),actualEntryCourse:null});
+   if((rank===null&&!/^(転|落|妨|失|欠|不|Ｆ|Ｌ|F|L|転覆|落水|失格|欠場|不完走)$/.test(resultStatus))||!Number.isInteger(boat)||!racerId||!racerName)continue;
+   racers.push({finish:rank,resultStatus,boat,racerId,name:text(racerName),actualEntryCourse:null});
   }
-  const valid=racers.length===6&&new Set(racers.map(r=>r.finish)).size===6&&
+  const ranks=racers.map(r=>r.finish).filter(Number.isInteger);
+  const valid=racers.length===6&&new Set(ranks).size===ranks.length&&
+   ranks.every((rank,i)=>rank>=1&&rank<=6)&&
+   [1,2,3].every(rank=>ranks.includes(rank))&&
    new Set(racers.map(r=>r.boat)).size===6&&new Set(racers.map(r=>r.racerId)).size===6&&
-   racers.every(r=>r.finish>=1&&r.finish<=6&&r.boat>=1&&r.boat<=6);
+   racers.every(r=>r.boat>=1&&r.boat<=6);
   // The official start information table is ordered by actual entry course.
   // Do not infer the course from the boat's color, number, or finishing order.
   const startTable=[...p.html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)]
@@ -43,11 +48,11 @@ export function extractOfficialResultRacers(report){
   if(entryCourses)for(const racer of racers)racer.actualEntryCourse=entryCourses[racer.boat];
   return {...base,status:valid?'parsed_needs_independent_review':'racer_finish_mapping_incomplete',
    startOrderBoats:startOrderValid?startBoats:null,entryCoursesExtracted:!!entryCourses,
-   racers:valid?racers:[],podium:valid?racers.filter(r=>r.finish<=3).sort((a,b)=>a.finish-b.finish).map(r=>r.boat):null};
+   racers:valid?racers:[],podium:valid?racers.filter(r=>Number.isInteger(r.finish)&&r.finish<=3).sort((a,b)=>a.finish-b.finish).map(r=>r.boat):null};
  });
  return {method:'saved_official_result_racer_finish_parser',rows,parsedRaces:rows.filter(r=>r.status==='parsed_needs_independent_review').length,
   independentlyVerifiedRaces:0,eligibleForHistoricalProfile:0,
-  warning:'Start-order-derived courses require independent review before historical profile use. Never assume boat equals entry course.'};
+  warning:'Non-finish statuses (e.g. 転) are preserved as null finish; start-order-derived courses require independent review; no scoring changes.'};
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const [input,output]=process.argv.slice(2);
