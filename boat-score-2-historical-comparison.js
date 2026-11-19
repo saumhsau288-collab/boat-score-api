@@ -22,6 +22,8 @@ export function compareHistoricalRace(row){
  const oldRanking=[...old.racers].sort((a,b)=>b.score-a.score||a.boat-b.boat).map(r=>r.boat);
  const newRanking=next.ranked.map(r=>r.boat);
  const measure=ranked=>({winnerHit:ranked[0]===row.finishOrder[0],
+   winnerRank:ranked.indexOf(row.finishOrder[0])+1,
+   winnerTopThree:ranked.slice(0,3).includes(row.finishOrder[0]),
    podiumSetHit:ranked.slice(0,3).every(b=>row.finishOrder.slice(0,3).includes(b))});
  return {status:'compared',key:[row.date,row.venue,row.race].join(':'),old:measure(oldRanking),experimental:measure(newRanking),oldRanking,newRanking};
 }
@@ -40,6 +42,8 @@ export function compareHistoricalSet(rows){
  const excludedReasons={};
  for(const item of items)if(item.status==='excluded')excludedReasons[item.reason]=(excludedReasons[item.reason]||0)+1;
  const totals=k=>({winnerHits:valid.filter(x=>x[k].winnerHit).length,
+   winnerTopThreeHits:valid.filter(x=>x[k].winnerTopThree).length,
+   winnerRankSum:valid.reduce((sum,x)=>sum+x[k].winnerRank,0),
    podiumSetHits:valid.filter(x=>x[k].podiumSetHit).length});
  return {status:valid.length?'evaluated':'insufficient_history',total:rows.length,
    eligible:valid.length,excluded:rows.length-valid.length,excludedReasons,baseline:totals('old'),
