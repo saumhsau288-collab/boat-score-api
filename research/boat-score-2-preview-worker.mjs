@@ -31,6 +31,22 @@ export function rankRace(racers){
  all.sort((a,b)=>b.heuristic-a.heuristic||a.ticket.localeCompare(b.ticket));
  return {ranking,main:all.filter(x=>x.ticket.startsWith(ranking[0].boat+'-')).slice(0,6),upset:all.filter(x=>!x.ticket.startsWith(ranking[0].boat+'-')).slice(0,6)};
 }
+// Strict public-name matching is a research fallback only, never proof of registration identity.
+export function matchMakulaboByName(official,recent){
+ if(!Array.isArray(official)||official.length!==6||!Array.isArray(recent)||recent.length!==6)return {verified:false,reason:'six_racers_required',matches:[]};
+ const norm=s=>typeof s==='string'?s.normalize('NFKC').replace(/[\\s\\u3000]/g,''):''; 
+ const names=official.map(r=>norm(r.name));
+ if(names.some(n=>n.length<2)||new Set(names).size!==6)return {verified:false,reason:'official_names_incomplete',matches:[]};
+ const byName=new Map();
+ for(const row of recent){
+  const n=norm(row?.name);
+  if(n.length<2||byName.has(n))return {verified:false,reason:'recent_names_incomplete_or_duplicate',matches:[]};
+  if(!Number.isInteger(row?.starts)||row.starts<1||row.starts>50||!Array.isArray(row?.finishCounts)||row.finishCounts.length!==6||row.finishCounts.some(v=>!Number.isInteger(v)||v<0)||row.finishCounts.reduce((a,b)=>a+b,0)!==row.starts)return {verified:false,reason:'invalid_finish_counts',matches:[]};
+  byName.set(n,row);
+ }
+ if(names.some(n=>!byName.has(n)))return {verified:false,reason:'name_mismatch',matches:[]};
+ return {verified:true,identityMethod:'exact_normalized_name_only',registrationVerified:false,matches:official.map(r=>({boat:r.boat,racerId:r.racerId,record:byName.get(norm(r.name))}))};
+}
 // Makulabo identity matching: exact registration IDs only; no inferred boat order.
 export function matchMakulaboByRegistration(official,recent){
  if(!Array.isArray(official)||official.length!==6||!Array.isArray(recent)||recent.length!==6)return {verified:false,reason:'six_racers_required',matches:[]};
