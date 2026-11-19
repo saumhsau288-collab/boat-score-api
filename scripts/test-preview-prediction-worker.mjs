@@ -20,7 +20,7 @@ const bundled=(await import(new URL('../dist/boat-score-2-predict-lab.mjs',impor
 const homepage=await bundled.fetch(new Request('https://preview.example/'));
 assert.equal(homepage.status,200);
 assert.match(homepage.headers.get('content-type')??'',/text\/html/);
-assert.ok((await homepage.text()).includes('id="predict-direct"'));
+assert.ok((await homepage.text()).includes('id="select"'));
 const alias=await bundled.fetch(new Request('https://preview.example/index.html'));
 assert.equal(alias.status,200);
 const oldFetch=globalThis.fetch;
