@@ -51,6 +51,6 @@ export default {async fetch(request){
   if(html.length>2000000)return reply({status:'official_page_too_large',date,venue,race});
   const racers=parseRacers(html);
   if(!racers)return reply({status:'official_features_incomplete',date,venue,race,main:[],upset:[],message:'6選手の公式データを照合できません'});
-  return reply({status:'experimental',date,venue,race,...rankRace(racers),entryScenario:'boat_order_assumption',makulaboComparison:null,provenance:{officialUrl,fetchedAt:new Date().toISOString(),preCutoffSnapshotAuthenticated:false},warning:'研究用の暫定予想。進入は枠なり仮定、展示・直前情報・まくらぼ未反映。'});
+  return reply({status:'experimental',date,venue,race,...rankRace(racers),entryScenario:'boat_order_assumption',makulaboComparison:null,dataCompleteness:{officialRacelist:true,verifiedEntry:false,exhibition:false,motor:false,makulaboRecent50:false},provenance:{officialUrl,fetchedAt:new Date().toISOString(),preCutoffSnapshotAuthenticated:false},warning:'研究用の暫定予想。進入は枠なり仮定、展示・直前情報・まくらぼ未反映。'});
  }catch(e){return reply({status:'official_fetch_failed',date,venue,race,error:String(e.message).slice(0,120)});}
 }};
