@@ -5,10 +5,17 @@ const race={date:'20261119',venue:2,race:3,preRaceSnapshotVerified:true,resultIn
 const report=evaluateRacerScoreQuality([race]);
 assert.equal(report.eligibleRaces,1);
 assert.equal(report.pairwiseTies,1);
+assert.equal(report.tiedTopRaces,1);
+assert.equal(report.tieNeutralTopRatedWinRate,0.5);
+assert.equal(report.tieNeutralTopRatedPodiumRate,1);
 assert.equal(report.pairwiseTotal,14);
 assert.equal(report.pairwiseCorrect,14);
 const allTie=evaluateRacerScoreQuality([{...race,racers:racers.map(r=>({...r,score:50}))}]);
 assert.equal(allTie.pairwiseTies,15);
+assert.equal(allTie.tiedTopRaces,1);
+assert.equal(allTie.tiedTopThreeBoundaryRaces,1);
+assert.equal(allTie.tieNeutralTopRatedWinRate,1/6);
+assert.equal(allTie.tieNeutralTopThreePodiumOverlapRate,0.5);
 assert.equal(allTie.pairwiseTotal,0);
 assert.equal(allTie.pairwiseAccuracy,null);
 console.log('Tied racer scores excluded from pairwise accuracy');
