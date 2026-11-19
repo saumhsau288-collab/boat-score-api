@@ -4,16 +4,17 @@ const clean=s=>s.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(
 export function extractArchivedRacerFeatures(entry){
  const base={date:entry?.date,venue:entry?.venue,race:entry?.race,status:'not_parsed',preCutoffSnapshotAuthenticated:false,eligibleForWeightTuning:false,racers:[]};
  if(entry?.status!=='raw_html_saved'||typeof entry.html!=='string')return base;
- const blocks=[...entry.html.matchAll(/<td\b[^>]*rowspan=["']4["'][^>]*>\s*<div class=["']is-fs11["']>\s*(\d{4,6})[\s\S]*?<\/td>([\s\S]*?)(?=<td\b[^>]*rowspan=["']4["'][^>]*>\s*<div class=["']is-fs11["']>\s*\d{4,6}|<\/tbody>)/gi)];
  const racers=[];
- for(const b of blocks){
-  const cells=[...b[2].matchAll(/<td\b[^>]*rowspan=["']4["'][^>]*>([\s\S]*?)<\/td>/gi)].map(x=>clean(x[1]));
-  if(cells.length<3)continue;
-  const st=cells[0].match(/(?:F\d+\s+)?(?:L\d+\s+)?(0\.\d{2})/i);
-  const national=cells[1].match(/^(\d{1,2}\.\d{2})\b/);
-  const local=cells[2].match(/^(\d{1,2}\.\d{2})\b/);
-  if(!st||!national||!local)continue;
-  racers.push({racerId:b[1],nationalWinRate:Number(national[1]),localWinRate:Number(local[1]),averageStartTiming:Number(st[1])});
+ // Each racer starts a four-row block: boat, photo, racer identity, ST, national, local.
+ for(const tr of entry.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
+  const cells=[...tr[1].matchAll(/<td\b[^>]*rowspan=["']4["'][^>]*>([\s\S]*?)<\/td>/gi)].map(x=>x[1]);
+  if(cells.length<6)continue;
+  const racerId=clean(cells[2]).match(/^(\d{4,6})\b/)?.[1];
+  const st=clean(cells[3]).match(/(?:^|\s)(0\.\d{2})(?:\s|$)/);
+  const national=clean(cells[4]).match(/^(\d{1,2}\.\d{2})(?:\s|$)/);
+  const local=clean(cells[5]).match(/^(\d{1,2}\.\d{2})(?:\s|$)/);
+  if(!racerId||!st||!national||!local)continue;
+  racers.push({racerId,nationalWinRate:Number(national[1]),localWinRate:Number(local[1]),averageStartTiming:Number(st[1])});
  }
  if(racers.length!==6||new Set(racers.map(x=>x.racerId)).size!==6)return {...base,status:'incomplete_six_racer_features',found:racers.length};
  return {...base,status:'parsed_archival_features_unverified',racers};
