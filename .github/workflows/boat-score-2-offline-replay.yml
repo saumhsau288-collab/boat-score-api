@@ -8,6 +8,7 @@ on:
       - 'scripts/compare-exploratory-winrates-results.mjs'
       - 'scripts/test-compare-exploratory-winrates-results.mjs'
       - 'scripts/compare-exploratory-ranking-models.mjs'
+      - 'scripts/test-compare-exploratory-ranking-models.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -36,6 +37,8 @@ jobs:
         run: |
           node scripts/test-compare-exploratory-winrates-results.mjs
           node scripts/compare-exploratory-winrates-results.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-comparison.json
+      - name: Test experimental ranking comparison integrity
+        run: node scripts/test-compare-exploratory-ranking-models.mjs
       - name: Compare four experimental ranking weight sets offline
         run: node scripts/compare-exploratory-ranking-models.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-ranking-models.json
       - name: Upload replayed comparison
