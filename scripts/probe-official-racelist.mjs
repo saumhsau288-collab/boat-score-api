@@ -5,6 +5,7 @@ try{
  const res=await fetch(url,{redirect:'follow',headers:{accept:'text/html'},signal:AbortSignal.timeout(15000)});
  const html=res.ok?await res.text():'';
  const racers=html.length<=2000000?parseRacers(html):null;
+ const racerRowDiagnostics=!racers?[...html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[...m[1].matchAll(/<td\b(?=[^>]*\browspan\s*=\s*(?:[\"']4[\"']|4(?=\s|>)))[^>]*>([\s\S]*?)<\/td>/gi)].map(x=>x[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,100))).filter(x=>x.length>=6).map(x=>x.slice(0,6)):[];
  const makulaboUrl='https://makulabo-jp.com/data/'+String(venue).padStart(2,'0')+'/'+race+'/heatmap?hd='+date;
  let crossSource={status:'unavailable',matches:[]};
  try{
@@ -76,7 +77,7 @@ try{
   }:null;
   resultAudit={status:resultResponse.ok?'page_fetched_not_yet_parsed':'http_error',httpStatus:resultResponse.status,htmlBytes:resultHtml.length,hasResultMarker:!!marker,tableShape,tableAudit,verifiedFinish,topThreeVerified,predictionAudit,warning:'No finish order inferred from generic text; requires structural parsing and racer-ID verification'};
  }catch(e){resultAudit={status:'fetch_error',error:String(e.message).slice(0,120),verifiedFinish:[]};}
- const audit={date,venue,race,httpStatus:res.status,htmlBytes:html.length,tableRows:(html.match(/<tr\b/gi)||[]).length,parsedSix:racers?.length===6,crossSource,resultAudit,names:racers?.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name}))??[],warning:'Public official racelist inspection only; no prediction or deploy'};
+ const audit={date,venue,race,httpStatus:res.status,htmlBytes:html.length,tableRows:(html.match(/<tr\b/gi)||[]).length,parsedSix:racers?.length===6,racerRowDiagnostics,crossSource,resultAudit,names:racers?.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name}))??[],warning:'Public official racelist inspection only; no prediction or deploy'};
  console.log('OFFICIAL_RACELIST_PROBE',JSON.stringify(audit));
  if(!res.ok||!racers)process.exitCode=1;
 }catch(e){console.log('OFFICIAL_RACELIST_PROBE',JSON.stringify({status:'fetch_failed',error:String(e.message).slice(0,150)}));process.exitCode=1;}
