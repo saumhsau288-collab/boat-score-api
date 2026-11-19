@@ -3,7 +3,8 @@
 import {fetchHistoricalRacelistSample} from './fetch-historical-racelist-sample.mjs';
 import {extractArchivedRacerFeatures} from './extract-archived-racer-features.mjs';
 import {predictFromInput} from './predict-boat-score-2-experiment.mjs';
-export async function predictSelectedRace({date,venue,race,courses=null,fetchImpl=fetch}){
+import {summarizeVenueTendencies} from '../boat-score-2-venue-tendencies.js';
+export async function predictSelectedRace({date,venue,race,courses=null,venueHistory=[],fetchImpl=fetch}){
  if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)
   return {status:'invalid_selection',main:[],upset:[]};
  const entry=await fetchHistoricalRacelistSample({date,venue,race,fetchImpl});
@@ -15,9 +16,10 @@ export async function predictSelectedRace({date,venue,race,courses=null,fetchImp
  if(!Array.isArray(selectedCourses)||selectedCourses.length!==6||selectedCourses.some(n=>!Number.isInteger(n)||n<1||n>6)||new Set(selectedCourses).size!==6)
   return {status:'invalid_entry_scenario',date,venue,race,main:[],upset:[],racers:features.racers};
  const racers=features.racers.map((x,i)=>({...x,boat:i+1,entryCourse:selectedCourses[i]}));
+ const venueTendency=summarizeVenueTendencies(venueHistory).find(x=>x.venue===venue)??null;
  return {...predictFromInput({date,venue,race,racers,dataSource:'official_racelist_download_unverified_snapshot'}),
   entryScenario:usingAssumedEntry?'boat_order_assumption':'user_supplied_entry_scenario',
-  entryCourses:selectedCourses,
+  entryCourses:selectedCourses,venueTendency,venueTendencyAppliedToScore:false,
   inputCaveat:usingAssumedEntry?'PROVISIONAL: Boat-order entry is assumed solely for scenario prediction. Actual entry is unverified; do not treat this as confirmed exhibition.':'Entry courses supplied as scenario, not authenticated exhibition or confirmed actual entry.'};
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
