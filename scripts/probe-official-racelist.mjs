@@ -35,7 +35,16 @@ try{
    crossSource={...crossSource,status:match.verified?'six_name_and_boat_matches':'identity_unverified',reason:match.reason??null,registrationVerified:false,matches:match.matches.map(x=>({boat:x.boat,racerId:x.racerId,nameMatch:x.nameMatch,starts:x.record.starts,firstPlaceRatePct:Number((x.record.finishCounts[0]/x.record.starts*100).toFixed(2))}))};
   }else crossSource={status:'makulabo_or_official_unavailable',httpStatus:mak.status,matches:[]};
  }catch(e){crossSource={status:'fetch_error',error:String(e.message).slice(0,120),matches:[]};}
- const audit={date,venue,race,httpStatus:res.status,htmlBytes:html.length,tableRows:(html.match(/<tr\b/gi)||[]).length,parsedSix:racers?.length===6,crossSource,names:racers?.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name}))??[],warning:'Public official racelist inspection only; no prediction or deploy'};
+ let resultAudit={status:'not_checked',verifiedFinish:[]};
+ try{
+  const resultUrl='https://www.boatrace.jp/owpc/pc/race/raceresult?'+new URLSearchParams({hd:date,jcd:String(venue).padStart(2,'0'),rno:String(race)});
+  const resultResponse=await fetch(resultUrl,{headers:{accept:'text/html'},signal:AbortSignal.timeout(12000)});
+  const resultHtml=resultResponse.ok?await resultResponse.text():'';
+  const visible=resultHtml.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
+  const marker=visible.match(/(?:着順|レース結果|競走結果)/);
+  resultAudit={status:resultResponse.ok?'page_fetched_not_yet_parsed':'http_error',httpStatus:resultResponse.status,htmlBytes:resultHtml.length,hasResultMarker:!!marker,verifiedFinish:[],warning:'No finish order inferred from generic text; requires structural parsing and racer-ID verification'};
+ }catch(e){resultAudit={status:'fetch_error',error:String(e.message).slice(0,120),verifiedFinish:[]};}
+ const audit={date,venue,race,httpStatus:res.status,htmlBytes:html.length,tableRows:(html.match(/<tr\b/gi)||[]).length,parsedSix:racers?.length===6,crossSource,resultAudit,names:racers?.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name}))??[],warning:'Public official racelist inspection only; no prediction or deploy'};
  console.log('OFFICIAL_RACELIST_PROBE',JSON.stringify(audit));
  if(!res.ok||!racers)process.exitCode=1;
 }catch(e){console.log('OFFICIAL_RACELIST_PROBE',JSON.stringify({status:'fetch_failed',error:String(e.message).slice(0,150)}));process.exitCode=1;}
