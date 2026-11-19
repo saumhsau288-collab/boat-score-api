@@ -1,10 +1,17 @@
 import assert from 'node:assert/strict';
 import {comparePreCutoffPredictions} from './compare-precutoff-predictions.mjs';
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
-const snapshot={date:'20261119',venue:2,race:1,capturedAt:'2026-11-19T12:00:00+09:00',cutoffAt:'2026-11-19T12:10:00+09:00',source:'official_live_entry',captureProvenance:'server_timestamped',racers,prediction:{mainSix:[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]}};
+const snapshot={date:'20261119',venue:2,race:1,capturedAt:'2026-11-19T12:00:00+09:00',cutoffAt:'2026-11-19T12:10:00+09:00',source:'official_live_entry',captureProvenance:'server_timestamped',phase:'precutoff_10min',racers,prediction:{mainSix:[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]}};
 const result={date:'20261119',venue:2,race:1,status:'independently_verified',racers:racers.map((r,i)=>({...r,finish:i+1}))};
 const ok=comparePreCutoffPredictions([snapshot],[result]);
 assert.equal(ok.eligibleRaces,1);assert.equal(ok.mainSixExactHits,1);
+assert.equal(ok.byPhase.precutoff_10min.eligibleRaces,1);
+assert.equal(ok.byPhase.morning_8am.eligibleRaces,0);
+const morning={...snapshot,phase:'morning_8am',capturedAt:'2026-11-19T08:00:00+09:00'};
+const both=comparePreCutoffPredictions([snapshot,morning],[result]);
+assert.equal(both.eligibleRaces,2);
+assert.equal(both.byPhase.precutoff_10min.mainSixExactHits,1);
+assert.equal(both.byPhase.morning_8am.mainSixExactHits,1);
 assert.equal(ok.rows[0].winnerInMainFirstChoices,true);
 const duplicates=comparePreCutoffPredictions([snapshot,structuredClone(snapshot)],[result]);
 assert.equal(duplicates.eligibleRaces,1);
