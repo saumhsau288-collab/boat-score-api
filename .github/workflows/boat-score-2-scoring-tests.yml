@@ -62,6 +62,8 @@ jobs:
           node --experimental-default-type=module boat-score-2-entry-alert-integration.test.mjs
           node --experimental-default-type=module scripts/predict-boat-score-2-experiment.test.mjs
           node --experimental-default-type=module scripts/predict-selected-boat-race.test.mjs
+          node --experimental-default-type=module boat-score-2-entry-scenarios.test.mjs
+          node --experimental-default-type=module boat-score-2-venue-tendencies.test.mjs
           node --experimental-default-type=module --check boat-score-2-racer-weight-study.js
           node --experimental-default-type=module boat-score-2-racer-weight-study.test.mjs
           node --experimental-default-type=module --check boat-score-2-archived-capture-audit.js
