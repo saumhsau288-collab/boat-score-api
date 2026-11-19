@@ -40,6 +40,10 @@ jobs:
         run: |
           node --check scripts/evaluate-archived-racer-scores.mjs
           node scripts/evaluate-archived-racer-scores.mjs research-historical/20261118-tokuyama-feature-joins.json research-historical/20261118-tokuyama-score-comparison.json
+      - name: Compare alternative score weights descriptively
+        run: |
+          node --check scripts/compare-archived-weight-candidates.mjs
+          node scripts/compare-archived-weight-candidates.mjs research-historical/20261118-tokuyama-feature-joins.json research-historical/20261118-tokuyama-weight-candidates.json
       - name: Save original official source and fetch status
         uses: actions/upload-artifact@v4
         with:
