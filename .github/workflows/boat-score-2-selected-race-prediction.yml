@@ -51,13 +51,13 @@ jobs:
             result.message??result.inputCaveat??'',
             '',
             '※暫定シナリオであり、直前情報・進入の確認済み予想ではありません。'
-          ].join('\\n');
-          const ticketText=arr=>Array.isArray(arr)?arr.map((x,i)=>`${i+1}. ${typeof x==='string'?x:JSON.stringify(x)}`).join('\\n'):'なし';
+          ].join('\n');
+          const ticketText=arr=>Array.isArray(arr)?arr.map((x,i)=>`${i+1}. ${typeof x==='string'?x:JSON.stringify(x)}`).join('\n'):'なし';
           const ticketSection=result.status==='experimental'?[
             '', '## 本命候補（暫定）', ticketText(result.main),
             '', '## 穴候補（暫定）', ticketText(result.upset)
-          ].join('\\n'):'\\n予想候補は保留しました。';
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,summary+'\\n'+ticketSection+'\\n');
+          ].join('\n') :'\n予想候補は保留しました。';
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,summary+'\n'+ticketSection+'\n');
           console.log(JSON.stringify({status:result.status,date,venue,race,main:result.main?.length??0,upset:result.upset?.length??0,entryScenario:result.entryScenario??null}));
           if(result.status!=='experimental')process.exitCode=1;
           JS
