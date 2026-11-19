@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {compareHistoricalRace,compareHistoricalSet} from './boat-score-2-historical-comparison.js';
+import {compareHistoricalRace,compareHistoricalSet,compareChronologicalHoldout} from './boat-score-2-historical-comparison.js';
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:6,localWinRate:6,
  motorTwoWinRate:50,recent50WinRate:20,exhibitionScore:50,
  averageStartTiming:0.15,entryCourse:i+1}));
@@ -29,3 +29,11 @@ assert.equal(compareHistoricalSet([row]).experimental.winnerRankSum,1);
 assert.equal(compareHistoricalRace({...row,entryCourseSource:'boat_number_proxy'}).reason,'unverified_course_or_start_source');
 assert.equal(compareHistoricalRace({...row,averageStartTimingSource:'post_race'}).reason,'unverified_course_or_start_source');
 assert.equal(compareHistoricalRace({...row,racers:racers.map(r=>({...r,entryCourse:1}))}).status,'excluded');
+
+const split=compareChronologicalHoldout([row,{...row,date:'20261119'}],'20261119');
+assert.equal(split.status,'audited');
+assert.equal(split.training.eligible,1);
+assert.equal(split.holdout.eligible,1);
+assert.equal(compareChronologicalHoldout([row],'20261119').status,'insufficient_history');
+assert.equal(compareChronologicalHoldout([row,row],'20261119').status,'duplicate_races');
+assert.equal(compareChronologicalHoldout([row],'not-a-date').status,'invalid_input');
