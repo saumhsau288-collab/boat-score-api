@@ -16,4 +16,8 @@ const duplicateRacer={...result,racers:result.racers.map((x,i)=>i===5?{...x,race
 assert.equal(comparePreRaceWinRates([{snapshot,result:duplicateRacer}]).eligibleRaces,0);
 const afterCutoff={...snapshot,capturedAt:'2026-11-18T13:00:00+09:00'};
 assert.equal(comparePreRaceWinRates([{snapshot:afterCutoff,result}]).eligibleRaces,0);
+const wrongDay={...snapshot,capturedAt:'2026-11-17T08:00:00+09:00'};
+assert.equal(comparePreRaceWinRates([{snapshot:wrongDay,result}]).eligibleRaces,0);
+const wrongCutoffDay={...snapshot,cutoffAt:'2026-11-19T12:00:00+09:00'};
+assert.equal(comparePreRaceWinRates([{snapshot:wrongCutoffDay,result}]).eligibleRaces,0);
 console.log('Pre-race win-rate vs finish checks passed (synthetic only)');
