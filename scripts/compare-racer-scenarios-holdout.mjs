@@ -1,12 +1,13 @@
 // Research-only chronological holdout comparison for individual racer ratings.
 import {compareRacerWeightScenarios} from './compare-racer-weight-scenarios.mjs';
 import {evaluateRacerScoreQuality} from './evaluate-racer-score-quality.mjs';
+import {auditRacerHoldoutProvenance} from './audit-racer-holdout-provenance.mjs';
 export function compareRacerScenariosOnHoldout(races,candidates=[]){
  const seen=new Set(),accepted=[],rejected=[];
  for(const race of races??[]){
   const key=[race?.date,race?.venue,race?.race].join(':');
   const racers=race?.racers;
-  const eligible=/^20\d{6}$/.test(String(race?.date??''))&&Number.isInteger(race?.venue)&&race.venue>=1&&race.venue<=24&&Number.isInteger(race?.race)&&race.race>=1&&race.race<=12&&
+  const eligible=auditRacerHoldoutProvenance(race).eligible&&/^20\d{6}$/.test(String(race?.date??''))&&Number.isInteger(race?.venue)&&race.venue>=1&&race.venue<=24&&Number.isInteger(race?.race)&&race.race>=1&&race.race<=12&&
    race?.preRaceSnapshotVerified===true&&race?.resultIndependentlyVerified===true&&race?.chronologicalHoldout===true&&Array.isArray(racers)&&racers.length===6&&
    new Set(racers.map(r=>r?.boat)).size===6&&new Set(racers.map(r=>r?.racerId)).size===6&&new Set(racers.map(r=>r?.finish)).size===6&&
    racers.every(r=>Number.isInteger(r?.boat)&&r.boat>=1&&r.boat<=6&&/^\d{4}$/.test(String(r.racerId??''))&&Number.isInteger(r.finish)&&r.finish>=1&&r.finish<=6)&&!seen.has(key);
