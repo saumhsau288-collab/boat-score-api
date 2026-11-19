@@ -6,7 +6,7 @@ export function summarizeCaptureReadiness(capture) {
   if (!Array.isArray(capture?.records)) throw Error('Expected capture.records');
   if (capture.authenticatedBeforeRace !== false) throw Error('Expected explicitly unauthenticated raw capture');
   if (capture.attempted !== capture.records.length) throw Error('Capture attempted count mismatch');
-  if (!/^20\\d{6}$/.test(String(capture.date??''))) throw Error('Invalid capture date');
+  if (!/^20\d{6}$/.test(String(capture.date??''))) throw Error('Invalid capture date');
   const counts={attempted:capture.records.length,ready:0,failedOrNotReady:0,missingReceiveTime:0,
     capturedOutsideMorningWindow:0,missingRankedScores:0,missingSixOriginalInputs:0};
   const byVenue={};
