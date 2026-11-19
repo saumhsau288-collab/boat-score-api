@@ -28,6 +28,7 @@ export function extractArchivedRacerFeatures(entry){
  }
  if(racers.length!==6||new Set(racers.map(x=>x.racerId)).size!==6)return {...base,status:'incomplete_six_racer_features',found:racers.length,diagnostics};
  const boatMappingVerified=racers.every((r,i)=>r.boat===i+1);
+ diagnostics.mappingStatus=boatMappingVerified?'explicit_order_verified':'boat_number_mismatch_or_missing';
  return {...base,status:'parsed_archival_features_unverified',boatMappingVerified,racers,diagnostics};
 }
 export function joinArchivedRace(entry,result){
