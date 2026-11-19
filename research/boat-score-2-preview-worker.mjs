@@ -31,6 +31,20 @@ export function rankRace(racers){
  all.sort((a,b)=>b.heuristic-a.heuristic||a.ticket.localeCompare(b.ticket));
  return {ranking,main:all.filter(x=>x.ticket.startsWith(ranking[0].boat+'-')).slice(0,6),upset:all.filter(x=>!x.ticket.startsWith(ranking[0].boat+'-')).slice(0,6)};
 }
+// Makulabo identity matching: exact registration IDs only; no inferred boat order.
+export function matchMakulaboByRegistration(official,recent){
+ if(!Array.isArray(official)||official.length!==6||!Array.isArray(recent)||recent.length!==6)return {verified:false,reason:'six_racers_required',matches:[]};
+ const ids=official.map(r=>String(r.racerId??''));
+ if(ids.some(id=>!/^\\d{4}$/.test(id))||new Set(ids).size!==6||new Set(official.map(r=>r.boat)).size!==6)return {verified:false,reason:'invalid_official_identity',matches:[]};
+ const byId=new Map();
+ for(const row of recent){
+  const id=String(row?.racerId??'');
+  if(!/^\\d{4}$/.test(id)||byId.has(id))return {verified:false,reason:'duplicate_or_invalid_recent_identity',matches:[]};
+  byId.set(id,row);
+ }
+ if(byId.size!==6||ids.some(id=>!byId.has(id)))return {verified:false,reason:'registration_mismatch',matches:[]};
+ return {verified:true,matches:official.map(r=>({boat:r.boat,racerId:r.racerId,record:byId.get(String(r.racerId))}))};
+}
 export default {async fetch(request){
  if(request.method==='OPTIONS')return new Response(null,{headers:cors});
  const u=new URL(request.url);
