@@ -11,3 +11,11 @@ assert.equal(experimentalRacerScore({...base,averageStartTiming:null}).status,'i
 const racers=Array.from({length:6},(_,i)=>({...base,boat:i+1,entryCourse:i+1}));
 assert.equal(experimentalRaceRanking(racers).ranked[0].boat,1);
 console.log('Offline racer experiment passed');
+
+const weakInside=experimentalRacerScore({...base,nationalWinRate:3,localWinRate:3,averageStartTiming:0.22,entryCourse:1});
+const strongOutside=experimentalRacerScore({...base,nationalWinRate:9,localWinRate:9,averageStartTiming:0.11,entryCourse:5});
+assert.ok(strongOutside.score>weakInside.score,'Strong outside racer must outrank weak inside racer');
+const sameAbilityOutside=experimentalRacerScore({...base,entryCourse:5});
+assert.ok(a.score>sameAbilityOutside.score,'Inside advantage applies when racer ability and ST are equal');
+const strongInsideSlowStart=experimentalRacerScore({...base,averageStartTiming:0.24});
+assert.ok(a.score>strongInsideSlowStart.score,'Start timing remains material even in the same course');
