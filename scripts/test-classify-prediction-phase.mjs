@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {classifyPredictionPhase} from './classify-prediction-phase.mjs';
+const base={capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T12:10:00+09:00',phase:'morning_8am'};
+assert.equal(classifyPredictionPhase(base).phase,'morning_8am');
+assert.equal(classifyPredictionPhase({...base,capturedAt:'2026-11-19T08:16:00+09:00'}).phase,null);
+assert.equal(classifyPredictionPhase({...base,phase:'precutoff_10min',capturedAt:'2026-11-19T12:00:00+09:00'}).phase,'precutoff_10min');
+assert.equal(classifyPredictionPhase({...base,phase:'precutoff_10min'}).phase,null);
+assert.equal(classifyPredictionPhase({...base,phase:'precutoff_10min',capturedAt:base.cutoffAt}).phase,null);
+assert.equal(classifyPredictionPhase({...base,phase:'unknown'}).phase,null);
+console.log('Prediction phase classification tests passed');
