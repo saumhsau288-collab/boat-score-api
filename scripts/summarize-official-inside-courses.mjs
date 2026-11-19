@@ -7,6 +7,8 @@ export function summarizeOfficialInsideCourses(report){
   const racers=r?.racers;
   const valid=r?.status==='parsed_needs_independent_review'&&Array.isArray(racers)&&racers.length===6&&
    new Set(racers.map(x=>x.boat)).size===6&&new Set(racers.map(x=>x.actualEntryCourse)).size===6&&
+   [1,2,3,4,5,6].every(boat=>racers.some(x=>x.boat===boat))&&
+   [1,2,3].every(rank=>racers.filter(x=>x.finish===rank).length===1)&&
    [1,2,3].every(rank=>racers.some(x=>x.finish===rank))&&
    racers.every(x=>Number.isInteger(x.actualEntryCourse)&&x.actualEntryCourse>=1&&x.actualEntryCourse<=6);
   if(!valid){out.blocked++;continue;}
