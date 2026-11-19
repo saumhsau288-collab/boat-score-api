@@ -21,7 +21,7 @@ test('rejects post-race or unverified snapshots',()=>{
  assert.equal(compareHistoricalRace({...snapshot,finishOrder:[1,1,3,4,5,6]}).status,'unverified_result');
 });
 test('reports exclusions rather than inventing accuracy',()=>{
- const r=summarizeHistoricalComparisons([snapshot,{...snapshot,resultVerified:false}]);
+ const r=summarizeHistoricalComparisons([snapshot,{...snapshot,race:10,resultVerified:false}]);
  assert.equal(r.eligible,1);
  assert.equal(r.excluded,1);
  assert.equal(r.winnerRate,1);
