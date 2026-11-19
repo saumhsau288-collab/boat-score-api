@@ -13,4 +13,10 @@ assert.equal(classifyCaptureTiming(record,verified).status,'captured_before_offi
 assert.equal(classifyCaptureTiming({...record,receivedAt:verified.cutoffAt},verified).status,'captured_at_or_after_official_cutoff');
 assert.equal(classifyCaptureTiming({...record,receivedAt:'bad'},verified).status,'invalid_capture_time');
 assert.equal(classifyCaptureTiming(record,verified).authenticatedBeforeRace,false);
+for(const ambiguous of ['2026-11-18T01:00:00','2026-11-18 01:00:00',null]){
+ assert.equal(classifyCaptureTiming({...record,receivedAt:ambiguous},verified).status,'invalid_capture_time');
+ assert.equal(classifyCaptureTiming(record,{...verified,cutoffAt:ambiguous}).status,'official_cutoff_unverified');
+}
+assert.equal(classifyCaptureTiming({...record,receivedAt:'2026-11-18T10:00:00+09:00'},verified).status,'captured_before_official_cutoff');
+assert.equal(classifyCaptureTiming({...record,receivedAt:'2026-11-18T10:05:00+09:00'},verified).status,'captured_at_or_after_official_cutoff');
 console.log('Official cutoff timing audit tests passed');

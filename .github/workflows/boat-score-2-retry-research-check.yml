@@ -13,6 +13,8 @@ on:
       - 'scripts/classify-daily-venue-evidence.mjs'
       - 'scripts/test-classify-daily-venue-evidence.mjs'
       - 'scripts/test-report-morning-coverage-research.mjs'
+      - 'scripts/audit-morning-official-cutoffs.mjs'
+      - 'scripts/test-audit-morning-official-cutoffs.mjs'
       - 'scripts/audit-saved-comparison-evidence.mjs'
       - 'scripts/test-audit-saved-comparison-evidence.mjs'
       - 'scripts/report-capture-readiness-research.mjs'
@@ -36,6 +38,8 @@ jobs:
           node-version: '22'
       - name: Check research scripts syntax
         run: |
+          node --check scripts/audit-morning-official-cutoffs.mjs
+          node --check scripts/test-audit-morning-official-cutoffs.mjs
           node --check scripts/audit-saved-comparison-evidence.mjs
           node --check scripts/test-audit-saved-comparison-evidence.mjs
           node --check scripts/research-capture-retry-policies.mjs
@@ -76,6 +80,7 @@ jobs:
           node --check scripts/test-summarize-cutoff-candidates.mjs
       - name: Run offline retry research regression
         run: |
+          node scripts/test-audit-morning-official-cutoffs.mjs
           node scripts/test-audit-saved-comparison-evidence.mjs
           node scripts/test-research-capture-retry-policies.mjs
           node scripts/test-select-verified-active-venues.mjs

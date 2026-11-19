@@ -7,11 +7,15 @@ function hasOfficialCutoffUrl(value) {
   return url.protocol==='https:' && (url.hostname==='boatrace.jp' || url.hostname.endsWith('.boatrace.jp')) && !url.username && !url.password;
  } catch { return false; }
 }
+function parseExplicitOffsetTime(value) {
+ if(typeof value!=='string'||!/T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value))return NaN;
+ return Date.parse(value);
+}
 export function classifyCaptureTiming(record, officialCutoff) {
-  const received=Date.parse(record?.receivedAt);
+  const received=parseExplicitOffsetTime(record?.receivedAt);
   if(!Number.isFinite(received))return {status:'invalid_capture_time'};
   if(!officialCutoff || officialCutoff.verified!==true || officialCutoff.source!=='official' || !hasOfficialCutoffUrl(officialCutoff.sourceUrl) ||
-     !Number.isFinite(Date.parse(officialCutoff.cutoffAt)))
+     !Number.isFinite(parseExplicitOffsetTime(officialCutoff.cutoffAt)))
     return {status:'official_cutoff_unverified'};
   if(officialCutoff.date!==record.date || officialCutoff.venue!==record.venue || officialCutoff.race!==record.race)
     return {status:'official_cutoff_identity_mismatch'};
