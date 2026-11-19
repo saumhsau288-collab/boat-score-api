@@ -31,6 +31,8 @@ assert.equal(new Set([...comparison.adjusted.main,...comparison.adjusted.upset].
 for(const r of comparison.adjusted.ranking){
  const before=comparison.baseline.ranking.find(x=>x.boat===r.boat);
  assert.equal(r.score,Number((before.score*.9+(50+r.boat)*.1).toFixed(3)));
+ assert.equal(r.scoreBreakdown.makulaboPoints,Number(((50+r.boat)*.1).toFixed(3)));
+ assert.ok(Math.abs(r.score-(r.scoreBreakdown.winRatePoints+r.scoreBreakdown.startPoints+r.scoreBreakdown.assumedCoursePoints+r.scoreBreakdown.makulaboPoints))<0.005,'Adjusted breakdown should explain final score');
 }
 assert.equal(compareVerifiedMakulaboScores(parsed,evidence.map((r,i)=>i===0?{...r,verified:false}:r)).applied,false);
 assert.equal(compareVerifiedMakulaboScores(parsed,evidence.map((r,i)=>i===0?{...r,sourceUrl:'https://example.com/'}:r)).applied,false);
