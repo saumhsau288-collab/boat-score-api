@@ -7,6 +7,7 @@ on:
       - '.github/workflows/boat-score-2-offline-replay.yml'
       - 'scripts/compare-exploratory-winrates-results.mjs'
       - 'scripts/test-compare-exploratory-winrates-results.mjs'
+      - 'scripts/compare-exploratory-ranking-models.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -35,9 +36,13 @@ jobs:
         run: |
           node scripts/test-compare-exploratory-winrates-results.mjs
           node scripts/compare-exploratory-winrates-results.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-comparison.json
+      - name: Compare four experimental ranking weight sets offline
+        run: node scripts/compare-exploratory-ranking-models.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-ranking-models.json
       - name: Upload replayed comparison
         uses: actions/upload-artifact@v4
         with:
           name: boat-score-2-offline-replay-${{ github.run_id }}
-          path: research-historical/manual.replayed-comparison.json
+          path: |
+            research-historical/manual.replayed-comparison.json
+            research-historical/manual.replayed-ranking-models.json
           retention-days: 14
