@@ -12,4 +12,7 @@ assert.throws(()=>build({...args,inputsCapturedBeforeCutoff:false}),/provenance/
 assert.throws(()=>build({...args,prediction:{...args.prediction,ready:false}}),/not ready/);
 assert.throws(()=>build({...args,phase:'post_race'}),/phase/);
 assert.throws(()=>build({...args,date:'2026-11-18'}),/identity/);
+assert.throws(()=>build({...args,savedAt:'2026-11-17T23:00:00+09:00'}),/race date in JST/);
+assert.throws(()=>build({...args,cutoffAt:'2026-11-19T03:00:00+09:00'}),/race date in JST/);
+assert.throws(()=>build({...args,savedAt:'2026-11-18T09:00:00'}),/timezone/);
 console.log('Pre-race snapshot builder tests passed (synthetic only)');
