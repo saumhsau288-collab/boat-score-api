@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {planRacerEvidenceKvWrite} from './plan-racer-evidence-kv-write.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const sample={ready:true,schemaVersion:1,date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T11:00:00+09:00',captureStatus:'server_timestamped_verified',source:'official_live_entry',racers};
+const planned=planRacerEvidenceKvWrite(sample);
+assert.equal(planned.writeAllowed,true);
+assert.ok(planned.key.startsWith('racer-evidence:v1:20261119:02:03:'));
+assert.equal(planRacerEvidenceKvWrite({...sample,captureStatus:'caller_supplied_unverified'}).writeAllowed,false);
+assert.equal(planRacerEvidenceKvWrite({...sample,capturedAt:'2026-11-19T12:00:00+09:00'}).writeAllowed,false);
+assert.equal(planRacerEvidenceKvWrite(sample,{existingRecord:{}}).writeAllowed,false);
+console.log('Immutable racer evidence KV write planner tests passed');
