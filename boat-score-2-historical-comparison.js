@@ -5,7 +5,7 @@ import {experimentalRaceRanking} from './boat-score-2-racer-experiment.js';
 const validOrder=a=>Array.isArray(a)&&a.length===6&&new Set(a).size===6&&a.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
 export function compareHistoricalRace(row){
  if(!row||row.preRaceSnapshot!==true||row.resultVerified!==true||
-    !/^20\\d{6}$/.test(String(row.date))||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||
+    !/^20\d{6}$/.test(String(row.date))||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||
     !Number.isInteger(row.race)||row.race<1||row.race>12||
     !validOrder(row.finishOrder))return {status:'excluded',reason:'unverified_or_invalid_race'};
  const old=evaluateRace(row.racers);
