@@ -20,3 +20,8 @@ assert.equal(study.holdoutCount,3);
 assert.equal(study.candidateWeights.ability+study.candidateWeights.start+study.candidateWeights.course,100);
 assert.equal(studyRacerWeights(rows,{minTrain:4,minHoldout:3}).status,'insufficient_verified_history');
 console.log('Racer weight study tests passed (synthetic data only)');
+
+const malformed=studyRacerWeights([null,{},null]);
+assert.equal(malformed.status,'insufficient_verified_history');
+assert.equal(malformed.eligible,0);
+assert.equal(malformed.excludedReasons.unverified_or_invalid_race,3);
