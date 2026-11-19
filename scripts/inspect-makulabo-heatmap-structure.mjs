@@ -12,10 +12,11 @@ try {
  if(heading<0)throw Error('Heatmap heading not found');
  const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)];
  const candidates=tables.map((m,i)=>({index:i,start:m.index,end:m.index+m[0].length,html:m[0]}))
-  .filter(t=>t.start<=heading&&t.end>=heading||Math.abs(t.start-heading)<7000);
- const reports=candidates.slice(0,5).map(t=>{
+  .map(t=>({...t,distance:t.start<=heading&&t.end>=heading?0:Math.min(Math.abs(t.start-heading),Math.abs(t.end-heading))}))
+  .sort((a,b)=>a.distance-b.distance).slice(0,5);
+ const reports=candidates.map(t=>{
   const trs=[...t.html.matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)].map(m=>m[0]);
-  return {tableIndex:t.index,relativeStart:t.start-heading,
+  return {tableIndex:t.index,relativeStart:t.start-heading,distanceFromHeading:t.distance,
    headerRows:trs.filter(tr=>/<th\b/i.test(tr)).slice(0,4).map(tr=>[...tr.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>strip(m[1]).slice(0,80))),
    sampleRows:trs.filter(tr=>/<td\b/i.test(tr)).slice(0,2).map(tr=>[...tr.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(m=>strip(m[1]).slice(0,32))),
    rowCount:trs.length};
