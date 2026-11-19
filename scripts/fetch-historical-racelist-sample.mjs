@@ -16,6 +16,6 @@ export async function fetchHistoricalRacelistSample({date='20261118',venue=18,ra
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const output=process.argv[2];if(!output)throw Error('Output file required');
  const data=await fetchHistoricalRacelistSample();
- fs.writeFileSync(output,JSON.stringify(data,null,2)+'\\n');
+ fs.writeFileSync(output,JSON.stringify(data,null,2)+'\n');
  console.log(JSON.stringify({status:data.status,sha256:data.sha256||null,error:data.error||null}));
 }
