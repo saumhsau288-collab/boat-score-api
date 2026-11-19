@@ -79,7 +79,7 @@ jobs:
           import fs from 'node:fs';
           import {predictSelectedRace} from './scripts/predict-selected-boat-race.mjs';
           const r=await predictSelectedRace({date:'20261119',venue:18,race:2});
-          const report={target:'20261119 Tokuyama 2R',status:r.status,officialUrl:r.provenance?.officialUrl??null,htmlSha256:r.provenance?.htmlSha256??null,diagnostics:r.diagnostics??null,parsedRacerCount:r.racers?.length??0,provisionalMainCount:r.main?.length??0,provisionalUpsetCount:r.upset?.length??0,entryScenario:r.entryScenario??null,preCutoffSnapshotAuthenticated:false};
+          const report={target:'20261119 Tokuyama 2R',status:r.status,officialUrl:r.provenance?.officialUrl??null,htmlSha256:r.provenance?.htmlSha256??null,diagnostics:r.diagnostics??null,parsedRacerCount:r.racers?.length??0,provisionalMainCount:r.main?.length??0,provisionalUpsetCount:r.upset?.length??0,main:r.main??[],upset:r.upset??[],ranking:r.ranking??[],entryCourses:r.entryCourses??null,entryScenario:r.entryScenario??null,preCutoffSnapshotAuthenticated:false};
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n## 公式出走表の実データ検証（過去レース・研究用）\n\n```json\n'+JSON.stringify(report,null,2)+'\n```\n\n※取得時点のアーカイブであり、締切前のデータとしては認証されていません。\n');
           console.log(JSON.stringify(report));
           JS
