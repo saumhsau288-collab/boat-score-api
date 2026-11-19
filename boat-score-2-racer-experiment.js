@@ -29,7 +29,12 @@ export function experimentalRaceRanking(racers){
    return {status:'invalid_entry_courses'};
  const scored=racers.map(r=>({boat:r.boat,...experimentalRacerScore(r)}));
  if(scored.some(r=>r.status!=='evaluated'))return {status:'insufficient_data',scored};
- return {status:'evaluated',ranked:scored.sort((a,b)=>b.score-a.score||a.boat-b.boat)};
+ const ranked=scored.sort((a,b)=>b.score-a.score||a.boat-b.boat);
+ const ties=[];
+ for(let i=1;i<ranked.length;i++)if(ranked[i].score===ranked[i-1].score)
+   ties.push([ranked[i-1].boat,ranked[i].boat]);
+ return {status:'evaluated',ranked,ties,
+   warning:ties.length?'Equal scores use boat number for stable display order only, not a proven ability advantage.':null};
 }
 
 /**
