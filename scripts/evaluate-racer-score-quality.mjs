@@ -1,7 +1,7 @@
 // Research-only evaluation of individual racer score quality.
 // Finish positions are outcome labels for validation, never scoring inputs.
 export function evaluateRacerScoreQuality(races){
- const report={eligibleRaces:0,eligibleRacers:0,rejectedRaces:0,topRatedWins:0,topRatedPodiums:0,topThreeRatedPodiumPlaces:0,pairwiseCorrect:0,pairwiseTotal:0,meanAbsoluteRankError:null,byBoat:Object.fromEntries(Array.from({length:6},(_,i)=>[i+1,{samples:0,rankErrorSum:0,overrated:0,underrated:0,exactRank:0}]))};
+ const report={eligibleRaces:0,eligibleRacers:0,rejectedRaces:0,topRatedWins:0,topRatedPodiums:0,topThreeRatedPodiumPlaces:0,pairwiseCorrect:0,pairwiseTotal:0,pairwiseTies:0,meanAbsoluteRankError:null,byBoat:Object.fromEntries(Array.from({length:6},(_,i)=>[i+1,{samples:0,rankErrorSum:0,overrated:0,underrated:0,exactRank:0}]))};
  let errorSum=0;const seen=new Set();
  for(const race of races??[]){
   const key=[race?.date,race?.venue,race?.race].join(':');
@@ -24,13 +24,16 @@ export function evaluateRacerScoreQuality(races){
    boatStats.underrated+=Number(predictedRank>actualRank);
    boatStats.exactRank+=Number(predictedRank===actualRank);
    errorSum+=Math.abs(predictedRank-actualRank);
-   for(let j=i+1;j<6;j++){report.pairwiseTotal++;report.pairwiseCorrect+=Number(ranked[i].finish<ranked[j].finish);}
+   for(let j=i+1;j<6;j++){
+    if(Math.abs(ranked[i].score-ranked[j].score)<1e-9){report.pairwiseTies++;continue;}
+    report.pairwiseTotal++;report.pairwiseCorrect+=Number(ranked[i].finish<ranked[j].finish);
+   }
   }
  }
  for(const stats of Object.values(report.byBoat))stats.meanAbsoluteRankError=stats.samples?stats.rankErrorSum/stats.samples:null;
  report.meanAbsoluteRankError=report.eligibleRacers?errorSum/report.eligibleRacers:null;
  report.pairwiseAccuracy=report.pairwiseTotal?report.pairwiseCorrect/report.pairwiseTotal:null;
  report.topThreePodiumOverlapRate=report.eligibleRaces?report.topThreeRatedPodiumPlaces/(3*report.eligibleRaces):null;
- report.researchOnly=true;report.note='Race finishes are used solely as outcome labels. No score weights are updated automatically.';
+ report.researchOnly=true;report.note='Pairwise ties are excluded rather than broken by boat number. Top-rated and rank-error metrics still use boat-number tie breaking and must be interpreted cautiously. No weights are updated automatically.';
  return report;
 }
