@@ -17,3 +17,14 @@ test('rejects conflicting boat/name and unverified source',()=>{
  wrong[0].boat=6;
  assert.equal(joinMakulaboWithOfficial(official,{verified:true,parsedRows:wrong}).verified,false);
 });
+
+test('requires explicit reviewed identity for abbreviated names',()=>{
+ const abbreviated=parsedRows.map(r=>({...r}));
+ abbreviated[2].name='選手';
+ const rejected=joinMakulaboWithOfficial(official,{verified:true,parsedRows:abbreviated});
+ assert.equal(rejected.verified,false);
+ const approved=joinMakulaboWithOfficial(official,{verified:true,parsedRows:abbreviated,
+  reviewedIdentityPairs:[{boat:3,racerId:'4003',officialName:'選手3',sourceName:'選手',reviewed:true}]});
+ // A too-short ambiguous name must not be accepted by the identity matcher.
+ assert.equal(approved.verified,false);
+});
