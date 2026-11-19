@@ -10,12 +10,15 @@ export async function predictSelectedRace({date,venue,race,courses=null,fetchImp
  if(entry.status!=='raw_html_saved')return {status:'official_fetch_failed',date,venue,race,main:[],upset:[],error:entry.error};
  const features=extractArchivedRacerFeatures(entry);
  if(features.status!=='parsed_archival_features_unverified')return {status:'official_features_incomplete',date,venue,race,main:[],upset:[]};
- if(!Array.isArray(courses)||courses.length!==6||courses.some(n=>!Number.isInteger(n)||n<1||n>6)||new Set(courses).size!==6)
-  return {status:'entry_prediction_required',date,venue,race,main:[],upset:[],racers:features.racers,
-   message:'Official entry features fetched, but predicted entry courses are not verified. Provide six unique course numbers in boat order; do not substitute boat numbers silently.'};
- const racers=features.racers.map((x,i)=>({...x,boat:i+1,entryCourse:courses[i]}));
+ const usingAssumedEntry=courses===null;
+ const selectedCourses=usingAssumedEntry?[1,2,3,4,5,6]:courses;
+ if(!Array.isArray(selectedCourses)||selectedCourses.length!==6||selectedCourses.some(n=>!Number.isInteger(n)||n<1||n>6)||new Set(selectedCourses).size!==6)
+  return {status:'invalid_entry_scenario',date,venue,race,main:[],upset:[],racers:features.racers};
+ const racers=features.racers.map((x,i)=>({...x,boat:i+1,entryCourse:selectedCourses[i]}));
  return {...predictFromInput({date,venue,race,racers,dataSource:'official_racelist_download_unverified_snapshot'}),
-  inputCaveat:'Entry courses supplied as scenario, not authenticated exhibition or confirmed actual entry.'};
+  entryScenario:usingAssumedEntry?'boat_order_assumption':'user_supplied_entry_scenario',
+  entryCourses:selectedCourses,
+  inputCaveat:usingAssumedEntry?'PROVISIONAL: Boat-order entry is assumed solely for scenario prediction. Actual entry is unverified; do not treat this as confirmed exhibition.':'Entry courses supplied as scenario, not authenticated exhibition or confirmed actual entry.'};
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const [date,venue,race,courseArg]=process.argv.slice(2);
