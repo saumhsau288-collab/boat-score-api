@@ -21,6 +21,10 @@ jobs:
         run: |
           mkdir -p research-historical
           node scripts/fetch-historical-racelist-sample.mjs research-historical/20261118-tokuyama-2r-racelist.json
+      - name: Fetch matching official race result and start order
+        run: |
+          node scripts/fetch-manual-official-historical-results.mjs 20261118 18 2 research-historical/20261118-tokuyama-2r-result-raw.json
+          node scripts/extract-official-result-racers.mjs research-historical/20261118-tokuyama-2r-result-raw.json research-historical/20261118-tokuyama-2r-result-parsed.json
       - name: Save original official source and fetch status
         uses: actions/upload-artifact@v4
         with:
