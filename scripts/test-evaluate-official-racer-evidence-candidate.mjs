@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {evaluateOfficialRacerEvidenceCandidate} from './evaluate-official-racer-evidence-candidate.mjs';
+const racersByBoat=Array.from({length:6},(_,i)=>({boat:i+1,toban:String(4000+i)}));
+const statsByBoat=Array.from({length:6},(_,i)=>({boat:i+1,nationwide:{winRate:6},local:{winRate:4},averageST:0.15,motor:{secondPlaceRate:40}}));
+const input={date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T11:00:00+09:00',official:{racersVerified:true,statsVerified:true,racersByBoat,statsByBoat}};
+const result=evaluateOfficialRacerEvidenceCandidate(input);
+assert.equal(result.ready,false);
+assert.equal(result.stage,'factor_normalization');
+assert.equal(result.partialRows.length,0);
+assert.equal(result.missingByBoat.length,6);
+assert.ok(result.missingByBoat.every(r=>r.missing.includes('expectedEntryCourse')&&r.missing.includes('exhibitionTime')));
+assert.equal(result.racerIdentities[0].racerId,'4000');
+assert.equal(evaluateOfficialRacerEvidenceCandidate({...input,official:{...input.official,racersByBoat:racersByBoat.map((r,i)=>i===0?{...r,boat:2}:r)}}).stage,'official_adapter');
+console.log('Official racer research scoring bridge tests passed');
