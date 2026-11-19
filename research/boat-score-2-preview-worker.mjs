@@ -34,7 +34,7 @@ export function rankRace(racers){
 // Strict public-name matching is a research fallback only, never proof of registration identity.
 export function matchMakulaboByName(official,recent){
  if(!Array.isArray(official)||official.length!==6||!Array.isArray(recent)||recent.length!==6)return {verified:false,reason:'six_racers_required',matches:[]};
- const norm=s=>typeof s==='string'?s.normalize('NFKC').replace(/[\\s\\u3000]/g,''):''; 
+ const norm=s=>typeof s==='string'?s.normalize('NFKC').replace(/[\s\u3000]/g,''):''; 
  const names=official.map(r=>norm(r.name));
  if(names.some(n=>n.length<2)||new Set(names).size!==6)return {verified:false,reason:'official_names_incomplete',matches:[]};
  const byName=new Map();
