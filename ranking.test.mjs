@@ -29,6 +29,16 @@ const avgResult=score(date,12,1,official(avgRows));
 assert.equal(avgResult.ready,true);
 assert.ok(avgResult.rankedScores.find(x=>x.boat===2).score>avgResult.rankedScores.find(x=>x.boat===1).score,
   'National 7/local 7 (average 7) must outrank national 8/local 4 (average 6)');
+// A strong racer on an outside boat must beat a weak racer on the inside
+// in the provisional morning screen when motor quality is equal.
+const strengthRows=Array.from({length:6},(_,i)=>({
+ boat:i+1,nationwide:{winRate:i===3?8:i===0?3:5,secondPlaceRate:35,thirdPlaceRate:55},
+ local:{winRate:i===3?8:i===0?3:5},motor:{secondPlaceRate:40}
+}));
+const strength=score(date,12,1,official(strengthRows));
+assert.equal(strength.ready,true);
+assert.ok(strength.rankedScores.find(x=>x.boat===4).score>strength.rankedScores.find(x=>x.boat===1).score,
+ 'High racer win-rate on boat 4 must outrank low racer win-rate on boat 1');
 result=score(date,12,1,official(Array.from({length:6},(_,i)=>row(i+1,i===0?null:6))));
 assert.equal(result.method,'national_winrate70_motor30_screening_unvalidated');
 assert.ok(result.missingInputs.includes('local'));
