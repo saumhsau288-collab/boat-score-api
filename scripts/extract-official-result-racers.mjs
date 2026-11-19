@@ -42,7 +42,8 @@ export function extractOfficialResultRacers(report){
   const entryCourses=valid&&startOrderValid?Object.fromEntries(startBoats.map((boat,index)=>[boat,index+1])):null;
   if(entryCourses)for(const racer of racers)racer.actualEntryCourse=entryCourses[racer.boat];
   return {...base,status:valid?'parsed_needs_independent_review':'racer_finish_mapping_incomplete',
-   startOrderBoats:startOrderValid?startBoats:null,entryCoursesExtracted:!!entryCourses,\n   racers:valid?racers:[],podium:valid?racers.filter(r=>r.finish<=3).sort((a,b)=>a.finish-b.finish).map(r=>r.boat):null};
+   startOrderBoats:startOrderValid?startBoats:null,entryCoursesExtracted:!!entryCourses,
+   racers:valid?racers:[],podium:valid?racers.filter(r=>r.finish<=3).sort((a,b)=>a.finish-b.finish).map(r=>r.boat):null};
  });
  return {method:'saved_official_result_racer_finish_parser',rows,parsedRaces:rows.filter(r=>r.status==='parsed_needs_independent_review').length,
   independentlyVerifiedRaces:0,eligibleForHistoricalProfile:0,
