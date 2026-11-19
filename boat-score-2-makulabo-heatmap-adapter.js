@@ -19,12 +19,17 @@ export function reconcileMakulaboHeatmap(official, heatmapRows) {
     const runs=counts.reduce((a,b)=>a+b,0);
     if (Number.isFinite(row.runs)&&row.runs!==runs)
       return {verified:false,reason:'run_count_conflict',racers:[]};
+    const finishHeadersVerified=row.finishHeadersVerified===true;
+    const rate=n=>runs>0?Math.round(n/runs*10000)/100:null;
     racers.push({boat:match.boat,racerId:official.find(r=>r.boat===match.boat).racerId,
       name:official.find(r=>r.boat===match.boat).name,counts:[...counts],runs,
       firstColumnShare:runs>0?Math.round(counts[0]/runs*10000)/100:null,
-      firstPlaceRate:null, courseFinishMatrixVerified:false,
+      firstPlaceRate:finishHeadersVerified?rate(counts[0]):null,
+      top2Rate:finishHeadersVerified?rate(counts[0]+counts[1]):null,
+      top3Rate:finishHeadersVerified?rate(counts[0]+counts[1]+counts[2]):null,
+      finishHeadersVerified,courseFinishMatrixVerified:false,
       eligibleForCourseSpecificScoring:false,
       eligibleAsVerifiedRecent50:false});
   }
-  return {verified:true,reason:null,racers,warning:'Course-by-finishing-position matrix and 50-race sample have not been verified; do not infer a first-place or course-specific rate from flattened counts.'};
+  return {verified:true,reason:null,racers,warning:'Finish rates require verified 1着–6着 column labels for each source row. Course-specific matrix and exactly 50 runs remain unverified; do not use these rates as course-specific evidence.'};
 }
