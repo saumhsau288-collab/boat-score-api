@@ -31,7 +31,7 @@ export async function fetchManualOfficialHistoricalResults({date,venue,races},{f
   for(let attempt=1;attempt<=3&&!saved;attempt++){
    try{
     const res=await fetchImpl(url,{redirect:'error',signal:AbortSignal.timeout(timeoutMs),headers:{accept:'text/html'}});
-    if(!res.ok||!/^text\\/html(?:;|$)/i.test(res.headers.get('content-type')||''))throw Error('Unexpected response status '+res.status);
+    if(!res.ok||!/^text\/html(?:;|$)/i.test(res.headers.get('content-type')||''))throw Error('Unexpected response status '+res.status);
     const html=await res.text();
     if(html.length<100||html.length>2000000)throw Error('Unexpected HTML size');
     pages.push({date,venue,race,url,status:'raw_html_saved',attempts:attempt,fetchedAt:new Date().toISOString(),
