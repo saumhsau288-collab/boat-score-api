@@ -21,6 +21,8 @@ on:
       - 'scripts/test-prepare-prediction-snapshot-batch.mjs'
       - 'scripts/audit-existing-morning-record.mjs'
       - 'scripts/test-audit-existing-morning-record.mjs'
+      - 'scripts/evaluate-racer-score-quality.mjs'
+      - 'scripts/test-evaluate-racer-score-quality.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -51,6 +53,8 @@ jobs:
           node scripts/compare-exploratory-winrates-results.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-comparison.json
       - name: Verify pre-cutoff snapshot eligibility rules
         run: node scripts/test-validate-precutoff-snapshot.mjs
+      - name: Test individual racer score quality evaluation
+        run: node scripts/test-evaluate-racer-score-quality.mjs
       - name: Test legacy morning snapshot eligibility audit
         run: node scripts/test-audit-existing-morning-record.mjs
       - name: Test append-only snapshot batch preparation
