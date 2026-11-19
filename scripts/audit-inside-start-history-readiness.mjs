@@ -6,11 +6,12 @@ export function auditInsideStartHistoryReadiness(rows){
  const report={total:rows.length,readyForManualVerification:0,blocked:0,missing:{},races:[],
   verifiedHistoricalAccuracy:false,approvedForDeployment:false,
   warning:'This audit checks structure and supplied evidence pointers only. Human/source verification and an untouched later-date test set remain mandatory.'};
- const seen=new Set();
+ const counts=new Map();
+ for(const r of rows){const key=[r?.date,r?.venue,r?.race].join(':');counts.set(key,(counts.get(key)||0)+1);}
  for(const r of rows){
   const missing=[],key=[r?.date,r?.venue,r?.race].join(':');
   if(!/^20\d{6}$/.test(String(r?.date))||!Number.isInteger(r?.venue)||r.venue<1||r.venue>24||!Number.isInteger(r?.race)||r.race<1||r.race>12)missing.push('race_identity');
-  if(seen.has(key))missing.push('duplicate_race');seen.add(key);
+  if(counts.get(key)>1)missing.push('duplicate_race');
   if(!Array.isArray(r?.actual)||r.actual.length!==3||new Set(r.actual).size!==3||r.actual.some(n=>!Number.isInteger(n)||n<1||n>6))missing.push('official_podium');
   if(r?.verifiedOfficialResult!==true||typeof r?.officialResultSourceUrl!=='string'||!r.officialResultSourceUrl.startsWith('https://www.boatrace.jp/'))missing.push('official_result_evidence');
   if(r?.verifiedPreRace!==true||typeof r?.preRaceSourceUrl!=='string'||!r.preRaceSourceUrl.startsWith('https://'))missing.push('pre_race_evidence');
