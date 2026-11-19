@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {buildRacerInputEvidenceSnapshot} from './build-racer-input-evidence-snapshot.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),nationalWinRate:6.2,localWinRate:null,averageST:0.14,motorSecondPlaceRate:32,expectedEntryCourse:i+1,exhibitionTime:null,last50Score:null}));
+const input={date:'20261119',venue:2,race:3,capturedAt:'2026-11-18T23:00:00Z',cutoffAt:'2026-11-19T11:00:00+09:00',source:'official_live_entry',racers};
+const out=buildRacerInputEvidenceSnapshot(input);
+assert.equal(out.ready,true);
+assert.equal(out.scoringReady,false);
+assert.equal(out.racers.length,6);
+assert.equal(out.racers[0].values.localWinRate,null);
+assert.ok(out.racers[0].missing.includes('last50Score'));
+assert.equal(out.captureStatus,'caller_supplied_unverified');
+assert.equal(buildRacerInputEvidenceSnapshot({...input,capturedAt:'2026-11-19T12:00:00+09:00'}).ready,false);
+assert.equal(buildRacerInputEvidenceSnapshot({...input,source:'post_race'}).ready,false);
+assert.equal(buildRacerInputEvidenceSnapshot({...input,racers:[...racers.slice(0,5),racers[0]]}).ready,false);
+console.log('Six-racer pre-race evidence snapshot schema tests passed');
