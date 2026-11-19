@@ -35,11 +35,11 @@ export function rankRace(racers){
 export function matchMakulaboByRegistration(official,recent){
  if(!Array.isArray(official)||official.length!==6||!Array.isArray(recent)||recent.length!==6)return {verified:false,reason:'six_racers_required',matches:[]};
  const ids=official.map(r=>String(r.racerId??''));
- if(ids.some(id=>!/^\\d{4}$/.test(id))||new Set(ids).size!==6||new Set(official.map(r=>r.boat)).size!==6)return {verified:false,reason:'invalid_official_identity',matches:[]};
+ if(ids.some(id=>!/^\d{4}$/.test(id))||new Set(ids).size!==6||new Set(official.map(r=>r.boat)).size!==6)return {verified:false,reason:'invalid_official_identity',matches:[]};
  const byId=new Map();
  for(const row of recent){
   const id=String(row?.racerId??'');
-  if(!/^\\d{4}$/.test(id)||byId.has(id))return {verified:false,reason:'duplicate_or_invalid_recent_identity',matches:[]};
+  if(!/^\d{4}$/.test(id)||byId.has(id))return {verified:false,reason:'duplicate_or_invalid_recent_identity',matches:[]};
   byId.set(id,row);
  }
  if(byId.size!==6||ids.some(id=>!byId.has(id)))return {verified:false,reason:'registration_mismatch',matches:[]};
