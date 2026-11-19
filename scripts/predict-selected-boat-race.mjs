@@ -8,9 +8,11 @@ export async function predictSelectedRace({date,venue,race,courses=null,venueHis
  if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)
   return {status:'invalid_selection',main:[],upset:[]};
  const entry=await fetchHistoricalRacelistSample({date,venue,race,fetchImpl});
- if(entry.status!=='raw_html_saved')return {status:'official_fetch_failed',date,venue,race,main:[],upset:[],error:entry.error};
+ if(entry.status!=='raw_html_saved')return {status:'official_fetch_failed',date,venue,race,main:[],upset:[],error:entry.error,
+  message:'公式出走表の取得に失敗しました。開催日・開催場・レース番号と公式サイトの公開状況を確認してください。'};
  const features=extractArchivedRacerFeatures(entry);
- if(features.status!=='parsed_archival_features_unverified')return {status:'official_features_incomplete',date,venue,race,main:[],upset:[]};
+ if(features.status!=='parsed_archival_features_unverified')return {status:'official_features_incomplete',date,venue,race,main:[],upset:[],
+  message:'出走表から6人分の選手勝率・平均STを確認できないため、予想を保留しました。'};
  const usingAssumedEntry=courses===null;
  const selectedCourses=usingAssumedEntry?[1,2,3,4,5,6]:courses;
  if(!Array.isArray(selectedCourses)||selectedCourses.length!==6||selectedCourses.some(n=>!Number.isInteger(n)||n<1||n>6)||new Set(selectedCourses).size!==6)
