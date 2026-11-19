@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {predictExperimentalRace} from './boat-score-2-offline-prediction.js';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,entryCourse:i+1,nationalWinRate:8-i*0.7,localWinRate:8-i*0.7,averageStartTiming:0.12+i*0.01}));
+const result=predictExperimentalRace(racers);
+assert.equal(result.status,'experimental');
+assert.equal(result.main.length,6);
+assert.equal(result.upset.length,6);
+const all=[...result.main,...result.upset];
+assert.equal(new Set(all.map(x=>x.ticket)).size,12);
+for(const item of all)assert.equal(new Set(item.boats).size,3);
+assert.ok(result.main.every(x=>x.boats[0]===result.ranking[0].boat));
+assert.ok(result.upset.every(x=>x.boats[0]!==result.ranking[0].boat));
+assert.equal(predictExperimentalRace(racers.slice(0,5)).status,'invalid_race');
+assert.equal(predictExperimentalRace(racers.map((r,i)=>i===5?{...r,averageStartTiming:null}:r)).status,'insufficient_data');
+console.log('Experimental offline ticket generation structural tests passed (synthetic data only)');
+
+assert.equal(predictExperimentalRace(racers,{weightStudy:{status:'insufficient_verified_history'}}).status,'uncalibrated_history');
+assert.equal(predictExperimentalRace(racers,{weightStudy:{status:'research_only',trainingCount:29,holdoutCount:15,candidateWeights:{ability:75,start:20,course:5}}}).status,'uncalibrated_history');
+const eligibleStudy={status:'research_only',trainingCount:30,holdoutCount:15,improvedOnHoldout:true,candidateWeights:{ability:75,start:20,course:5}};
+const weighted=predictExperimentalRace(racers,{weightStudy:eligibleStudy});
+assert.equal(weighted.status,'experimental');
+assert.equal(weighted.weightsApplied.ability,75);
+assert.equal(weighted.main.length,6);
+assert.equal(weighted.upset.length,6);
+
+assert.equal(predictExperimentalRace(racers,{weightStudy:{...eligibleStudy,improvedOnHoldout:false}}).status,'uncalibrated_history');

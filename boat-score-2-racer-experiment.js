@@ -1,0 +1,53 @@
+// Offline experiment only. No production import.
+// Values: official national/local win rates 0..10; start timing in seconds.
+// Course is actual entry course, not boat number.
+const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
+export function experimentalRacerScore(r){
+  if(!r || !Number.isFinite(r.nationalWinRate) || !Number.isFinite(r.localWinRate) ||
+     !Number.isFinite(r.averageStartTiming) || !Number.isInteger(r.entryCourse) ||
+     r.nationalWinRate<0 || r.nationalWinRate>10 || r.localWinRate<0 || r.localWinRate>10 ||
+     r.averageStartTiming<0 || r.averageStartTiming>0.5 || r.entryCourse<1 || r.entryCourse>6)
+    return {status:'insufficient_or_invalid_data',score:null};
+  // Arithmetic mean, not sum, of the two official win-rate measures.
+  const winRateMean=(r.nationalWinRate+r.localWinRate)/2;
+  const ability=winRateMean/10*70;
+  // Faster historical average start is better. This is not race-day exhibition ST.
+  const start=clamp((0.30-r.averageStartTiming)/0.30,0,1)*20;
+  const course=[10,8,6,4,2,0][r.entryCourse-1];
+  return {status:'evaluated',score:Math.round((ability+start+course)*100)/100,
+    components:{winRateMean,ability,start,course}};
+}
+export function experimentalRaceRanking(racers){
+ if(!Array.isArray(racers)||racers.length!==6||
+    new Set(racers.map(r=>r.boat)).size!==6||
+    racers.some(r=>!Number.isInteger(r.boat)||r.boat<1||r.boat>6))
+    return {status:'invalid_race'};
+ // A six-racer entry order cannot contain duplicate courses. Do not silently
+ // accept a boat-number proxy or malformed course assignment as a valid race.
+ if(racers.some(r=>!Number.isInteger(r.entryCourse)||r.entryCourse<1||r.entryCourse>6)||
+    new Set(racers.map(r=>r.entryCourse)).size!==6)
+   return {status:'invalid_entry_courses'};
+ const scored=racers.map(r=>({boat:r.boat,...experimentalRacerScore(r)}));
+ if(scored.some(r=>r.status!=='evaluated'))return {status:'insufficient_data',scored};
+ const ranked=scored.sort((a,b)=>b.score-a.score||a.boat-b.boat);
+ const ties=[];
+ for(let i=1;i<ranked.length;i++)if(ranked[i].score===ranked[i-1].score)
+   ties.push([ranked[i-1].boat,ranked[i].boat]);
+ return {status:'evaluated',ranked,ties,
+   warning:ties.length?'Equal scores use boat number for stable display order only, not a proven ability advantage.':null};
+}
+
+/**
+ * Compare score components without using finishing order.
+ * Positive difference means the first racer scores higher.
+ */
+export function explainRacerComparison(first,second){
+ const a=experimentalRacerScore(first),b=experimentalRacerScore(second);
+ if(a.status!=='evaluated'||b.status!=='evaluated')
+   return {status:'insufficient_data'};
+ const diff=k=>Math.round((a.components[k]-b.components[k])*100)/100;
+ return {status:'evaluated',scoreDifference:Math.round((a.score-b.score)*100)/100,
+   componentDifferences:{ability:diff('ability'),start:diff('start'),course:diff('course')},
+   winner:a.score===b.score?'tie':a.score>b.score?'first':'second',
+   note:'Offline explanatory score decomposition, not empirical race-win probability.'};
+}

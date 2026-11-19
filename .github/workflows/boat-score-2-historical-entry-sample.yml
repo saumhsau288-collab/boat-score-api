@@ -1,0 +1,74 @@
+name: Boat Score 2 historical official entry sample (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      race_date:
+        description: 'Official race date YYYYMMDD (research only)'
+        required: true
+        default: '20261118'
+        type: string
+      venue_code:
+        description: 'Official two-digit venue code'
+        required: true
+        default: '18'
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: historical-archive-research-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+jobs:
+  archive-one-official-entry:
+    timeout-minutes: 12
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set historical target
+        run: |
+          DATE="${{ inputs.race_date || '20261118' }}"
+          VENUE="${{ inputs.venue_code || '18' }}"
+          [[ "$DATE" =~ ^20[0-9]{6}$ ]] || exit 1
+          [[ "$VENUE" =~ ^(0[1-9]|1[0-9]|2[0-4])$ ]] || exit 1
+          echo "RACE_DATE=$DATE" >> "$GITHUB_ENV"
+          echo "VENUE_CODE=$VENUE" >> "$GITHUB_ENV"
+      - name: Validate sample collector and score comparison tests
+        run: |
+          node --check scripts/fetch-historical-racelist-sample.mjs
+          node --test scripts/compare-archived-weight-candidates.test.mjs
+      - name: Fetch archived official entry HTML
+        run: |
+          mkdir -p research-historical
+          for race in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            timeout 12s node scripts/fetch-historical-racelist-sample.mjs "research-historical/20261118-tokuyama-${race}r-racelist.json" "$RACE_DATE" "$VENUE_CODE" "$race" || echo "{\"status\":\"fetch_failed\",\"date\":\"$RACE_DATE\",\"venue\":$((10#$VENUE_CODE)),\"race\":$race,\"error\":\"timeout_or_failure\"}" > "research-historical/20261118-tokuyama-${race}r-racelist.json"
+            sleep 1
+          done
+      - name: Fetch matching official race result and start order
+        run: |
+          timeout 240s node scripts/fetch-manual-official-historical-results.mjs "$RACE_DATE" "$VENUE_CODE" 1,2,3,4,5,6,7,8,9,10,11,12 research-historical/20261118-tokuyama-results-raw.json
+          node scripts/extract-official-result-racers.mjs research-historical/20261118-tokuyama-results-raw.json research-historical/20261118-tokuyama-results-parsed.json
+      - name: Summarize real capture completeness
+        run: |
+          node --check scripts/summarize-official-historical-capture.mjs
+          node scripts/summarize-official-historical-capture.mjs research-historical research-historical/20261118-tokuyama-completeness.json
+      - name: Join archived racer features to official results (research only)
+        run: |
+          node --check scripts/extract-archived-racer-features.mjs
+          node scripts/extract-archived-racer-features.mjs research-historical research-historical/20261118-tokuyama-feature-joins.json
+      - name: Compare research-only scores with actual finish
+        run: |
+          node --check scripts/evaluate-archived-racer-scores.mjs
+          node scripts/evaluate-archived-racer-scores.mjs research-historical/20261118-tokuyama-feature-joins.json research-historical/20261118-tokuyama-score-comparison.json
+      - name: Compare alternative score weights descriptively
+        run: |
+          node --check scripts/compare-archived-weight-candidates.mjs
+          node scripts/compare-archived-weight-candidates.mjs research-historical/20261118-tokuyama-feature-joins.json research-historical/20261118-tokuyama-weight-candidates.json
+      - name: Save original official source and fetch status
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-official-entry-sample-${{ github.run_id }}
+          path: research-historical/
+          retention-days: 30
+          if-no-files-found: error

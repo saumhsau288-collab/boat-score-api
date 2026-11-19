@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {auditHistoricalSourceCoverage as audit} from './audit-historical-source-coverage.mjs';
+const good=Array.from({length:6},(_,i)=>({nationalWinRate:6,localWinRate:5,averageStartTiming:.15,entryCourse:i+1}));
+const r=audit([{date:'20261118',venue:18,race:2,racers:good,finishOrder:[1,2,3,4,5,6],entryCourseSource:'verified_pre_race'},{date:'20261118',venue:18,race:3,racers:[],finishOrder:[]}]);
+assert.equal(r.total,2);
+assert.equal(r.completeFeatureRows,1);
+assert.equal(r.missingSixRacers,1);
+assert.equal(r.missingByField.nationalWinRate,1);
+assert.equal(r.eligibleForWeightTuning,0);
+assert.equal(audit([{racers:good.map(x=>({...x,entryCourse:1}))}]).completeFeatureRows,0);
+assert.throws(()=>audit({}),/array/);
+console.log('Historical source coverage audit tests passed (synthetic only)');

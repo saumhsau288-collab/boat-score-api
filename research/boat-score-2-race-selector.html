@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Boat Score 2 検証用レース選択</title><style>
+:root{font-family:system-ui,sans-serif;color-scheme:light}body{max-width:560px;margin:auto;padding:18px;background:#f4f7fa;color:#172b42}main{background:white;border-radius:16px;padding:20px;box-shadow:0 3px 18px #0001}label{display:block;font-weight:700;margin-top:16px}select,input,button{font:inherit;width:100%;box-sizing:border-box;padding:13px;border:1px solid #aebccb;border-radius:10px;margin-top:7px}button{background:#1265b4;color:white;font-weight:700;margin-top:20px;border:0}button:disabled{background:#8796a5}p,small{line-height:1.65}pre{white-space:pre-wrap;word-break:break-word;background:#eef3f8;padding:12px;border-radius:10px}</style></head>
+<body><main><h1>Boat Score 2</h1><p>検証用：開催場・レース選択</p><label for="date">開催日</label><input id="date" type="date" required><label for="venue">開催場</label><select id="venue"><option value="01">01 桐生</option>
+<option value="02">02 戸田</option>
+<option value="03">03 江戸川</option>
+<option value="04">04 平和島</option>
+<option value="05">05 多摩川</option>
+<option value="06">06 浜名湖</option>
+<option value="07">07 蒲郡</option>
+<option value="08">08 常滑</option>
+<option value="09">09 津</option>
+<option value="10">10 三国</option>
+<option value="11">11 びわこ</option>
+<option value="12">12 住之江</option>
+<option value="13">13 尼崎</option>
+<option value="14">14 鳴門</option>
+<option value="15">15 丸亀</option>
+<option value="16">16 児島</option>
+<option value="17">17 宮島</option>
+<option value="18">18 徳山</option>
+<option value="19">19 下関</option>
+<option value="20">20 若松</option>
+<option value="21">21 芦屋</option>
+<option value="22">22 福岡</option>
+<option value="23">23 唐津</option>
+<option value="24">24 大村</option></select><label for="race">レース</label><select id="race"><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="select">レースを選択</button><button id="predict-direct" type="button">選択レースを予想（検証API）</button><button id="workflow" type="button" style="background:#1f7a52">GitHubで予想を実行（検証）</button><button id="copy" type="button" style="background:#516475">選択内容をコピー</button><section><h2>公式データ・まくらぼ確認</h2><button id="open-makulabo" type="button" style="background:#526a84">選択レースのまくらぼを開く</button><p><small>まくらぼの直近50走データは、選手との照合が済むまで自動反映しません。</small></p></section><section><h2>予想結果ファイルを表示</h2><p>GitHubの検証結果（prediction.json）を選ぶと、この画面に本命・穴・選手評価を表示します。</p><input id="prediction-file" type="file" accept=".json,application/json"><div id="prediction-view" aria-live="polite"></div></section><section aria-live="polite"><h2>選択結果</h2><pre id="result">開催場とレースを選んでください。</pre><a id="official" href="#" target="_blank" rel="noopener noreferrer" hidden>選択したレースの公式出走表を開く</a></section><small>注意：これは検証用の選択画面です。開催の有無・出走表・直前情報は未取得です。検証用APIが接続された場合、または予想結果JSONを選んだ場合に暫定買い目を表示します。公開アプリとは独立しています。</small></main>
+<script>
+const date=document.querySelector('#date'),venue=document.querySelector('#venue'),race=document.querySelector('#race'),result=document.querySelector('#result');
+date.value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+let predictionRequestVersion=0;
+function selection(){return {date:date.value,venue:venue.value,race:race.value,venueName:venue.options[venue.selectedIndex].text}}
+document.querySelector('#predict-direct').addEventListener('click',async()=>{const x=selection(),requestVersion=++predictionRequestVersion,view=document.querySelector('#prediction-view');view.replaceChildren();try{const u=new URL(location.origin);if(u.protocol!=='https:')throw Error('HTTPSの専用プレビューから開いてください');u.pathname='/api/predict';u.search=new URLSearchParams({date:x.date.replaceAll('-',''),venue:String(Number(x.venue)),race:x.race}).toString();result.textContent='公式出走表から暫定予想を取得中…';const res=await fetch(u,{signal:AbortSignal.timeout(20000),cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const data=await res.json();if(requestVersion!==predictionRequestVersion)return;if(data.status!=='experimental')throw Error('予想保留：'+(data.message??data.status));if(data.date!==x.date.replaceAll('-','')||data.venue!==Number(x.venue)||data.race!==Number(x.race))throw Error('取得結果のレースが一致しません');if(!Array.isArray(data.ranking)||!Array.isArray(data.main)||data.main.length!==6||!Array.isArray(data.upset)||data.upset.length!==6)throw Error('予想結果が不完全です');result.textContent='暫定予想（枠なり仮定・まくらぼ未反映）';const h=document.createElement('h3');h.textContent=x.venueName+' '+x.race+'R';view.append(h);for(const [label,items] of [['本命6点',data.main],['穴6点',data.upset]]){const title=document.createElement('h3');title.textContent=label;view.append(title);const list=document.createElement('ol');for(const item of items??[]){const li=document.createElement('li');li.textContent=item.ticket;list.append(li);}view.append(list);}const p=document.createElement('p');p.textContent='選手評価：'+(data.ranking??[]).map(r=>r.boat+'号艇 '+r.score+'点').join(' / ');view.append(p);}catch(e){if(requestVersion===predictionRequestVersion)result.textContent='予想できません：'+e.message;}});
+document.querySelector('#workflow').addEventListener('click',()=>{const x=selection();if(!x.date){result.textContent='開催日を選択してください';return;}const url='https://github.com/saumhsau288-collab/boat-score-api/actions/workflows/boat-score-2-selected-race-prediction.yml';result.textContent=`GitHub Actionsで Run workflow を選択し、ブランチ experiment-racer-start-course-20261119 を選んでください。実行後の Artifacts に prediction.html と prediction.json が保存されます。\\n入力値：\\nrace_date = ${x.date.replaceAll('-','')}\\nvenue_code = ${Number(x.venue)}\\nrace_number = ${Number(x.race)}\\n注意：GitHubの仕様により新規ワークフローが表示されない場合があります。`;window.open(url,'_blank','noopener,noreferrer');});
+document.querySelector('#copy').addEventListener('click',async()=>{const x=selection();const s=`Boat Score 2 予想対象：${x.date} ${x.venueName} ${x.race}R`;try{await navigator.clipboard.writeText(s);result.textContent=s+'\\nコピーしました';}catch{result.textContent=s+'\\nコピーできない場合はこの文字を確認してください';}});
+document.querySelector('#select').addEventListener('click',()=>{
+ if(!date.value){result.textContent='開催日を選択してください。';return}
+ const hd=date.value.replaceAll('-',''),jcd=venue.value,rno=race.value;
+ const url=new URL('https://www.boatrace.jp/owpc/pc/race/racelist');
+ url.searchParams.set('hd',hd);url.searchParams.set('jcd',jcd);url.searchParams.set('rno',rno);
+ const official=document.querySelector('#official');official.href=url.href;official.hidden=false;
+ result.textContent=venue.options[venue.selectedIndex].text+' / '+race.value+'R / '+date.value+'\n公式出走表：'+url.href+'\n\n現在は選択と公式ページへの参照まで。自動予想は未接続です。';
+});
+document.querySelector('#open-makulabo').addEventListener('click',()=>{const x=selection();if(!x.date){result.textContent='開催日を選択してください';return;}const url='https://makulabo-jp.com/data/'+x.venue+'/'+Number(x.race)+'/heatmap?hd='+x.date.replaceAll('-','');window.open(url,'_blank','noopener,noreferrer');});
+for(const field of [date,venue,race])field.addEventListener('change',()=>{predictionRequestVersion++;result.textContent='選択が変わりました。新しいレースで予想を実行してください。';document.querySelector('#prediction-view').replaceChildren();document.querySelector('#prediction-file').value='';});
+document.querySelector('#prediction-file').addEventListener('change',async event=>{
+ const view=document.querySelector('#prediction-view');view.replaceChildren();
+ const file=event.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>2000000)throw Error('ファイルが大きすぎます');
+  const data=JSON.parse(await file.text());
+  if(data.status!=='experimental')throw Error('公式出走表の検証が完了していないため予想を表示できません');
+  if(!/^20\d{6}$/.test(String(data.date))||!Number.isInteger(data.venue)||!Number.isInteger(data.race)||!Array.isArray(data.main)||!Array.isArray(data.upset))throw Error('予想結果ファイルの形式が違います');
+  const chosen=selection();
+  if(data.date!==chosen.date.replaceAll('-','')||data.venue!==Number(chosen.venue)||data.race!==Number(chosen.race))throw Error('読み込んだ予想は現在選択している開催日・開催場・レースと一致しません');
+  const title=document.createElement('h3');title.textContent=data.date+' / '+data.venue+'場 / '+data.race+'R';view.append(title);
+  const warning=document.createElement('p');warning.textContent='検証用：進入と締切前データは未確認。まくらぼ反映の有無も確認してください。';view.append(warning);
+  function list(label,items){
+   const h=document.createElement('h3');h.textContent=label;view.append(h);
+   const ol=document.createElement('ol');
+   for(const item of items){const li=document.createElement('li');li.textContent=String(item.ticket??'不明');ol.append(li);}
+   view.append(ol);
+  }
+  list('本命（反映前）',data.main);list('穴（反映前）',data.upset);
+  const ranking=document.createElement('p');ranking.textContent='評価順位：'+(data.ranking??[]).map(x=>x.boat+'号艇 '+x.score+'点').join(' / ');view.append(ranking);
+  const m=data.makulaboComparison;
+  if(m?.applied===true&&Array.isArray(m.adjusted?.main)&&Array.isArray(m.adjusted?.upset)){list('まくらぼ反映後・本命',m.adjusted.main);list('まくらぼ反映後・穴',m.adjusted.upset);}
+  else {const p=document.createElement('p');p.textContent='まくらぼ：未反映（'+(m?.reason??'実データ未取得')+'）';view.append(p);}
+ }catch(error){view.textContent='表示できません：'+error.message;}
+});
+</script></body></html>

@@ -1,0 +1,30 @@
+name: Validate isolated Boat Score 2 prediction preview (no deploy)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'research/boat-score-2-preview-worker.mjs'
+      - 'research/boat-score-2-race-selector.html'
+      - 'scripts/test-preview-prediction-worker.mjs'
+      - 'scripts/test-mobile-race-selector.mjs'
+      - '.github/workflows/boat-score-2-isolated-preview-check.yml'
+permissions:
+  contents: read
+jobs:
+  preview-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate isolated API and mobile selector
+        run: |
+          node --check research/boat-score-2-preview-worker.mjs
+          node scripts/test-preview-prediction-worker.mjs
+          node scripts/test-mobile-race-selector.mjs
+      - name: Confirm production is untouched
+        run: |
+          test -f research/boat-score-2-preview-worker.mjs
+          echo 'Validation only; no Cloudflare credentials or deployment used.'
