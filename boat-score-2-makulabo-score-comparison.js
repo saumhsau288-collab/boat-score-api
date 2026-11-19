@@ -4,7 +4,7 @@ export function compareMakulaboWithScores(joined,scoringInputs,provenance) {
  // Historical prediction comparison requires independent proof that all inputs
  // were available before the race deadline. A current page is not such proof.
  if(provenance?.preRaceVerified!==true || provenance?.allInputsPreRaceVerified!==true ||
-    !/^20\\d{6}$/.test(String(provenance?.raceDate??'')))
+    !/^20\d{6}$/.test(String(provenance?.raceDate??'')))
   return {status:'pre_race_evidence_required',racers:[],scoreChangeApplied:false};
  if(joined?.verified!==true||!Array.isArray(joined.racers)||joined.racers.length!==6)
   return {status:'unverified_identity',racers:[],scoreChangeApplied:false};
