@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {buildPreRacePredictionSnapshot as build} from './build-prerace-prediction-snapshot.mjs';
+import {validateHistoricalPreRaceSnapshot as validate} from './validate-historical-prerace-snapshot.mjs';
+const picks=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
+const args={date:'20261118',venue:2,race:1,phase:'morning_0800',savedAt:'2026-11-18T00:00:00Z',cutoffAt:'2026-11-18T03:00:00Z',inputsCapturedBeforeCutoff:true,prediction:{ready:true,main:picks,upset:picks}};
+const morning=build(args);
+assert.equal(morning.phase,'morning_0800');
+assert.equal(validate(morning,{date:args.date,venue:2,race:1,independentlyVerified:true}).eligible,true);
+assert.equal(build({...args,phase:'pre_cutoff'}).phase,'pre_cutoff');
+assert.throws(()=>build({...args,savedAt:args.cutoffAt}),/post-cutoff/);
+assert.throws(()=>build({...args,inputsCapturedBeforeCutoff:false}),/provenance/);
+assert.throws(()=>build({...args,prediction:{...args.prediction,ready:false}}),/not ready/);
+assert.throws(()=>build({...args,phase:'post_race'}),/phase/);
+assert.throws(()=>build({...args,date:'2026-11-18'}),/identity/);
+console.log('Pre-race snapshot builder tests passed (synthetic only)');
