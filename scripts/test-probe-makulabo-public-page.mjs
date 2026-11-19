@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {probeMakulaboPublicPage} from './probe-makulabo-public-page.mjs';
+const html='<html><body>ヒートマップ 直近50走 登録番号 4001<table><tr><td>1</td></tr><tr><td>2</td></tr></table></body></html>';
+const fetchImpl=async()=>new Response(html,{status:200,headers:{'content-type':'text/html'}});
+const result=await probeMakulaboPublicPage({date:'20261119',venue:11,race:2,fetchImpl});
+assert.equal(result.status,'public_page_inspected');
+assert.equal(result.structure.tableCount,1);
+assert.equal(result.structure.rowCount,2);
+assert.equal(result.indicators.hasLast50Label,true);
+assert.equal(result.recent50Ready,false,'Labels are not verified racer data');
+const denied=await probeMakulaboPublicPage({date:'20261119',venue:11,race:2,fetchImpl:async()=>new Response('Forbidden',{status:403})});
+assert.equal(denied.status,'http_error');
+assert.equal(denied.recent50Ready,false);
+console.log('Makulabo page probe structure tests passed');
