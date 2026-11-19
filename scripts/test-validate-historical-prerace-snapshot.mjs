@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {validateHistoricalPreRaceSnapshot as check} from './validate-historical-prerace-snapshot.mjs';
 const picks=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
-const snapshot={source:'existing_Boat_Score_2_selected_race',captureKind:'saved_before_cutoff',date:'20261118',venue:2,race:1,savedAt:'2026-11-18T03:00:00Z',cutoffAt:'2026-11-18T03:05:00Z',inputsCapturedBeforeCutoff:true,main:picks,upset:picks};
+const snapshot={source:'existing_Boat_Score_2_selected_race',captureKind:'saved_before_cutoff',date:'20261118',venue:2,race:1,phase:'morning_0800',savedAt:'2026-11-18T03:00:00Z',cutoffAt:'2026-11-18T03:05:00Z',inputsCapturedBeforeCutoff:true,main:picks,upset:picks};
 const result={date:'20261118',venue:2,race:1,independentlyVerified:true};
 assert.equal(check(snapshot,result).eligible,true);
 assert.ok(check({...snapshot,savedAt:snapshot.cutoffAt},result).issues.includes('captured_at_or_after_cutoff'));
