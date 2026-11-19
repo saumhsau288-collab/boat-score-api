@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {compareInsideStartTickets} from './compare-inside-start-ticket-history.mjs';
+import {EXPERIMENTAL_WEIGHTS} from './inside-start-historical-research.mjs';
+const boats=Array.from({length:6},(_,i)=>({boat:i+1,entryCourse:i+1,racerForm:.5,start:.5,motor:.5,recent50:.5,exhibitionWeather:.5}));
+const baselineWeights={racerForm:20,start:10,entryCourse:50,motor:10,recent50:5,exhibitionWeather:5};
+const valid={race:1,boats,actual:[1,2,3],verifiedPreRace:true,verifiedOfficialResult:true,capturedAt:'2026-11-18T01:00:00Z',cutoffAt:'2026-11-18T02:00:00Z'};
+const r=compareInsideStartTickets([valid,{...valid,race:2,verifiedOfficialResult:false}],{baselineWeights});
+assert.equal(r.baseline.races,1);
+assert.equal(r.experimental.races,1);
+assert.equal(r.excluded.length,1);
+assert.equal(r.baseline.firstCorrect,1);
+assert.equal(r.experimental.firstCorrect,1);
+assert.equal(r.approvedForDeployment,false);
+assert.equal(r.baseline.mainExact,1);
+assert.equal(r.experimental.mainExact,1);
+assert.deepEqual(Object.values(EXPERIMENTAL_WEIGHTS).reduce((a,b)=>a+b,0),100);
+console.log('Paired research ticket checks passed (synthetic fixtures; no historical performance claims)');
