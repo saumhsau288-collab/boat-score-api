@@ -29,13 +29,18 @@ jobs:
           node --check research/boat-score-2-preview-worker.mjs
           node scripts/test-preview-prediction-worker.mjs
           node scripts/test-mobile-race-selector.mjs
+          test -f research/boat-score-2-race-selector.html
           test "boat-score-2-predict-lab" != "rough-math-6d4c"
           test "boat-score-2-predict-lab" != "boat-score-2-preview"
-      - name: Deploy isolated Worker only
+      - name: Prepare isolated mobile app assets
+        run: |
+          mkdir -p isolated-preview-assets
+          cp research/boat-score-2-race-selector.html isolated-preview-assets/index.html
+      - name: Deploy isolated Worker and mobile selector
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           test -n "$CLOUDFLARE_API_TOKEN"
           test -n "$CLOUDFLARE_ACCOUNT_ID"
-          npx --yes wrangler@4 deploy research/boat-score-2-preview-worker.mjs --name boat-score-2-predict-lab --compatibility-date 2026-11-19 --workers-dev
+          npx --yes wrangler@4 deploy research/boat-score-2-preview-worker.mjs --name boat-score-2-predict-lab --compatibility-date 2026-11-19 --workers-dev --assets ./isolated-preview-assets
