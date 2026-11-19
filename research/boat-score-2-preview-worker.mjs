@@ -19,7 +19,13 @@ export function parseRacers(html){
  return racers.length===6&&new Set(racers.map(r=>r.boat)).size===6&&new Set(racers.map(r=>r.racerId)).size===6?racers.sort((a,b)=>a.boat-b.boat):null;
 }
 export function rankRace(racers){
- const ranking=racers.map(r=>({...r,score:Number((((r.nationalWinRate+r.localWinRate)/2)/10*70+Math.max(0,Math.min(1,(0.30-r.averageStartTiming)/0.30))*20+(6-r.entryCourse)/5*10).toFixed(3))})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
+ const ranking=racers.map(r=>{
+  const winRateAverage=(r.nationalWinRate+r.localWinRate)/2;
+  const winRatePoints=Number((winRateAverage/10*70).toFixed(3));
+  const startPoints=Number((Math.max(0,Math.min(1,(0.30-r.averageStartTiming)/0.30))*20).toFixed(3));
+  const assumedCoursePoints=Number(((6-r.entryCourse)/5*10).toFixed(3));
+  return {...r,winRateAverage,scoreBreakdown:{winRatePoints,startPoints,assumedCoursePoints,makulaboPoints:null,motorPoints:null,exhibitionPoints:null},score:Number((winRatePoints+startPoints+assumedCoursePoints).toFixed(3))};
+ }).sort((a,b)=>b.score-a.score||a.boat-b.boat);
  const all=[];
  for(const a of ranking)for(const b of ranking)for(const c of ranking)if(a.boat!==b.boat&&a.boat!==c.boat&&b.boat!==c.boat)all.push({ticket:[a.boat,b.boat,c.boat].join('-'),heuristic:Number((a.score*.5+b.score*.3+c.score*.2).toFixed(2))});
  all.sort((a,b)=>b.heuristic-a.heuristic||a.ticket.localeCompare(b.ticket));
