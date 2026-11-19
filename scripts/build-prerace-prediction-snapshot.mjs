@@ -6,7 +6,7 @@ export function buildPreRacePredictionSnapshot({date,venue,race,phase,cutoffAt,s
  if(!['morning_0800','pre_cutoff'].includes(phase))throw Error('Invalid snapshot phase');
  if(typeof cutoffAt!=='string'||!Number.isFinite(Date.parse(cutoffAt))||typeof savedAt!=='string'||!Number.isFinite(Date.parse(savedAt)))throw Error('Missing timestamps');
  if(Date.parse(savedAt)>=Date.parse(cutoffAt))throw Error('Cannot save a post-cutoff prediction as pre-race');
- if(!/(Z|[+-]\\d{2}:\\d{2})$/i.test(savedAt)||!/(Z|[+-]\\d{2}:\\d{2})$/i.test(cutoffAt))throw Error('Snapshot timestamps must include timezone offsets');
+ if(!/(Z|[+-]\d{2}:\d{2})$/i.test(savedAt)||!/(Z|[+-]\d{2}:\d{2})$/i.test(cutoffAt))throw Error('Snapshot timestamps must include timezone offsets');
  const jstDate=t=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t)).replaceAll('-','');
  if(jstDate(savedAt)!==String(date)||jstDate(cutoffAt)!==String(date))throw Error('Snapshot timestamps must match race date in JST');
  if(inputsCapturedBeforeCutoff!==true)throw Error('Pre-race input provenance not verified');
