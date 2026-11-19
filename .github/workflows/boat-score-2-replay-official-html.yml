@@ -21,6 +21,7 @@ jobs:
         run: |
           node --check scripts/parse-saved-official-result-pages.mjs
           node scripts/test-parse-saved-official-result-pages.mjs
+          node scripts/test-inspect-official-racer-course-evidence.mjs
       - name: Download raw official HTML artifact
         env:
           GH_TOKEN: ${{ github.token }}
@@ -39,6 +40,11 @@ jobs:
           if [ "$count" -eq 0 ]; then echo 'No archived official HTML JSON found'; exit 1; fi
           for file in research-reports/*.json; do
             node -e 'const fs=require("fs");const r=JSON.parse(fs.readFileSync(process.argv[1]));console.log(JSON.stringify({parsed:r.parsed,verifiedResults:r.verifiedResults,eligibleForAccuracy:r.eligibleForAccuracy,rows:r.rows.map(x=>({race:x.race,status:x.status,podium:x.podium??null,reason:x.reason??null}))}))' "$file"
+          done
+      - name: Inspect archived racer ID and course evidence
+        run: |
+          find research-input -type f -name '*.official-raw.json' -print0 | while IFS= read -r -d '' file; do
+            node scripts/inspect-official-racer-course-evidence.mjs "$file" "research-reports/$(basename "$file").racer-course-evidence.json"
           done
       - name: Upload offline parse reports
         uses: actions/upload-artifact@v4
