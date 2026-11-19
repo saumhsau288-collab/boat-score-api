@@ -47,6 +47,17 @@ export function matchMakulaboByRegistration(official,recent){
  if(byId.size!==6||ids.some(id=>!byId.has(id)))return {verified:false,reason:'registration_mismatch',matches:[]};
  return {verified:true,matches:official.map(r=>({boat:r.boat,racerId:r.racerId,record:byId.get(String(r.racerId))}))};
 }
+// Research-only comparison. Never call this with unverified scraped labels.
+export function compareVerifiedMakulaboScores(official,recent,{weight=10}={}){
+ const baseline=Array.isArray(official)&&official.length===6?rankRace(official):null;
+ const identity=matchMakulaboByRegistration(official,recent);
+ if(!baseline||!identity.verified)return {applied:false,reason:identity.reason??'invalid_official_six',baseline};
+ if(typeof weight!=='number'||!Number.isFinite(weight)||weight<0||weight>20)return {applied:false,reason:'invalid_weight',baseline};
+ if(identity.matches.some(m=>m.record.verified!==true||typeof m.record.sourceUrl!=='string'||!/^https:\/\/makulabo-jp\.com\//.test(m.record.sourceUrl)||typeof m.record.observedAt!=='string'||!Number.isFinite(Date.parse(m.record.observedAt))))return {applied:false,reason:'source_evidence_incomplete',baseline};
+ const rates=new Map(identity.matches.map(m=>[m.boat,m.record.winRate]));
+ const ranking=baseline.ranking.map(r=>({...r,makulaboRecent50WinRate:rates.get(r.boat),score:Number((r.score*(1-weight/100)+rates.get(r.boat)*weight/100).toFixed(3))})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
+ return {applied:true,baseline,adjusted:{ranking},weight,warning:'Research comparison only. Source metadata and verified flags are claims; underlying 50 races have not been independently authenticated.'};
+}
 export default {async fetch(request){
  if(request.method==='OPTIONS')return new Response(null,{headers:cors});
  const u=new URL(request.url);
