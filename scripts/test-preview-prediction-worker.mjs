@@ -2,7 +2,7 @@ import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
-import worker,{parseRacers,rankRace,matchMakulaboByRegistration} from '../research/boat-score-2-preview-worker.mjs';
+import worker,{parseRacers,rankRace,matchMakulaboByRegistration,compareVerifiedMakulaboScores} from '../research/boat-score-2-preview-worker.mjs';
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),averageStartTiming:.12+i*.01,nationalWinRate:6.8-i*.3,localWinRate:6.4-i*.2,entryCourse:i+1}));
 const html='<table>'+racers.map(r=>'<tr>'+[r.boat,'photo',r.racerId,'0.'+String(Math.round(r.averageStartTiming*100)).padStart(2,'0'),r.nationalWinRate.toFixed(2),r.localWinRate.toFixed(2)].map(v=>'<td rowspan="4">'+v+'</td>').join('')+'</tr>').join('')+'</table>';
 const parsed=parseRacers(html);
@@ -17,6 +17,17 @@ assert.equal(matchMakulaboByRegistration(parsed,parsed.map(r=>({racerId:r.racerI
 assert.equal(matchMakulaboByRegistration(parsed,parsed.map(r=>({racerId:r.racerId})).slice(1)).verified,false);
 assert.equal(matchMakulaboByRegistration(parsed,parsed.map(r=>({racerId:r.racerId})).map((r,i)=>i===0?{racerId:'9999'}:r)).verified,false);
 assert.equal(matchMakulaboByRegistration(parsed,parsed.map(r=>({racerId:r.racerId})).map((r,i)=>i===0?{racerId:'4002'}:r)).verified,false);
+const evidence=parsed.map(r=>({racerId:r.racerId,winRate:50+r.boat,verified:true,sourceUrl:'https://makulabo-jp.com/data/18/2/heatmap?hd=20261119',observedAt:'2026-11-19T12:00:00Z'})).reverse();
+const comparison=compareVerifiedMakulaboScores(parsed,evidence);
+assert.equal(comparison.applied,true);
+assert.equal(comparison.adjusted.ranking.length,6);
+for(const r of comparison.adjusted.ranking){
+ const before=comparison.baseline.ranking.find(x=>x.boat===r.boat);
+ assert.equal(r.score,Number((before.score*.9+(50+r.boat)*.1).toFixed(3)));
+}
+assert.equal(compareVerifiedMakulaboScores(parsed,evidence.map((r,i)=>i===0?{...r,verified:false}:r)).applied,false);
+assert.equal(compareVerifiedMakulaboScores(parsed,evidence.map((r,i)=>i===0?{...r,sourceUrl:'https://example.com/'}:r)).applied,false);
+assert.equal(compareVerifiedMakulaboScores(parsed,evidence,{weight:21}).applied,false);
 const out=rankRace(parsed);
 assert.equal(out.ranking.length,6);
 for(const racer of out.ranking){
