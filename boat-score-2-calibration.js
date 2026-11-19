@@ -6,6 +6,7 @@ const LIMITS={nationalWinRate:10,localWinRate:10,motorTwoWinRate:100,recent50Win
 const KEYS=Object.keys(BASE_WEIGHTS);
 const validWeights=w=>w&&KEYS.every(k=>Number.isFinite(w[k])&&w[k]>=0)&&Math.abs(KEYS.reduce((s,k)=>s+w[k],0)-100)<1e-8;
 export function scoreRacer(r,w=BASE_WEIGHTS){
+ r = r && r.localWinRate === 0 && Number.isFinite(r.nationalWinRate) ? {...r,localWinRate:r.nationalWinRate} : r;
  if(!validWeights(w))return null;
  if(!r||KEYS.some(k=>!Number.isFinite(r[k])||r[k]<0||r[k]>LIMITS[k]))return null;
  return KEYS.reduce((s,k)=>s+r[k]/LIMITS[k]*w[k],0);
