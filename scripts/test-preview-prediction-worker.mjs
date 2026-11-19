@@ -36,5 +36,16 @@ try{
  assert.equal(withheld.status,'official_features_incomplete');
  assert.deepEqual(withheld.main,[]);
  assert.deepEqual(withheld.upset,[]);
+ globalThis.fetch=async()=>new Response('Service unavailable',{status:503});
+ const unavailable=await (await worker.fetch(new Request('https://preview.example/api/predict?date=20261119&venue=18&race=2'))).json();
+ assert.equal(unavailable.status,'official_fetch_failed');
+ assert.equal(unavailable.httpStatus,503);
+ globalThis.fetch=async()=>{throw Error('network disconnected')};
+ const disconnected=await (await worker.fetch(new Request('https://preview.example/api/predict?date=20261119&venue=18&race=2'))).json();
+ assert.equal(disconnected.status,'official_fetch_failed');
+ const noRoute=await worker.fetch(new Request('https://preview.example/api/unknown'));
+ assert.equal(noRoute.status,404);
+ const options=await worker.fetch(new Request('https://preview.example/api/predict',{method:'OPTIONS'}));
+ assert.equal(options.status,200);
 }finally{globalThis.fetch=oldFetch;}
 console.log('Preview Worker HTTP route, race selection, withholding and 6+6 tests passed');
