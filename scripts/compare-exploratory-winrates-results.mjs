@@ -17,13 +17,15 @@ export function compareExploratoryWinRateFinishes(entryReport,resultReport){
   if(finishes.size!==6||new Set(result.racers.map(r=>r.racerId)).size!==6||new Set(entry.racers.map(r=>r.racerId)).size!==6)continue;
   if(entry.racers.some(r=>!Number.isFinite(r.averageWinRate)||r.averageWinRate<0||r.averageWinRate>10))continue;
   if(entry.racers.some(r=>finishes.get(r.boat)?.racerId!==r.racerId))continue;
-  const joined=entry.racers.map(r=>({...r,finish:finishes.get(r.boat).finish}));
+  const joined=entry.racers.map(r=>({...r,finish:finishes.get(r.boat).finish,actualEntryCourse:finishes.get(r.boat).actualEntryCourse}));
   const ranked=[...joined].sort((a,b)=>b.averageWinRate-a.averageWinRate||a.boat-b.boat);
   rows.push({race:entry.race,highestAverageWinRateBoat:ranked[0].boat,
    highestAverageWinRateFinish:ranked[0].finish,
    highestAverageWinRateWon:ranked[0].finish===1,
    highestAverageWinRatePodium:Number.isInteger(ranked[0].finish)&&ranked[0].finish<=3,
    highestAverageWinRateBoatInside:ranked[0].boat<=3,
+   highestAverageWinRateActualCourse:Number.isInteger(ranked[0].actualEntryCourse)?ranked[0].actualEntryCourse:null,
+   highestAverageWinRateActualCourseInside:Number.isInteger(ranked[0].actualEntryCourse)?ranked[0].actualEntryCourse<=3:null,
    topWinRateAverageST:ranked[0].averageST??null,
    winnerAverageST:joined.find(r=>r.finish===1)?.averageST??null,
    winnerBoat:joined.find(r=>r.finish===1)?.boat??null,
@@ -33,6 +35,8 @@ export function compareExploratoryWinRateFinishes(entryReport,resultReport){
  }
  return {matchedRaces:rows.length,highestWinRateRacerWon:rows.filter(r=>r.highestAverageWinRateWon).length,
   highestWinRateRacerPodium:rows.filter(r=>r.highestAverageWinRatePodium).length,
+  topWinRateActualInside:{races:rows.filter(r=>r.highestAverageWinRateActualCourseInside===true).length,wins:rows.filter(r=>r.highestAverageWinRateActualCourseInside===true&&r.highestAverageWinRateWon).length,podiums:rows.filter(r=>r.highestAverageWinRateActualCourseInside===true&&r.highestAverageWinRatePodium).length},
+  topWinRateActualOutside:{races:rows.filter(r=>r.highestAverageWinRateActualCourseInside===false).length,wins:rows.filter(r=>r.highestAverageWinRateActualCourseInside===false&&r.highestAverageWinRateWon).length,podiums:rows.filter(r=>r.highestAverageWinRateActualCourseInside===false&&r.highestAverageWinRatePodium).length},
   topWinRateInside:{races:rows.filter(r=>r.highestAverageWinRateBoatInside).length,wins:rows.filter(r=>r.highestAverageWinRateBoatInside&&r.highestAverageWinRateWon).length,podiums:rows.filter(r=>r.highestAverageWinRateBoatInside&&r.highestAverageWinRatePodium).length},
   topWinRateOutside:{races:rows.filter(r=>!r.highestAverageWinRateBoatInside).length,wins:rows.filter(r=>!r.highestAverageWinRateBoatInside&&r.highestAverageWinRateWon).length,podiums:rows.filter(r=>!r.highestAverageWinRateBoatInside&&r.highestAverageWinRatePodium).length},
   eligibleForCalibration:0,warning:'Stats fetched after the race; results not independently confirmed. Descriptive only.',rows};
@@ -41,5 +45,5 @@ if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const [entries,results,output]=process.argv.slice(2);
  const report=compareExploratoryWinRateFinishes(JSON.parse(fs.readFileSync(entries,'utf8')),JSON.parse(fs.readFileSync(results,'utf8')));
  fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');
- console.log(JSON.stringify({matchedRaces:report.matchedRaces,highestWinRateRacerWon:report.highestWinRateRacerWon,highestWinRateRacerPodium:report.highestWinRateRacerPodium,topWinRateInside:report.topWinRateInside,topWinRateOutside:report.topWinRateOutside,eligibleForCalibration:0,rows:report.rows.map(r=>({race:r.race,highestAverageWinRateBoat:r.highestAverageWinRateBoat,highestAverageWinRateFinish:r.highestAverageWinRateFinish,winnerBoat:r.winnerBoat}))}));
+ console.log(JSON.stringify({matchedRaces:report.matchedRaces,highestWinRateRacerWon:report.highestWinRateRacerWon,highestWinRateRacerPodium:report.highestWinRateRacerPodium,topWinRateActualInside:report.topWinRateActualInside,topWinRateActualOutside:report.topWinRateActualOutside,topWinRateInside:report.topWinRateInside,topWinRateOutside:report.topWinRateOutside,eligibleForCalibration:0,rows:report.rows.map(r=>({race:r.race,highestAverageWinRateBoat:r.highestAverageWinRateBoat,highestAverageWinRateFinish:r.highestAverageWinRateFinish,winnerBoat:r.winnerBoat}))}));
 }
