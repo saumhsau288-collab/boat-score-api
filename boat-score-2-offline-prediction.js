@@ -1,5 +1,6 @@
 // Experimental pre-race trifecta candidate generation. Not deployed, not calibrated.
 import {experimentalRaceRanking} from './boat-score-2-racer-experiment.js';
+import {analyzeEntryChanges} from './boat-score-2-entry-alerts.js';
 const permutations=boats=>{
  const result=[];
  for(const a of boats)for(const b of boats)for(const c of boats)
@@ -37,5 +38,6 @@ export function predictExperimentalRace(racers,{weightStudy=null}={}){
  const main=ordered.filter(x=>x.boats[0]===favorite).slice(0,6);
  const upset=ordered.filter(x=>x.boats[0]!==favorite).slice(0,6);
  return {status:'experimental',ranking:ranked,main,upset,ties:ranking.ties,weightsApplied:w||null,
+  entryAlerts:analyzeEntryChanges(racers,{source:'prediction'}),
   warning:'Heuristic candidate order only. Not calibrated win probabilities, not verified betting recommendations; real pre-race data and holdout validation are required.'};
 }
