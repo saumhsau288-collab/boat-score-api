@@ -51,3 +51,7 @@ jobs:
           node --experimental-default-type=module --check boat-score-2-recent50-identity.js
           node --experimental-default-type=module boat-score-2-recent50-identity.test.mjs
           node --experimental-default-type=module boat-score-2-html-diagnostics.test.mjs
+          node --experimental-default-type=module --check boat-score-2-racer-experiment.js
+          node --experimental-default-type=module --check boat-score-2-historical-comparison.js
+          node --experimental-default-type=module boat-score-2-racer-experiment.test.mjs
+          node --experimental-default-type=module boat-score-2-historical-comparison.test.mjs
