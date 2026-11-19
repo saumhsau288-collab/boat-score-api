@@ -4,4 +4,12 @@ const rows=Array.from({length:6},(_,i)=>({date:'20261118',venue:1,race:1,course:
 const r=compareCourseAndStart(rows);
 assert.equal(r.eligibleRaces,1);assert.equal(r.innerWins,1);assert.equal(r.fastestStartWins,1);assert.equal(r.innerTop3Rate,1);
 assert.equal(compareCourseAndStart(rows.slice(0,5)).eligibleRaces,0);
+const tied=rows.map((x,i)=>({...x,st:i<2?0.12:x.st}));
+const t=compareCourseAndStart(tied);
+assert.equal(t.eligibleRaces,1);
+assert.equal(t.fastestStartEligibleRaces,0);
+assert.equal(t.tiedFastestStartRaces,1);
+assert.equal(t.fastestStartWinRate,null);
+assert.equal(compareCourseAndStart([...rows,rows[0]]).eligibleRaces,0);
+assert.equal(compareCourseAndStart(rows.map(x=>({...x,date:'invalid'}))).eligibleRaces,0);
 console.log('Course and start diagnostics checks passed (synthetic only)');
