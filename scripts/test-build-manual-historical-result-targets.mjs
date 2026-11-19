@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {buildManualHistoricalResultTargets as build} from './build-manual-historical-result-targets.mjs';
+const a=build([{date:'20261118',venue:1,race:3},{date:'20261118',venue:1,race:11}]);
+assert.equal(a.targets.length,2);
+assert.match(a.targets[0].officialResultPageUrl,/jcd=01/);
+assert.equal(a.eligibleForHistoricalReplay,0);
+assert.throws(()=>build([{date:'20260230',venue:1,race:3}]));
+assert.throws(()=>build([{date:'20261118',venue:1,race:3},{date:'20261118',venue:1,race:3}]));
+assert.throws(()=>build(Array.from({length:25},()=>({date:'20261118',venue:1,race:3}))));
+console.log('Manual historical result targets tests passed');
