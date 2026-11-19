@@ -32,10 +32,16 @@ export function summarizeHistoricalComparisons(snapshots) {
  const keys=snapshots.map(s=>s&&/^20\d{6}$/.test(String(s.date))&&Number.isInteger(s.venue)&&Number.isInteger(s.race)?[s.date,s.venue,s.race].join(':'):null);
  const known=keys.filter(Boolean);
  if(new Set(known).size!==known.length)return {status:'duplicate_races',total:snapshots.length,scoreChangeApplied:false};
- const evaluated=snapshots.map(compareHistoricalRace).filter(x=>x.status==='evaluated');
+ const results=snapshots.map(compareHistoricalRace);
+ const evaluated=results.filter(x=>x.status==='evaluated');
+ const excludedReasons=results.filter(x=>x.status!=='evaluated').reduce((out,x)=>{
+  out[x.status]=(out[x.status]??0)+1;return out;
+ },{});
  const n=evaluated.length;
  return {status:n?'evaluated':'no_eligible_races',total:snapshots.length,eligible:n,
-  excluded:snapshots.length-n,winnerHits:evaluated.filter(x=>x.winnerHit).length,
+  excluded:snapshots.length-n,excludedReasons,
+  evidenceComplete:evaluated.filter(x=>x.evidenceStatus==='evidence_complete').length,
+  winnerHits:evaluated.filter(x=>x.winnerHit).length,
   topThreeSetHits:evaluated.filter(x=>x.topThreeSetHit).length,
   exactTopThreeHits:evaluated.filter(x=>x.exactTopThreeHit).length,
   winnerRate:n?evaluated.filter(x=>x.winnerHit).length/n:null,
