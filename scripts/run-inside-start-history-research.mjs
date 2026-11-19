@@ -8,8 +8,7 @@ const BASELINE_PROXY=Object.freeze({racerForm:20,start:10,entryCourse:50,motor:1
 export function runInsideStartHistoryResearch(rows){
  const readiness=auditInsideStartHistoryReadiness(rows);
  // All evidence fields are still subject to independent human verification.
- const keys=new Set(readiness.races.filter(r=>r.readyForManualVerification).map(r=>[r.date,r.venue,r.race].join(':')));
- const eligible=rows.filter(r=>keys.has([r?.date,r?.venue,r?.race].join(':')));
+ const eligible=rows.filter((r,i)=>readiness.races[i]?.readyForManualVerification===true);
  const comparison=compareInsideStartTickets(eligible,{baselineWeights:BASELINE_PROXY});
  return {readiness,comparison,baselineDescription:'Explicit illustrative same-feature proxy; NOT the deployed Boat Score 2 weights',
   eligibleForProductionChange:false,verifiedAccuracy:false,
