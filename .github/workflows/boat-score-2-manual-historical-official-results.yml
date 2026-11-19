@@ -36,6 +36,9 @@ jobs:
         run: |
           mkdir -p research-historical
           node scripts/fetch-manual-official-historical-results.mjs "$DATE" "$VENUE" "$RACES" "research-historical/manual.official-raw.json"
+      - name: Parse saved official racer numbers and finishes offline
+        run: |
+          node scripts/extract-official-result-racers.mjs research-historical/manual.official-raw.json research-historical/manual.racer-finishes.json
       - name: Upload raw research artifact
         uses: actions/upload-artifact@v4
         with:
