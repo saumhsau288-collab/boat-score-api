@@ -9,7 +9,8 @@ test('matches six boats by racer ID and keeps counts unverified for recent50 sco
  assert.deepEqual(result.racers.map(r=>r.boat),[1,2,3,4,5,6]);
  assert.equal(result.racers[0].firstColumnShare,50);
  assert.equal(result.racers[0].firstPlaceRate,null);
- assert.equal(result.racers[0].finishingPositionSemanticsVerified,false);
+ assert.equal(result.racers[0].courseFinishMatrixVerified,false);
+ assert.equal(result.racers[0].eligibleForCourseSpecificScoring,false);
  assert.equal(result.racers[0].eligibleAsVerifiedRecent50,false);
 });
 test('rejects boat conflict',()=>{
