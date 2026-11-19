@@ -53,6 +53,9 @@ jobs:
       - name: Print per-race extraction evidence (no pre-race claims)
         run: |
           node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.racer-finishes.json","utf8")); for(const r of d.rows) console.log(JSON.stringify({date:r.date,venue:r.venue,race:r.race,status:r.status,podium:r.podium,entryCoursesExtracted:r.entryCoursesExtracted,startOrderBoats:r.startOrderBoats,racers:r.racers.map(x=>({boat:x.boat,finish:x.finish,actualEntryCourse:x.actualEntryCourse})),independentlyVerified:r.racerFinishIndependentlyVerified}));'
+      - name: Report evidence readiness for win-rate versus finish comparison
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.racer-finishes.json","utf8")); const parsed=d.rows.filter(r=>r.status==="parsed_needs_independent_review"); const verified=parsed.filter(r=>r.racerFinishIndependentlyVerified===true); const hasPreRaceWinRates=parsed.filter(r=>r.racers.length===6&&r.racers.every(x=>x.preRaceNationalWinRateVerified===true&&Number.isFinite(x.preRaceNationalWinRate))).length; console.log(JSON.stringify({parsedResultRaces:parsed.length,independentlyVerifiedResultRaces:verified.length,racesWithVerifiedPreRaceWinRates:hasPreRaceWinRates,eligibleRealWinRateFinishComparisons:parsed.filter(r=>r.racerFinishIndependentlyVerified===true&&r.racers.length===6&&r.racers.every(x=>x.preRaceNationalWinRateVerified===true&&Number.isFinite(x.preRaceNationalWinRate))).length,warning:"No historical score calibration without pre-race racer metrics and independently verified results"}));'
       - name: Summarize inner-course outcomes (post-race description only)
         run: node scripts/summarize-official-inside-courses.mjs research-historical/manual.racer-finishes.json
       - name: Upload offline evidence for review
