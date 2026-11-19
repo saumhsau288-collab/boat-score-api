@@ -1,0 +1,58 @@
+name: Deploy isolated Boat Score 2 prediction API (manual approval only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_isolated_preview:
+        description: 'Type DEPLOY-ISOLATED-PREVIEW to deploy only boat-score-2-predict-lab'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: boat-score-2-predict-lab-only
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: ${{ inputs.confirm_isolated_preview == 'DEPLOY-ISOLATED-PREVIEW' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: experiment-racer-start-course-20261119
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify API tests and exact preview target
+        run: |
+          node --check research/boat-score-2-preview-worker.mjs
+          node scripts/test-preview-prediction-worker.mjs
+          node scripts/test-mobile-race-selector.mjs
+          test -f research/boat-score-2-race-selector.html
+          test "boat-score-2-predict-lab" != "rough-math-6d4c"
+          test "boat-score-2-predict-lab" != "boat-score-2-preview"
+      - name: Prepare isolated mobile app assets
+        run: |
+          mkdir -p isolated-preview-assets
+          cp research/boat-score-2-race-selector.html isolated-preview-assets/index.html
+      - name: Verify packaged mobile page and API paths
+        run: |
+          test -s isolated-preview-assets/index.html
+          grep -F 'new URL(location.origin)' isolated-preview-assets/index.html
+          grep -F "'/api/predict'" research/boat-score-2-preview-worker.mjs
+      - name: Deploy isolated Worker and mobile selector
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN"
+          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          npx --yes wrangler@4 deploy research/boat-score-2-preview-worker.mjs --name boat-score-2-predict-lab --compatibility-date 2026-11-19 --workers-dev --assets ./isolated-preview-assets
+      - name: Verify deployed mobile page and API without wagering
+        run: |
+          BASE='https://boat-score-2-predict-lab.saumh-sau-288.workers.dev'
+          curl --fail --show-error --location --max-time 20 "$BASE/" -o /tmp/boat-score-2-mobile.html
+          grep -F 'predict-direct' /tmp/boat-score-2-mobile.html
+          curl --show-error --max-time 20 "$BASE/api/predict?date=bad&venue=18&race=2" -o /tmp/boat-score-2-api.json -w '%{http_code}' | grep -qx '400'
+          grep -F 'invalid_selection' /tmp/boat-score-2-api.json
