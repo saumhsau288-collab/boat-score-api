@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {experimentalRacerScore,experimentalRaceRanking} from './boat-score-2-racer-experiment.js';
+import {experimentalRacerScore,experimentalRaceRanking,explainRacerComparison} from './boat-score-2-racer-experiment.js';
 const base={nationalWinRate:6,localWinRate:8,averageStartTiming:0.15,entryCourse:1};
 const a=experimentalRacerScore(base);
 assert.equal(a.status,'evaluated');
@@ -19,3 +19,11 @@ const sameAbilityOutside=experimentalRacerScore({...base,entryCourse:5});
 assert.ok(a.score>sameAbilityOutside.score,'Inside advantage applies when racer ability and ST are equal');
 const strongInsideSlowStart=experimentalRacerScore({...base,averageStartTiming:0.24});
 assert.ok(a.score>strongInsideSlowStart.score,'Start timing remains material even in the same course');
+
+const explanation=explainRacerComparison({...base,nationalWinRate:9,localWinRate:9,entryCourse:5},
+ {...base,nationalWinRate:3,localWinRate:3,entryCourse:1});
+assert.equal(explanation.status,'evaluated');
+assert.equal(explanation.winner,'first');
+assert.ok(explanation.componentDifferences.ability>0);
+assert.ok(explanation.componentDifferences.course<0);
+assert.equal(explainRacerComparison(base,{...base,averageStartTiming:null}).status,'insufficient_data');
