@@ -30,11 +30,12 @@ export default {async fetch(request){
  const u=new URL(request.url);
  if(u.pathname!=='/api/predict')return reply({status:'not_found'},404);
  const date=u.searchParams.get('date')??'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
- if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply({status:'invalid_selection'},400);
+ if(!/^20\d{6}$/.test(date)||!u.searchParams.has('venue')||!u.searchParams.has('race')||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply({status:'invalid_selection'},400);
  const officialUrl='https://www.boatrace.jp/owpc/pc/race/racelist?'+new URLSearchParams({hd:date,jcd:String(venue).padStart(2,'0'),rno:String(race)});
  try{
   const res=await fetch(officialUrl,{headers:{accept:'text/html'},signal:AbortSignal.timeout(12000),redirect:'error'});
   if(!res.ok)return reply({status:'official_fetch_failed',httpStatus:res.status,date,venue,race});
+  const size=Number(res.headers.get('content-length')??0);if(size>2000000)return reply({status:'official_page_too_large',date,venue,race});
   const html=await res.text();
   if(html.length>2000000)return reply({status:'official_page_too_large',date,venue,race});
   const racers=parseRacers(html);
