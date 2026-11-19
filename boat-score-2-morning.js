@@ -4,6 +4,7 @@
 const WEIGHTS=Object.freeze({nationalWinRate:45,localWinRate:25,motorTwoWinRate:15,recent50WinRate:10});
 const MAX=Object.freeze({nationalWinRate:10,localWinRate:10,motorTwoWinRate:100,recent50WinRate:100});
 export function morningRacerScore(racer){
+  racer = racer && racer.localWinRate === 0 && Number.isFinite(racer.nationalWinRate) ? {...racer,localWinRate:racer.nationalWinRate} : racer;
   const keys=Object.keys(WEIGHTS);
   const missing=keys.filter(k=>!Number.isFinite(racer?.[k]));
   if(missing.length)return {status:'insufficient_data',score:null,missing};
