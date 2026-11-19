@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {analyzeRacerFactorErrors} from './analyze-racer-factor-errors.mjs';
+const factors=['racerWinRateAverage','preRaceStartAbility','expectedEntryCourse','motorPerformance','verifiedExhibitionAndWeather'];
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),score:90-i*10,finish:i+1,factorPoints:{racerWinRateAverage:40-i*5,preRaceStartAbility:20-i*3,expectedEntryCourse:15-i,motorPerformance:10-i,verifiedExhibitionAndWeather:5}}));
+const race={date:'20261119',venue:2,race:3,preRaceSnapshotVerified:true,resultIndependentlyVerified:true,chronologicalHoldout:true,racers};
+const validRacers=racers.map(r=>({...r,score:Object.values(r.factorPoints).reduce((a,b)=>a+b,0)}));
+const valid={...race,racers:validRacers};
+const result=analyzeRacerFactorErrors([valid]);
+assert.equal(result.eligibleRaces,1);
+assert.equal(result.byFactor.racerWinRateAverage.samples,6);
+assert.equal(result.byFactor.racerWinRateAverage.correctRank,6);
+assert.equal(result.byFactor.racerWinRateAverage.meanPointsCorrect,27.5);
+const reversed=analyzeRacerFactorErrors([{...valid,racers:validRacers.map((r,i)=>({...r,finish:6-i}))}]);
+assert.equal(reversed.byFactor.expectedEntryCourse.overrated,3);
+assert.equal(reversed.byFactor.expectedEntryCourse.underrated,3);
+assert.equal(analyzeRacerFactorErrors([{...valid,racers:validRacers.map((r,i)=>i===0?{...r,score:r.score+1}:r)}]).eligibleRaces,0);
+assert.equal(analyzeRacerFactorErrors([valid,valid]).eligibleRaces,1);
+console.log('Racer factor error association tests passed');
