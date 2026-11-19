@@ -6,6 +6,10 @@ on:
     paths:
       - '.github/workflows/boat-score-2-official-history-diagnostics.yml'
       - 'scripts/extract-official-result-racers.mjs'
+      - 'scripts/fetch-manual-official-historical-results.mjs'
+      - 'scripts/test-fetch-manual-official-historical-results.mjs'
+      - 'scripts/summarize-official-inside-courses.mjs'
+      - 'scripts/test-summarize-official-inside-courses.mjs'
       - 'scripts/test-extract-official-result-diagnostics.mjs'
   workflow_dispatch:
 permissions:
