@@ -30,7 +30,12 @@ export function compareHistoricalSavedPredictions(snapshots, results){
  });
  const compared=rows.filter(r=>r.status==='compared');
  const mainHits=compared.filter(r=>r.mainHit).length,upsetHits=compared.filter(r=>r.upsetHit).length;
- return {method:'saved_prerace_predictions_vs_independently_verified_results',checked:snapshots.length,compared:compared.length,held:rows.length-compared.length,mainHits,upsetHits,mainHitRate:compared.length?mainHits/compared.length:null,upsetHitRate:compared.length?upsetHits/compared.length:null,eligibleForWeightTuning:false,warning:'Descriptive comparison only; sample adequacy and independent verification must be reviewed before tuning.',rows};
+ const byPhase=Object.fromEntries(['morning_0800','pre_cutoff'].map(phase=>{
+  const phaseRows=rows.filter(r=>r.phase===phase),valid=phaseRows.filter(r=>r.status==='compared');
+  const phaseMainHits=valid.filter(r=>r.mainHit).length,phaseUpsetHits=valid.filter(r=>r.upsetHit).length;
+  return [phase,{checked:phaseRows.length,compared:valid.length,held:phaseRows.length-valid.length,mainHits:phaseMainHits,upsetHits:phaseUpsetHits,mainHitRate:valid.length?phaseMainHits/valid.length:null,upsetHitRate:valid.length?phaseUpsetHits/valid.length:null}];
+ }));
+ return {method:'saved_prerace_predictions_vs_independently_verified_results',checked:snapshots.length,compared:compared.length,held:rows.length-compared.length,mainHits,upsetHits,mainHitRate:compared.length?mainHits/compared.length:null,upsetHitRate:compared.length?upsetHits/compared.length:null,byPhase,eligibleForWeightTuning:false,warning:'Descriptive comparison only; sample adequacy and independent verification must be reviewed before tuning.',rows};
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const [snapshotsPath,resultsPath]=process.argv.slice(2);
