@@ -12,5 +12,7 @@ assert.equal(d.blocked,1);
 assert.equal(d.insideWins,2);
 assert.equal(d.insidePodiumPlacements,4);
 assert.equal(d.insidePodiumSlots,6);
+assert.deepEqual(d.insideWinsByCourse,{'1':0,'2':0,'3':2});
+assert.deepEqual(d.podiumByCourse,{'1':1,'2':1,'3':2,'4':1,'5':0,'6':1});
 assert.equal(d.eligibleForWeightTuning,false);
 console.log('Inner-course descriptive summary tests passed (synthetic only)');
