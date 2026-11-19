@@ -34,3 +34,11 @@ test('counts partial four-row blocks but does not treat them as racers',()=>{
  assert.equal(r.diagnostics.fourRowBlockCandidates,0);
  assert.equal(r.racers.length,0);
 });
+
+test('extracts racer identity from official profile link when displayed ID is absent',()=>{
+ const html=Array.from({length:6},(_,i)=>block(i+1).replace(`${4001+i} 選手`,`<a href="/racersearch/profile/${4001+i}">選手名</a>`)).join('');
+ const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
+ assert.equal(r.status,'parsed_archival_features_unverified');
+ assert.deepEqual(r.racers.map(x=>x.racerId),['4001','4002','4003','4004','4005','4006']);
+ assert.equal(r.boatMappingVerified,true);
+});
