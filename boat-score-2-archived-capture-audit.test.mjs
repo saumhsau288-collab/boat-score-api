@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {auditArchivedCapture} from './boat-score-2-archived-capture-audit.js';
+assert.equal(auditArchivedCapture(null).status,'invalid_input');
+const scores=Array.from({length:6},(_,i)=>({boat:i+1,score:30+i}));
+const row={date:'20261118',venue:1,race:1,httpStatus:200,response:{ready:true,rankedScores:scores}};
+const report=auditArchivedCapture({date:'20261118',records:[row]});
+assert.equal(report.ready,1);
+assert.equal(report.withSixScores,1);
+assert.equal(report.withOriginalInputs,0);
+assert.equal(report.eligibleForHistoricalWeightTuning,0);
+assert.equal(report.reasons.missing_original_six_boat_inputs,1);
+assert.equal(auditArchivedCapture({records:[row,row]}).duplicateKeys,1);
+assert.equal(auditArchivedCapture({records:[{...row,httpStatus:500}]}).ready,0);
+console.log('Archived capture audit tests passed (synthetic fixtures)');
