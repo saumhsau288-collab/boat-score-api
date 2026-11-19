@@ -25,6 +25,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check Makulabo public source independently
+        continue-on-error: true
+        env:
+          RACE_DATE: ${{ inputs.date }}
+          VENUE: ${{ inputs.venue }}
+          RACE: ${{ inputs.race }}
+        run: node scripts/check-makulabo-public-source.mjs "$RACE_DATE" "$VENUE" "$RACE"
       - name: Validate inputs and fetch public API
         env:
           RACE_DATE: ${{ inputs.date }}
