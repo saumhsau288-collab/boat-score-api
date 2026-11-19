@@ -6,6 +6,9 @@ const race={date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T08:00:00+09:00
 const weights={racerWinRateAverage:35,preRaceStartAbility:25,expectedEntryCourse:25,motorPerformance:10,verifiedExhibitionAndWeather:5};
 const out=compareRacerScenariosOnHoldout([race,race,{...race,race:4,preRaceSnapshotVerified:false}],[{id:'course_25',weights}]);
 assert.equal(out.eligibleRaces,1);
+assert.equal(out.comparisonStatus,'descriptive_holdout_only');
+assert.ok(out.comparisonMetrics.includes('tieNeutralTopThreePodiumOverlapRate'));
+assert.equal(typeof out.scenarios[0].deltaFromBaseline.tieNeutralTopRatedPodiumRate,'number');
 assert.equal(compareRacerScenariosOnHoldout([{...race,capturedAt:'2026-11-19T12:00:00+09:00'}]).eligibleRaces,0);
 assert.equal(compareRacerScenariosOnHoldout([{...race,source:'post_race_entry'}]).eligibleRaces,0);
 assert.equal(out.rejectedRaces,2);
@@ -14,4 +17,5 @@ assert.equal(out.scenarios[0].quality.eligibleRacers,6);
 assert.equal(out.eligibleForDeployment,false);
 assert.equal(compareRacerScenariosOnHoldout([{...race,racers:racers.map((r,i)=>i===0?{...r,preRaceVerified:false}:r)}]).eligibleRaces,0);
 assert.equal(compareRacerScenariosOnHoldout([]).baseline.meanAbsoluteRankError,null);
+assert.equal(compareRacerScenariosOnHoldout([]).comparisonStatus,'no_eligible_verified_races');
 console.log('Verified racer-score holdout scenario comparison tests passed (synthetic only)');
