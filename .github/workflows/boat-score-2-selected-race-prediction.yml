@@ -41,12 +41,13 @@ jobs:
           const summary=[
             '# Boat Score 2 選択レース検証',
             `対象: ${date} / 開催場 ${venue} / ${race}R`,
-            `取得結果: ${result.status}`,
+            `取得結果: ${result.status==='experimental'?'暫定予想を作成': '予想保留（'+result.status+'）'}`,
             `進入: ${result.entryScenario??'未確認'}`,
             `公式ページ: ${result.provenance?.officialUrl??'未取得'}`,
             `取得時刻: ${result.provenance?.fetchedAt??'未取得'}`,
             `取得HTML SHA-256: ${result.provenance?.htmlSha256??'未取得'}`,
             `本命: ${result.main?.length??0}点 / 穴: ${result.upset?.length??0}点`,
+            `艇番・選手対応: ${result.status==='boat_mapping_unverified'?'未確認':result.status==='experimental'?'解析済み':'未判定'}`,
             result.message??result.inputCaveat??'',
             '',
             '※暫定シナリオであり、直前情報・進入の確認済み予想ではありません。'
