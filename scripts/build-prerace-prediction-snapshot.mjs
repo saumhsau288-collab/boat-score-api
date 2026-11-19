@@ -11,7 +11,7 @@ export function buildPreRacePredictionSnapshot({date,venue,race,phase,cutoffAt,s
  const jstDate=t=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t)).replaceAll('-','');
  if(jstDate(savedAt)!==String(date)||jstDate(cutoffAt)!==String(date))throw Error('Snapshot timestamps must match race date in JST');
  if(inputsCapturedBeforeCutoff!==true)throw Error('Pre-race input provenance not verified');
- const validPicks=a=>Array.isArray(a)&&a.length===6&&a.every(p=>Array.isArray(p)&&p.length===3&&new Set(p).size===3&&p.every(n=>integer(n,1,6)));
+ const validPicks=a=>Array.isArray(a)&&a.length===6&&a.every(p=>Array.isArray(p)&&p.length===3&&new Set(p).size===3&&p.every(n=>integer(n,1,6)))&&new Set(a.map(p=>p.join('-'))).size===6;
  if(prediction?.ready!==true||!validPicks(prediction.main)||!validPicks(prediction.upset))throw Error('Prediction not ready or picks invalid');
  return {source:'existing_Boat_Score_2_selected_race',captureKind:'saved_before_cutoff',date,venue,race,phase,cutoffAt,savedAt,inputsCapturedBeforeCutoff:true,main:prediction.main.map(p=>[...p]),upset:prediction.upset.map(p=>[...p])};
 }
