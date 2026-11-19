@@ -1,4 +1,8 @@
 // Offline-only: quantify which independent evidence is missing before claiming hit rates.
+function parseExplicitOffsetTime(value) {
+ if(typeof value!=='string'||!/T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value))return NaN;
+ return Date.parse(value);
+}
 export function auditSavedComparisonEvidence(capture,resultsEvidence){
  const rows=Array.isArray(capture?.records)?capture.records:[];
  const official=Array.isArray(resultsEvidence?.results)?resultsEvidence.results:[];
@@ -20,10 +24,10 @@ export function auditSavedComparisonEvidence(capture,resultsEvidence){
   else report.missing.verifiedFinish++;
   if(typeof r.sourceUrl==='string'&&/^https:\/\//.test(r.sourceUrl))report.sourceUrlsPresent++;
   else report.missing.resultSource++;
-  const cutoff=Date.parse(r.officialCutoffAt);
+  const cutoff=parseExplicitOffsetTime(r.officialCutoffAt);
   if(!Number.isFinite(cutoff)){report.missing.cutoff++;continue;}
   report.cutoffsPresent++;
-  const received=Date.parse(row.receivedAt);
+  const received=parseExplicitOffsetTime(row.receivedAt);
   if(Number.isFinite(received)&&received<cutoff)report.capturedBeforeCutoff++;
   else report.missing.notBeforeCutoff++;
  }
