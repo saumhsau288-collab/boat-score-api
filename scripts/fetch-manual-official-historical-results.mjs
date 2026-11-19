@@ -26,17 +26,21 @@ export async function fetchManualOfficialHistoricalResults({date,venue,races},{f
  const pages=[];
  for(const race of races){
   const url='https://www.boatrace.jp/owpc/pc/race/raceresult?'+new URLSearchParams({rno:String(race),jcd:String(venue).padStart(2,'0'),hd:date});
-  try{
-   const res=await fetchImpl(url,{redirect:'error',signal:AbortSignal.timeout(timeoutMs),headers:{accept:'text/html'}});
-   if(!res.ok||!/^text\/html(?:;|$)/i.test(res.headers.get('content-type')||''))throw Error('Unexpected response');
-   const html=await res.text();
-   if(html.length<100||html.length>2000000)throw Error('Unexpected HTML size');
-   pages.push({date,venue,race,url,status:'raw_html_saved',fetchedAt:new Date().toISOString(),
-    sha256:crypto.createHash('sha256').update(html).digest('hex'),html,resultVerified:false,officialCutoffVerified:false});
-  }catch(e){
-   pages.push({date,venue,race,url,status:'fetch_failed',error:String(e?.message||e).slice(0,160),
-    resultVerified:false,officialCutoffVerified:false});
+  let lastError;
+  let saved=false;
+  for(let attempt=1;attempt<=3&&!saved;attempt++){
+   try{
+    const res=await fetchImpl(url,{redirect:'error',signal:AbortSignal.timeout(timeoutMs),headers:{accept:'text/html'}});
+    if(!res.ok||!/^text\\/html(?:;|$)/i.test(res.headers.get('content-type')||''))throw Error('Unexpected response status '+res.status);
+    const html=await res.text();
+    if(html.length<100||html.length>2000000)throw Error('Unexpected HTML size');
+    pages.push({date,venue,race,url,status:'raw_html_saved',attempts:attempt,fetchedAt:new Date().toISOString(),
+     sha256:crypto.createHash('sha256').update(html).digest('hex'),html,resultVerified:false,officialCutoffVerified:false});
+    saved=true;
+   }catch(e){lastError=String(e?.message||e).slice(0,160);}
   }
+  if(!saved)pages.push({date,venue,race,url,status:'fetch_failed',attempts:3,error:lastError,
+   resultVerified:false,officialCutoffVerified:false});
  }
  return {method:'manual_historical_official_result_html_unverified',targets:races.length,pages,
   verifiedResults:0,eligibleForHistoricalReplay:0,
