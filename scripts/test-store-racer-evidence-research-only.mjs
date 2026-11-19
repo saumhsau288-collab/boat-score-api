@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {storeRacerEvidenceResearchOnly} from './store-racer-evidence-research-only.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}));
+const sample={ready:true,schemaVersion:1,date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T11:00:00+09:00',captureStatus:'server_timestamped_verified',source:'official_live_entry',racers};
+let writes=0;
+const kv={get:async()=>null,put:async()=>{writes++}};
+const dry=await storeRacerEvidenceResearchOnly(sample,{kv});
+assert.equal(dry.stored,false);
+assert.equal(dry.reason,'write_not_enabled');
+assert.equal(writes,0);
+assert.equal((await storeRacerEvidenceResearchOnly(sample,{kv,dryRun:false})).reason,'atomic_create_if_absent_not_available_on_cloudflare_kv');
+assert.equal((await storeRacerEvidenceResearchOnly(sample,{kv:{...kv,get:async()=>'{"exists":true}'}})).reason,'existing_snapshot_key');
+assert.equal((await storeRacerEvidenceResearchOnly({...sample,captureStatus:'caller_supplied_unverified'},{kv})).stored,false);
+assert.equal(writes,0);
+console.log('Research KV adapter safely performs no writes');
