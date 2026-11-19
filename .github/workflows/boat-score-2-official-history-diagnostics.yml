@@ -1,0 +1,38 @@
+name: Boat Score 2 isolated official historical diagnostics
+on:
+  push:
+    branches:
+      - fix-boat-score-2-syntax-20261115
+    paths:
+      - '.github/workflows/boat-score-2-official-history-diagnostics.yml'
+      - 'scripts/extract-official-result-racers.mjs'
+      - 'scripts/test-extract-official-result-diagnostics.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test offline diagnostic parser
+        run: node scripts/test-extract-official-result-diagnostics.mjs
+      - name: Fetch the previously checked historical race pages
+        run: |
+          mkdir -p research-historical
+          node scripts/fetch-manual-official-historical-results.mjs 20261118 2 2,3 research-historical/manual.official-raw.json
+      - name: Report parsing status by race
+        run: |
+          node scripts/extract-official-result-racers.mjs research-historical/manual.official-raw.json research-historical/manual.racer-finishes.json
+      - name: Upload offline evidence for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-official-history-diagnostics-${{ github.run_id }}
+          path: research-historical/
+          retention-days: 14
+          if-no-files-found: warn
