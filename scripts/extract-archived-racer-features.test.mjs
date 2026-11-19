@@ -11,7 +11,7 @@ test('six explicit boat numbers are mapped in order',()=>{
  assert.equal(r.eligibleForWeightTuning,false);
 });
 test('nonmatching boat numbers do not pass mapping verification',()=>{
- const html=Array.from({length:6},(_,i)=>block(i===0?6:i+1)).join('');
+ const html=Array.from({length:6},(_,i)=>block(i+1).replace('rowspan="4">1 枠','rowspan="4">6 枠')).join('');
  const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
  assert.equal(r.boatMappingVerified,false);
 });
