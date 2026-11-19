@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {auditOfficialEntryIntegration} from './audit-official-entry-integration.mjs';
+const racers={verified:true,racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i)}))};
+const stats={verified:true,rows:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),nationwide:{winRate:6},local:{winRate:5},averageST:0.15}))};
+const audit=auditOfficialEntryIntegration({racers,stats,capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T11:00:00+09:00'});
+assert.equal(audit.parserCompatible,true);
+assert.equal(audit.storageEligible,false);
+assert.ok(audit.issues.includes('motor_second_place_rate_missing'));
+assert.equal(auditOfficialEntryIntegration({racers,stats:{...stats,rows:stats.rows.map((r,i)=>i===0?{...r,racerId:'9999'}:r)}}).parserCompatible,false);
+console.log('Existing official parser integration audit tests passed');
