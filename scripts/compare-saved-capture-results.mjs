@@ -7,6 +7,10 @@ function isOfficialBoatraceSource(url) {
   return parsed.protocol==='https:' && (parsed.hostname==='boatrace.jp' || parsed.hostname.endsWith('.boatrace.jp')) && !parsed.username && !parsed.password;
  } catch { return false; }
 }
+function explicitTimezoneTimestamp(value) {
+ if(typeof value!=='string'||!/T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value))return NaN;
+ return Date.parse(value);
+}
 function raceKey(row) {
  const date=String(row?.date??'');
  const venue=Number(row?.venue), race=Number(row?.race);
@@ -40,8 +44,8 @@ export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
   if(!actual)reasons.push('no_independently_verified_result');
   if(!isOfficialBoatraceSource(official?.sourceUrl))
    reasons.push('missing_official_result_source');
-  const cutoff=Date.parse(official?.officialCutoffAt);
-  const captured=Date.parse(r.receivedAt);
+  const cutoff=explicitTimezoneTimestamp(official?.officialCutoffAt);
+  const captured=explicitTimezoneTimestamp(r.receivedAt);
   if(!Number.isFinite(cutoff)||!Number.isFinite(captured)||captured>=cutoff)
    reasons.push('capture_before_official_cutoff_unverified');
   const row={date:r.date,venue:r.venue,race:r.race,status:reasons.length?'held':'compared',reasons,actual:actual||null,mainHit:null,upsetHit:null};
