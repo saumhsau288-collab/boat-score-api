@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {compareHistoricalSavedPredictions as compare} from './compare-historical-saved-predictions.mjs';
 const picks=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
-const s={source:'existing_Boat_Score_2_selected_race',captureKind:'saved_before_cutoff',date:'20261118',venue:2,race:1,savedAt:'2026-11-18T03:00:00Z',cutoffAt:'2026-11-18T03:05:00Z',inputsCapturedBeforeCutoff:true,main:picks,upset:picks};
+const s={source:'existing_Boat_Score_2_selected_race',captureKind:'saved_before_cutoff',date:'20261118',venue:2,race:1,phase:'morning_0800',savedAt:'2026-11-18T03:00:00Z',cutoffAt:'2026-11-18T03:05:00Z',inputsCapturedBeforeCutoff:true,main:picks,upset:picks};
 const r={date:s.date,venue:s.venue,race:s.race,independentlyVerified:true,podium:[1,2,3]};
 const ok=compare([s],[r]);
 assert.equal(ok.compared,1);
