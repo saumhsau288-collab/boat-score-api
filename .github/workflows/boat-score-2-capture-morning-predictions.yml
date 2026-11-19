@@ -61,6 +61,8 @@ jobs:
           node --check scripts/test-audit-morning-input-coverage.mjs
           node --check scripts/classify-morning-capture-quality.mjs
           node --check scripts/test-classify-morning-capture-quality.mjs
+          node --check scripts/audit-pre-race-feature-snapshots.mjs
+          node --check scripts/test-audit-pre-race-feature-snapshots.mjs
           node --check scripts/audit-capture-score-inputs.mjs
           node --check scripts/test-audit-capture-score-inputs.mjs
           node --check scripts/audit-capture-response-shapes.mjs
@@ -92,6 +94,7 @@ jobs:
           node scripts/test-validate-morning-capture.mjs
           node scripts/test-audit-morning-input-coverage.mjs
           node scripts/test-classify-morning-capture-quality.mjs
+          node scripts/test-audit-pre-race-feature-snapshots.mjs
           node scripts/test-audit-capture-score-inputs.mjs
           node scripts/test-audit-capture-response-shapes.mjs
           node scripts/test-audit-morning-official-cutoffs.mjs
@@ -188,6 +191,14 @@ jobs:
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             case "$file" in *-quality.json) continue ;; esac
             node scripts/audit-capture-score-inputs.mjs "$file" > "${file%.json}-score-inputs.json"
+          done
+      - name: Audit original six-boat feature snapshots and cutoff evidence
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\\.json$ ]] || continue
+            node scripts/audit-pre-race-feature-snapshots.mjs "$file" > "${file%.json}-feature-snapshot-audit.json"
           done
       - name: Discover actual deployed response score-input field names
         if: always()
