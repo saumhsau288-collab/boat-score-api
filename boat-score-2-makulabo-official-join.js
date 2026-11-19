@@ -12,7 +12,13 @@ export function joinMakulaboWithOfficial(official,extracted) {
   // The Makulabo table is labelled by boat: require it to agree with official boat.
   if(source.boat!==match.boat)return {verified:false,reason:'boat_mismatch',racers:[]};
   // Abbreviated-name matches need manual review before being treated as verified evidence.
-  if(match.method==='unique_suffix_omission')return {verified:false,reason:'abbreviated_name_requires_review',racers:[]};
+  if(match.method==='unique_suffix_omission') {
+    const approval=Array.isArray(extracted.reviewedIdentityPairs) &&
+      extracted.reviewedIdentityPairs.some(x=>x?.boat===match.boat &&
+        String(x.racerId)===String(racer.racerId) &&
+        x.officialName===racer.name && x.sourceName===source.name && x.reviewed===true);
+    if(!approval)return {verified:false,reason:'abbreviated_name_requires_review',racers:[]};
+  }
   const rate=n=>source.runs>0?+(100*n/source.runs).toFixed(2):null;
   racers.push({boat:match.boat,racerId:String(racer.racerId),name:racer.name,
    runs:source.runs,firstPlaceRate:rate(source.counts[0]),
