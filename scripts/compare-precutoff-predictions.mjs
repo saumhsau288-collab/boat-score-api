@@ -2,10 +2,12 @@ import {validatePreCutoffSnapshot} from './validate-precutoff-snapshot.mjs';
 // Research-only: join saved predictions to separately verified race results.
 export function comparePreCutoffPredictions(snapshots,results){
  const lookup=new Map((results??[]).map(r=>[r.date+':'+r.venue+':'+r.race,r]));
- const rows=[],rejections=[];
+ const rows=[],rejections=[],seen=new Set();
  for(const snapshot of snapshots??[]){
   const key=snapshot?.date+':'+snapshot?.venue+':'+snapshot?.race;
   const eligibility=validatePreCutoffSnapshot(snapshot);
+  if(seen.has(key)){rejections.push({key,reasons:['duplicate_race_snapshot']});continue;}
+  seen.add(key);
   if(!eligibility.eligible){rejections.push({key,reasons:eligibility.errors});continue;}
   const result=lookup.get(key);
   if(result?.status!=='independently_verified'||!Array.isArray(result.racers)||result.racers.length!==6){rejections.push({key,reasons:['unverified_result']});continue;}
