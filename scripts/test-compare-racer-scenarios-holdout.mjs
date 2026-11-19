@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {compareRacerScenariosOnHoldout} from './compare-racer-scenarios-holdout.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),finish:i+1,preRaceVerified:true,
+ racerWinRateAverage:i===3?1:i===0?0.1:0.5,preRaceStartAbility:0.5,expectedEntryCourse:i===0?1:i===3?0.2:0.5,motorPerformance:0.5,verifiedExhibitionAndWeather:0.5}));
+const race={date:'20261119',venue:2,race:3,preRaceSnapshotVerified:true,resultIndependentlyVerified:true,chronologicalHoldout:true,racers};
+const weights={racerWinRateAverage:35,preRaceStartAbility:25,expectedEntryCourse:25,motorPerformance:10,verifiedExhibitionAndWeather:5};
+const out=compareRacerScenariosOnHoldout([race,race,{...race,race:4,preRaceSnapshotVerified:false}],[{id:'course_25',weights}]);
+assert.equal(out.eligibleRaces,1);
+assert.equal(out.rejectedRaces,2);
+assert.equal(out.baseline.eligibleRacers,6);
+assert.equal(out.scenarios[0].quality.eligibleRacers,6);
+assert.equal(out.eligibleForDeployment,false);
+assert.equal(compareRacerScenariosOnHoldout([{...race,racers:racers.map((r,i)=>i===0?{...r,preRaceVerified:false}:r)}]).eligibleRaces,0);
+assert.equal(compareRacerScenariosOnHoldout([]).baseline.meanAbsoluteRankError,null);
+console.log('Verified racer-score holdout scenario comparison tests passed (synthetic only)');
