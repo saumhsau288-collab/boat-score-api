@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {scoreInsideStartRace,compareInsideStartHistory,EXPERIMENTAL_WEIGHTS} from './inside-start-historical-research.mjs';
+const boats=Array.from({length:6},(_,i)=>({boat:i+1,entryCourse:i+1,racerForm:.5,start:.5,motor:.5,recent50:.5,exhibitionWeather:.5}));
+const result=scoreInsideStartRace(boats);
+assert.equal(result.status,'research_only');
+assert.deepEqual(result.ranked.map(x=>x.boat),[1,2,3,4,5,6]);
+const swapped=boats.map(b=>({...b,entryCourse:7-b.entryCourse}));
+assert.equal(scoreInsideStartRace(swapped).ranked[0].boat,6,'actual entry course overrides boat number');
+const strongOuter=boats.map(b=>b.boat===6?{...b,racerForm:1,start:1}:b);
+assert.equal(scoreInsideStartRace(strongOuter).ranked[0].boat,6,'strong outer racer may beat inside advantage');
+assert.equal(scoreInsideStartRace(boats.map(b=>({...b,start:NaN}))).status,'insufficient_or_invalid_pre_race_data');
+const record={race:1,boats,actual:[1,2,3],verifiedPreRace:true,verifiedOfficialResult:true,capturedAt:'2026-11-18T01:00:00Z',cutoffAt:'2026-11-18T02:00:00Z'};
+const compared=compareInsideStartHistory([record,{...record,race:2,verifiedPreRace:false}]);
+assert.equal(compared.eligible,1);assert.equal(compared.excluded.length,1);
+assert.equal(compared.top1,1);assert.equal(compared.exactTop3,1);
+assert.equal(compared.approvedForDeployment,false);
+assert.equal(Object.values(EXPERIMENTAL_WEIGHTS).reduce((a,b)=>a+b,0),100);
+console.log('Inside/start offline research checks passed (synthetic fixtures, not historical accuracy)');
