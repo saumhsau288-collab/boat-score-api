@@ -28,4 +28,14 @@ assert(duplicateStart.racers.every(r=>r.actualEntryCourse===null));
 assert.equal(extract({pages:[{...page,html:html.replace('5439','5194')}]}).parsedRaces,0);
 assert.equal(extract({pages:[{...page,url:page.url.replace('jcd=02','jcd=03')}]}).rows[0].status,'invalid_official_identity');
 assert.equal(extract({pages:[{...page,status:'fetch_failed'}]}).rows[0].status,'not_saved');
+// Real-world pattern: Toda 2026-11-18 2R has two overturned boats,
+ // which must not be mislabeled as 5th or 6th place.
+const overturned=html.replace('５</td>','転</td>').replace('６</td>','転</td>');
+const nonfinish=extract({pages:[{...page,html:overturned+startTable([1,2,3,4,5,6])}]}).rows[0];
+assert.equal(nonfinish.status,'parsed_needs_independent_review');
+assert.deepEqual(nonfinish.racers.map(r=>r.finish),[1,2,3,4,null,null]);
+assert.deepEqual(nonfinish.racers.map(r=>r.resultStatus),[null,null,null,null,'転','転']);
+assert.deepEqual(nonfinish.podium,[1,2,3]);
+assert.equal(nonfinish.racers[4].actualEntryCourse,5);
+assert.equal(nonfinish.eligibleForScoreChange,false);
 console.log('Saved official result racer finish parser tests passed');
