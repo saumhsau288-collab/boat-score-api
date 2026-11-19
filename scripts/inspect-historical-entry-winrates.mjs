@@ -15,15 +15,15 @@ export function inspectSavedEntryHtml(pages,workerSource){
  const context=vm.createContext({URL,Set,Number,String,RegExp});
  vm.runInContext(parserCode,context,{timeout:1000});
  return pages.map(p=>{
-  if(p.status!=='raw_historical_entry_html'||typeof p.html!=='string')return {race:p.race,status:p.status,statsVerified:false};
+  if(p.status!=='raw_historical_entry_html'||typeof p.html!=='string')return {date:p.date,venue:p.venue,race:p.race,status:p.status,statsVerified:false};
   try{
    const racers=context.extractOfficialBoatRows(p.html);
    const stats=context.extractOfficialBoatStats(p.html);
    const matched=racers.verified&&stats.verified&&stats.rows.every((r,i)=>r.boat===racers.racers[i].boat&&r.racerId===racers.racers[i].racerId);
-   return {race:p.race,status:p.status,parsedSixRacers:racers.verified,parsedSixStats:stats.verified,
+   return {date:p.date,venue:p.venue,race:p.race,status:p.status,parsedSixRacers:racers.verified,parsedSixStats:stats.verified,
     identityMatched:matched,statsVerified:matched,preCutoffSnapshotVerified:false,
     racers:matched?stats.rows.map(r=>({boat:r.boat,racerId:r.racerId,nationalWinRate:r.nationwide.winRate,localWinRate:r.local.winRate,averageWinRate:(r.nationwide.winRate+r.local.winRate)/2,averageST:r.averageST})):[]};
-  }catch(e){return {race:p.race,status:'parse_error',error:String(e.message).slice(0,140),statsVerified:false,preCutoffSnapshotVerified:false};}
+  }catch(e){return {date:p.date,venue:p.venue,race:p.race,status:'parse_error',error:String(e.message).slice(0,140),statsVerified:false,preCutoffSnapshotVerified:false};}
  });
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
