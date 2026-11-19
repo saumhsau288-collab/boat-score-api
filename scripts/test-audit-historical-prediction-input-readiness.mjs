@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {auditHistoricalPredictionInputReadiness as audit} from './audit-historical-prediction-input-readiness.mjs';
+const boats=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:5,localWinRate:5,motorTwoWinRate:40,recent50WinRate:30,exhibitionScore:6}));
+const base={date:'20261118',venue:1,race:3,boats,historicalInputProvenanceVerified:true,historicalInputSourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',historicalInputCapturedAt:'2026-11-18T09:00:00+09:00',officialCutoffAt:'2026-11-18T09:30:00+09:00'};
+const report=audit([base,{...base,boats:boats.map(({recent50WinRate,...b})=>b)},{...base,historicalInputCapturedAt:'2026-11-18T09:31:00+09:00'}],{asOfDate:'20261119'});
+assert.equal(report.total,3);
+assert.equal(report.completeForManualReview,1);
+assert.equal(report.missingCounts.missing_original_recent50WinRate,1);
+assert.equal(report.missingCounts.input_not_before_cutoff,1);
+assert.equal(report.eligibleForScoreChange,false);
+assert.throws(()=>audit([],{asOfDate:'20260230'}));
+console.log('Historical prediction original-input readiness tests passed');
