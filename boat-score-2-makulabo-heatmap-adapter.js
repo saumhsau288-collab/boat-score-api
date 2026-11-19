@@ -17,8 +17,9 @@ export function reconcileMakulaboHeatmap(official, heatmapRows) {
     if (Number.isInteger(row.boat) && row.boat!==match.boat)
       return {verified:false,reason:'boat_conflict',racers:[]};
     const runs=counts.reduce((a,b)=>a+b,0);
-    if (Number.isFinite(row.runs)&&row.runs!==runs)
+    if (row.runs!==undefined && (!Number.isInteger(row.runs)||row.runs!==runs))
       return {verified:false,reason:'run_count_conflict',racers:[]};
+    // The flag must be backed by the source parser's actual header check.
     const finishHeadersVerified=row.finishHeadersVerified===true;
     const rate=n=>runs>0?Math.round(n/runs*10000)/100:null;
     racers.push({boat:match.boat,racerId:official.find(r=>r.boat===match.boat).racerId,
