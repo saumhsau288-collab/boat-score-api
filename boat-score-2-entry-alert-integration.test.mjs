@@ -10,11 +10,19 @@ test('predicted inward movement appears in preview',()=>{
 test('valid exhibition entry supersedes prediction alert',()=>{
  const p=predictExperimentalRace(racers);
  const exhibition=[1,2,3,4,6,5].map((entryCourse,i)=>({boat:i+1,entryCourse}));
- const view=buildEntryAlertView(p,{exhibitionRacers:exhibition});
+ const view=buildEntryAlertView(p,{exhibitionRacers:exhibition,exhibitionSourceVerified:true});
  assert.equal(view.source,'exhibition');assert.match(view.html,/6号艇 → 5コース/);
 });
 test('invalid exhibition is rejected, prediction warning remains',()=>{
  const p=predictExperimentalRace(racers);
  const view=buildEntryAlertView(p,{exhibitionRacers:[{boat:6,entryCourse:3}]});
  assert.equal(view.source,'prediction');assert.equal(view.exhibitionRejected,true);
+});
+
+test('unverified exhibition data cannot override prediction warning',()=>{
+ const p=predictExperimentalRace(racers);
+ const exhibition=[1,2,3,4,6,5].map((entryCourse,i)=>({boat:i+1,entryCourse}));
+ const view=buildEntryAlertView(p,{exhibitionRacers:exhibition});
+ assert.equal(view.source,'prediction');assert.equal(view.exhibitionRejected,true);
+ assert.match(view.html,/6号艇 → 3コース/);
 });
