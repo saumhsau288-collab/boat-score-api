@@ -16,3 +16,13 @@ export async function probeMakulaboPublicPage({date,venue,race,fetchImpl=fetch}=
   return {status:'public_page_inspected',url,recent50Ready:false,indicators,structure,js,warning:'Page labels are not authenticated six-racer recent50 win rates. No values extracted or applied.'};
  }catch(e){return {status:'fetch_failed',url,recent50Ready:false,error:String(e.message).slice(0,120)};}
 }
+
+// Direct CLI mode: inspect only public page metadata, never store page HTML.
+if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
+ const date=process.env.MAKULABO_DATE||'20261119';
+ const venue=Number(process.env.MAKULABO_VENUE||18);
+ const race=Number(process.env.MAKULABO_RACE||2);
+ const report=await probeMakulaboPublicPage({date,venue,race});
+ console.log('MAKULABO_PUBLIC_PROBE',JSON.stringify(report));
+ if(report.status!=='public_page_inspected')process.exitCode=1;
+}
