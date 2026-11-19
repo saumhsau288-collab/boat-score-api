@@ -29,3 +29,19 @@ test('rejects missing counts and missing racers',()=>{
  rows[0].counts=null;
  assert.equal(reconcileMakulaboHeatmap(official,rows).reason,'invalid_heatmap_counts');
 });
+
+test('calculates overall 1st, top-2 and top-3 rates only with verified headers',()=>{
+ const rows=heatmap.map(r=>({...r,finishHeadersVerified:true}));
+ const result=reconcileMakulaboHeatmap(official,rows);
+ assert.equal(result.verified,true);
+ assert.equal(result.racers[0].firstPlaceRate,50);
+ assert.equal(result.racers[0].top2Rate,75);
+ assert.equal(result.racers[0].top3Rate,100);
+ assert.equal(result.racers[0].eligibleForCourseSpecificScoring,false);
+ assert.equal(result.racers[0].eligibleAsVerifiedRecent50,false);
+});
+test('unverified headers cannot create finish rates',()=>{
+ const result=reconcileMakulaboHeatmap(official,heatmap);
+ assert.equal(result.racers[0].top2Rate,null);
+ assert.equal(result.racers[0].top3Rate,null);
+});
