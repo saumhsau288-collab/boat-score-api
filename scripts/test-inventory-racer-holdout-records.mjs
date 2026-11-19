@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {inventoryRacerHoldoutRecords} from './inventory-racer-holdout-records.mjs';
+const empty=inventoryRacerHoldoutRecords([]);
+assert.equal(empty.totalRecords,0);
+assert.equal(empty.eligibleRecords,0);
+assert.equal(empty.readyForAccuracyResearch,false);
+const missing=inventoryRacerHoldoutRecords([{date:'20261119',venue:2,race:3,racers:[]}]);
+assert.equal(missing.rejectedRecords,1);
+assert.equal(missing.missingReasons.six_verified_scoring_factors_and_results_missing,1);
+assert.equal(missing.missingReasons.capture_not_before_cutoff,1);
+console.log('Historical racer holdout inventory tests passed');
