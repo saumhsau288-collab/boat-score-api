@@ -30,7 +30,7 @@ export default {async fetch(request){
  const u=new URL(request.url);
  if(u.pathname==='/api/makulabo-status'){
   const date=u.searchParams.get('date')??'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
-  if(!/^20\\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply({status:'invalid_selection'},400);
+  if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply({status:'invalid_selection'},400);
   const url='https://makulabo-jp.com/data/'+String(venue).padStart(2,'0')+'/'+race+'/heatmap?hd='+date;
   try{
    const response=await fetch(url,{headers:{accept:'text/html'},redirect:'follow',signal:AbortSignal.timeout(10000)});
