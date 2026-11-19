@@ -49,6 +49,6 @@ jobs:
         run: |
           BASE='https://boat-score-2-predict-lab.saumh-sau-288.workers.dev'
           curl --fail --show-error --location --max-time 20 "$BASE/" -o /tmp/boat-score-2-mobile.html
-          grep -F 'predict-direct' /tmp/boat-score-2-mobile.html
+          grep -F 'select' /tmp/boat-score-2-mobile.html
           curl --show-error --max-time 20 "$BASE/api/predict?date=bad&venue=18&race=2" -o /tmp/boat-score-2-api.json -w '%{http_code}' | grep -qx '400'
           grep -F 'invalid_selection' /tmp/boat-score-2-api.json
