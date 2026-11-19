@@ -15,6 +15,8 @@ on:
       - 'scripts/test-compare-precutoff-predictions.mjs'
       - 'scripts/classify-prediction-phase.mjs'
       - 'scripts/test-classify-prediction-phase.mjs'
+      - 'scripts/format-prediction-snapshot.mjs'
+      - 'scripts/test-format-prediction-snapshot.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -45,6 +47,8 @@ jobs:
           node scripts/compare-exploratory-winrates-results.mjs research-historical/manual.official-entry-stats.json research-historical/manual.racer-finishes.json research-historical/manual.replayed-comparison.json
       - name: Verify pre-cutoff snapshot eligibility rules
         run: node scripts/test-validate-precutoff-snapshot.mjs
+      - name: Test prediction snapshot record format
+        run: node scripts/test-format-prediction-snapshot.mjs
       - name: Test prediction phase classification
         run: node scripts/test-classify-prediction-phase.mjs
       - name: Test strict pre-cutoff prediction and finish comparison
