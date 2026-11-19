@@ -57,3 +57,27 @@ export function compareHistoricalSet(rows){
    experimental:totals('experimental'),
    warning:'Offline descriptive comparison only; not a validated out-of-sample gain.'};
 }
+
+/**
+ * Chronological audit only. Training and holdout dates never overlap.
+ * This does not tune weights, authenticate sources, or claim predictive validity.
+ */
+export function compareChronologicalHoldout(rows,holdoutStartDate){
+ if(!Array.isArray(rows)||!/^20\d{6}$/.test(String(holdoutStartDate)))
+   return {status:'invalid_input'};
+ const train=[],holdout=[];
+ for(const row of rows){
+   if(!row||!/^20\d{6}$/.test(String(row.date)))
+     return {status:'invalid_input'};
+   (String(row.date)<String(holdoutStartDate)?train:holdout).push(row);
+ }
+ const training=compareHistoricalSet(train);
+ const testing=compareHistoricalSet(holdout);
+ if(training.status==='duplicate_races'||testing.status==='duplicate_races')
+   return {status:'duplicate_races'};
+ const keys=rows.map(r=>[r.date,r.venue,r.race].join(':'));
+ if(new Set(keys).size!==keys.length)return {status:'duplicate_races'};
+ return {status:training.eligible>0&&testing.eligible>0?'audited':'insufficient_history',
+   holdoutStartDate,training,holdout:testing,
+   warning:'Chronological audit only; requires independent source authentication and untouched model selection.'};
+}
