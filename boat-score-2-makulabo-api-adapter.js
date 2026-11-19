@@ -18,6 +18,7 @@ export function inspectMakulaboApiResponse(payload) {
     if(parsed.rows.length!==6 || parsed.rows.some(row=>{
       const original=rows.find(x=>x.boat===row.boat);
       return !original || original.name!==row.name ||
+        !Array.isArray(original.counts) || original.counts.length!==6 ||
         original.counts.some((n,i)=>n!==row.counts[i]);
     }))return {status:'unverified',reason:'labelled_row_mismatch',racers:[]};
     rows=rows.map(row=>({...row,finishHeadersVerified:true}));
