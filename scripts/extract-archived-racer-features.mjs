@@ -7,7 +7,7 @@ export function extractArchivedRacerFeatures(entry){
  const base={date:entry?.date,venue:entry?.venue,race:entry?.race,status:'not_parsed',preCutoffSnapshotAuthenticated:false,eligibleForWeightTuning:false,racers:[]};
  if(entry?.status!=='raw_html_saved'||typeof entry.html!=='string')return base;
  const racers=[];
- const diagnostics={totalTableRows:0,rowsWithRacerProfileLinks:0,rowsWithFourRowCells:0,fourRowBlockCandidates:0,completeRacerBlocks:0,boatNumberRecognized:0,missingFields:{racerId:0,averageStartTiming:0,nationalWinRate:0,localWinRate:0},failureCategory:null};
+ const diagnostics={totalTableRows:0,rowsWithRacerProfileLinks:0,rowsWithFourRowCells:0,fourRowBlockCandidates:0,completeRacerBlocks:0,boatNumberRecognized:0,missingFields:{racerId:0,averageStartTiming:0,nationalWinRate:0,localWinRate:0},failureCategory:null,boatCellSamples:[]};
  // Each racer starts a four-row block: boat, photo, racer identity, ST, national, local.
  for(const tr of entry.html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
   diagnostics.totalTableRows++;
@@ -17,6 +17,7 @@ export function extractArchivedRacerFeatures(entry){
   if(cells.length<6)continue;
   diagnostics.fourRowBlockCandidates++;
   const boatText=clean(cells[0]);
+  if(diagnostics.boatCellSamples.length<6)diagnostics.boatCellSamples.push({text:boatText.slice(0,60),markup:cells[0].slice(0,220)});
   const boat=boatText.match(/^([1-6])(?:\s|$)/)?.[1];
   const racerId=racerIdFromCell(cells[2]);
   const st=firstDecimal(cells[3],/(?:^|\s)(0\.\d{2})(?=\s|$)/);
