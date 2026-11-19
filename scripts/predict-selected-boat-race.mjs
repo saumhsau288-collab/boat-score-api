@@ -10,8 +10,9 @@ export async function predictSelectedRace({date,venue,race,courses=null,venueHis
  const entry=await fetchHistoricalRacelistSample({date,venue,race,fetchImpl});
  if(entry.status!=='raw_html_saved')return {status:'official_fetch_failed',date,venue,race,main:[],upset:[],error:entry.error,
   message:'公式出走表の取得に失敗しました。開催日・開催場・レース番号と公式サイトの公開状況を確認してください。'};
+ const provenance={officialUrl:entry.url,htmlSha256:entry.sha256??null,fetchedAt:entry.fetchedAt??null,preCutoffSnapshotAuthenticated:false};
  const features=extractArchivedRacerFeatures(entry);
- if(features.status!=='parsed_archival_features_unverified')return {status:'official_features_incomplete',date,venue,race,main:[],upset:[],
+ if(features.status!=='parsed_archival_features_unverified')return {status:'official_features_incomplete',date,venue,race,main:[],upset:[],provenance,
   message:'出走表から6人分の選手勝率・平均STを確認できないため、予想を保留しました。'};
  const usingAssumedEntry=courses===null;
  const selectedCourses=usingAssumedEntry?[1,2,3,4,5,6]:courses;
@@ -20,13 +21,13 @@ export async function predictSelectedRace({date,venue,race,courses=null,venueHis
  // Current parser extracts six racer rows but does not independently prove each boat-to-racer mapping.
  // Do not turn positional parsing into real ticket recommendations without that proof.
  if(features.boatMappingVerified!==true)return {status:'boat_mapping_unverified',date,venue,race,
-  main:[],upset:[],racers:features.racers,entryScenario:usingAssumedEntry?'boat_order_assumption':'user_supplied_entry_scenario',
+  main:[],upset:[],provenance,racers:features.racers,entryScenario:usingAssumedEntry?'boat_order_assumption':'user_supplied_entry_scenario',
   message:'Six racer features found, but official boat-number mapping has not been independently verified. Tickets withheld.'};
  const racers=features.racers.map((x,i)=>({...x,boat:i+1,entryCourse:selectedCourses[i]}));
  const venueTendency=summarizeVenueTendencies(venueHistory).find(x=>x.venue===venue)??null;
  return {...predictFromInput({date,venue,race,racers,dataSource:'official_racelist_download_unverified_snapshot'}),
   entryScenario:usingAssumedEntry?'boat_order_assumption':'user_supplied_entry_scenario',
-  entryCourses:selectedCourses,venueTendency,venueTendencyAppliedToScore:false,
+  entryCourses:selectedCourses,provenance,venueTendency,venueTendencyAppliedToScore:false,
   inputCaveat:usingAssumedEntry?'PROVISIONAL: Boat-order entry is assumed solely for scenario prediction. Actual entry is unverified; do not treat this as confirmed exhibition.':'Entry courses supplied as scenario, not authenticated exhibition or confirmed actual entry.'};
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
