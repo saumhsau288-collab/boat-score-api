@@ -7,7 +7,7 @@ export function validateHistoricalPreRaceSnapshot(snapshot, result){
  if(snapshot.captureKind!=='saved_before_cutoff')issues.push('not_saved_before_cutoff');
  if(snapshot.savedAt===undefined||!Number.isFinite(Date.parse(snapshot.savedAt)))issues.push('missing_capture_timestamp');
  if(snapshot.cutoffAt===undefined||!Number.isFinite(Date.parse(snapshot.cutoffAt)))issues.push('missing_cutoff_timestamp');
- const hasOffset=t=>typeof t==='string'&&/(Z|[+-]\\d{2}:\\d{2})$/i.test(t);
+ const hasOffset=t=>typeof t==='string'&&/(Z|[+-]\d{2}:\d{2})$/i.test(t);
  if(!hasOffset(snapshot.savedAt)||!hasOffset(snapshot.cutoffAt))issues.push('timestamp_timezone_missing');
  const jstDate=t=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t)).replaceAll('-','');
  if(hasOffset(snapshot.savedAt)&&hasOffset(snapshot.cutoffAt)&&Number.isFinite(Date.parse(snapshot.savedAt))&&Number.isFinite(Date.parse(snapshot.cutoffAt))&&
