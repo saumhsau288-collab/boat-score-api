@@ -1,0 +1,49 @@
+name: Diagnose Makulabo historical API (read-only)
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: Race date YYYYMMDD (public historical data only)
+        required: true
+        default: '20261113'
+      venue:
+        description: Venue number 01-24
+        required: true
+        default: '02'
+      race:
+        description: Race number 1-12
+        required: true
+        default: '9'
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate inputs and fetch public API
+        env:
+          RACE_DATE: ${{ inputs.date }}
+          VENUE: ${{ inputs.venue }}
+          RACE: ${{ inputs.race }}
+        run: |
+          set -euo pipefail
+          [[ "$RACE_DATE" =~ ^20[0-9]{6}$ ]] || exit 2
+          [[ "$VENUE" =~ ^(0?[1-9]|1[0-9]|2[0-4])$ ]] || exit 2
+          [[ "$RACE" =~ ^(0?[1-9]|1[0-2])$ ]] || exit 2
+          curl --fail-with-body --location --max-time 20 --retry 1 --silent --show-error \
+            --get 'https://boat-score-api-v2.saumh-sau-288.workers.dev/api/makulabo/heatmap' \
+            --data-urlencode "date=$RACE_DATE" \
+            --data-urlencode "venue=$VENUE" \
+            --data-urlencode "race=$RACE" \
+            --output /tmp/makulabo-response.json
+          node --experimental-default-type=module scripts/diagnose-makulabo-response.mjs /tmp/makulabo-response.json
+      - name: Explanation
+        if: failure()
+        run: |
+          echo 'Diagnostic failed: inspect the preceding step for HTTP errors or a safe validation reason.'
+          echo 'This workflow does not deploy, change scoring, or publish source HTML.'
