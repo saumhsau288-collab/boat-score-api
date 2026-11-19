@@ -36,6 +36,17 @@ const morning={...s,phase:'morning_0800'};
 const cutoff={...s,phase:'pre_cutoff'};
 const both=compare([morning,cutoff],[r]);
 assert.equal(both.compared,2);
+assert.equal(both.pairedComparison.races,1);
+assert.equal(both.pairedComparison.morningMainHits,1);
+assert.equal(both.pairedComparison.preCutoffMainHits,1);
+assert.equal(both.pairedComparison.mainImproved,0);
+assert.equal(ok.pairedComparison.races,0);
+const morningMiss={...morning,main:[[4,1,2],[4,2,1],[5,1,2],[5,2,1],[6,1,2],[6,2,1]]};
+const improved=compare([morningMiss,cutoff],[r]);
+assert.equal(improved.pairedComparison.races,1);
+assert.equal(improved.pairedComparison.mainImproved,1);
+assert.equal(improved.pairedComparison.mainWorsened,0);
+
 assert.equal(both.byPhase.morning_0800.compared,1);
 assert.equal(both.byPhase.pre_cutoff.compared,1);
 assert.equal(both.byPhase.morning_0800.mainHits,1);
