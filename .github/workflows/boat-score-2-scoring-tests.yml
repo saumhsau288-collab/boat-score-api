@@ -63,6 +63,7 @@ jobs:
           node --experimental-default-type=module scripts/predict-boat-score-2-experiment.test.mjs
           node --experimental-default-type=module scripts/extract-archived-racer-features.test.mjs
           node --experimental-default-type=module scripts/fetch-historical-racelist-sample.test.mjs
+          node --experimental-default-type=module scripts/compare-makulabo-recent50.test.mjs
           node --experimental-default-type=module scripts/predict-selected-boat-race.test.mjs
           node --experimental-default-type=module boat-score-2-entry-scenarios.test.mjs
           node --experimental-default-type=module boat-score-2-venue-tendencies.test.mjs
