@@ -26,10 +26,12 @@ export async function probeMakulaboPublicPage({date,venue,race,fetchImpl=fetch}=
   });
   // Determine whether the four-digit player cell is a registration number or just a short name.
   const identityAudit=cells.slice(1,7).map((row,i)=>{
+   const boatText=(row[0]??'').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').normalize('NFKC').trim();
+   const boat=/^[1-6]$/.test(boatText)?Number(boatText):null;
    const raw=row[1]??'';
    const visible=raw.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
    const hrefs=[...raw.matchAll(/href\s*=\s*["']([^"']+)["']/gi)].map(m=>m[1]);
-   return {boat:i+1,playerText:visible.slice(0,50),containsFourDigitId:/\b\d{4}\b/.test(visible),linkCount:hrefs.length,linkPathSamples:hrefs.map(x=>x.replace(/\?.*$/,'').slice(0,100)).slice(0,2)};
+   return {boat,playerText:visible.slice(0,50),containsFourDigitId:/\b\d{4}\b/.test(visible),linkCount:hrefs.length,linkPathSamples:hrefs.map(x=>x.replace(/\?.*$/,'').slice(0,100)).slice(0,2)};
   });
   const names=identityAudit.map(x=>x.playerText.normalize('NFKC').replace(/[\s\u3000]/g,''));
   const sixRowIdentityReady=cells.length===7&&identityAudit.length===6&&identityAudit.every((x,i)=>x.boat===i+1&&names[i].length>=2)&&new Set(names).size===6;
