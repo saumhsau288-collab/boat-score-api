@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {adaptOfficialRaceEntryToEvidence} from './adapt-official-racer-evidence.mjs';
+const identities=Array.from({length:6},(_,i)=>({boat:i+1,toban:String(4000+i)}));
+const stats=Array.from({length:6},(_,i)=>({boat:i+1,nationwide:{winRate:6.1},local:{winRate:5.7},motor:{secondPlaceRate:31.5}}));
+const input={date:'20261119',venue:2,race:3,capturedAt:'2026-11-19T08:00:00+09:00',cutoffAt:'2026-11-19T11:00:00+09:00',official:{racersVerified:true,statsVerified:true,racersByBoat:identities,statsByBoat:stats}};
+const out=adaptOfficialRaceEntryToEvidence(input);
+assert.equal(out.ready,true);
+assert.equal(out.racers.length,6);
+assert.equal(out.racers[0].values.nationalWinRate,6.1);
+assert.equal(out.racers[0].values.averageST,null);
+assert.equal(out.racers[0].values.exhibitionTime,null);
+assert.equal(out.scoringReady,false);
+assert.equal(adaptOfficialRaceEntryToEvidence({...input,official:{...input.official,statsVerified:false}}).ready,false);
+console.log('Official racer entry evidence adapter tests passed');
