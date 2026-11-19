@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {inspectRacerPageHtml} from './probe-kyoteibiyori-racer-page.mjs';
+const html='<html><body>データ取得中です。 ※集計期間は直近6カ月です。<script src="/assets/racer.js"></script></body></html>';
+const inspected=inspectRacerPageHtml(html);
+assert.equal(inspected.loadingMessagePresent,true);
+assert.equal(inspected.recentSixMonthDisclaimer,true);
+assert.equal(inspected.sameOriginScriptCount,1);
+assert.equal(inspected.automatedRegistrationSearchConfirmed,false);
+assert.equal(inspected.historicalAsOfDataConfirmed,false);
+assert.throws(()=>inspectRacerPageHtml(null),/HTML string required/);
+console.log('Offline-only racer page inspection tests passed');
