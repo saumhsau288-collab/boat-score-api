@@ -6,9 +6,16 @@ export function compareRacerCourseToHistoricalBaseline(records,{asOfDate,minRace
  if(!Number.isInteger(minRacerStarts)||minRacerStarts<1||!Number.isInteger(minCourseStarts)||minCourseStarts<1)throw Error('Positive minimum sample sizes required');
  // Use the same strict earlier-date, verified-source, duplicate-filtering rules for both cohorts.
  const racer=buildHistoricalRacerCourseProfiles(records,{asOfDate,minStarts:minRacerStarts});
- const overall=buildHistoricalRacerCourseProfiles(records.map(r=>({...r,racerId:'9999'})),{asOfDate,minStarts:minCourseStarts});
- // The pooled calculation must not silently count multiple racers from the same race as duplicate.
- const baseline=new Map(overall.profiles.map(p=>[p.course,p]));
+ const baseline=new Map();
+ for(const p of racer.profiles){
+  if(!baseline.has(p.course))baseline.set(p.course,{starts:0,firsts:0,top3:0});
+  const b=baseline.get(p.course);
+  b.starts+=p.starts;b.firsts+=p.firsts;b.top3+=p.top3;
+ }
+ for(const b of baseline.values()){
+  b.firstRate=b.firsts/b.starts;b.top3Rate=b.top3/b.starts;
+  b.enoughSamples=b.starts>=minCourseStarts;
+ }
  const rows=racer.profiles.map(p=>{
   const b=baseline.get(p.course);
   const sufficient=p.enoughSamples&&b?.enoughSamples===true;
