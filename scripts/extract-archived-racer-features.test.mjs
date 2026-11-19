@@ -15,3 +15,13 @@ test('nonmatching boat numbers do not pass mapping verification',()=>{
  const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
  assert.equal(r.boatMappingVerified,false);
 });
+
+test('reports layout mismatch without fabricating racer metrics',()=>{
+ const html='<table><tr><td><a href="/racersearch/profile">選手</a></td></tr></table>';
+ const r=extractArchivedRacerFeatures({status:'raw_html_saved',html});
+ assert.equal(r.status,'incomplete_six_racer_features');
+ assert.equal(r.diagnostics.totalTableRows,1);
+ assert.equal(r.diagnostics.rowsWithRacerProfileLinks,1);
+ assert.equal(r.diagnostics.fourRowBlockCandidates,0);
+ assert.deepEqual(r.racers,[]);
+});
