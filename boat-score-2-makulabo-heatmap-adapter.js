@@ -20,8 +20,9 @@ export function reconcileMakulaboHeatmap(official, heatmapRows) {
       return {verified:false,reason:'run_count_conflict',racers:[]};
     racers.push({boat:match.boat,racerId:official.find(r=>r.boat===match.boat).racerId,
       name:official.find(r=>r.boat===match.boat).name,counts:[...counts],runs,
-      firstPlaceRate:runs>0?Math.round(counts[0]/runs*10000)/100:null,
+      firstColumnShare:runs>0?Math.round(counts[0]/runs*10000)/100:null,
+      firstPlaceRate:null, finishingPositionSemanticsVerified:false,
       eligibleAsVerifiedRecent50:false});
   }
-  return {verified:true,reason:null,racers,warning:'Heatmap counts alone do not prove a 50-race sample or verified recent-50 scoring input.'};
+  return {verified:true,reason:null,racers,warning:'Heatmap column semantics and 50-race sample have not been verified; first-place rate must not be inferred.'};
 }
