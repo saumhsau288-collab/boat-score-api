@@ -48,6 +48,9 @@ jobs:
       - name: Report entry-list fetch status without pre-cutoff claims
         run: |
           node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.official-entries.json","utf8")); for(const p of d.pages) console.log(JSON.stringify({race:p.race,status:p.status,error:p.error??null,preCutoffSnapshotVerified:p.preCutoffSnapshotVerified,winRatesVerified:p.winRatesVerified}));'
+      - name: Inspect racer IDs and win-rate labels in saved entry HTML
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; const d=JSON.parse(fs.readFileSync("research-historical/manual.official-entries.json","utf8")); for(const p of d.pages){if(!p.html){console.log(JSON.stringify({race:p.race,status:p.status}));continue;} const html=p.html; const ids=[...html.matchAll(/(?:toban=|toban%3D)([0-9]{4})/gi)].map(m=>m[1]); const unique=[...new Set(ids)]; const labels={national:html.includes("全国勝率"),local:html.includes("当地勝率"),nationalAlternate:html.includes("全国"),localAlternate:html.includes("当地")}; console.log(JSON.stringify({race:p.race,status:p.status,htmlBytes:html.length,uniqueRacerIds:unique.length,racerIds:unique.slice(0,12),labels,preCutoffSnapshotVerified:false,winRatesVerified:false}));}'
       - name: Fetch full 12-race historical card (exploratory sample)
         run: |
           mkdir -p research-historical
