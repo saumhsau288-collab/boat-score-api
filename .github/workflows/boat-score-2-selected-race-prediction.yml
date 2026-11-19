@@ -62,6 +62,12 @@ jobs:
           console.log(JSON.stringify({status:result.status,date,venue,race,main:result.main?.length??0,upset:result.upset?.length??0,entryScenario:result.entryScenario??null}));
           if(result.status!=='experimental')process.exitCode=1;
           JS
+      - name: Build mobile-readable prediction report
+        if: always()
+        run: |
+          if [ -f selected-race-output/prediction.json ]; then
+            node scripts/render-selected-race-html.mjs selected-race-output/prediction.json selected-race-output/prediction.html
+          fi
       - name: Upload result for review even if fetch failed
         if: always()
         uses: actions/upload-artifact@v4
