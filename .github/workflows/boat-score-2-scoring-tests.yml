@@ -99,6 +99,8 @@ jobs:
           node scripts/test-run-saved-makulabo-research.mjs
           node scripts/test-evaluate-verified-makulabo-research.mjs
           node scripts/test-report-research-snapshot-readiness.mjs
+          node --check scripts/capture-official-beforeinfo-evidence.mjs
+          node scripts/test-capture-official-beforeinfo-evidence.mjs
           node scripts/test-evaluate-captured-research-snapshot.mjs
           node scripts/test-compare-research-score-phases.mjs
           node scripts/test-audit-saved-research-race.mjs
