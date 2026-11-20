@@ -16,6 +16,8 @@ const result=summarize(data);
 assert.equal(result.total,5);
 assert.equal(result.evaluable,2);
 assert.equal(result.notEvaluable,3);
+assert.equal(result.missingEvidenceCounts.independently_authenticated_pre_race_inputs,1);
+assert.equal(result.missingEvidenceCounts.duplicate_race_key,2);
 assert.equal(result.firstPlaceHits,1);
 assert.equal(result.top3SetHits,2);
 assert.equal(result.exactTop3OrderHits,1);
