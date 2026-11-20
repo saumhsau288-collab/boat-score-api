@@ -28,6 +28,7 @@ on:
       - 'scripts/audit-research-disagreement-boat-position.mjs'
       - 'scripts/fetch-research-official-results.mjs'
       - 'scripts/diagnose-research-official-result-structure.mjs'
+      - 'scripts/preview-research-official-result-tables.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -56,6 +57,8 @@ jobs:
         run: node scripts/fetch-research-official-results.mjs research-queue/feature-collection-queue.json research-official-racelists
       - name: Diagnose official result page HTML structure without claiming finish order
         run: node scripts/diagnose-research-official-result-structure.mjs research-official-racelists
+      - name: Preview official result table rows before extracting finish positions
+        run: node scripts/preview-research-official-result-tables.mjs research-official-racelists
       - name: Audit archived HTML structure
         run: node scripts/audit-research-official-racelist-structure.mjs research-official-racelists
       - name: Audit source field labels
