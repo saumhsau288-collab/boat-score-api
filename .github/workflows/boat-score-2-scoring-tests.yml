@@ -170,7 +170,7 @@ jobs:
           retention-days: 30
 
   research-result-source-diagnostic:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
