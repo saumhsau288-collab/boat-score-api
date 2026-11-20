@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {evaluateWeightCandidates as evaluate} from './evaluate-historical-weight-candidates.mjs';
+const empty=evaluate([]);
+assert.equal(empty.status,'insufficient_verified_history');
+assert.equal(empty.eligibleForDeployment,false);
+const expected={date:'20261120',venue:'02',race:3};
+const source={...expected,officialDomainVerified:true,sourceDocumentVerified:true,raceIdentityVerified:true,cutoffLabelVerified:true,sourceCaptureVerified:true,sourceCapturedAtEpochMs:Date.parse('2026-11-20T08:00:00+09:00'),receivedAt:'2026-11-20T08:00:00+09:00',cutoffJst:'09:35',resultVerified:true};
+const schedule={raceNumbers:Array.from({length:12},(_,i)=>i+1),cutoffTimes:['08:43','09:09','09:35','10:01','10:28','10:58','11:30','12:03','12:38','13:11','13:46','14:23'],sourceVerified:true};
+const scoreInputsByBoat=Array.from({length:6},(_,i)=>({boat:i+1,verified:true,score:60-i*3,racerId:String(4001+i),preRaceSourceVerified:true,capturedAt:'2026-11-20T08:00:00+09:00',scoreComputedBeforeCutoffVerified:true,scoreComputedAt:'2026-11-20T08:05:00+09:00'}));
+const finishByBoat=Array.from({length:6},(_,i)=>({boat:i+1,finish:i+1,officialResultVerified:true}));
+const featureInputsByBoat=scoreInputsByBoat.map((r,i)=>({boat:r.boat,racerId:r.racerId,sourceVerified:true,nationalWinRate:7-i,localWinRate:7-i,motorTwoWinRate:50,recent50WinRate:20,exhibitionScore:50}));
+const valid={expected,source,schedule,scoreInputsByBoat,finishByBoat,featureInputsByBoat};
+assert.equal(evaluate([valid]).eligible,1);
+assert.equal(evaluate([valid,valid]).excluded.duplicate_race,1);
+assert.equal(evaluate([{...valid,featureInputsByBoat:undefined}]).excluded.authenticated_pre_cutoff_features_missing,1);
+assert.equal(evaluate([{...valid,source:{...source,resultVerified:false}}]).eligible,0);
+console.log('Historical weight candidate evidence gate tests passed');
