@@ -5,9 +5,10 @@ const times=['08:43','09:09','09:35','10:01','10:28','10:58','11:30','12:03','12
 const source={date:'20261120',venue:'02',race:3,officialDomainVerified:true,sourceDocumentVerified:true,raceIdentityVerified:true,cutoffLabelVerified:true,sourceCaptureVerified:true,sourceCapturedAtEpochMs:Date.parse('2026-11-20T08:00:00+09:00'),receivedAt:'2026-11-20T08:00:00+09:00',cutoffJst:'09:35',resultVerified:true};
 const schedule={raceNumbers:Array.from({length:12},(_,i)=>i+1),cutoffTimes:times,sourceVerified:true};
 const scoreInputsByBoat=Array.from({length:6},(_,i)=>({boat:i+1,verified:true,score:50+i,racerId:String(4001+i),preRaceSourceVerified:true,capturedAt:'2026-11-20T08:00:00+09:00',scoreComputedBeforeCutoffVerified:true,scoreComputedAt:'2026-11-20T08:05:00+09:00'}));
-const finishByBoat=Array.from({length:6},(_,i)=>({boat:i+1,finish:i+1}));
+const finishByBoat=Array.from({length:6},(_,i)=>({boat:i+1,finish:i+1,officialResultVerified:true}));
 const base={expected,source,schedule,scoreInputsByBoat,finishByBoat};
 assert.equal(check(base).eligible,true);
+assert.equal(check({...base,finishByBoat:finishByBoat.map((v,i)=>i===3?{...v,officialResultVerified:false}:v)}).reason,'six_boat_finish_unverified');
 assert.equal(check({...base,scoreInputsByBoat:scoreInputsByBoat.map((v,i)=>i===0?{...v,scoreComputedAt:'2026-11-20T09:36:00+09:00'}:v)}).reason,'score_generation_not_authenticated_before_cutoff');
 assert.equal(check({...base,scoreInputsByBoat:scoreInputsByBoat.map((v,i)=>i===0?{...v,scoreComputedBeforeCutoffVerified:false}:v)}).reason,'score_generation_not_authenticated_before_cutoff');
 assert.equal(check({...base,scoreInputsByBoat:scoreInputsByBoat.map((v,i)=>i===0?{...v,scoreComputedAt:'2026-11-20T07:59:00+09:00'}:v)}).reason,'score_generation_not_authenticated_before_cutoff');
