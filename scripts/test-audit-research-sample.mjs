@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {auditResearchSample as audit} from './audit-research-sample.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i}));
+const samples=racers.map(r=>({boat:r.boat,sourceName:r.name,runs:50,finishCountsValid:true,finishCounts:[10,10,10,10,5,5]}));
+const official={status:'captured_research_inputs',date:'20261120',venue:18,race:1,racers};
+const makulabo={status:'held',identityReview:{verified:false},finishSample:{racers:samples}};
+const held=audit(official,makulabo);
+assert.equal(held.identitySafe,false);
+assert.equal(held.allExactly50,true);
+assert.equal(held.eligibleForCalibration,false);
+assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=>i===4?{...r,runs:1,finishCounts:[0,0,0,0,1,0]}:r)}}).allExactly50,false);
+assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=>i===4?{...r,runs:50,finishCounts:[0,0,0,0,1,0]}:r)}}).rows[4].sampleValid,false);
+assert.equal(audit(official,{...makulabo,status:'ok',identityReview:{verified:true}}).readyForResearchMorningScoring,false);
+console.log('Research sample audit tests passed');
