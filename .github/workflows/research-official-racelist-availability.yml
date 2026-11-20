@@ -48,6 +48,7 @@ on:
       - 'scripts/audit-research-candidate-formula-disagreements.mjs'
       - 'scripts/audit-research-local-zero-sensitivity.mjs'
       - 'scripts/audit-research-local-zero-saved-agreement.mjs'
+      - 'scripts/audit-research-local-zero-official-finishes.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -140,6 +141,7 @@ jobs:
           node scripts/audit-research-candidate-formula-disagreements.mjs research-official-racelists
           node scripts/audit-research-local-zero-sensitivity.mjs research-official-racelists
           node scripts/audit-research-local-zero-saved-agreement.mjs research-official-racelists
+          node scripts/audit-research-local-zero-official-finishes.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
