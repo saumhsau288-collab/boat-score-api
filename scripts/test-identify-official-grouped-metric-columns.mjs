@@ -9,4 +9,7 @@ assert.deepEqual(out.columns,{nationalWinRate:1,localWinRate:3,motorTwoWinRate:6
 const bad=identify(html.replace('<th>勝率</th><th>2連率</th><th>勝率</th>','<th>勝率</th><th>2連率</th><th>不明</th>'));
 assert.equal(bad.verified,false);
 assert.equal(bad.reason,'ambiguous_grouped_metric_columns');
+assert.equal(bad.headerRowCount,2);
+assert.equal(bad.headerGridLabels[0][1],'全国');
+assert.equal(bad.headerGridLabels[1][3],null);
 console.log('Grouped official metric column tests passed');
