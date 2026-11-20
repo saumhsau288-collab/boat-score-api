@@ -17,7 +17,8 @@ def summarize_capture(payload):
     records = payload.get('records')
     if not isinstance(records, list):
         raise ValueError('Missing capture records')
-    counts = {'captured': len(records), 'http200': 0, 'ready': 0, 'usableSixPlusSix': 0}
+    counts = {'captured': len(records), 'http200': 0, 'ready': 0, 'usableSixPlusSix': 0, 'readyWithoutSixBoatInputs': 0,
+              'readyWithoutAuthenticatedPreRaceEvidence': 0}
     def six(picks):
         return (isinstance(picks, list) and len(picks) == 6
                 and all(isinstance(p, list) and len(p) == 3
@@ -32,6 +33,12 @@ def summarize_capture(payload):
             response = row.get('response')
             if isinstance(response, dict) and response.get('ready') is True:
                 counts['ready'] += 1
+                if not (isinstance(response.get('scoreInputsByBoat'), list)
+                        and len(response['scoreInputsByBoat']) == 6):
+                    counts['readyWithoutSixBoatInputs'] += 1
+                if not (payload.get('authenticatedBeforeRace') is True
+                        and row.get('authenticatedBeforeRace') is True):
+                    counts['readyWithoutAuthenticatedPreRaceEvidence'] += 1
                 if six(response.get('main')) and six(response.get('upset')):
                     counts['usableSixPlusSix'] += 1
     return counts
@@ -175,7 +182,9 @@ def api(path, token, binary=False):
 
 def inventory(repository, token):
     totals = defaultdict(lambda: {'artifacts': 0, 'captured': 0,
-                                  'http200': 0, 'ready': 0, 'usableSixPlusSix': 0})
+                                  'http200': 0, 'ready': 0, 'usableSixPlusSix': 0,
+                                  'readyWithoutSixBoatInputs': 0,
+                                  'readyWithoutAuthenticatedPreRaceEvidence': 0})
     errors = []
     inspected = 0
     diagnostics = defaultdict(lambda: {'states': Counter(), 'byVenue': defaultdict(Counter), 'readyRaceIdentities': [], 'notReadyResponseFieldSets': Counter(), 'transportErrorCategories': Counter(), 'missingInputStructures': Counter(), 'verificationFlagCounts': Counter(), 'missingInputListLengths': Counter(), 'officialStatsRetryTypes': Counter(), 'verificationPairs': Counter(), 'notReadyReasonTypes': Counter(), 'officialRetryCategories': Counter(), 'explicitRetryHttpStatuses': Counter()})
