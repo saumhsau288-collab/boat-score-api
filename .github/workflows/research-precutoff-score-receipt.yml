@@ -35,17 +35,22 @@ jobs:
           gh run download "$RUN_ID" --repo "${{ github.repository }}" --name "$ARTIFACT_NAME" --dir prediction-captures
           test -f prediction-captures/verified-input.json
           test -f prediction-captures/archived-source-evidence.bin
+          gh api "repos/${{ github.repository }}/actions/runs/$RUN_ID" --jq '{id,created_at,run_started_at,head_sha,event,conclusion}' > prediction-captures/source-run-provenance.json
+          test -s prediction-captures/source-run-provenance.json
       - name: Capture scores only when evidence and cutoff checks pass
         run: |
           node scripts/capture-research-precutoff-score.mjs \
             prediction-captures/verified-input.json \
             prediction-captures/research-score-receipt.json \
-            prediction-captures/archived-source-evidence.bin
+            prediction-captures/archived-source-evidence.bin \\
+            prediction-captures/source-run-provenance.json
       - name: Preserve rejection or receipt for research audit
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: research-score-receipt-${{ github.run_id }}
-          path: prediction-captures/research-score-receipt.json
+          path: |
+            prediction-captures/research-score-receipt.json
+            prediction-captures/source-run-provenance.json
           if-no-files-found: warn
           retention-days: 30
