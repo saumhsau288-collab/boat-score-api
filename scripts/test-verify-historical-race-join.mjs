@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {verifyHistoricalRaceJoin as check} from './verify-historical-race-join.mjs';
 const expected={date:'20261120',venue:'02',race:3};
 const times=['08:43','09:09','09:35','10:01','10:28','10:58','11:30','12:03','12:38','13:11','13:46','14:23'];
-const source={date:'20261120',venue:'02',race:3,officialDomainVerified:true,sourceDocumentVerified:true,raceIdentityVerified:true,cutoffLabelVerified:true,sourceCaptureVerified:true,sourceCapturedAtEpochMs:1795140000000,cutoffJst:'09:35',resultVerified:true};
+const source={date:'20261120',venue:'02',race:3,officialDomainVerified:true,sourceDocumentVerified:true,raceIdentityVerified:true,cutoffLabelVerified:true,sourceCaptureVerified:true,sourceCapturedAtEpochMs:Date.parse('2026-11-20T08:00:00+09:00'),receivedAt:'2026-11-20T08:00:00+09:00',cutoffJst:'09:35',resultVerified:true};
 const schedule={raceNumbers:Array.from({length:12},(_,i)=>i+1),cutoffTimes:times,sourceVerified:true};
 const scoreInputsByBoat=Array.from({length:6},(_,i)=>({boat:i+1,verified:true}));
 const finishByBoat=Array.from({length:6},(_,i)=>({boat:i+1,finish:i+1}));
@@ -14,4 +14,6 @@ assert.equal(check({...base,schedule:{...schedule,cutoffTimes:times.map((t,i)=>i
 assert.equal(check({...base,scoreInputsByBoat:scoreInputsByBoat.slice(0,5)}).eligible,false);
 assert.equal(check({...base,finishByBoat:finishByBoat.map((v,i)=>i===5?{boat:6,finish:1}:v)}).eligible,false);
 assert.equal(check({...base,source:{...source,resultVerified:false}}).eligible,false);
-console.log('Historical join evidence gate: seven synthetic cases passed');
+assert.equal(check({...base,source:{...source,receivedAt:'2026-11-20T09:36:00+09:00',sourceCapturedAtEpochMs:Date.parse('2026-11-20T09:36:00+09:00')}}).reason,'capture_not_before_cutoff');
+assert.equal(check({...base,source:{...source,receivedAt:'2026-11-20T08:00:00+09:00',sourceCapturedAtEpochMs:0}}).reason,'capture_timestamp_unverified');
+console.log('Historical join evidence gate: nine synthetic cases passed');
