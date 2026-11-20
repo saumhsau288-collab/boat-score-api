@@ -71,6 +71,16 @@ jobs:
                 const data=JSON.parse(body);
                 if(data.service!=='boat-score-2-research-preview'||data.liveData!==false)
                   throw Error('Unexpected preview API response');
+                const apiUrl=process.env.RESEARCH_PREVIEW_URL+'/api/research/evaluate-sources';
+                const probe=await fetch(apiUrl,{
+                  method:'POST',headers:{'content-type':'application/json'},
+                  body:JSON.stringify({official:{verified:false,racers:[]},recent50:[]}),
+                  signal:AbortSignal.timeout(15000)
+                });
+                const probeData=await probe.json();
+                if(probe.status!==422||probeData.status!=='insufficient_data'||probeData.liveData!==false)
+                  throw Error('Deployed source-evaluation API contract mismatch: '+probe.status+' '+JSON.stringify(probeData).slice(0,250));
+                console.log('Research API rejects unverified official/recent50 data as expected');
                 console.log('Isolated research API preview health verified:',url);
                 process.exit(0);
               }
