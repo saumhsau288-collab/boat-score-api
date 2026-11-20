@@ -136,6 +136,7 @@ jobs:
           node scripts/test-capture-research-result-batch.mjs
           node scripts/test-evaluate-venue-specific-weights.mjs
           node scripts/test-summarize-venue-course-tendencies.mjs
+          node scripts/test-summarize-venue-racer-podiums.mjs
 
   archived-evidence-diagnostic:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
