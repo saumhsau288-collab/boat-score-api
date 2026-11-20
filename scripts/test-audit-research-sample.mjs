@@ -16,6 +16,15 @@ assert.equal(artifactShape.candidateSourceIdsVerified,false);
 assert(artifactShape.reasons.includes('independent_source_registration_ids_missing_or_mismatched'));
 assert(artifactShape.reasons.includes('six_source_verified_registration_id_matches_required'));
 assert.equal(artifactShape.rows[0].sourceRacerIdProvided,false);
+// Real captured sample-size pattern: 50/49/49/49/1/49; counts are consistent but identity is held.
+const observedRuns=[50,49,49,49,1,49];
+const observedSamples=artifactShapeSamples.map((x,i)=>({...x,runs:observedRuns[i],
+ finishCounts:i===0?[10,10,10,10,5,5]:i===4?[0,0,0,0,1,0]:[10,10,10,10,5,4]}));
+const observed=audit(official,{...makulabo,identityReview:{verified:false,candidates:artifactShapeCandidates},finishSample:{racers:observedSamples}});
+assert.equal(observed.countsConsistent,true);
+assert.equal(observed.allExactly50,false);
+assert.equal(observed.identitySafe,false);
+assert.equal(observed.eligibleForCalibration,false);
 assert.equal(held.allExactly50,true);
 assert.equal(held.eligibleForCalibration,false);
 assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=>i===4?{...r,runs:1,finishCounts:[0,0,0,0,1,0]}:r)}}).allExactly50,false);
