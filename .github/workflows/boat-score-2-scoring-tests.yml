@@ -119,3 +119,4 @@ jobs:
           node scripts/test-verify-historical-race-join.mjs
           node scripts/test-audit-historical-race-joins.mjs
           node scripts/test-normalize-saved-prediction-for-join.mjs
+          node scripts/test-audit-research-sample.mjs
