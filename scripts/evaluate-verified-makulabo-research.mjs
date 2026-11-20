@@ -15,7 +15,10 @@ export function evaluateVerifiedMakulaboResearch(snapshot,extracted){
  const summary={status:'makulabo_identity_joined',date:snapshot.date,venue:snapshot.venue,race:snapshot.race,
   racers:joined.racers.map(r=>({boat:r.boat,racerId:r.racerId,runs:r.runs,
    firstPlaceRate:r.firstPlaceRate,top2Rate:r.top2Rate,top3Rate:r.top3Rate,
-   matchMethod:r.matchMethod})),eligibleForCalibration:false,
+   matchMethod:r.matchMethod,exactly50Runs:r.runs===50})),
+  allExactly50Runs:joined.racers.every(r=>r.runs===50),
+  finishTableProvesRecent50:false,
+  eligibleForCalibration:false,
   morningScoreApplied:false};
  // The verified table gives first-place percentages, not necessarily the
  // recent50WinRate required by the existing scoring pipeline.
