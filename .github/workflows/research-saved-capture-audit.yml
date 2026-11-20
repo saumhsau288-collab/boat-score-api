@@ -33,8 +33,11 @@ jobs:
           import {inspectScoreEvidence} from './scripts/inspect-score-evidence-research.mjs';
           function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):[path.join(dir,e.name)]);}
           const files=walk('research-artifact/unpacked').filter(f=>f.endsWith('.json'));
-          const captures=files.map(file=>({file,data:JSON.parse(fs.readFileSync(file,'utf8'))})).filter(x=>Array.isArray(x.data?.records));
-          if(captures.length!==1)throw Error('Expected exactly one raw capture, got '+captures.length);
+          const expected='20261120-44639859914.json';
+          const matching=files.filter(file=>path.basename(file)===expected);
+          if(matching.length!==1)throw Error('Expected exact saved raw capture file: '+expected);
+          const captures=[{file:matching[0],data:JSON.parse(fs.readFileSync(matching[0],'utf8'))}];
+          if(!Array.isArray(captures[0].data.records)||captures[0].data.date!=='20261120')throw Error('Invalid saved raw capture');
           const report=inspectScoreEvidence(captures[0].data);
           const summary={sourceArtifactId:14586303082,sourceFile:path.basename(captures[0].file),total:report.total,ready:report.ready,withRankedScores:report.withRankedScores,completeOriginalInputs:report.completeOriginalInputs,eligibleForWeightTuning:report.eligibleForWeightTuning,warning:report.warning};
           fs.writeFileSync('research-artifact/score-evidence-summary.json',JSON.stringify(summary,null,2)+'\n');
