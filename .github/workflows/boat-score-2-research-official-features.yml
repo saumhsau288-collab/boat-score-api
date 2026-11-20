@@ -34,6 +34,7 @@ jobs:
           node scripts/test-extract-grouped-official-six.mjs
           node scripts/test-select-research-official-metrics.mjs
           node scripts/test-describe-official-table-structure.mjs
+          node scripts/test-report-research-snapshot-readiness.mjs
           node scripts/test-evaluate-captured-research-snapshot.mjs
           node scripts/test-compare-research-score-phases.mjs
           node scripts/test-audit-saved-research-race.mjs
@@ -51,6 +52,19 @@ jobs:
           CAPTURE_VENUE: ${{ inputs.venue }}
           CAPTURE_RACE: ${{ inputs.race }}
         run: node --experimental-default-type=module scripts/capture-research-official-features.mjs
+      - name: Report official capture readiness without claiming predictions
+        if: always()
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: |
+          path="prediction-captures/research-official-${CAPTURE_DATE}-${CAPTURE_VENUE}-${CAPTURE_RACE}.json"
+          if [ -f "$path" ]; then
+            node scripts/report-research-snapshot-readiness.mjs "$path"
+          else
+            echo 'No official snapshot was saved; readiness unavailable.'
+          fi
       - name: Save research snapshot, even when incomplete
         if: always()
         uses: actions/upload-artifact@v4
