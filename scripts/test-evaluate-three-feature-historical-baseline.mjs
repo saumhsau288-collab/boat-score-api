@@ -7,6 +7,10 @@ const list={status:'official_racelist_source_captured',sixRacersParsed:true,race
 const ok=evaluate(list,{verified:true,finishByBoat});
 assert.equal(ok.status,'three_feature_diagnostic_only');
 assert.equal(ok.firstPlaceCorrect,true);
+assert.equal(ok.firstPlaceScoreTied,false);
+const tied=evaluate({...list,racers:racers.map((r,i)=>i===1?{...r,nationalWinRate:8,localWinRate:8,motorTwoWinRate:60}:r)},{verified:true,finishByBoat});
+assert.equal(tied.firstPlaceScoreTied,true);
+assert.equal(tied.firstPlaceCorrect,null);
 assert.equal(ok.topThreePodiumHits,3);
 assert.equal(ok.scoreWeightCoverage,85);
 assert.equal(ok.currentFiveFeaturePrediction,false);
