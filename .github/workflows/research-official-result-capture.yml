@@ -8,6 +8,8 @@ on:
       - 'scripts/run-research-official-result-capture.mjs'
       - 'scripts/verify-official-result-evidence-pair.mjs'
       - 'scripts/test-verify-official-result-evidence-pair.mjs'
+      - 'scripts/parse-official-result-finish-rows.mjs'
+      - 'scripts/test-parse-official-result-finish-rows.mjs'
       - '.github/workflows/research-official-result-capture.yml'
   workflow_dispatch:
     inputs:
@@ -38,6 +40,7 @@ jobs:
         run: |
           node scripts/test-capture-official-result-evidence.mjs
           node scripts/test-verify-official-result-evidence-pair.mjs
+          node scripts/test-parse-official-result-finish-rows.mjs
       - name: Capture official result evidence
         if: github.event_name == 'workflow_dispatch'
         env:
