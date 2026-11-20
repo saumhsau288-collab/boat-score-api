@@ -30,6 +30,7 @@ on:
       - 'scripts/diagnose-research-official-result-structure.mjs'
       - 'scripts/preview-research-official-result-tables.mjs'
       - 'scripts/extract-research-official-finishes.mjs'
+      - 'scripts/compare-research-scores-official-finishes.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -100,6 +101,7 @@ jobs:
           node scripts/compare-research-saved-scores.mjs research-official-racelists "$CAPTURE"
           node scripts/audit-research-score-disagreements.mjs research-official-racelists
           node scripts/audit-research-disagreement-boat-position.mjs research-official-racelists
+          node scripts/compare-research-scores-official-finishes.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
