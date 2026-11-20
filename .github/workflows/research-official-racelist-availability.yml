@@ -20,6 +20,7 @@ on:
       - 'scripts/build-research-racer-comparison.mjs'
       - 'scripts/audit-research-prediction-feature-coverage.mjs'
       - 'scripts/join-research-saved-predictions.mjs'
+      - 'scripts/validate-research-join-integrity.mjs'
   workflow_dispatch:
 permissions:
   contents: read
