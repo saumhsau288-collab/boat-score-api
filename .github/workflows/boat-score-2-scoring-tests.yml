@@ -94,4 +94,5 @@ jobs:
           node scripts/test-summarize-research-finish-gaps.mjs
           node scripts/test-audit-saved-research-batch.mjs
           node scripts/test-audit-saved-research-batch-source-evidence.mjs
+          node scripts/test-build-official-table-grid.mjs
 
