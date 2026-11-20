@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import {summarizeHistoricalPredictionReviews as summarize} from './summarize-historical-prediction-reviews.mjs';
 const make=(key,finish,verified=true)=>({
  evidenceAudit:{status:'evidence_fields_complete',readyForHistoricalCalibration:verified,raceKey:key},
- savedPrediction:{preRaceVerified:true,predictorVersionVerified:true,raceKey:key,rankedBoats:[1,2,3,4,5,6]},
- officialResult:{sourceVerified:true,raceKey:key,finishOrder:finish}
+ savedPrediction:{preRaceVerified:true,predictorVersionVerified:true,raceKey:key,savedAt:'2026-11-20T01:00:00Z',raceDeadlineAt:'2026-11-20T02:00:00Z',rankedBoats:[1,2,3,4,5,6]},
+ officialResult:{sourceVerified:true,raceKey:key,raceDeadlineAt:'2026-11-20T02:00:00Z',finishOrder:finish}
 });
 const data=[
  make('20261120-18-1',[1,2,3,4,5,6]),
