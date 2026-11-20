@@ -20,6 +20,13 @@ assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=
 assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=>i===4?{...r,runs:50,finishCounts:[0,0,0,0,1,0]}:r)}}).rows[4].sampleValid,false);
 const authenticated=audit(official,{...makulabo,status:'ok',identityReview:{verified:true,candidates}});
 assert.equal(authenticated.identitySafe,true);
+const abbreviated=candidates.map((c,i)=>i===5?{...c,manualReviewRequired:true}:c);
+const pending=audit(official,{...makulabo,status:'ok',identityReview:{verified:true,candidates:abbreviated}});
+assert.equal(pending.manualReviewOutstanding,true);
+assert.equal(pending.identitySafe,false);
+assert(pending.reasons.includes('explicit_manual_identity_review_required'));
+const approved=audit(official,{...makulabo,status:'ok',identityReview:{verified:true,manualReviewApproved:true,candidates:abbreviated}});
+assert.equal(approved.identitySafe,true);
 assert.equal(audit(official,{...makulabo,status:'ok',identityReview:{verified:true,candidates:candidates.map((c,i)=>i===5?{...c,officialRacerId:'9999'}:c)}}).identitySafe,false);
 const duplicateOfficialBoat=audit({...official,racers:racers.map((r,i)=>i===5?{...r,boat:1}:r)},{...makulabo,status:'ok',identityReview:{verified:true}});
 assert.equal(duplicateOfficialBoat.identitySafe,false);
