@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {mapResearchDeadlineTableColumns as map} from './map-research-deadline-table-columns.mjs';
+const headers=Array.from({length:12},(_,i)=>'<th><a href="/race?rno='+(i+1)+'">'+(i+1)+'R</a></th>').join('');
+const times=Array.from({length:12},(_,i)=>'<td>1'+(i%10)+':45</td>').join('');
+const html='<table><tr><th>R</th>'+headers+'</tr><tr><td>締切予定時刻</td>'+times+'</tr></table>';
+const result=map(html);
+assert.equal(result.status,'table_columns_consistent_not_authenticated');
+assert.equal(result.raceTimes.length,12);
+assert.equal(result.raceTimes[0].race,1);
+assert.equal(result.verified,false);
+assert.equal(map(html.replace('12R','11R')).status,'matching_deadline_table_not_found');
+assert.equal(map('<table><tr><td>締切予定時刻</td>'+times+'</tr></table>').status,'matching_deadline_table_not_found');
+console.log('Research deadline table mapping tests passed');
