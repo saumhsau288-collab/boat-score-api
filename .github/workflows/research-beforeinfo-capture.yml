@@ -30,6 +30,7 @@ jobs:
           node scripts/test-capture-official-beforeinfo-evidence.mjs
           node scripts/test-report-research-snapshot-readiness.mjs
       - name: Capture source metadata only
+        if: github.event_name == 'workflow_dispatch'
         env:
           CAPTURE_DATE: ${{ inputs.date }}
           CAPTURE_VENUE: ${{ inputs.venue }}
