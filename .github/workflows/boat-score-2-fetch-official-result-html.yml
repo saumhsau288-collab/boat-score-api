@@ -116,6 +116,9 @@ jobs:
           fs.writeFileSync('research-results/official-parsed-probe.json',JSON.stringify(parsed,null,2));
           const summary={targets:raw.targets,saved:raw.pages.filter(x=>x.status==='raw_html_saved').length,failed:raw.pages.filter(x=>x.status==='fetch_failed').length,parsed:parsed.parsed,reviewReasons:parsed.rows.reduce((a,r)=>{if(r.status!=='parsed_needs_independent_review'){const k=r.reason||r.status;a[k]=(a[k]||0)+1;}return a;},{}),verifiedResults:0,eligibleForAccuracy:0};
           console.log(JSON.stringify(summary));
+          const diagnostics=parsed.rows.map(r=>({date:r.date,venue:r.venue,race:r.race,status:r.status,reason:r.reason??null,podium:r.podium??null,verified:false}));
+          fs.writeFileSync('research-results/official-probe-diagnostics.json',JSON.stringify({summary,diagnostics},null,2));
+          console.log('Per-race diagnostics:',JSON.stringify(diagnostics));
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Official HTML research probe\\n\\n'+JSON.stringify(summary)+'\\n\\nNo authenticated historical prediction or accuracy claim.\\n');
           NODE
       - name: Archive bounded research evidence
