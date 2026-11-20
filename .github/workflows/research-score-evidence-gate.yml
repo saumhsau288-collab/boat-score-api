@@ -22,6 +22,8 @@ on:
       - 'scripts/test-classify-research-deadline-refresh.mjs'
       - 'scripts/evaluate-research-race-deadline-refresh.mjs'
       - 'scripts/test-evaluate-research-race-deadline-refresh.mjs'
+      - 'scripts/inspect-research-cutoff-evidence.mjs'
+      - 'scripts/test-inspect-research-cutoff-evidence.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -43,3 +45,4 @@ jobs:
       - run: node scripts/test-normalize-research-racer-features.mjs
       - run: node scripts/test-classify-research-deadline-refresh.mjs
       - run: node scripts/test-evaluate-research-race-deadline-refresh.mjs
+      - run: node scripts/test-inspect-research-cutoff-evidence.mjs
