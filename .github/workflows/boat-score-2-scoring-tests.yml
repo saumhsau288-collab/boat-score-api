@@ -76,6 +76,7 @@ jobs:
           node --experimental-default-type=module boat-score-2-pre-race-evidence.test.mjs
           node --experimental-default-type=module --check boat-score-2-historical-evidence-check.js
           node --experimental-default-type=module boat-score-2-historical-evidence-check.test.mjs
+          node --check scripts/capture-research-official-features.mjs
           node --experimental-default-type=module --check boat-score-2-research-feature-snapshot.js
           node --experimental-default-type=module --test boat-score-2-research-feature-snapshot.test.mjs
           node --experimental-default-type=module --check scripts/check-boat-score-2-history.mjs
