@@ -30,4 +30,13 @@ assert.equal(mixed.parsed,1);
 const tampered={...base,sha256:crypto.createHash('sha256').update(base.html).digest('hex'),html:base.html.replace('8,230','8,240')};
 assert.equal(parse({pages:[tampered]}).rows[0].reason,'raw_html_checksum_unconfirmed');
 assert.equal(parse({pages:[{...base,sha256:'invalid'}]}).rows[0].reason,'raw_html_checksum_unconfirmed');
+for(const invalidUrl of [
+ 'http://www.boatrace.jp/owpc/pc/race/raceresult?rno=3&jcd=01&hd=20261118',
+ 'https://user:pass@www.boatrace.jp/owpc/pc/race/raceresult?rno=3&jcd=01&hd=20261118',
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=3&rno=4&jcd=01&hd=20261118',
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=3&jcd=01&jcd=02&hd=20261118',
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=3&jcd=01&hd=20261118&hd=20261117'
+]) {
+ assert.equal(parse({pages:[{...base,url:invalidUrl}]}).rows[0].reason,'race_identity_unconfirmed');
+}
 console.log('Saved official result HTML parsing tests passed');
