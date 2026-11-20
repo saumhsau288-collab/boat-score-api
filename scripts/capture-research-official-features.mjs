@@ -48,7 +48,10 @@ try {
    hasMotorLabel:body.includes('モーター'),
    // Structural indicators only: never store personal page contents or infer metrics.
   };
-  const snapshot=noRaceText?{status:'no_race_notice_detected',eligibleForCalibration:false,reason:'explicit_no_race_text_on_official_racelist'}:buildResearchFeatureSnapshot({date,venue,race,capturedAt:receivedAt,official:selected.verified?selected.racers:null});
+  const emptyRacePage=page.tableCount===0&&!body.includes('全国')&&!body.includes('モーター');
+  const snapshot=noRaceText?{status:'no_race_notice_detected',eligibleForCalibration:false,reason:'explicit_no_race_text_on_official_racelist'}:
+   emptyRacePage?{status:'empty_official_racelist',eligibleForCalibration:false,reason:'no_tables_or_metric_labels_in_official_response'}:
+   buildResearchFeatureSnapshot({date,venue,race,capturedAt:receivedAt,official:selected.verified?selected.racers:null});
   result={...snapshot,diagnostic,requestedAt,receivedAt,sourceUrl:target.url,responseSha256:digest,
    httpStatus:response.status,finalUrl:finalUrl.toString(),preRaceIndependentlyVerified:false};
  }
