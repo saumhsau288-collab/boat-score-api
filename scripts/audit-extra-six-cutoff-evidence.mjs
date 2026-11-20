@@ -24,6 +24,14 @@ export function auditExtraSixCutoffEvidence(records){
    r.priorRaceNumbers.some(n=>!Number.isInteger(n)||n<1||n>=r.race)){
    reject('invalid_prior_races');continue;
   }
+  // Per-race receipts prevent a late result from hiding behind an earlier summary timestamp.
+  if(!Array.isArray(r.priorRaceResultReceipts)||r.priorRaceResultReceipts.length!==r.priorRaceNumbers.length||
+   new Set(r.priorRaceResultReceipts.map(x=>x?.race)).size!==r.priorRaceNumbers.length||
+   r.priorRaceResultReceipts.some(x=>!r.priorRaceNumbers.includes(x?.race)||
+    x?.verified!==true||!Number.isFinite(parse(x?.resultCapturedAt))||
+    parse(x.resultCapturedAt)>=predicted||parse(x.resultCapturedAt)>lastResult)){
+   reject('prior_race_receipts_missing_or_future');continue;
+  }
   accepted.push(r);
  }
  return {status:'research_extra_six_cutoff_audit',accepted,excluded,eligibleForDeployment:false,
