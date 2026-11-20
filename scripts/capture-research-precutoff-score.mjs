@@ -2,6 +2,7 @@
 // Research-only capture: compute scores from six supplied verified pre-race inputs.
 // No retrospective reconstruction, no production Worker changes.
 import fs from 'node:fs';
+import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {evaluateRace,SCORE_WEIGHTS} from '../boat-score-2-scoring.js';
 import {auditPreCutoffScoreReceipt} from './audit-pre-cutoff-score-receipt.mjs';
@@ -22,10 +23,12 @@ export function buildScoreCapture(source,now=new Date().toISOString()){
  return {status:'research_score_captured',receipt,receiptSha256:createHash('sha256').update(JSON.stringify(receipt)).digest('hex'),authenticatedHistoricalPrediction:false,eligibleForWeightTuning:false};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
- const [input,output]=process.argv.slice(2);
- if(!input||!output)throw Error('Usage: node scripts/capture-research-precutoff-score.mjs verified-input.json receipt.json');
- const result=buildScoreCapture(JSON.parse(fs.readFileSync(input,'utf8')));
- fs.mkdirSync((await import('node:path')).dirname(output),{recursive:true});
+ const [input,output,evidenceFile]=process.argv.slice(2);
+ if(!input||!output||!evidenceFile)throw Error('Usage: node scripts/capture-research-precutoff-score.mjs verified-input.json receipt.json archived-source-evidence');
+ const source=JSON.parse(fs.readFileSync(input,'utf8'));
+ const evidenceHash=createHash('sha256').update(fs.readFileSync(evidenceFile)).digest('hex');
+ const result=evidenceHash===source.sourceEvidenceSha256?buildScoreCapture(source):{status:'held',reason:'source_evidence_bytes_hash_mismatch',eligibleForWeightTuning:false};
+ fs.mkdirSync(path.dirname(output),{recursive:true});
  fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n');
  console.log(JSON.stringify({status:result.status,reason:result.reason??null,output}));
  if(result.status!=='research_score_captured')process.exitCode=2;
