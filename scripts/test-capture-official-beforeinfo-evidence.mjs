@@ -15,6 +15,15 @@ const fake=(url,contentType='text/html',ok=true)=>async()=>({
 const clock=()=> '2026-11-20T01:00:00.000Z';
 const good=await captureOfficialBeforeinfo(selection,fake(target.url),clock);
 assert.equal(good.status,'beforeinfo_source_captured');
+assert.equal(good.headersReceivedAt,clock());
+assert.equal(good.receivedAt,clock());
+const missingResponseUrl=await captureOfficialBeforeinfo(selection,async()=>({status:200,ok:true,headers:{get:()=> 'text/html'},text:async()=>'<html>fixture</html>'}),clock);
+assert.equal(missingResponseUrl.status,'beforeinfo_source_rejected');
+let tick=0;
+const sequenceClock=()=>['2026-11-20T01:00:00.000Z','2026-11-20T01:00:01.000Z','2026-11-20T01:00:03.000Z'][tick++];
+const timed=await captureOfficialBeforeinfo(selection,fake(target.url),sequenceClock);
+assert.equal(timed.headersReceivedAt,'2026-11-20T01:00:01.000Z');
+assert.equal(timed.receivedAt,'2026-11-20T01:00:03.000Z');
 assert.equal(good.verified,false);
 assert.equal(good.preRaceIndependentlyVerified,false);
 assert.equal(good.eligibleForCalibration,false);
