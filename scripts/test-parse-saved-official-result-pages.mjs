@@ -17,4 +17,7 @@ assert.equal(parse({pages:[{...base,html:duplicateBoatHtml}]}).rows[0].reason,'p
 // Even a valid-looking podium must not pass when the official trifecta disagrees.
 const wrongPayoutOrder=base.html.replace('numberSet1_number is-type2','numberSet1_number is-type4').replace('is-type4">2</span>','is-type4">4</span>');
 assert.equal(parse({pages:[{...base,html:wrongPayoutOrder}]}).rows[0].reason,'trifecta_payout_mismatch');
+// A conflicting boat-color class and boat number must be rejected before scoring.
+const conflictingColorHtml=base.html.replace('is-boatColor2">2</td>','is-boatColor4">2</td>');
+assert.equal(parse({pages:[{...base,html:conflictingColorHtml}]}).rows[0].reason,'boat_color_mismatch');
 console.log('Saved official result HTML parsing tests passed');
