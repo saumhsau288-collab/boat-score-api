@@ -25,7 +25,11 @@ export async function fetchOfficialResultPages(capture,{fetchImpl=fetch,limit=12
    pages.push({date:target.date,venue:target.venue,race:target.race,url,status:'raw_html_saved',
     fetchedAt:new Date().toISOString(),sha256:crypto.createHash('sha256').update(html).digest('hex'),
     html,resultVerified:false,officialCutoffVerified:false});
-  }catch(e){pages.push({date:target.date,venue:target.venue,race:target.race,url,status:'fetch_failed',error:String(e.message||e).slice(0,160),resultVerified:false,officialCutoffVerified:false});}
+  }catch(e){
+   const error=String(e?.message||e).slice(0,160);
+   const reason=/timeout|timed out|abort/i.test(error)?'timeout':/redirect/i.test(error)?'redirect_rejected':/status or content type/i.test(error)?'http_status_or_content_type':/html size/i.test(error)?'html_size_invalid':'network_or_other';
+   pages.push({date:target.date,venue:target.venue,race:target.race,url,status:'fetch_failed',reason,error,resultVerified:false,officialCutoffVerified:false});
+  }
  }
  return {method:'raw_official_result_page_retrieval_unverified',targets:targets.length,pages,
   verifiedResults:0,eligibleForAccuracy:0,
