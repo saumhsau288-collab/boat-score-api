@@ -8,11 +8,17 @@ export function auditResearchSample(official,makulabo){
  const sampleIds=new Set(samples.map(r=>String(r?.racerId??'')));
  const candidates=Array.isArray(makulabo?.identityReview?.candidates)?makulabo.identityReview.candidates:[];
  const candidateByBoat=new Map(candidates.map(c=>[c.boat,c]));
+ const candidateBoatsUnique=candidates.length===6&&new Set(candidates.map(c=>c.boat)).size===6;
+ const candidatesAlign= candidateBoatsUnique&&racers.every(r=>{
+  const c=candidateByBoat.get(r.boat);
+  return c?.sameLabelledBoat===true&&String(c.officialRacerId)===String(r.racerId)&&
+   c.officialName===r.name&&c.sourceName===samples.find(x=>x.boat===r.boat)?.sourceName;
+ });
  const idsMatch=racers.length===6&&samples.length===6&&officialIds.size===6&&sampleIds.size===6&&
   racers.every(r=>samples.some(s=>s.boat===r.boat&&String(s.racerId)===String(r.racerId)&&s.sourceVerified===true));
  const officialBoatsValid=racers.length===6&&new Set(racers.map(r=>r.boat)).size===6&&
   racers.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6&&r.sourceVerified===true);
- const identitySafe=official?.status==='captured_research_inputs'&&officialBoatsValid&&idsMatch&&
+ const identitySafe=official?.status==='captured_research_inputs'&&officialBoatsValid&&idsMatch&&candidatesAlign&&
   makulabo?.identityReview?.verified===true&&makulabo?.status!=='held';
  const byBoat=new Map(samples.map(r=>[r.boat,r]));
  const rows=racers.map(r=>{
@@ -39,6 +45,7 @@ export function auditResearchSample(official,makulabo){
   reasons:[...(!officialBoatsValid?['six_unique_source_verified_official_boats_required']:[]),
    ...(!sampleBoatsUnique?['six_unique_sample_boats_required']:[]),
    ...(!idsMatch?['six_source_verified_registration_id_matches_required']:[]),
+   ...(!candidatesAlign?['candidate_identity_evidence_incomplete_or_mismatched']:[]),
    ...(!identitySafe?['identity_not_independently_verified']:[]),
    ...(!countsConsistent?['finish_counts_inconsistent_or_missing']:[]),
    ...(!complete?['sample_sizes_not_all_50_diagnostic_only']:[]),
