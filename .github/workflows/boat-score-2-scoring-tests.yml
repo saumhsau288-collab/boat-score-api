@@ -2,7 +2,7 @@ name: Validate Boat Score 2 scoring modules
 
 on:
   push:
-    branches: [main, research/cutoff-join-gate-20261120]
+    branches: [main, research-cutoff-join-gate-20261120]
     paths:
       - 'boat-score-2-*.js'
       - 'boat-score-2-*.mjs'
