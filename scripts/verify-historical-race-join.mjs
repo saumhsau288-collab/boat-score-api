@@ -34,7 +34,7 @@ export function verifyHistoricalRaceJoin({expected, source, schedule, scoreInput
       Date.parse(v.scoreComputedAt) < Date.parse(v.capturedAt)))
     return fail('score_generation_not_authenticated_before_cutoff');
   if (!Array.isArray(finishByBoat) || finishByBoat.length !== 6 ||
-      finishByBoat.some((v,i) => !v || v.boat !== i+1 || !Number.isInteger(v.finish) || v.finish < 1 || v.finish > 6) ||
+      finishByBoat.some((v,i) => !v || v.boat !== i+1 || v.officialResultVerified !== true || !Number.isInteger(v.finish) || v.finish < 1 || v.finish > 6) ||
       new Set(finishByBoat.map(v=>v.finish)).size !== 6)
     return fail('six_boat_finish_unverified');
   if (source.resultVerified !== true) return fail('official_result_unverified');
