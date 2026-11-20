@@ -14,7 +14,11 @@ function explicitTimezoneTimestamp(value) {
 function raceKey(row) {
  const date=String(row?.date??'');
  const venue=Number(row?.venue), race=Number(row?.race);
- if(!/^\d{8}$/.test(date) || !Number.isInteger(venue) || venue<1 || venue>24 ||
+ const y=Number(date.slice(0,4)),m=Number(date.slice(4,6)),d=Number(date.slice(6,8));
+ const validDate=/^20\d{6}$/.test(date)&&m>=1&&m<=12&&d>=1&&d<=31&&
+  new Date(Date.UTC(y,m-1,d)).toISOString().slice(0,10)===
+   date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8);
+ if(!validDate || !Number.isInteger(venue) || venue<1 || venue>24 ||
     !Number.isInteger(race) || race<1 || race>12) return null;
  return [date,venue,race].join(':');
 }
