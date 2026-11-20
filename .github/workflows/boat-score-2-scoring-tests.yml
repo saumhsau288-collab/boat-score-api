@@ -126,6 +126,7 @@ jobs:
           node scripts/test-audit-pre-cutoff-score-receipt.mjs
           node scripts/test-capture-research-precutoff-score.mjs
           node scripts/test-evaluate-historical-weight-candidates.mjs
+          node scripts/test-report-historical-evidence-readiness.mjs
 
   archived-evidence-diagnostic:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
@@ -144,7 +145,7 @@ jobs:
           gh run download 44670651345 --repo "${{ github.repository }}" --name research-official-features-44670651345 --dir archived-evidence
       - name: Produce research-only evidence readiness report
         run: |
-          node scripts/inspect-archived-research-pair.mjs \
+          node scripts/report-historical-evidence-readiness.mjs \
             archived-evidence/research-official-20261120-18-1.json \
             archived-evidence/research-makulabo-20261120-18-1.json \
             > archived-evidence/research-evidence-readiness.json
