@@ -25,6 +25,14 @@ export function classifyHistoricalPredictionReview({evidenceAudit,savedPredictio
     deadlineAt!==officialDeadlineAt||savedAt>=deadlineAt)
   missing.push('authenticated_prediction_before_official_deadline');
  const keys=[savedPrediction?.raceKey,officialResult?.raceKey,evidenceAudit?.raceKey];
+ const match=typeof keys[0]==='string'?keys[0].match(/^(20\\d{6})-(\\d{1,2})-(\\d{1,2})$/):null;
+ const date=match?.[1]??'',venue=Number(match?.[2]),race=Number(match?.[3]);
+ const y=Number(date.slice(0,4)),m=Number(date.slice(4,6)),d=Number(date.slice(6,8));
+ const validCalendar=Boolean(match)&&m>=1&&m<=12&&d>=1&&d<=31&&
+  new Date(Date.UTC(y,m-1,d)).toISOString().slice(0,10)===
+   date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8);
+ if(!validCalendar||venue<1||venue>24||race<1||race>12)
+  missing.push('valid_race_date_venue_and_number');
  if(keys.some(k=>typeof k!=='string'||!/^[0-9]{8}-([0-9]{1,2})-([0-9]{1,2})$/.test(k))||
     new Set(keys).size!==1)missing.push('matching_race_identity');
  if(missing.length)return {status:'not_evaluable',missing,predictionMiss:false,
