@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {inspectResearchCutoffEvidence as inspect} from './inspect-research-cutoff-evidence.mjs';
+const race={date:'20261120',venue:2,race:3};
+const url='https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261120&jcd=02&rno=3';
+const html='<a href="?hd=20261120&jcd=02&rno=3">3R</a><div>締切予定時刻 14:35</div>';
+const x={requestedUrl:url,responseUrl:url,httpStatus:200,contentType:'text/html; charset=utf-8',html,race};
+assert.equal(inspect(x).status,'consistent_candidate_requires_independent_authentication');
+assert.equal(inspect(x).verified,false);
+assert.equal(inspect({...x,responseUrl:'https://example.com/'}).status,'source_rejected');
+assert.equal(inspect({...x,html:'<div>締切予定時刻 14:35</div>'}).status,'identity_unresolved');
+assert.equal(inspect({...x,html:html.replace('14:35','no cutoff')}).status,'cutoff_unresolved');
+assert.equal(inspect({...x,html:html.replace('rno=3','rno=4')}).status,'identity_unresolved');
+console.log('Research cutoff evidence consistency tests passed');
