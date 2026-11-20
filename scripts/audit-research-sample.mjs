@@ -8,7 +8,9 @@ export function auditResearchSample(official,makulabo){
  const sampleIds=new Set(samples.map(r=>String(r?.racerId??'')));
  const idsMatch=racers.length===6&&samples.length===6&&officialIds.size===6&&sampleIds.size===6&&
   racers.every(r=>samples.some(s=>s.boat===r.boat&&String(s.racerId)===String(r.racerId)&&s.sourceVerified===true));
- const identitySafe=official?.status==='captured_research_inputs'&&idsMatch&&
+ const officialBoatsValid=racers.length===6&&new Set(racers.map(r=>r.boat)).size===6&&
+  racers.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6&&r.sourceVerified===true);
+ const identitySafe=official?.status==='captured_research_inputs'&&officialBoatsValid&&idsMatch&&
   makulabo?.identityReview?.verified===true&&makulabo?.status!=='held';
  const byBoat=new Map(samples.map(r=>[r.boat,r]));
  const rows=racers.map(r=>{
@@ -27,7 +29,8 @@ export function auditResearchSample(official,makulabo){
  return {status:'research_sample_audit_only',date:official?.date??null,venue:official?.venue??null,
   race:official?.race??null,rows,allExactly50:complete,identitySafe,
   eligibleForCalibration:false,readyForResearchMorningScoring:false,
-  reasons:[...(!sampleBoatsUnique?['six_unique_sample_boats_required']:[]),
+  reasons:[...(!officialBoatsValid?['six_unique_source_verified_official_boats_required']:[]),
+   ...(!sampleBoatsUnique?['six_unique_sample_boats_required']:[]),
    ...(!idsMatch?['six_source_verified_registration_id_matches_required']:[]),
    ...(!identitySafe?['identity_not_independently_verified']:[]),
    ...(!complete?['not_all_six_have_exactly_50_verified_finish_counts']:[]),
