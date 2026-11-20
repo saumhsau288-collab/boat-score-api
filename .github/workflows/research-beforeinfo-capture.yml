@@ -1,0 +1,45 @@
+name: Research official beforeinfo evidence capture
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Race date YYYYMMDD'
+        required: true
+        type: string
+      venue:
+        description: 'Venue 01-24'
+        required: true
+        type: string
+      race:
+        description: 'Race 1-12'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify capture tests
+        run: |
+          node scripts/test-capture-official-beforeinfo-evidence.mjs
+          node scripts/test-report-research-snapshot-readiness.mjs
+      - name: Capture source metadata only
+        env:
+          CAPTURE_DATE: ${{ inputs.date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: node scripts/run-research-beforeinfo-capture.mjs
+      - name: Preserve evidence even on failed fetch
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-beforeinfo-${{ github.run_id }}
+          path: prediction-captures/research-beforeinfo-*.json
+          if-no-files-found: warn
+          retention-days: 30
