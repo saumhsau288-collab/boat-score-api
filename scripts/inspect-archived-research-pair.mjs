@@ -7,7 +7,7 @@ export function inspectArchivedResearchPair(official,makulabo){
  const racers=official?.racers;
  const sample=makulabo?.finishSample?.racers;
  const missing=[];
- const sixOfficial=Array.isArray(racers)&&racers.length===6&&racers.every((r,i)=>r.boat===i+1&&r.sourceVerified===true&&/^\\d{4}$/.test(String(r.racerId??'')))&&new Set(racers.map(r=>String(r.racerId))).size===6;
+ const sixOfficial=Array.isArray(racers)&&racers.length===6&&racers.every((r,i)=>r.boat===i+1&&r.sourceVerified===true&&/^\d{4}$/.test(String(r.racerId??'')))&&new Set(racers.map(r=>String(r.racerId))).size===6;
  if(!sixOfficial)missing.push('six_verified_official_racer_identities');
  if(!Array.isArray(sample)||sample.length!==6)missing.push('six_makulabo_sample_rows');
  const rows=Array.from({length:6},(_,i)=>{
