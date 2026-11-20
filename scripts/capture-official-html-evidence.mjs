@@ -17,6 +17,10 @@ export async function captureOfficialHtml({url,expected,fetchImpl=fetch,now=()=>
  const response=await fetchImpl(url,{redirect:'manual',signal:AbortSignal.timeout(15000),headers:{'User-Agent':'BoatScoreResearchEvidence/1.0'}});
  const receivedAt=now().toISOString();
  if(response.status!==200||response.redirected)throw Error('unexpected_response');
+ // A fetch adapter may supply a final URL even without a redirect flag.
+ if(response.url && response.url!==url)throw Error('final_url_mismatch');
+ const announcedLength=Number(response.headers.get('content-length'));
+ if(Number.isFinite(announcedLength)&&announcedLength>maxBytes)throw Error('too_large');
  const contentType=response.headers.get('content-type')??'';
  if(!/text\/html/i.test(contentType))throw Error('not_html');
  const body=Buffer.from(await response.arrayBuffer());
