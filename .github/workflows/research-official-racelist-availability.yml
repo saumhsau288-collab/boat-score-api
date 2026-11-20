@@ -21,6 +21,7 @@ on:
       - 'scripts/audit-research-prediction-feature-coverage.mjs'
       - 'scripts/join-research-saved-predictions.mjs'
       - 'scripts/validate-research-join-integrity.mjs'
+      - 'scripts/test-validate-research-join-integrity.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,6 +35,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test strict research join integrity
+        run: node scripts/test-validate-research-join-integrity.mjs
       - name: Download independently generated research queue
         env:
           GH_TOKEN: ${{ github.token }}
