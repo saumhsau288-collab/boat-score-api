@@ -23,6 +23,10 @@ export function verifyHistoricalRaceJoin({expected, source, schedule, scoreInput
         !/^\d{4}$/.test(String(v.racerId ?? ''))) ||
       new Set(scoreInputsByBoat.map(v=>String(v.racerId))).size !== 6)
     return fail('six_boat_inputs_unverified');
+  if (scoreInputsByBoat.some(v => v.preRaceSourceVerified !== true ||
+      typeof v.capturedAt !== 'string' || !Number.isFinite(Date.parse(v.capturedAt)) ||
+      Date.parse(v.capturedAt) >= official.cutoffEpochMs))
+    return fail('score_inputs_not_verified_before_cutoff');
   if (!Array.isArray(finishByBoat) || finishByBoat.length !== 6 ||
       finishByBoat.some((v,i) => !v || v.boat !== i+1 || !Number.isInteger(v.finish) || v.finish < 1 || v.finish > 6) ||
       new Set(finishByBoat.map(v=>v.finish)).size !== 6)
