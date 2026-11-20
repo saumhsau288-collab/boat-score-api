@@ -1,0 +1,36 @@
+name: Inspect official daily venue candidates (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      capture_date:
+        description: 'Date YYYYMMDD'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax and candidate classification tests
+        run: |
+          node --check scripts/capture-official-daily-venue-candidates.mjs
+          node scripts/test-classify-daily-venue-evidence.mjs
+          node scripts/test-guard-research-active-venue.mjs
+      - name: Inspect daily index without asserting active status
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+        run: node scripts/capture-official-daily-venue-candidates.mjs
+      - name: Save source evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-venue-candidates-${{ github.run_id }}
+          path: prediction-captures/daily-venue-candidates-*.json
+          retention-days: 90
+          if-no-files-found: warn
