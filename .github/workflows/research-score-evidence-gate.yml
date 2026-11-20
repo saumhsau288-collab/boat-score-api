@@ -49,6 +49,8 @@ on:
       - 'scripts/test-quarantine-research-anomalous-schedule.mjs'
       - 'scripts/describe-research-schedule-disruption.mjs'
       - 'scripts/test-describe-research-schedule-disruption.mjs'
+      - 'scripts/inspect-research-refresh-candidate-integrity.mjs'
+      - 'scripts/test-inspect-research-refresh-candidate-integrity.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -84,3 +86,4 @@ jobs:
       - run: node scripts/test-inspect-research-cutoff-intervals.mjs
       - run: node scripts/test-quarantine-research-anomalous-schedule.mjs
       - run: node scripts/test-describe-research-schedule-disruption.mjs
+      - run: node scripts/test-inspect-research-refresh-candidate-integrity.mjs
