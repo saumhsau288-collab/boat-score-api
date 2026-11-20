@@ -18,8 +18,9 @@ export async function captureOfficialBeforeinfo(selection,fetcher=fetch,now=()=>
  const requestedAt=now();
  try{
   const response=await fetcher(target.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
-  const receivedAt=now();
-  const finalUrl=new URL(response.url||target.url);
+  const headersReceivedAt=now();
+  // A missing response URL cannot independently prove which page supplied the bytes.
+  const finalUrl=new URL(response.url||'about:blank');
   const expected=new URL(target.url);
   const sourceMatches=finalUrl.origin===expected.origin&&finalUrl.pathname===expected.pathname&&
    ['rno','jcd','hd'].every(k=>finalUrl.searchParams.getAll(k).length===1&&
@@ -27,11 +28,12 @@ export async function captureOfficialBeforeinfo(selection,fetcher=fetch,now=()=>
    [...finalUrl.searchParams.keys()].every(k=>['rno','jcd','hd'].includes(k));
   const contentType=response.headers.get('content-type')||'';
   const html=await response.text();
+  const receivedAt=now(); // Body completion, not just response headers.
   const bytes=Buffer.byteLength(html,'utf8');
   const acceptable=response.ok&&sourceMatches&&/text\/html/i.test(contentType)&&bytes>0&&bytes<=2_000_000;
   return {status:acceptable?'beforeinfo_source_captured':'beforeinfo_source_rejected',
    date:String(selection.date),venue:Number(selection.venue),race:Number(selection.race),
-   sourceUrl:target.url,finalUrl:finalUrl.toString(),requestedAt,receivedAt,
+   sourceUrl:target.url,finalUrl:finalUrl.toString(),requestedAt,headersReceivedAt,receivedAt,
    httpStatus:response.status,contentType,bodyBytes:bytes,
    responseSha256:createHash('sha256').update(html).digest('hex'),
    verified:false,preRaceIndependentlyVerified:false,eligibleForCalibration:false,
