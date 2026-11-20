@@ -8,7 +8,7 @@ export function extractGroupedOfficialSix(html){
  const {grid,columns}=layout,found=[];
  for(const row of grid.rows){
   if(row.every(c=>c.tag==='th'))continue;
-  const boats=row.filter(c=>c.originRow===grid.rows.indexOf(row)&&/^[1-6]$/.test(clean(c.html)));
+  const boats=row.slice(0,1).filter(c=>c.originRow===grid.rows.indexOf(row)&&/^[1-6]$/.test(clean(c.html)));
   // Never infer the boat from row order or from an arbitrary numeric statistic.
   if(boats.length!==1)continue;
   const boat=number(boats[0].html);
