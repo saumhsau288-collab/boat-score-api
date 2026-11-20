@@ -18,5 +18,15 @@ assert.equal(morningRaceScore(race([9,5,4,4,3,2])).closeAbilityReview.status,'no
 assert.equal(morningRaceScore(race([9,5,4,4,3,2]).slice(1)).status,'invalid_race');
 const list=morningShortlists([{venue:'01',race:1,racers:race([9,5,4,4,3,2])},{venue:'01',race:2,racers:[]}]);
 assert.equal(list.eligible,1);assert.equal(list.excluded,1);assert.equal(list.favorites.length,1);
+const morningBatch=morningShortlists([
+ {venue:'01',date:'20261121',race:1,racers:race([9,5,4,4,3,2])},
+ {venue:'02',date:'20261121',race:2,racers:race([6,6,6,6,6,6])},
+ {venue:'03',date:'20261121',race:3,racers:race([3,5,5,9,4,3])}
+]);
+assert.equal(morningBatch.eligible,3);
+assert.equal(morningBatch.favorites[0].closeAbilityReview.status,'not_flagged');
+assert.equal(morningBatch.uncertain[0].closeAbilityReview.status,'review');
+assert.equal(morningBatch.upsets[0].closeAbilityReview.affectsRanking,false);
+assert.equal(morningBatch.uncertain[0].closeAbilityReview.actualEntryCourse,'unknown');
 assert.equal(list.favorites[0].closeAbilityReview.affectsScore,false);
 console.log('Morning preliminary scoring tests passed');
