@@ -23,7 +23,9 @@ try {
  const receivedAt=new Date().toISOString();
  const digest=crypto.createHash('sha256').update(body).digest('hex');
  if(!response.ok||!officialHost||!/text\/html/i.test(response.headers.get('content-type')||'')||body.length>2_000_000)
-  result={status:'invalid_official_response',httpStatus:response.status,receivedAt,officialHost};
+  result={status:'invalid_official_response',httpStatus:response.status,receivedAt,officialHost,
+   contentType:response.headers.get('content-type')||null,bodyBytes:Buffer.byteLength(body,'utf8'),
+   finalUrl:finalUrl.toString(),responseSha256:digest,requestedAt,eligibleForCalibration:false};
  else {
   const page=classifyOfficialCaptureHtml(body);
   const noRaceText=page.explicitNoRaceNotice;
@@ -31,6 +33,7 @@ try {
   const mapped=parseOfficialBoatRows(body);
   const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,metricStructure:parsed.diagnostics??null,
    boatMappingReason:mapped.reason??null,boatMappingVerified:mapped.verified===true,
+   candidateBoatRows:mapped.candidateRows??0,
    verifiedBoatCount:mapped.verified?mapped.racers?.length??0:0,
    tableCount:page.tableCount,explicitNoRaceNotice:noRaceText,
    hasNationalLabel:body.includes('全国'),hasLocalLabel:body.includes('当地'),
