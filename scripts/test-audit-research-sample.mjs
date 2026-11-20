@@ -7,6 +7,13 @@ const candidates=racers.map(r=>({boat:r.boat,officialRacerId:r.racerId,officialN
 const makulabo={status:'held',identityReview:{verified:false,candidates},finishSample:{racers:samples}};
 const held=audit(official,makulabo);
 assert.equal(held.identitySafe,false);
+const artifactShapeSamples=samples.map(({racerId,sourceVerified,...rest})=>rest);
+const artifactShapeCandidates=candidates.map(c=>({...c,sourceRacerId:null,matchMethod:'exact_name',matchStatus:'verified',manualReviewRequired:false}));
+const artifactShape=audit(official,{...makulabo,identityReview:{verified:false,candidates:artifactShapeCandidates},finishSample:{racers:artifactShapeSamples}});
+assert.equal(artifactShape.countsConsistent,true);
+assert.equal(artifactShape.identitySafe,false);
+assert(artifactShape.reasons.includes('six_source_verified_registration_id_matches_required'));
+assert.equal(artifactShape.rows[0].sourceRacerIdProvided,false);
 assert.equal(held.allExactly50,true);
 assert.equal(held.eligibleForCalibration,false);
 assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=>i===4?{...r,runs:1,finishCounts:[0,0,0,0,1,0]}:r)}}).allExactly50,false);
