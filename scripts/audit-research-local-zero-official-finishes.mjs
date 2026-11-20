@@ -7,7 +7,7 @@ const sensitivity=JSON.parse(await fs.readFile(path.join(dir,'research-local-zer
 const finishes=JSON.parse(await fs.readFile(path.join(dir,'official-verified-finishing-orders.json'),'utf8'));
 const key=r=>[String(r.date),Number(r.venue),Number(r.race)].join(':');
 const index=new Map(finishes.rows.map(r=>[key(r),r]));
-const rows=sensitivity.rows.filter(r=>r.zeroLocalBoats.length).map(r=>{
+const rows=sensitivity.changed.map(r=>{
  const f=index.get(key(r));
  if(!f?.finishVerified)return {date:r.date,venue:r.venue,race:r.race,finishVerified:false,reason:f?.reason||'result_unverified',topChanged:r.topChanged};
  const rawFinish=f.finishingBoats.indexOf(r.rawTop)+1;
