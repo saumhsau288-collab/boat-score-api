@@ -17,6 +17,11 @@ export function describeOfficialTableStructure(html){
    const spans=[...row.matchAll(/\b(?:rowspan|colspan)\s*=\s*["']?(\d+)/gi)].map(m=>Number(m[1]));
    return spans.length?Math.max(...spans):1;
   });
+  const headerCellsByRow=rows.slice(0,3).map(row=>[...row.matchAll(/<th\b([^>]*)>([\s\S]*?)<\/th>/gi)].map(m=>({
+   label:clean(m[2]).slice(0,48),
+   colspan:Number(m[1].match(/\bcolspan\s*=\s*["']?(\d+)/i)?.[1]??1),
+   rowspan:Number(m[1].match(/\browspan\s*=\s*["']?(\d+)/i)?.[1]??1)
+  })));
   const headerLabels=[...new Set([...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>clean(m[1])).filter(s=>labels.includes(s)))];
   return {index,rowCount:rows.length,headerCellsPerRow:thPerRow.slice(0,32),dataCellsPerRow:tdPerRow.slice(0,32),
    profileLinksPerRow:profileLinksPerRow.slice(0,32),
@@ -26,6 +31,7 @@ export function describeOfficialTableStructure(html){
    gridColumnCount:grid.valid?grid.columns:null,
    mappingVerified:mapping.verified,mappingReason:mapping.reason??null,
    mappingCandidates:mapping.candidates??null,
-   headerGridLabels:mapping.headerGridLabels??null};
+   headerGridLabels:mapping.headerGridLabels??null,
+   headerCellsByRow};
  });
 }
