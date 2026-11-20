@@ -17,7 +17,7 @@ export async function captureHistoricalRacelistBatch(selections,{fetcher=fetch,o
   let result={date:String(selection.date),venue:String(selection.venue).padStart(2,'0'),race:selection.race,
    status:'fetch_failed',sixRacersParsed:false,preRaceHistoricalValidityVerified:false,eligibleForCalibration:false};
   try{
-   const response=await fetcher(url.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(7000)});
+   const response=await fetcher(url.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
    const finalUrl=new URL(response.url||url.url);
    const body=await response.text();
    if(!response.ok||finalUrl.protocol!=='https:'||finalUrl.hostname!=='www.boatrace.jp'||
@@ -42,6 +42,7 @@ export async function captureHistoricalRacelistBatch(selections,{fetcher=fetch,o
   preRaceHistoricalValidityVerified:0,eligibleForCalibration:0,
   results:results.map(({racers,...rest})=>({...rest,racerCount:racers?.length??0}))};
  fs.writeFileSync(outputDir+'/research-historical-racelist-batch-summary.json',JSON.stringify(summary,null,2)+'\n');
+ if(summary.captured===0)throw Error('historical_racelist_batch_zero_sources_captured');
  return summary;
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
