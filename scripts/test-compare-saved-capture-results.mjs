@@ -54,4 +54,14 @@ for(const date of ['20260230','20261301','20260001']){
  assert.equal(report.compared,0,'Impossible date must never be compared');
  assert.equal(report.holdReasons.invalid_saved_capture_race_key,1);
 }
+// Saved official HTML parsing is research evidence, not independently verified outcome.
+const parsedOnly={...result,verified:false,finishOrder:[1,2,3,4,5,6]};
+const parsedOnlyReport=compare(capture,[parsedOnly]);
+assert.equal(parsedOnlyReport.compared,0);
+assert.equal(parsedOnlyReport.mainHitRate,null);
+assert.equal(parsedOnlyReport.holdReasons.no_independently_verified_result,1);
+// A duplicated official result must never produce a valid accuracy observation.
+const conflictingOfficial=compare(capture,[result,{...result,finishOrder:[2,1,3,4,5,6]}]);
+assert.equal(conflictingOfficial.compared,0);
+assert.equal(conflictingOfficial.holdReasons.no_independently_verified_result,1);
 console.log('Saved capture / official result comparison eligibility tests passed');
