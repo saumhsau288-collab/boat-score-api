@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {inspectScoreEvidence} from './inspect-score-evidence-research.mjs';
+const empty=inspectScoreEvidence({authenticatedBeforeRace:false,records:[{date:'20261120',venue:2,race:1,response:{ready:true,rankedScores:[{boat:1,score:60}]}}]});
+assert.equal(empty.ready,1);
+assert.equal(empty.withRankedScores,1);
+assert.equal(empty.completeOriginalInputs,0);
+assert.equal(empty.eligibleForWeightTuning,0);
+assert(empty.rows[0].blockedReasons.includes('six_original_score_inputs_missing'));
+const fields={nationalWinRate:7,localWinRate:0,motorTwoWinRate:40,recent50WinRate:50,exhibitionScore:50};
+const six=Array.from({length:6},(_,i)=>({boat:i+1,...fields}));
+const complete=inspectScoreEvidence({authenticatedBeforeRace:true,records:[{authenticatedBeforeRace:true,response:{ready:true,scoreInputsByBoat:six}}]});
+assert.equal(complete.completeOriginalInputs,1);
+assert.equal(complete.eligibleForWeightTuning,0);
+const invalid=inspectScoreEvidence({records:[{response:{ready:true,scoreInputsByBoat:six.map((b,i)=>i===0?{...b,nationalWinRate:NaN}:b)}}]});
+assert.equal(invalid.completeOriginalInputs,0);
+assert(invalid.rows[0].missingFields.includes('nationalWinRate'));
+console.log('score evidence gate regression tests passed');
