@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {normalizeSavedPredictionForJoin as normalize} from './normalize-saved-prediction-for-join.mjs';
+import {verifyHistoricalRaceJoin} from './verify-historical-race-join.mjs';
+const old=normalize({prediction:{ready:true,method:'weighted_national50_local20_motor30_unvalidated',rankedScores:[1,2,3,4,5,6]}});
+assert.equal(old.predictorMethod,'weighted_national50_local20_motor30_unvalidated');
+assert.equal(old.scoreInputsByBoat,null);
+assert.equal(old.reconstructed,false);
+assert.ok(old.missing.includes('original_six_boat_score_inputs'));
+assert.equal(verifyHistoricalRaceJoin(old).eligible,false);
+const spoof=normalize({prediction:{scoreInputsByBoat:[{boat:1,verified:true}]}});
+assert.equal(spoof.scoreInputsByBoat,null);
+console.log('Saved prediction normalizer: missing six-boat inputs remain unverified');
