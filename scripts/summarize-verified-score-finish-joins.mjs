@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import {pathToFileURL} from 'node:url';
+import {resolve} from 'node:path';
 // Research-only descriptive comparison of already-verified pre-cutoff scores and official finishes.
 // Do not infer a historical prediction or tune weights from rejected races.
 import {verifyHistoricalRaceJoin} from './verify-historical-race-join.mjs';
@@ -24,4 +27,14 @@ export function summarizeVerifiedScoreFinishJoins(records){
   tiedTopScoreRaceCount:races.filter(r=>r.topScoreTied).length,
   eligibleForWeightTuning:false,
   warning:'Descriptive only. Verification flags must be independently supported by archived source evidence; no retrospective score reconstruction.'};
+}
+
+// Read-only CLI for archived independently authenticated evidence records.
+if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
+ const file=process.argv[2];
+ if(!file)throw Error('Usage: node scripts/summarize-verified-score-finish-joins.mjs verified-records.json');
+ const records=JSON.parse(fs.readFileSync(file,'utf8'));
+ const report=summarizeVerifiedScoreFinishJoins(records);
+ console.log(JSON.stringify(report,null,2));
+ if(report.eligible===0)process.exitCode=2;
 }
