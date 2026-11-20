@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {buildResearchDailyRefreshCandidates as build} from './build-research-daily-refresh-candidates.mjs';
+const race={date:'20261120',venue:2,race:1};
+const url='https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261120&jcd=02&rno=1';
+const h=Array.from({length:12},(_,i)=>'<th><a href="?rno='+(i+1)+'">'+(i+1)+'R</a></th>').join('');
+const t=['10:45','11:12','11:39','12:06','12:33','13:00','13:27','13:54','14:21','14:48','15:15','15:42'];
+const html='<table><tr><th>レース</th>'+h+'</tr><tr><td>締切予定時刻</td>'+t.map(x=>'<td>'+x+'</td>').join('')+'</tr></table>';
+const result=build({html,requestedUrl:url,responseUrl:url,race});
+assert.equal(result.status,'daily_candidates_not_authenticated');
+assert.equal(result.candidates.length,12);
+assert.equal(result.candidates[0].refreshCandidateAt,'2026-11-20T01:35:00.000Z');
+assert.equal(result.candidates[11].race,12);
+assert.equal(result.refreshAuthorized,false);
+assert.ok(result.candidates.every(x=>!x.verified&&!x.refreshAuthorized));
+assert.equal(build({html,requestedUrl:url,responseUrl:url.replace('rno=1','rno=2'),race}).status,'race_url_not_consistent');
+console.log('Research daily refresh candidates tests passed');
