@@ -61,8 +61,11 @@ export function evaluateWeightCandidates(records,{minTrain=100,minHoldout=30}={}
  const ranked=candidates.map((w,i)=>({name:i===0?'baseline':'candidate_'+i,weights:Object.fromEntries(FEATURES.map((k,j)=>[k,w[j]])),train:metric(train,w),holdout:metric(holdout,w)}))
   .sort((a,b)=>b.train.winRate-a.train.winRate||a.name.localeCompare(b.name));
  const best=ranked[0],base=ranked.find(c=>c.name==='baseline');
- const proposed=best.name!=='baseline'&&best.train.winRate>base.train.winRate&&best.holdout.winRate>base.holdout.winRate&&validateResearchWeights(best.weights)?best:null;
- return {status:'research_comparison_only',proposedResearchWeights:proposed?.weights??null,proposalReason:proposed?'train_and_holdout_improved':'no_confirmed_out_of_sample_improvement',total:records.length,eligible:eligible.length,excluded:exclusions,trainRaces:train.length,holdoutRaces:holdout.length,candidates:ranked,
+ const proposed=best.name!=='baseline'&&best.train.winRate>base.train.winRate&&best.holdout.winRate>base.holdout.winRate&&
+  best.train.podiumPrecision>=base.train.podiumPrecision&&best.holdout.podiumPrecision>=base.holdout.podiumPrecision&&
+  best.train.topScorePodiumRate>=base.train.topScorePodiumRate&&best.holdout.topScorePodiumRate>=base.holdout.topScorePodiumRate&&
+  validateResearchWeights(best.weights)?best:null;
+ return {status:'research_comparison_only',proposedResearchWeights:proposed?.weights??null,proposalReason:proposed?'first_place_improved_and_podium_not_worse_on_train_and_holdout':'no_confirmed_out_of_sample_improvement_without_podium_regression',total:records.length,eligible:eligible.length,excluded:exclusions,trainRaces:train.length,holdoutRaces:holdout.length,candidates:ranked,
   eligibleForDeployment:false,warning:'No automatic weight changes. Source verification flags require independent evidence, and holdout is evaluation only.'};
 }
 
