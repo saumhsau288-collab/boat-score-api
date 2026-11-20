@@ -43,6 +43,7 @@ try {
    candidateBoatRows:mapped.candidateRows??0,
    verifiedBoatCount:mapped.verified?mapped.racers?.length??0:0,
    tableCount:page.tableCount,explicitNoRaceNotice:noRaceText,
+   emptyRacePage:page.tableCount===0&&!body.includes('全国')&&!body.includes('モーター'),
    hasNationalLabel:body.includes('全国'),hasLocalLabel:body.includes('当地'),
    hasMotorLabel:body.includes('モーター'),
    // Structural indicators only: never store personal page contents or infer metrics.
