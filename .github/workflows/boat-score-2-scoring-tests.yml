@@ -140,6 +140,8 @@ jobs:
           node --check scripts/capture-historical-racelist-batch.mjs
           node scripts/test-join-historical-racelist-result-identities.mjs
           node scripts/test-evaluate-three-feature-historical-baseline.mjs
+          node scripts/test-explain-historical-first-place-misses.mjs
+          node --check scripts/run-historical-first-place-miss-diagnostic.mjs
           node --check scripts/run-three-feature-historical-baseline.mjs
           node scripts/test-evaluate-venue-specific-weights.mjs
           node scripts/test-summarize-venue-course-tendencies.mjs
@@ -256,6 +258,9 @@ jobs:
       - name: Compare historical official-metric partial rankings to actual finishes
         if: always()
         run: node scripts/run-three-feature-historical-baseline.mjs
+      - name: Explain each missed first-place prediction by racer score component
+        if: always()
+        run: node scripts/run-historical-first-place-miss-diagnostic.mjs
       - name: Print complete historical baseline summary
         if: always()
         run: |
@@ -271,5 +276,6 @@ jobs:
             prediction-captures/research-historical-racelist-*
             prediction-captures/historical-racelist-result-join.json
             prediction-captures/historical-three-feature-baseline.json
+            prediction-captures/historical-first-place-misses.json
           if-no-files-found: warn
           retention-days: 30
