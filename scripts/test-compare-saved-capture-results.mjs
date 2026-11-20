@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {compareSavedCaptureWithVerifiedResults as compare} from './compare-saved-capture-results.mjs';
 const picks=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
 const capture={authenticatedBeforeRace:true,records:[{date:'20261118',venue:1,race:1,httpStatus:200,receivedAt:'2026-11-18T00:00:00Z',response:{ready:true,main:picks,upset:picks}}]};
-const result={date:'20261118',venue:1,race:1,verified:true,finishOrder:[1,2,3,4,5,6],sourceUrl:'https://www.boatrace.jp/result',officialCutoffAt:'2026-11-18T00:30:00Z'};
+const result={date:'20261118',venue:1,race:1,verified:true,finishOrder:[1,2,3,4,5,6],sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&hd=20261118',officialCutoffAt:'2026-11-18T00:30:00Z'};
 const eligible=compare(capture,[result]);
 assert.equal(eligible.compared,1);assert.equal(eligible.mainHits,1);
 const unauthenticated=compare({...capture,authenticatedBeforeRace:false},[result]);
@@ -31,7 +31,7 @@ for(const spoofed of ['https://boatrace.jp.evil.example/result','https://example
  assert.equal(report.compared,0,'Spoofed or non-official origin must be held');
  assert.equal(report.holdReasons.missing_official_result_source,1);
 }
-assert.equal(compare(capture,[{...result,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult'}]).compared,1);
+assert.equal(compare(capture,[{...result,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&hd=20261118'}]).compared,1);
 const normalizedDuplicate=compare({...capture,records:[capture.records[0],{...capture.records[0],venue:'01',race:'01'}]},[result]);
 assert.equal(normalizedDuplicate.compared,0);
 assert.equal(normalizedDuplicate.holdReasons.duplicate_saved_capture_race,2);
@@ -70,4 +70,14 @@ const duplicatePickReport=compare({...capture,records:[{...capture.records[0],re
 assert.equal(duplicatePickReport.compared,0);
 assert.equal(duplicatePickReport.holdReasons.invalid_picks,1);
 assert.equal(duplicatePickReport.mainHitRate,null);
+for(const wrong of [
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=2&jcd=01&hd=20261118',
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=02&hd=20261118',
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&hd=20261117',
+ 'https://www.boatrace.jp/owpc/pc/race/index?rno=1&jcd=01&hd=20261118'
+]) {
+ const report=compare(capture,[{...result,sourceUrl:wrong}]);
+ assert.equal(report.compared,0,'Official URL must identify same race and result page');
+ assert.equal(report.holdReasons.official_result_url_race_mismatch,1);
+}
 console.log('Saved capture / official result comparison eligibility tests passed');
