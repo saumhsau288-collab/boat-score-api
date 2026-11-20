@@ -33,6 +33,7 @@ export async function captureResultBatch(selections,{fetcher=fetch,now=()=>new D
   fs.writeFileSync(outputDir+'/'+name+'.json',JSON.stringify(metadata,null,2)+'\n');
   results.push({date:String(selection.date),venue:String(selection.venue).padStart(2,'0'),race:Number(selection.race),
    status:metadata.status,integrity,parserStatus,matchedRows,eligibleForCalibration:false});
+  console.log(JSON.stringify({event:'historical_result_capture_progress',completed:results.length,total:selections.length,...results[results.length-1]}));
  }
  const summary={status:'research_batch_diagnostic',requested:results.length,
   sourceCaptured:results.filter(r=>r.status==='official_result_source_captured').length,
