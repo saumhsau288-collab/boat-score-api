@@ -13,7 +13,9 @@ export function parseSavedOfficialResultPages(report){
   let u;
   try { u=new URL(p.url); } catch { return {...base,status:'needs_review',reason:'invalid_result_url'}; }
   const h=p.html;
-  if(u.hostname!=='www.boatrace.jp'||u.pathname!=='/owpc/pc/race/raceresult'||
+  if(u.protocol!=='https:'||u.hostname!=='www.boatrace.jp'||u.username||u.password||
+   u.pathname!=='/owpc/pc/race/raceresult'||
+   ['hd','jcd','rno'].some(k=>u.searchParams.getAll(k).length!==1)||
    u.searchParams.get('hd')!==String(p.date)||Number(u.searchParams.get('jcd'))!==Number(p.venue)||
    Number(u.searchParams.get('rno'))!==Number(p.race)||
    !h.includes('hd='+String(p.date))||!h.includes('jcd='+String(p.venue).padStart(2,'0')))
