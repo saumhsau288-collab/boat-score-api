@@ -29,6 +29,7 @@ on:
       - 'scripts/fetch-research-official-results.mjs'
       - 'scripts/diagnose-research-official-result-structure.mjs'
       - 'scripts/preview-research-official-result-tables.mjs'
+      - 'scripts/extract-research-official-finishes.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -59,6 +60,8 @@ jobs:
         run: node scripts/diagnose-research-official-result-structure.mjs research-official-racelists
       - name: Preview official result table rows before extracting finish positions
         run: node scripts/preview-research-official-result-tables.mjs research-official-racelists
+      - name: Extract six-boat official finishing order with strict checks
+        run: node scripts/extract-research-official-finishes.mjs research-official-racelists
       - name: Audit archived HTML structure
         run: node scripts/audit-research-official-racelist-structure.mjs research-official-racelists
       - name: Audit source field labels
