@@ -6,9 +6,15 @@ import {resolve} from 'node:path';
 import {verifyHistoricalRaceJoin} from './verify-historical-race-join.mjs';
 export function summarizeVerifiedScoreFinishJoins(records){
  if(!Array.isArray(records))throw new TypeError('records_must_be_array');
- const races=[];const excludedReasons={};
+ const races=[];const excludedReasons={};const seen=new Set();
  for(const record of records){
   const gate=verifyHistoricalRaceJoin(record);
+  const key=record?.expected?.date+'|'+record?.expected?.venue+'|'+record?.expected?.race;
+  if(gate.eligible&&seen.has(key)){
+   excludedReasons.duplicate_race_identity=(excludedReasons.duplicate_race_identity??0)+1;
+   continue;
+  }
+  if(gate.eligible)seen.add(key);
   if(!gate.eligible){excludedReasons[gate.reason]=(excludedReasons[gate.reason]??0)+1;continue;}
   const ranked=[...record.scoreInputsByBoat].sort((a,b)=>b.score-a.score||a.boat-b.boat);
   // A tied highest score has no uniquely ranked first choice; do not count it as a hit.
