@@ -40,6 +40,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: research-beforeinfo-${{ github.run_id }}
-          path: prediction-captures/research-beforeinfo-*.json
+          path: |
+            prediction-captures/research-beforeinfo-*.json
+            prediction-captures/research-beforeinfo-*.html
           if-no-files-found: warn
           retention-days: 30
