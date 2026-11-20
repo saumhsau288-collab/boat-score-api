@@ -1,0 +1,43 @@
+name: Capture selected official racer features (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      capture_date:
+        description: 'Race date YYYYMMDD'
+        required: true
+        type: string
+      venue:
+        description: 'Venue number 1-24'
+        required: true
+        type: string
+      race:
+        description: 'Race number 1-12'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate standalone script
+        run: node --check scripts/capture-research-official-features.mjs
+      - name: Capture source-proven six-racer metrics
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: node --experimental-default-type=module scripts/capture-research-official-features.mjs
+      - name: Save research snapshot, even when incomplete
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-official-features-${{ github.run_id }}
+          path: prediction-captures/research-official-*.json
+          retention-days: 90
+          if-no-files-found: warn
