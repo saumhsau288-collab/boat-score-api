@@ -37,6 +37,7 @@ jobs:
           node scripts/test-run-saved-makulabo-research.mjs
           node scripts/test-evaluate-verified-makulabo-research.mjs
           node scripts/test-describe-makulabo-identity-review.mjs
+          node scripts/test-describe-makulabo-finish-sample.mjs
           node scripts/test-build-makulabo-review-template.mjs
           node --check scripts/capture-research-makulabo-join.mjs
           node scripts/test-report-research-snapshot-readiness.mjs
