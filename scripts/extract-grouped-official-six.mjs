@@ -3,6 +3,11 @@ import {identifyOfficialGroupedMetricColumns} from './identify-official-grouped-
 const clean=s=>String(s).replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
 const number=s=>{const t=clean(s).replace(/[%％]/g,'');return /^\d+(?:\.\d+)?$/.test(t)?Number(t):null;};
 export function extractGroupedOfficialSix(html){
+ const tables=typeof html==='string'?[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(m=>m[0]):[];
+ if(tables.length!==1){
+  const results=tables.map(t=>extractGroupedOfficialSix(t)).filter(r=>r.verified);
+  return results.length===1?results[0]:{verified:false,reason:results.length?'multiple_verified_grouped_tables':'no_verified_grouped_table',racers:[]};
+ }
  const layout=identifyOfficialGroupedMetricColumns(html);
  if(!layout.verified)return {verified:false,reason:layout.reason,racers:[]};
  const {grid,columns}=layout,found=[];
