@@ -2,7 +2,7 @@
 // Never reconstruct missing six-racer inputs or source verification from rankings.
 export function normalizeSavedPredictionForJoin(record={}) {
  const source=record?.source??{};
- const original=record?.prediction??record;
+ const original=record?.response??record?.prediction??record;
  const six=Array.isArray(original?.scoreInputsByBoat)&&original.scoreInputsByBoat.length===6
   ?original.scoreInputsByBoat:null;
  const result=Array.isArray(record?.finishByBoat)&&record.finishByBoat.length===6
