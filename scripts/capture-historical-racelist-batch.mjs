@@ -11,7 +11,7 @@ export async function captureHistoricalRacelistBatch(selections,{fetcher=fetch,o
  fs.mkdirSync(outputDir,{recursive:true});
  const results=[];
  for(const selection of selections){
-  const url=officialRacelistUrl({...selection,venue:Number(selection.venue)});
+  const url=officialRacelistUrl({...selection,venue:String(selection.venue).padStart(2,'0')});
   if(url.status!=='ok')throw Error('invalid_race_selection');
   const receivedAt=new Date().toISOString();
   let result={date:String(selection.date),venue:String(selection.venue).padStart(2,'0'),race:selection.race,
