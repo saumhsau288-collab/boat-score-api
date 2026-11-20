@@ -9,7 +9,7 @@ export function reportHistoricalEvidenceReadiness({records=[],archivedPairs=[]}=
  const missingCounts={};const archived=[];
  for(const pair of archivedPairs){
   const diagnosis=inspectArchivedResearchPair(pair.official,pair.makulabo);
-  archived.push({race:diagnosis.race,missing:diagnosis.missing,eligibleForWeightTuning:false});
+  archived.push({race:diagnosis.race,missing:diagnosis.missing,boats:diagnosis.rows.map(row=>({boat:row.boat,officialRacerId:row.officialRacerId,sourceRacerId:row.sourceRacerId,sampleRuns:row.sampleRuns,exactly50:row.exactly50,sourceIdentityVerified:row.sourceIdentityVerified,entryCourseVerified:row.officialEntryCourseVerified,recent50Verified:row.recent50Verified,startTimingVerified:row.startTimingVerified,exhibitionVerified:row.exhibitionVerified})),eligibleForWeightTuning:false});
   for(const missing of diagnosis.missing)missingCounts[missing]=(missingCounts[missing]||0)+1;
  }
  return {status:'research_evidence_readiness',recordCount:records.length,archivedPairCount:archivedPairs.length,
