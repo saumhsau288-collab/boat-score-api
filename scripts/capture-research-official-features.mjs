@@ -7,6 +7,7 @@ import {officialRacelistUrl} from '../boat-score-2-official.js';
 import {extractOfficialMetrics} from '../boat-score-2-metric-extractor.js';
 import {parseOfficialBoatRows} from '../boat-score-2-boat-mapping.js';
 import {buildResearchFeatureSnapshot} from '../boat-score-2-research-feature-snapshot.js';
+import {classifyOfficialCaptureHtml} from './classify-official-capture-html.mjs';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
 const race=Number(process.env.CAPTURE_RACE);
@@ -24,13 +25,14 @@ try {
  if(!response.ok||!officialHost||!/text\/html/i.test(response.headers.get('content-type')||'')||body.length>2_000_000)
   result={status:'invalid_official_response',httpStatus:response.status,receivedAt,officialHost};
  else {
-  const noRaceText=/本日のレースはありません|レースは開催されておりません|開催しておりません|開催はありません/.test(body.replace(/<[^>]+>/g,' ').replace(/\s+/g,' '));
+  const page=classifyOfficialCaptureHtml(body);
+  const noRaceText=page.explicitNoRaceNotice;
   const parsed=extractOfficialMetrics(body);
   const mapped=parseOfficialBoatRows(body);
   const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,
    boatMappingReason:mapped.reason??null,boatMappingVerified:mapped.verified===true,
    verifiedBoatCount:mapped.verified?mapped.racers?.length??0:0,
-   tableCount:(body.match(/<table\b/gi)||[]).length,explicitNoRaceNotice:noRaceText,
+   tableCount:page.tableCount,explicitNoRaceNotice:noRaceText,
    hasNationalLabel:body.includes('全国'),hasLocalLabel:body.includes('当地'),
    hasMotorLabel:body.includes('モーター'),
    // Structural indicators only: never store personal page contents or infer metrics.
