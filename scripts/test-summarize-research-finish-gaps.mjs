@@ -3,7 +3,7 @@ import {summarizeResearchFinishGaps as summarize} from './summarize-research-fin
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i,sourceVerified:true,
  nationalWinRate:9-i,localWinRate:9-i,motorTwoWinRate:50}));
 const snapshot={status:'captured_research_inputs',source:'verified_official_metrics',date:'20261120',venue:2,race:1,racers};
-const recent50=racers.map(r=>({racerId:r.racerId,winRate:20,verified:true}));
+const recent50=racers.map(r=>({racerId:r.racerId,winRate:20,verified:true,sourceVerified:true}));
 const officialResult={date:'20261120',venue:2,race:1,verified:true,finishOrder:[6,2,3,4,5,1]};
 const courseMapping=Array.from({length:6},(_,i)=>({boat:i+1,entryCourse:i+1,verified:true}));
 const item={snapshot,recent50,officialResult,courseMapping};
