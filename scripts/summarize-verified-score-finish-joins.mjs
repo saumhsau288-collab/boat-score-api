@@ -17,9 +17,6 @@ export function summarizeVerifiedScoreFinishJoins(records){
   }
   if(gate.eligible)seen.add(key);
   if(!gate.eligible){countExcluded(gate.reason);continue;}
-  if(races.length>0&&races.some(r=>r.date===record.expected.date&&r.venue===record.expected.venue&&r.race===record.expected.race)){
-   countExcluded('duplicate_race_identity');continue;
-  }
   const ranked=[...record.scoreInputsByBoat].sort((a,b)=>b.score-a.score||a.boat-b.boat);
   // A tied highest score has no uniquely ranked first choice; do not count it as a hit.
   const topScoreTied=ranked[0].score===ranked[1].score;
