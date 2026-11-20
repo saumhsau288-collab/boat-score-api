@@ -3,6 +3,8 @@
 // Does not modify the app, use credentials, or invent missing 50-run evidence.
 import fs from 'node:fs';
 import {runSavedMakulaboResearch} from './run-saved-makulabo-research.mjs';
+import {extractMakulaboFinishTable} from '../boat-score-2-makulabo-source-table.js';
+import {describeMakulaboIdentityReview} from './describe-makulabo-identity-review.mjs';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
 const race=Number(process.env.CAPTURE_RACE);
@@ -21,7 +23,13 @@ if(!fs.existsSync(officialPath)){
   const html=await response.text();
   if(!response.ok||!(/text\/html/i.test(response.headers.get('content-type')||''))||html.length>2_000_000)
    result={status:'held',reason:'makulabo_public_html_unavailable',httpStatus:response.status,eligibleForCalibration:false};
-  else result={...runSavedMakulaboResearch(snapshot,html),httpStatus:response.status};
+  else {
+   result={...runSavedMakulaboResearch(snapshot,html),httpStatus:response.status};
+   if(result.reason==='abbreviated_name_requires_review'||result.reason==='official_identity_mismatch'){
+    const extracted=extractMakulaboFinishTable(html);
+    result={...result,identityReview:describeMakulaboIdentityReview(snapshot.racers,extracted)};
+   }
+  }
  }catch(error){
   result={status:'held',reason:'makulabo_public_fetch_failed',errorType:error?.name??'Error',eligibleForCalibration:false};
  }
@@ -30,5 +38,5 @@ fs.mkdirSync('prediction-captures',{recursive:true});
 fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify({file,status:result.status,reason:result.reason??null,
  racers:result.racers?.length??0,morningScoreApplied:result.morningScoreApplied===true,
- eligibleForCalibration:false}));
+ eligibleForCalibration:false,identityReview:result.identityReview??null}));
 // Research source availability does not change the official capture success gate.
