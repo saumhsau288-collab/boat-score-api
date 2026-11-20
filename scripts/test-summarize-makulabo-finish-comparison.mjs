@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {describeMakulaboFinishSample} from './describe-makulabo-finish-sample.mjs';
+import {summarizeMakulaboFinishComparison as summarize} from './summarize-makulabo-finish-comparison.mjs';
+const counts=[[22,12,9,5,2,0],[8,15,7,8,5,6],[11,7,11,7,9,4],[6,4,15,9,6,9],[0,0,0,0,1,0],[1,2,8,8,12,18]];
+const diagnostic=describeMakulaboFinishSample({verified:true,parsedRows:counts.map((c,i)=>({boat:i+1,name:'選手'+(i+1),counts:c,runs:c.reduce((a,b)=>a+b,0)}))});
+const result=summarize(diagnostic);
+assert.equal(result.status,'descriptive_finish_comparison');
+assert.equal(result.racers[0].firstPlaceRate,44);
+assert.equal(result.racers[0].top2Rate,68);
+assert.equal(result.racers[0].top3Rate,86);
+assert.deepEqual(result.smallSampleBoats,[5]);
+assert.equal(result.rankings.firstPlace[0].boat,1);
+assert.equal(result.rankings.top2[0].boat,1);
+assert.equal(result.rankings.top3[0].boat,1);
+assert.equal(result.eligibleForCalibration,false);
+assert.equal(result.morningScoreApplied,false);
+assert.equal(summarize({status:'unavailable'}).status,'held');
+console.log('Makulabo finish comparison real-count fixture tests passed');
