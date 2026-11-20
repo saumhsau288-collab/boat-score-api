@@ -142,6 +142,7 @@ jobs:
           node scripts/test-evaluate-weather-prediction-stages.mjs
           node scripts/test-analyze-same-day-course-impact.mjs
           node scripts/test-compare-venue-course-shift.mjs
+          node scripts/test-assess-weather-course-shift.mjs
 
   archived-evidence-diagnostic:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
