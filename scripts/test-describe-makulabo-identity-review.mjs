@@ -11,5 +11,10 @@ assert.equal(report.candidates[2].identityEvidence,'abbreviated_name_review_requ
 assert.equal(report.candidates[2].manualReviewRequired,true);
 assert.equal(report.candidates[0].identityEvidence,'exact_name');
 assert.equal(report.scoreChangeApplied,false);
+const conflicting=parsedRows.map((r,i)=>i===0?{...r,racerId:'9999'}:r);
+const conflict=describe(official,{verified:true,parsedRows:conflicting});
+assert.equal(conflict.candidates[0].identityEvidence,'registration_conflict');
+assert.equal(conflict.candidates[0].manualReviewRequired,true);
+assert.equal(conflict.verified,false);
 assert.equal(describe(official,{verified:false,parsedRows}).status,'identity_review_unavailable');
 console.log('Makulabo identity review diagnostics tests passed');
