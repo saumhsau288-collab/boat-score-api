@@ -199,6 +199,7 @@ jobs:
             [ -f "$file" ] || continue
             [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\\.json$ ]] || continue
             node scripts/audit-pre-race-feature-snapshots.mjs "$file" > "${file%.json}-feature-snapshot-audit.json"
+            node --input-type=module -e "import fs from 'node:fs'; const r=JSON.parse(fs.readFileSync(process.argv[1],'utf8')); console.log(JSON.stringify({snapshotAudit:process.argv[1],total:r.total,completeSixBoatFeatures:r.completeSixBoatFeatures,eligibleForHistoricalCalibration:r.eligibleForHistoricalCalibration}));" "${file%.json}-feature-snapshot-audit.json"
           done
       - name: Discover actual deployed response score-input field names
         if: always()
