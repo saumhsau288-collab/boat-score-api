@@ -4,7 +4,7 @@ import {validTrifectaPicks,verifiedPodium} from './backtest-comparison-eligibili
 function isOfficialBoatraceSource(url) {
  try {
   const parsed=new URL(url);
-  return parsed.protocol==='https:' && (parsed.hostname==='boatrace.jp' || parsed.hostname.endsWith('.boatrace.jp')) && !parsed.username && !parsed.password;
+  return parsed.protocol==='https:' && parsed.hostname==='www.boatrace.jp' && !parsed.username && !parsed.password;
  } catch { return false; }
 }
 function explicitTimezoneTimestamp(value) {
