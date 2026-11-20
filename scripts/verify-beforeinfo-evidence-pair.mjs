@@ -6,6 +6,9 @@ export function verifyBeforeinfoEvidencePair(metadata,html){
  const actual=createHash('sha256').update(html).digest('hex');
  const hashValid=typeof metadata?.responseSha256==='string'&&/^[a-f0-9]{64}$/.test(metadata.responseSha256)&&metadata.responseSha256===actual;
  const sizeValid=metadata?.bodyBytes===Buffer.byteLength(html,'utf8');
+ const chronologyValid=(()=>{const stamps=[metadata?.requestedAt,metadata?.headersReceivedAt,metadata?.receivedAt];
+  return stamps.every(x=>typeof x==='string'&&/^\\d{4}-\\d{2}-\\d{2}T/.test(x)&&Number.isFinite(Date.parse(x)))&&
+   Date.parse(stamps[0])<=Date.parse(stamps[1])&&Date.parse(stamps[1])<=Date.parse(stamps[2]);})();
  const sourceValid=metadata?.status==='beforeinfo_source_captured'&&metadata?.verified===false&&
   metadata?.preRaceIndependentlyVerified===false&&metadata?.eligibleForCalibration===false&&
   typeof metadata?.sourceUrl==='string'&&typeof metadata?.finalUrl==='string'&&
@@ -18,8 +21,8 @@ export function verifyBeforeinfoEvidencePair(metadata,html){
    url.searchParams.get('jcd')===String(metadata.venue).padStart(2,'0')&&
    url.searchParams.get('hd')===String(metadata.date)&&
    metadata.httpStatus===200&&/^text\/html(?:;|$)/i.test(metadata.contentType||'');}catch{return false;}})();
- return {status:hashValid&&sizeValid&&sourceValid?'evidence_pair_valid':'evidence_pair_rejected',
-  hashValid,sizeValid,sourceValid,verified:false,eligibleForCalibration:false};
+ return {status:hashValid&&sizeValid&&sourceValid&&chronologyValid?'evidence_pair_valid':'evidence_pair_rejected',
+  hashValid,sizeValid,sourceValid,chronologyValid,verified:false,eligibleForCalibration:false};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
  const [metadataFile,htmlFile]=process.argv.slice(2);
