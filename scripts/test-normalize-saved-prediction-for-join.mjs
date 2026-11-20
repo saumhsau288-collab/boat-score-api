@@ -9,4 +9,8 @@ assert.ok(old.missing.includes('original_six_boat_score_inputs'));
 assert.equal(verifyHistoricalRaceJoin(old).eligible,false);
 const spoof=normalize({prediction:{scoreInputsByBoat:[{boat:1,verified:true}]}});
 assert.equal(spoof.scoreInputsByBoat,null);
+const actualShape=normalize({date:'20261120',venue:2,race:1,receivedAt:'2026-11-19T23:42:52.608Z',response:{ready:true,method:'weighted_national50_local20_motor30_unvalidated',rankedScores:[{boat:1,score:40.11}]}});
+assert.equal(actualShape.predictorMethod,'weighted_national50_local20_motor30_unvalidated');
+assert.equal(actualShape.scoreInputsByBoat,null);
+assert.equal(verifyHistoricalRaceJoin(actualShape).eligible,false);
 console.log('Saved prediction normalizer: missing six-boat inputs remain unverified');
