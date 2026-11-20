@@ -51,7 +51,7 @@ export function reportResearchSnapshotReadiness(snapshot){
   date:snapshot?.date??null,venue:snapshot?.venue??null,race:snapshot?.race??null,
   officialRacerCount:verified?6:0,boats,
   recent50Verified,coursesVerified,
-  readyForResearchMorningScoring:verified&&recent50Verified,
+  readyForResearchMorningScoring:verified&&recent50Verified&&prestartAuthenticated,
   readyForResearchPrestartScoring,missingPrestart,
   eligibleForCalibration:false,missing,
   note:'Official feature capture alone does not establish a pre-race prediction or historical accuracy.'};
