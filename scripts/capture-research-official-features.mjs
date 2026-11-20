@@ -24,7 +24,7 @@ try {
  if(!response.ok||!officialHost||!/text\/html/i.test(response.headers.get('content-type')||'')||body.length>2_000_000)
   result={status:'invalid_official_response',httpStatus:response.status,receivedAt,officialHost};
  else {
-  const noRaceText=/本日のレースはありません|レースは開催されておりません|開催しておりません|開催はありません/.test(body.replace(/<[^>]+>/g,' ').replace(/\\s+/g,' '));
+  const noRaceText=/本日のレースはありません|レースは開催されておりません|開催しておりません|開催はありません/.test(body.replace(/<[^>]+>/g,' ').replace(/\s+/g,' '));
   const parsed=extractOfficialMetrics(body);
   const mapped=parseOfficialBoatRows(body);
   const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,
