@@ -30,7 +30,7 @@ try {
   const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,
    boatMappingReason:mapped.reason??null,boatMappingVerified:mapped.verified===true,
    verifiedBoatCount:mapped.verified?mapped.racers?.length??0:0,
-   tableCount:(body.match(/<table\\b/gi)||[]).length,explicitNoRaceNotice:noRaceText,
+   tableCount:(body.match(/<table\b/gi)||[]).length,explicitNoRaceNotice:noRaceText,
    hasNationalLabel:body.includes('全国'),hasLocalLabel:body.includes('当地'),
    hasMotorLabel:body.includes('モーター'),
    // Structural indicators only: never store personal page contents or infer metrics.
