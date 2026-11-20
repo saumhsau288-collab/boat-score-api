@@ -29,8 +29,10 @@ if(!fs.existsSync(officialPath)){
   else {
    const extracted=extractMakulaboFinishTable(html);
    result={...runSavedMakulaboResearch(snapshot,html),httpStatus:response.status,
+    sourceUrl:url,observedAt:new Date().toISOString(),
     finishSample:describeMakulaboFinishSample(extracted),
-    sampleScope:identifyMakulaboSampleScope(html)};
+    sampleScope:identifyMakulaboSampleScope(html),
+    recent50WinRateVerified:false,preRaceIndependentlyVerified:false};
    if(result.reason==='abbreviated_name_requires_review'||result.reason==='official_identity_mismatch'){
     const identityReview=describeMakulaboIdentityReview(snapshot.racers,extracted);
     result={...result,identityReview,reviewTemplate:buildMakulaboReviewTemplate(snapshot,identityReview)};
