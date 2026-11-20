@@ -4,7 +4,7 @@ import {resolve} from 'node:path';
 // Research-only chronological out-of-sample evaluation of candidate weights.
 // Historical inputs must be independently authenticated before using this function.
 import {verifyHistoricalRaceJoin} from './verify-historical-race-join.mjs';
-import {SCORE_WEIGHTS,validateResearchWeights} from '../boat-score-2-scoring.js';
+import {SCORE_WEIGHTS,validateResearchWeights,evaluateRacer} from '../boat-score-2-scoring.js';
 export const FEATURES=['nationalWinRate','localWinRate','motorTwoWinRate','recent50WinRate','exhibitionScore'];
 const LIMITS=[10,10,100,100,100];
 export function evaluateWeightCandidates(records,{minTrain=100,minHoldout=30}={}){
@@ -22,6 +22,12 @@ export function evaluateWeightCandidates(records,{minTrain=100,minHoldout=30}={}
     f?.sourceVerified!==true||FEATURES.some((k,j)=>typeof f[k]!=='number'||!Number.isFinite(f[k])||f[k]<0||f[k]>LIMITS[j]))){
    reject('authenticated_pre_cutoff_features_missing');continue;
   }
+  // The archived pre-cutoff score must match the unchanged baseline formula.
+  // Otherwise the features and recorded score may be unrelated evidence.
+  if(r.featureInputsByBoat.some((f,i)=>{
+    const computed=evaluateRacer(f);
+    return computed.status!=='evaluated'||Math.abs(computed.score-r.scoreInputsByBoat[i].score)>0.011;
+  })){reject('archived_score_feature_mismatch');continue;}
   eligible.push(r);
  }
  eligible.sort((a,b)=>a.expected.date.localeCompare(b.expected.date)||Number(a.expected.venue)-Number(b.expected.venue)||a.expected.race-b.expected.race);
