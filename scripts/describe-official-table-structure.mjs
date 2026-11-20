@@ -22,6 +22,12 @@ export function describeOfficialTableStructure(html){
    colspan:Number(m[1].match(/\bcolspan\s*=\s*["']?(\d+)/i)?.[1]??1),
    rowspan:Number(m[1].match(/\browspan\s*=\s*["']?(\d+)/i)?.[1]??1)
   })));
+  const boatCellTypes=grid.valid?grid.rows.slice(3,27).filter((row,i)=>i%4===0).map(row=>{
+   const cell=row[0]; const value=clean(cell?.html);
+   return {originRow:cell?.originRow??null,tag:cell?.tag??null,
+    textShape:/^[1-6]$/.test(value)?'plain_digit':(/^[1-6]/.test(value)?'starts_digit':'other'),
+    tagShape:cell?.html?.match(/<([a-z][a-z0-9]*)\\b/i)?.[1]?.toLowerCase()??null};
+  }):null;
   const headerLabels=[...new Set([...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>clean(m[1])).filter(s=>labels.includes(s)))];
   return {index,rowCount:rows.length,headerCellsPerRow:thPerRow.slice(0,32),dataCellsPerRow:tdPerRow.slice(0,32),
    profileLinksPerRow:profileLinksPerRow.slice(0,32),
@@ -32,6 +38,6 @@ export function describeOfficialTableStructure(html){
    mappingVerified:mapping.verified,mappingReason:mapping.reason??null,
    mappingCandidates:mapping.candidates??null,
    headerGridLabels:mapping.headerGridLabels??null,
-   headerCellsByRow};
+   headerCellsByRow,boatCellTypes};
  });
 }
