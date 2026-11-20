@@ -1,0 +1,51 @@
+name: Research pre-cutoff score receipt (manual evidence)
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Existing GitHub Actions run with pre-race evidence artifact'
+        required: true
+        type: string
+      artifact_name:
+        description: 'Existing artifact containing verified-input.json and archived-source-evidence.bin'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  score:
+    if: github.ref == 'refs/heads/research-cutoff-join-gate-20261120'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retrieve independently archived evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.source_run_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+        run: |
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || exit 2
+          [[ "$ARTIFACT_NAME" =~ ^[A-Za-z0-9_.-]+$ ]] || exit 2
+          mkdir -p prediction-captures
+          gh run download "$RUN_ID" --repo "${{ github.repository }}" --name "$ARTIFACT_NAME" --dir prediction-captures
+          test -f prediction-captures/verified-input.json
+          test -f prediction-captures/archived-source-evidence.bin
+      - name: Capture scores only when evidence and cutoff checks pass
+        run: |
+          node scripts/capture-research-precutoff-score.mjs \
+            prediction-captures/verified-input.json \
+            prediction-captures/research-score-receipt.json \
+            prediction-captures/archived-source-evidence.bin
+      - name: Preserve rejection or receipt for research audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-score-receipt-${{ github.run_id }}
+          path: prediction-captures/research-score-receipt.json
+          if-no-files-found: warn
+          retention-days: 30
