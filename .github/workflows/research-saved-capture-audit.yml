@@ -31,6 +31,7 @@ jobs:
           import fs from 'node:fs';
           import path from 'node:path';
           import {inspectScoreEvidence} from './scripts/inspect-score-evidence-research.mjs';
+          import {buildFeatureCollectionQueue} from './scripts/build-research-feature-collection-queue.mjs';
           function walk(dir){return fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(dir,e.name)):[path.join(dir,e.name)]);}
           const files=walk('research-artifact/unpacked').filter(f=>f.endsWith('.json'));
           const expected='20261120-44639859914.json';
@@ -42,8 +43,13 @@ jobs:
           const summary={sourceArtifactId:14586303082,sourceFile:path.basename(captures[0].file),total:report.total,ready:report.ready,withRankedScores:report.withRankedScores,completeOriginalInputs:report.completeOriginalInputs,eligibleForWeightTuning:report.eligibleForWeightTuning,warning:report.warning};
           fs.writeFileSync('research-artifact/score-evidence-summary.json',JSON.stringify(summary,null,2)+'\n');
           console.log(JSON.stringify(summary,null,2));
+          const queue=buildFeatureCollectionQueue(captures[0].data);
+          fs.writeFileSync('research-artifact/feature-collection-queue.json',JSON.stringify(queue,null,2)+'\n');
+          console.log('Feature collection queue candidates:',queue.readyRaceCandidates);
           NODE
       - uses: actions/upload-artifact@v4
         with:
           name: research-score-evidence-summary
-          path: research-artifact/score-evidence-summary.json
+          path: |
+            research-artifact/score-evidence-summary.json
+            research-artifact/feature-collection-queue.json
