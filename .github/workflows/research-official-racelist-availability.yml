@@ -25,6 +25,7 @@ on:
       - 'scripts/audit-research-saved-score-schema.mjs'
       - 'scripts/compare-research-saved-scores.mjs'
       - 'scripts/audit-research-score-disagreements.mjs'
+      - 'scripts/audit-research-disagreement-boat-position.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -86,6 +87,7 @@ jobs:
           node scripts/audit-research-saved-score-schema.mjs "$CAPTURE" research-official-racelists
           node scripts/compare-research-saved-scores.mjs research-official-racelists "$CAPTURE"
           node scripts/audit-research-score-disagreements.mjs research-official-racelists
+          node scripts/audit-research-disagreement-boat-position.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
