@@ -17,6 +17,7 @@ on:
       - 'scripts/diagnose-research-fifth-boat.mjs'
       - 'scripts/normalize-research-racer-features.mjs'
       - 'scripts/audit-normalized-research-racers.mjs'
+      - 'scripts/build-research-racer-comparison.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -57,6 +58,8 @@ jobs:
         run: node scripts/diagnose-research-fifth-boat.mjs research-official-racelists
       - name: Audit normalized win rates for all extracted racers
         run: node scripts/audit-normalized-research-racers.mjs research-official-racelists
+      - name: Build descriptive racer comparison tables
+        run: node scripts/build-research-racer-comparison.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
