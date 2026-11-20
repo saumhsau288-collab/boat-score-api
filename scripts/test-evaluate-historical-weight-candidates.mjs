@@ -9,10 +9,11 @@ const source={...expected,officialDomainVerified:true,sourceDocumentVerified:tru
 const schedule={raceNumbers:Array.from({length:12},(_,i)=>i+1),cutoffTimes:['08:43','09:09','09:35','10:01','10:28','10:58','11:30','12:03','12:38','13:11','13:46','14:23'],sourceVerified:true};
 const scoreInputsByBoat=Array.from({length:6},(_,i)=>({boat:i+1,verified:true,score:60-i*3,racerId:String(4001+i),preRaceSourceVerified:true,capturedAt:'2026-11-20T08:00:00+09:00',scoreComputedBeforeCutoffVerified:true,scoreComputedAt:'2026-11-20T08:05:00+09:00'}));
 const finishByBoat=Array.from({length:6},(_,i)=>({boat:i+1,finish:i+1,officialResultVerified:true}));
-const featureInputsByBoat=scoreInputsByBoat.map((r,i)=>({boat:r.boat,racerId:r.racerId,sourceVerified:true,nationalWinRate:7-i,localWinRate:7-i,motorTwoWinRate:50,recent50WinRate:20,exhibitionScore:50}));
+const featureInputsByBoat=scoreInputsByBoat.map((r,i)=>({boat:r.boat,racerId:r.racerId,sourceVerified:true,capturedAt:'2026-11-20T08:00:00+09:00',nationalWinRate:7-i,localWinRate:7-i,motorTwoWinRate:50,recent50WinRate:20,exhibitionScore:50}));
 const consistentScores=scoreInputsByBoat.map((v,i)=>({...v,score:evaluateRacer(featureInputsByBoat[i]).score}));
 const valid={expected,source,schedule,scoreInputsByBoat:consistentScores,finishByBoat,featureInputsByBoat};
 assert.equal(evaluate([valid]).eligible,1);
+assert.equal(evaluate([{...valid,featureInputsByBoat:featureInputsByBoat.map((v,i)=>i===0?{...v,capturedAt:'2026-11-20T10:00:00+09:00'}:v)}]).excluded.authenticated_pre_cutoff_features_missing,1);
 assert.equal(evaluate([{...valid,scoreInputsByBoat}]).excluded.archived_score_feature_mismatch,1);
 assert.equal(evaluate([valid,valid]).excluded.duplicate_race,1);
 assert.equal(evaluate([{...valid,featureInputsByBoat:undefined}]).excluded.authenticated_pre_cutoff_features_missing,1);
@@ -23,7 +24,7 @@ for(let day=1;day<=5;day++)for(let venue=1;venue<=12;venue++){
  const when=date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6);
  const t=when+'T08:00:00+09:00';
  const c=when+'T08:05:00+09:00';
- records.push({...valid,expected:{date,venue:String(venue).padStart(2,'0'),race:3},source:{...source,date,venue:String(venue).padStart(2,'0'),race:3,receivedAt:t,sourceCapturedAtEpochMs:Date.parse(t)},scoreInputsByBoat:consistentScores.map(v=>({...v,capturedAt:t,scoreComputedAt:c}))});
+ records.push({...valid,expected:{date,venue:String(venue).padStart(2,'0'),race:3},source:{...source,date,venue:String(venue).padStart(2,'0'),race:3,receivedAt:t,sourceCapturedAtEpochMs:Date.parse(t)},scoreInputsByBoat:consistentScores.map(v=>({...v,capturedAt:t,scoreComputedAt:c})),featureInputsByBoat:featureInputsByBoat.map(v=>({...v,capturedAt:t}))});
 }
 const report=evaluate(records,{minTrain:24,minHoldout:12});
 assert.equal(report.status,'research_comparison_only');
