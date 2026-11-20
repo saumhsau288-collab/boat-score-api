@@ -19,7 +19,13 @@ export function joinMakulaboWithOfficial(official,extracted) {
         x.officialName===racer.name && x.sourceName===source.name && x.reviewed===true);
     if(!approval)return {verified:false,reason:'abbreviated_name_requires_review',racers:[]};
   }
-  const rate=n=>source.runs>0?+(100*n/source.runs).toFixed(2):null;
+  // A verified table label does not guarantee each row has valid arithmetic.
+  if(!Number.isInteger(source.runs)||source.runs<=0||
+     !Array.isArray(source.counts)||source.counts.length!==6||
+     source.counts.some(n=>!Number.isInteger(n)||n<0)||
+     source.counts.reduce((sum,n)=>sum+n,0)!==source.runs)
+    return {verified:false,reason:'invalid_finish_counts',racers:[],scoreChangeApplied:false};
+  const rate=n=>+(100*n/source.runs).toFixed(2);
   racers.push({boat:match.boat,racerId:String(racer.racerId),name:racer.name,
    runs:source.runs,firstPlaceRate:rate(source.counts[0]),
    top2Rate:rate(source.counts[0]+source.counts[1]),
