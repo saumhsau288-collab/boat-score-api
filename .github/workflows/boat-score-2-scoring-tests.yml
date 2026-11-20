@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   scoring-tests:
@@ -122,3 +123,34 @@ jobs:
           node scripts/test-audit-research-sample.mjs
           node scripts/test-summarize-verified-score-finish-joins.mjs
           node scripts/test-inspect-archived-research-pair.mjs
+
+  archived-evidence-diagnostic:
+    if: github.ref == 'refs/heads/research-cutoff-join-gate-20261120' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retrieve actual saved race artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p archived-evidence
+          gh run download 44670651345 --repo "${{ github.repository }}" --name research-official-features-44670651345 --dir archived-evidence
+      - name: Produce research-only evidence readiness report
+        run: |
+          node scripts/inspect-archived-research-pair.mjs \
+            archived-evidence/research-official-20261120-18-1.json \
+            archived-evidence/research-makulabo-20261120-18-1.json \
+            > archived-evidence/research-evidence-readiness.json
+          cat archived-evidence/research-evidence-readiness.json
+      - name: Upload diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-archived-evidence-diagnostic-${{ github.run_id }}
+          path: archived-evidence/research-evidence-readiness.json
+          if-no-files-found: warn
+          retention-days: 30
