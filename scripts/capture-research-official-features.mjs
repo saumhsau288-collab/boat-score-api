@@ -36,6 +36,7 @@ try {
   const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,metricStructure:parsed.diagnostics??null,
    boatMappingReason:mapped.reason??null,
    groupedParserReason:selected.groupedReason??null,
+   groupedTableAttempts:selected.groupedTableAttempts??null,
    groupedVerified:selected.source==='official_grouped_html_table',
    selectedRacerCount:selected.verified?selected.racers.length:0,
    selectedBoats:selected.verified?selected.racers.map(r=>r.boat):[],
