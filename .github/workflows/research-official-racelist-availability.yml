@@ -9,6 +9,7 @@ on:
       - 'scripts/audit-research-official-racelist-structure.mjs'
       - 'scripts/audit-research-official-field-labels.mjs'
       - 'scripts/diagnose-research-racelist-labels.mjs'
+      - 'scripts/diagnose-research-racelist-tables.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -37,6 +38,8 @@ jobs:
         run: node scripts/audit-research-official-field-labels.mjs research-official-racelists
       - name: Diagnose actual label formats
         run: node scripts/diagnose-research-racelist-labels.mjs research-official-racelists
+      - name: Diagnose table layout and header cells
+        run: node scripts/diagnose-research-racelist-tables.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
