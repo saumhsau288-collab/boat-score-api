@@ -5,17 +5,21 @@ import fs from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {resolve} from 'node:path';
 import {inspectResearchResultJoin} from './inspect-research-result-join.mjs';
+import {verifyHistoricalRaceJoin} from './verify-historical-race-join.mjs';
 export function auditArchivedResultJoin(metadata,html,prediction){
  const expected=prediction?.expected;
  const scoreInputsByBoat=prediction?.scoreInputsByBoat;
  const joined=inspectResearchResultJoin({metadata,html,expected,scoreInputsByBoat});
  if(joined.status!=='structural_match_only')return joined;
- const cutoff=Date.parse(prediction?.source?.receivedAt??'');
+ const sourceReceived=Date.parse(prediction?.source?.receivedAt??'');
  const scoreTimes=scoreInputsByBoat.map(r=>Date.parse(r.scoreComputedAt??''));
- const declaredCutoff=prediction?.source?.cutoffJst;
- const captureTimeVerified=Number.isFinite(cutoff)&&scoreTimes.every(t=>Number.isFinite(t)&&t>=cutoff);
- return {...joined,predictionTimestampStructureValid:captureTimeVerified,
-  cutoffDeclared:typeof declaredCutoff==='string'?declaredCutoff:null,
+ const timestampSequenceValid=Number.isFinite(sourceReceived)&&scoreTimes.every(t=>Number.isFinite(t)&&t>=sourceReceived);
+ // Full eligibility requires a separate independently authenticated finish record.
+ // Do not manufacture officialResultVerified=true from a parsed HTML table.
+ const historicalGate=verifyHistoricalRaceJoin(prediction);
+ return {...joined,predictionTimestampStructureValid:timestampSequenceValid,
+  historicalGateEligible:historicalGate.eligible,historicalGateReason:historicalGate.reason,
+  cutoffDeclared:typeof prediction?.source?.cutoffJst==='string'?prediction.source.cutoffJst:null,
   eligibleForWeightTuning:false,officialResultVerified:false,
   reason:'structural_join_only_requires_independent_cutoff_and_result_authentication'};
 }
