@@ -14,6 +14,7 @@ on:
       - 'scripts/extract-research-official-racers.mjs'
       - 'scripts/audit-research-official-racers.mjs'
       - 'scripts/report-research-racer-extraction-failures.mjs'
+      - 'scripts/diagnose-research-fifth-boat.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -50,6 +51,8 @@ jobs:
         run: node scripts/audit-research-official-racers.mjs research-official-racelists
       - name: Report incomplete six-racer records
         run: node scripts/report-research-racer-extraction-failures.mjs research-official-racelists
+      - name: Diagnose failed fifth-boat fields
+        run: node scripts/diagnose-research-fifth-boat.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
