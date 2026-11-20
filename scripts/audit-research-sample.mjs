@@ -18,7 +18,10 @@ export function auditResearchSample(official,makulabo){
   racers.every(r=>samples.some(s=>s.boat===r.boat&&String(s.racerId)===String(r.racerId)&&s.sourceVerified===true));
  const officialBoatsValid=racers.length===6&&new Set(racers.map(r=>r.boat)).size===6&&
   racers.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6&&r.sourceVerified===true);
+ const manualReviewOutstanding=candidates.some(c=>c.manualReviewRequired===true)&&
+  makulabo?.identityReview?.manualReviewApproved!==true;
  const identitySafe=official?.status==='captured_research_inputs'&&officialBoatsValid&&idsMatch&&candidatesAlign&&
+  !manualReviewOutstanding&&
   makulabo?.identityReview?.verified===true&&makulabo?.status!=='held';
  const byBoat=new Map(samples.map(r=>[r.boat,r]));
  const rows=racers.map(r=>{
@@ -40,12 +43,13 @@ export function auditResearchSample(official,makulabo){
  const countsConsistent=sampleBoatsUnique&&rows.length===6&&rows.every(r=>r.sampleValid);
  const complete=countsConsistent&&rows.every(r=>r.exactly50);
  return {status:'research_sample_audit_only',date:official?.date??null,venue:official?.venue??null,
-  race:official?.race??null,rows,countsConsistent,allExactly50:complete,identitySafe,
+  race:official?.race??null,rows,countsConsistent,allExactly50:complete,identitySafe,manualReviewOutstanding,
   eligibleForCalibration:false,readyForResearchMorningScoring:false,
   reasons:[...(!officialBoatsValid?['six_unique_source_verified_official_boats_required']:[]),
    ...(!sampleBoatsUnique?['six_unique_sample_boats_required']:[]),
    ...(!idsMatch?['six_source_verified_registration_id_matches_required']:[]),
    ...(!candidatesAlign?['candidate_identity_evidence_incomplete_or_mismatched']:[]),
+   ...(manualReviewOutstanding?['explicit_manual_identity_review_required']:[]),
    ...(!identitySafe?['identity_not_independently_verified']:[]),
    ...(!countsConsistent?['finish_counts_inconsistent_or_missing']:[]),
    ...(!complete?['sample_sizes_not_all_50_diagnostic_only']:[]),
