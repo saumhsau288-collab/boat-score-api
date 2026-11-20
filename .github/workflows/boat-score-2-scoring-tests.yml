@@ -141,6 +141,7 @@ jobs:
           node scripts/test-join-historical-racelist-result-identities.mjs
           node scripts/test-evaluate-three-feature-historical-baseline.mjs
           node scripts/test-explain-historical-first-place-misses.mjs
+          node scripts/test-screen-historical-three-feature-weights.mjs
           node --check scripts/run-historical-first-place-miss-diagnostic.mjs
           node --check scripts/run-three-feature-historical-baseline.mjs
           node scripts/test-evaluate-venue-specific-weights.mjs
