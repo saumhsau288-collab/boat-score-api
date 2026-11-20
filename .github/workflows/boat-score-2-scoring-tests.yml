@@ -131,6 +131,7 @@ jobs:
           node scripts/test-capture-official-result-evidence.mjs
           node scripts/test-verify-official-result-evidence-pair.mjs
           node scripts/test-parse-official-result-finish-rows.mjs
+          node scripts/test-inspect-research-result-join.mjs
 
   archived-evidence-diagnostic:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
