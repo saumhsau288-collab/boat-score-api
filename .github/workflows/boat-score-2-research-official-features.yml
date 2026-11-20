@@ -40,6 +40,7 @@ jobs:
           node scripts/test-describe-makulabo-finish-sample.mjs
           node scripts/test-summarize-makulabo-finish-comparison.mjs
           node scripts/test-compare-official-ability-and-frame-sample.mjs
+          node scripts/test-audit-ability-start-course-evidence.mjs
           node scripts/test-identify-makulabo-sample-scope.mjs
           node scripts/test-build-makulabo-review-template.mjs
           node --check scripts/capture-research-makulabo-join.mjs
