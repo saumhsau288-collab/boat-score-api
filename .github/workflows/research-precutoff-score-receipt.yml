@@ -44,7 +44,7 @@ jobs:
           node scripts/capture-research-precutoff-score.mjs \
             prediction-captures/verified-input.json \
             prediction-captures/research-score-receipt.json \
-            prediction-captures/archived-source-evidence.bin \\
+            prediction-captures/archived-source-evidence.bin \
             prediction-captures/source-run-provenance.json \
             prediction-captures/source-artifact-provenance.json
       - name: Preserve rejection or receipt for research audit
