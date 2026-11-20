@@ -26,12 +26,12 @@ if(!fs.existsSync(officialPath)){
   if(!response.ok||!(/text\/html/i.test(response.headers.get('content-type')||''))||html.length>2_000_000)
    result={status:'held',reason:'makulabo_public_html_unavailable',httpStatus:response.status,eligibleForCalibration:false};
   else {
-   result={...runSavedMakulaboResearch(snapshot,html),httpStatus:response.status};
+   const extracted=extractMakulaboFinishTable(html);
+   result={...runSavedMakulaboResearch(snapshot,html),httpStatus:response.status,
+    finishSample:describeMakulaboFinishSample(extracted)};
    if(result.reason==='abbreviated_name_requires_review'||result.reason==='official_identity_mismatch'){
-    const extracted=extractMakulaboFinishTable(html);
     const identityReview=describeMakulaboIdentityReview(snapshot.racers,extracted);
-    result={...result,identityReview,reviewTemplate:buildMakulaboReviewTemplate(snapshot,identityReview),
-     finishSample:describeMakulaboFinishSample(extracted)};
+    result={...result,identityReview,reviewTemplate:buildMakulaboReviewTemplate(snapshot,identityReview)};
    }
   }
  }catch(error){
