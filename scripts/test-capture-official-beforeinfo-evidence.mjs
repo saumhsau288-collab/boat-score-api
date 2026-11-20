@@ -3,6 +3,9 @@ import {officialBeforeinfoUrl,captureOfficialBeforeinfo} from './capture-officia
 const selection={date:'20261120',venue:18,race:1};
 const target=officialBeforeinfoUrl(selection);
 assert.equal(target.status,'ok');
+assert.equal(new URL(officialBeforeinfoUrl({...selection,venue:1}).url).searchParams.get('jcd'),'01');
+assert.equal(officialBeforeinfoUrl({...selection,venue:25}).status,'invalid_selection');
+assert.equal(officialBeforeinfoUrl({...selection,venue:'abc'}).status,'invalid_selection');
 assert.equal(new URL(target.url).pathname,'/owpc/pc/race/beforeinfo');
 assert.equal(officialBeforeinfoUrl({...selection,race:13}).status,'invalid_selection');
 const fake=(url,contentType='text/html',ok=true)=>async()=>({
