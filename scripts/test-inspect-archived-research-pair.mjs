@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {inspectArchivedResearchPair as inspect} from './inspect-archived-research-pair.mjs';
+const official={date:'20261120',venue:18,race:1,preRaceIndependentlyVerified:false,racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4551+i),name:'R'+i,sourceVerified:true,entryCourse:null,entryCourseVerified:false,recent50Verified:false,startTiming:null,exhibitionTime:null}))};
+const makulabo={status:'held',identityReview:{verified:false},finishSample:{racers:[50,49,49,49,1,49].map((runs,i)=>({boat:i+1,sourceName:'R'+i,runs,finishCounts:[runs,0,0,0,0,0]}))}};
+const out=inspect(official,makulabo);
+assert.equal(out.officialSixVerified,true);
+assert.deepEqual(out.sampleRuns,[50,49,49,49,1,49]);
+assert.equal(out.rows[0].countsValid,true);
+assert.equal(out.rows[0].exactly50,true);
+assert.equal(out.rows[5].sourceIdentityVerified,false);
+assert.equal(out.missing.includes('six_independently_verified_makulabo_registration_ids'),true);
+assert.equal(out.missing.includes('authenticated_pre_cutoff_score_snapshot'),true);
+assert.equal(out.eligibleForHistoricalAccuracy,false);
+assert.equal(out.eligibleForWeightTuning,false);
+assert.equal(inspect({},{}).officialSixVerified,false);
+console.log('Archived evidence diagnostic synthetic tests passed');
