@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {selectResearchVerifiedRefreshes as select} from './select-research-verified-refreshes.mjs';
+const schedule={status:'daily_candidates_not_authenticated',date:'20261120',venue:2,candidates:[{race:1,refreshCandidateAt:'2026-11-20T01:35:00.000Z'},{race:2,refreshCandidateAt:'2026-11-20T02:02:00.000Z'}]};
+const official={date:'20261120',venue:2,race:1,verified:true,source:'official',sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',cutoffAt:'2026-11-20T01:45:00.000Z'};
+const missing=select({schedule});
+assert.equal(missing.authorized.length,0);
+assert.equal(missing.rejected.length,2);
+const ok=select({schedule,verifiedCutoffs:[official]});
+assert.equal(ok.authorized.length,1);
+assert.equal(ok.rejected.length,1);
+assert.equal(ok.networkExecuted,false);
+assert.equal(select({schedule,verifiedCutoffs:[{...official,verified:false}]}).authorized.length,0);
+assert.equal(select({schedule,verifiedCutoffs:[{...official,cutoffAt:'2026-11-20T01:46:00.000Z'}]}).authorized.length,0);
+assert.equal(select({schedule,verifiedCutoffs:[official,official]}).authorized.length,0);
+console.log('Verified cutoff refresh gate tests passed');
