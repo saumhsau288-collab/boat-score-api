@@ -114,3 +114,4 @@ jobs:
           node scripts/test-select-research-official-metrics.mjs
           node scripts/test-describe-official-table-structure.mjs
 
+          node scripts/test-verify-historical-race-join.mjs
