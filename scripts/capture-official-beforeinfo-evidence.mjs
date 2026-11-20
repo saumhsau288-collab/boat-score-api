@@ -2,7 +2,9 @@
 import {createHash} from 'node:crypto';
 import {validateRaceSelection} from '../boat-score-2-adapter.js';
 export function officialBeforeinfoUrl(selection){
- const valid=validateRaceSelection(selection);
+ const normalized={...selection,venue:/^(?:[1-9]|1[0-9]|2[0-4])$/.test(String(selection?.venue))?
+  String(selection.venue).padStart(2,'0'):selection?.venue};
+ const valid=validateRaceSelection(normalized);
  if(!valid.valid)return {status:'invalid_selection',invalid:valid.invalid};
  const url=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
  url.searchParams.set('rno',String(Number(selection.race)));
