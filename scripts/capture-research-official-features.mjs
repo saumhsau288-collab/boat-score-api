@@ -8,8 +8,7 @@ import {extractOfficialMetrics} from '../boat-score-2-metric-extractor.js';
 import {parseOfficialBoatRows} from '../boat-score-2-boat-mapping.js';
 import {buildResearchFeatureSnapshot} from '../boat-score-2-research-feature-snapshot.js';
 import {classifyOfficialCaptureHtml} from './classify-official-capture-html.mjs';
-import {extractGroupedOfficialSix} from './extract-grouped-official-six.mjs';
-import {validateOfficialMetrics} from '../boat-score-2-official-metrics.js';
+import {selectResearchOfficialMetrics} from './select-research-official-metrics.mjs';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
 const race=Number(process.env.CAPTURE_RACE);
@@ -33,12 +32,11 @@ try {
   const noRaceText=page.explicitNoRaceNotice;
   const parsed=extractOfficialMetrics(body);
   const mapped=parseOfficialBoatRows(body);
-  const grouped=parsed.verified?null:extractGroupedOfficialSix(body);
-  const selected=parsed.verified?parsed:(grouped?.verified&&validateOfficialMetrics(grouped.racers).verified?grouped:null);
+  const selected=selectResearchOfficialMetrics(body);
   const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,metricStructure:parsed.diagnostics??null,
    boatMappingReason:mapped.reason??null,
-   groupedParserReason:grouped?.reason??null,
-   selectedParser:selected?.source??null,boatMappingVerified:mapped.verified===true,
+   groupedParserReason:selected.groupedReason??null,
+   selectedParser:selected.source??null,boatMappingVerified:mapped.verified===true,
    candidateBoatRows:mapped.candidateRows??0,
    verifiedBoatCount:mapped.verified?mapped.racers?.length??0:0,
    tableCount:page.tableCount,explicitNoRaceNotice:noRaceText,
@@ -46,7 +44,7 @@ try {
    hasMotorLabel:body.includes('モーター'),
    // Structural indicators only: never store personal page contents or infer metrics.
   };
-  const snapshot=noRaceText?{status:'no_race_notice_detected',eligibleForCalibration:false,reason:'explicit_no_race_text_on_official_racelist'}:buildResearchFeatureSnapshot({date,venue,race,capturedAt:receivedAt,official:selected?.racers??null});
+  const snapshot=noRaceText?{status:'no_race_notice_detected',eligibleForCalibration:false,reason:'explicit_no_race_text_on_official_racelist'}:buildResearchFeatureSnapshot({date,venue,race,capturedAt:receivedAt,official:selected.verified?selected.racers:null});
   result={...snapshot,diagnostic,requestedAt,receivedAt,sourceUrl:target.url,responseSha256:digest,
    httpStatus:response.status,finalUrl:finalUrl.toString(),preRaceIndependentlyVerified:false};
  }
