@@ -63,7 +63,7 @@ export function screenHistoricalThreeFeatureWeights(races,{minTrain=100,minHoldo
   (best.holdout.exactFirstSecondRate??-1)>=(base.holdout.exactFirstSecondRate??-1)&&
   (best.train.secondRate??-1)>=(base.train.secondRate??-1)&&
   (best.holdout.secondRate??-1)>=(base.holdout.secondRate??-1);
- return {status:'historical_three_feature_research_only',trainRaces:train.length,holdoutRaces:holdout.length,
+ return {status:'historical_three_feature_research_only',trainRaces:train.length,holdoutRaces:holdout.length,excluded,
   candidates:ranked,proposedWeights:improved?best.weights:null,
   eligibleForDeployment:false,warning:'Historical pre-race metric validity and missing 15% of current features remain unverified; never deploy from this report.'};
 }
