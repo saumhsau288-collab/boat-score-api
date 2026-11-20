@@ -3,7 +3,7 @@ import {auditResearchSample as audit} from './audit-research-sample.mjs';
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i,sourceVerified:true}));
 const samples=racers.map(r=>({boat:r.boat,racerId:r.racerId,sourceVerified:true,sourceName:r.name,runs:50,finishCountsValid:true,finishCounts:[10,10,10,10,5,5]}));
 const official={status:'captured_research_inputs',date:'20261120',venue:18,race:1,racers};
-const candidates=racers.map(r=>({boat:r.boat,officialRacerId:r.racerId,officialName:r.name,sourceName:r.name,sameLabelledBoat:true}));
+const candidates=racers.map(r=>({boat:r.boat,officialRacerId:r.racerId,sourceRacerId:r.racerId,officialName:r.name,sourceName:r.name,sameLabelledBoat:true}));
 const makulabo={status:'held',identityReview:{verified:false,candidates},finishSample:{racers:samples}};
 const held=audit(official,makulabo);
 assert.equal(held.identitySafe,false);
@@ -12,6 +12,8 @@ const artifactShapeCandidates=candidates.map(c=>({...c,sourceRacerId:null,matchM
 const artifactShape=audit(official,{...makulabo,identityReview:{verified:false,candidates:artifactShapeCandidates},finishSample:{racers:artifactShapeSamples}});
 assert.equal(artifactShape.countsConsistent,true);
 assert.equal(artifactShape.identitySafe,false);
+assert.equal(artifactShape.candidateSourceIdsVerified,false);
+assert(artifactShape.reasons.includes('independent_source_registration_ids_missing_or_mismatched'));
 assert(artifactShape.reasons.includes('six_source_verified_registration_id_matches_required'));
 assert.equal(artifactShape.rows[0].sourceRacerIdProvided,false);
 assert.equal(held.allExactly50,true);
@@ -20,6 +22,7 @@ assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=
 assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=>i===4?{...r,runs:50,finishCounts:[0,0,0,0,1,0]}:r)}}).rows[4].sampleValid,false);
 const authenticated=audit(official,{...makulabo,status:'ok',identityReview:{verified:true,candidates}});
 assert.equal(authenticated.identitySafe,true);
+assert.equal(audit(official,{...makulabo,status:'ok',identityReview:{verified:true,candidates:candidates.map((c,i)=>i===0?{...c,sourceRacerId:null}:c)}}).identitySafe,false);
 const abbreviated=candidates.map((c,i)=>i===5?{...c,manualReviewRequired:true}:c);
 const pending=audit(official,{...makulabo,status:'ok',identityReview:{verified:true,candidates:abbreviated}});
 assert.equal(pending.manualReviewOutstanding,true);
