@@ -20,4 +20,38 @@ assert.equal(good.racers[0].localWinRate,5.2);
 assert.equal(good.racers[0].motorTwoWinRate,44);
 assert.equal(extract(html.replace('4002','4001')).verified,false);
 assert.equal(extract(html.replace('5.20','不明')).verified,false);
+
+const officialHeader='<tr><th rowspan="3">枠</th><th colspan="3">ボートレーサー</th><th>全国</th><th>当地</th><th>モーター</th><th>ボート</th><th rowspan="3"></th><th colspan="14" rowspan="2">成績</th><th rowspan="3">早見</th></tr>'+
+ '<tr><th rowspan="2">写真</th><th rowspan="2">登録番号</th><th rowspan="2">平均ST</th>'+
+ '<th rowspan="2">勝率<br>2連率<br>3連率</th><th rowspan="2">勝率<br>2連率<br>3連率</th>'+
+ '<th rowspan="2">No<br>2連率<br>3連率</th><th rowspan="2">No<br>2連率<br>3連率</th></tr>'+
+ '<tr>'+Array.from({length:7},()=>'<th colspan="2">日別</th>').join('')+'</tr>';
+const officialRows=i=>{
+ const id=4000+i,profile='/owpc/pc/data/racersearch/profile?toban='+id;
+ const cells=[
+  '<td rowspan="4">'+i+'</td>',
+  '<td rowspan="4"><a href="'+profile+'"><img src="photo.jpg"></a></td>',
+  '<td rowspan="4"><a href="'+profile+'">選手'+i+'</a></td>',
+  '<td rowspan="4">0.13</td>',
+  '<td rowspan="4">6.50<br>42<br>55</td>',
+  '<td rowspan="4">5.20<br>36<br>49</td>',
+  '<td rowspan="4">15<br>44<br>53</td>',
+  '<td rowspan="4">12<br>39<br>45</td>',
+  '<td rowspan="4"></td>',
+  ...Array.from({length:14},()=>'<td>x</td>'),'<td rowspan="4">2R</td>'
+ ];
+ return '<tr>'+cells.join('')+'</tr>'+
+ Array.from({length:3},()=>'<tr>'+Array.from({length:14},()=>'<td>x</td>').join('')+'</tr>').join('');
+};
+const officialHtml='<table>'+officialHeader+Array.from({length:6},(_,i)=>officialRows(i+1)).join('')+'</table>';
+const officialResult=extract(officialHtml);
+assert.equal(officialResult.verified,true,JSON.stringify(officialResult));
+assert.equal(officialResult.racers.length,6);
+assert.equal(officialResult.racers[0].racerId,'4001');
+assert.equal(officialResult.racers[0].nationalWinRate,6.5);
+assert.equal(officialResult.racers[0].localWinRate,5.2);
+assert.equal(officialResult.racers[0].motorTwoWinRate,44);
+assert.equal(extract(officialHtml.replace('6.50<br>42<br>55','6.50<br>42')).verified,false);
+assert.equal(extract(officialHtml.replace('選手2','別名2')).verified,true);
+
 console.log('Grouped official six-racer extraction tests passed');
