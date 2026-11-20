@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {officialRacelistUrl} from '../boat-score-2-official.js';
 import {extractOfficialMetrics} from '../boat-score-2-metric-extractor.js';
+import {parseOfficialBoatRows} from '../boat-score-2-boat-mapping.js';
 import {buildResearchFeatureSnapshot} from '../boat-score-2-research-feature-snapshot.js';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
@@ -24,12 +25,21 @@ try {
   result={status:'invalid_official_response',httpStatus:response.status,receivedAt,officialHost};
  else {
   const parsed=extractOfficialMetrics(body);
+  const mapped=parseOfficialBoatRows(body);
+  const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,
+   boatMappingReason:mapped.reason??null,boatMappingVerified:mapped.verified===true,
+   verifiedBoatCount:mapped.verified?mapped.racers?.length??0:0,
+   tableCount:(body.match(/<table\\b/gi)||[]).length,
+   hasNationalLabel:body.includes('全国'),hasLocalLabel:body.includes('当地'),
+   hasMotorLabel:body.includes('モーター'),
+   // Structural indicators only: never store personal page contents or infer metrics.
+  };
   const snapshot=buildResearchFeatureSnapshot({date,venue,race,capturedAt:receivedAt,official:parsed.verified?parsed.racers:null});
-  result={...snapshot,requestedAt,receivedAt,sourceUrl:target.url,responseSha256:digest,
+  result={...snapshot,diagnostic,requestedAt,receivedAt,sourceUrl:target.url,responseSha256:digest,
    httpStatus:response.status,finalUrl:finalUrl.toString(),preRaceIndependentlyVerified:false};
  }
 }catch(error){result={status:'fetch_failed',error:String(error?.message||error),requestedAt};}
 fs.mkdirSync('prediction-captures',{recursive:true});
 const file='prediction-captures/research-official-'+date+'-'+venue+'-'+race+'.json';
 fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
-console.log(JSON.stringify({file,status:result.status,racers:result.racers?.length||0,eligibleForCalibration:false}));
+console.log(JSON.stringify({file,status:result.status,racers:result.racers?.length||0,diagnostic:result.diagnostic??null,eligibleForCalibration:false}));
