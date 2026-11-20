@@ -9,6 +9,7 @@ import {buildMakulaboReviewTemplate} from './build-makulabo-review-template.mjs'
 import {describeMakulaboFinishSample} from './describe-makulabo-finish-sample.mjs';
 import {identifyMakulaboSampleScope} from './identify-makulabo-sample-scope.mjs';
 import {summarizeMakulaboFinishComparison} from './summarize-makulabo-finish-comparison.mjs';
+import {compareOfficialAbilityAndFrameSample} from './compare-official-ability-and-frame-sample.mjs';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
 const race=Number(process.env.CAPTURE_RACE);
@@ -29,10 +30,12 @@ if(!fs.existsSync(officialPath)){
    result={status:'held',reason:'makulabo_public_html_unavailable',httpStatus:response.status,eligibleForCalibration:false};
   else {
    const extracted=extractMakulaboFinishTable(html);
+   const sample=describeMakulaboFinishSample(extracted);
+   const comparison=summarizeMakulaboFinishComparison(sample);
    result={...runSavedMakulaboResearch(snapshot,html),httpStatus:response.status,
     sourceUrl:url,observedAt:new Date().toISOString(),
-    finishSample:describeMakulaboFinishSample(extracted),
-    finishComparison:summarizeMakulaboFinishComparison(describeMakulaboFinishSample(extracted)),
+    finishSample:sample,finishComparison:comparison,
+    officialFrameComparison:compareOfficialAbilityAndFrameSample(snapshot,comparison),
     sampleScope:identifyMakulaboSampleScope(html),
     recent50WinRateVerified:false,preRaceIndependentlyVerified:false};
    if(result.reason==='abbreviated_name_requires_review'||result.reason==='official_identity_mismatch'){
