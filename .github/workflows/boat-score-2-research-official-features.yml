@@ -33,6 +33,7 @@ jobs:
           node scripts/test-identify-official-grouped-metric-columns.mjs
           node scripts/test-extract-grouped-official-six.mjs
           node scripts/test-select-research-official-metrics.mjs
+          node scripts/test-describe-official-table-structure.mjs
           node scripts/test-evaluate-captured-research-snapshot.mjs
           node scripts/test-compare-research-score-phases.mjs
           node scripts/test-audit-saved-research-race.mjs
