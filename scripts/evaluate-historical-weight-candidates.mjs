@@ -59,13 +59,13 @@ export function evaluateWeightCandidates(records,{minTrain=100,minHoldout=30}={}
    podiumHits,podiumTotal,podiumPrecision:podiumTotal?podiumHits/podiumTotal:0};
  };
  const ranked=candidates.map((w,i)=>({name:i===0?'baseline':'candidate_'+i,weights:Object.fromEntries(FEATURES.map((k,j)=>[k,w[j]])),train:metric(train,w),holdout:metric(holdout,w)}))
-  .sort((a,b)=>b.train.winRate-a.train.winRate||a.name.localeCompare(b.name));
+  .sort((a,b)=>b.train.podiumPrecision-a.train.podiumPrecision||b.train.topScorePodiumRate-a.train.topScorePodiumRate||b.train.winRate-a.train.winRate||a.name.localeCompare(b.name));
  const best=ranked[0],base=ranked.find(c=>c.name==='baseline');
- const proposed=best.name!=='baseline'&&best.train.winRate>base.train.winRate&&best.holdout.winRate>base.holdout.winRate&&
-  best.train.podiumPrecision>=base.train.podiumPrecision&&best.holdout.podiumPrecision>=base.holdout.podiumPrecision&&
+ const proposed=best.name!=='baseline'&&best.train.podiumPrecision>base.train.podiumPrecision&&best.holdout.podiumPrecision>base.holdout.podiumPrecision&&
+  best.train.winRate>=base.train.winRate&&best.holdout.winRate>=base.holdout.winRate&&
   best.train.topScorePodiumRate>=base.train.topScorePodiumRate&&best.holdout.topScorePodiumRate>=base.holdout.topScorePodiumRate&&
   validateResearchWeights(best.weights)?best:null;
- return {status:'research_comparison_only',proposedResearchWeights:proposed?.weights??null,proposalReason:proposed?'first_place_improved_and_podium_not_worse_on_train_and_holdout':'no_confirmed_out_of_sample_improvement_without_podium_regression',total:records.length,eligible:eligible.length,excluded:exclusions,trainRaces:train.length,holdoutRaces:holdout.length,candidates:ranked,
+ return {status:'research_comparison_only',proposedResearchWeights:proposed?.weights??null,proposalReason:proposed?'podium_precision_improved_without_win_rate_regression_on_train_and_holdout':'no_confirmed_out_of_sample_podium_improvement_without_win_rate_regression',total:records.length,eligible:eligible.length,excluded:exclusions,trainRaces:train.length,holdoutRaces:holdout.length,candidates:ranked,
   eligibleForDeployment:false,warning:'No automatic weight changes. Source verification flags require independent evidence, and holdout is evaluation only.'};
 }
 
