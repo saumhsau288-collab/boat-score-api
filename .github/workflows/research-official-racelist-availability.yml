@@ -43,6 +43,7 @@ on:
       - 'scripts/compare-research-ranking-baselines.mjs'
       - 'scripts/compare-research-paired-baselines.mjs'
       - 'scripts/audit-research-paired-race-differences.mjs'
+      - 'scripts/audit-research-winrate-improvements.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -130,6 +131,7 @@ jobs:
           node scripts/compare-research-ranking-baselines.mjs research-official-racelists
           node scripts/compare-research-paired-baselines.mjs research-official-racelists
           node scripts/audit-research-paired-race-differences.mjs research-official-racelists
+          node scripts/audit-research-winrate-improvements.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
