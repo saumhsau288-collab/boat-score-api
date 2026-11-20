@@ -8,4 +8,13 @@ const ok=parse({pages:[base]});assert.equal(ok.parsed,1);assert.deepEqual(ok.row
 assert.equal(parse({pages:[{...base,html:base.html.replace('8,230','')}]}).rows[0].reason,'trifecta_payout_mismatch');
 assert.equal(parse({pages:[{...base,race:4}]}).rows[0].reason,'race_identity_unconfirmed');
 assert.equal(parse({pages:[{...base,status:'fetch_failed',error:'timeout'}]}).rows[0].status,'not_saved');
+
+// Guard against falsely accepting a podium with duplicate finish ranks or boat identities.
+const duplicateRankHtml=base.html.replace('<td class="is-fs14">２</td>','<td class="is-fs14">１</td>');
+assert.equal(parse({pages:[{...base,html:duplicateRankHtml}]}).rows[0].reason,'podium_invalid');
+const duplicateBoatHtml=base.html.replace('<td class="is-fs14 is-fBold is-boatColor2">2</td>','<td class="is-fs14 is-fBold is-boatColor6">6</td>');
+assert.equal(parse({pages:[{...base,html:duplicateBoatHtml}]}).rows[0].reason,'podium_invalid');
+// Even a valid-looking podium must not pass when the official trifecta disagrees.
+const wrongPayoutOrder=base.html.replace('numberSet1_number is-type2','numberSet1_number is-type4').replace('is-type4">2</span>','is-type4">4</span>');
+assert.equal(parse({pages:[{...base,html:wrongPayoutOrder}]}).rows[0].reason,'trifecta_payout_mismatch');
 console.log('Saved official result HTML parsing tests passed');
