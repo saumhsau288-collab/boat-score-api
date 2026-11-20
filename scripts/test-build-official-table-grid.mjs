@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {buildOfficialTableGrid as grid} from './build-official-table-grid.mjs';
+const table='<table><tr><th rowspan="2">枠</th><th colspan="2">全国</th></tr><tr><th>勝率</th><th>2連率</th></tr><tr><td>1</td><td>6.50</td><td>40%</td></tr></table>';
+const result=grid(table);
+assert.equal(result.valid,true);
+assert.equal(result.columns,3);
+assert.equal(result.rowCount,3);
+assert.equal(result.rows[1][0],result.rows[0][0]);
+assert.equal(result.rows[0][1],result.rows[0][2]);
+assert.equal(result.rows[2][1].html,'6.50');
+assert.equal(grid('<table><tr><td colspan="0">x</td></tr></table>').valid,false);
+assert.equal(grid('<table><tr><td>1</td></tr><tr><td>2</td><td>3</td></tr></table>').valid,false);
+console.log('Official merged-cell table grid tests passed');
