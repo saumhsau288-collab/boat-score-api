@@ -41,6 +41,7 @@ on:
       - 'scripts/summarize-research-weight-review.mjs'
       - 'scripts/analyze-research-all-verified-racers.mjs'
       - 'scripts/compare-research-ranking-baselines.mjs'
+      - 'scripts/compare-research-paired-baselines.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -126,6 +127,7 @@ jobs:
           node scripts/summarize-research-weight-review.mjs research-official-racelists
           node scripts/analyze-research-all-verified-racers.mjs research-official-racelists
           node scripts/compare-research-ranking-baselines.mjs research-official-racelists
+          node scripts/compare-research-paired-baselines.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
