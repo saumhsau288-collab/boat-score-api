@@ -6,7 +6,9 @@ export function parseSavedOfficialResultPages(report){
  const rows=report.pages.map(p=>{
   const base={date:p.date,venue:p.venue,race:p.race,url:p.url,sha256:p.sha256??null,resultVerified:false,officialCutoffVerified:false};
   if(p.status!=='raw_html_saved'||typeof p.html!=='string')return {...base,status:'not_saved',reason:p.error??'No HTML'};
-  const h=p.html,u=new URL(p.url);
+  let u;
+  try { u=new URL(p.url); } catch { return {...base,status:'needs_review',reason:'invalid_result_url'}; }
+  const h=p.html;
   if(u.hostname!=='www.boatrace.jp'||u.pathname!=='/owpc/pc/race/raceresult'||
    u.searchParams.get('hd')!==String(p.date)||Number(u.searchParams.get('jcd'))!==Number(p.venue)||
    Number(u.searchParams.get('rno'))!==Number(p.race)||
