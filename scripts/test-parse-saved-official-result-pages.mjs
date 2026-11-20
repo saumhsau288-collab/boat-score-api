@@ -20,4 +20,9 @@ assert.equal(parse({pages:[{...base,html:wrongPayoutOrder}]}).rows[0].reason,'tr
 // A conflicting boat-color class and boat number must be rejected before scoring.
 const conflictingColorHtml=base.html.replace('is-boatColor2">2</td>','is-boatColor4">2</td>');
 assert.equal(parse({pages:[{...base,html:conflictingColorHtml}]}).rows[0].reason,'boat_color_mismatch');
+// A malformed URL in one saved page must not abort parsing the remaining races.
+const mixed=parse({pages:[{...base,url:'not-a-url'},base]});
+assert.equal(mixed.rows[0].reason,'invalid_result_url');
+assert.equal(mixed.rows[1].status,'parsed_needs_independent_review');
+assert.equal(mixed.parsed,1);
 console.log('Saved official result HTML parsing tests passed');
