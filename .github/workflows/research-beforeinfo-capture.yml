@@ -29,6 +29,7 @@ jobs:
         run: |
           node scripts/test-capture-official-beforeinfo-evidence.mjs
           node scripts/test-report-research-snapshot-readiness.mjs
+          node scripts/test-diagnose-official-beforeinfo-html.mjs
       - name: Capture source metadata only
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -36,6 +37,14 @@ jobs:
           CAPTURE_VENUE: ${{ inputs.venue }}
           CAPTURE_RACE: ${{ inputs.race }}
         run: node scripts/run-research-beforeinfo-capture.mjs
+      - name: Diagnose captured official HTML
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          for file in prediction-captures/research-beforeinfo-*.html; do
+            if [ -f "$file" ]; then
+              node scripts/diagnose-official-beforeinfo-html.mjs "$file" > "${file%.html}-diagnostic.json"
+            fi
+          done
       - name: Preserve evidence even on failed fetch
         if: always()
         uses: actions/upload-artifact@v4
@@ -44,5 +53,6 @@ jobs:
           path: |
             prediction-captures/research-beforeinfo-*.json
             prediction-captures/research-beforeinfo-*.html
+            prediction-captures/research-beforeinfo-*-diagnostic.json
           if-no-files-found: warn
           retention-days: 30
