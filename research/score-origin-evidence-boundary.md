@@ -63,3 +63,11 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - These are predictor-reported missing-input labels, not an independently verified root-cause diagnosis of upstream sources or data retrieval. The saved outputs must not be described as using any of these five inputs.
 - Together with all 14 `base_stats_only` and all adjustment flags false, this narrows the scope of valid retrospective analysis to archived base-stat scores. It does not demonstrate failure of all app modes or times.
 - Next investigation should distinguish whether the API failed to fetch data, failed to parse or validate six-racer data, or intentionally excluded unavailable/late inputs; do not fill missing values with invented measurements.
+
+## Archived beforeinfo verification reasons (14 ready responses)
+
+- Research CI run 44697939142 completed successfully. All 14 responses include `startVerification` and `exhibitionVerification` fields.
+- `startVerification` was `six_verified_start_rows_required` in 14/14: the app did not confirm all six start rows for adjustment.
+- `exhibitionVerification` was `beforeinfo_unverified` in 13/14 and `beforeinfo_http_403` in 1/14.
+- HTTP 403 is a response reported by the app for one race; the remaining 13 `beforeinfo_unverified` labels do not identify whether transport, parsing, timing, or missing official data was the cause.
+- These flags are archived application diagnostics, not independently authenticated root-cause analysis. No evidence that adjustments were applied to these 14 scores.
