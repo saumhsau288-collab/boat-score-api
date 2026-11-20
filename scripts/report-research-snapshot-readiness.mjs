@@ -8,7 +8,17 @@ export function reportResearchSnapshotReadiness(snapshot){
   Array.isArray(snapshot.racers)&&snapshot.racers.every(r=>r.sourceVerified===true)&&
   validateOfficialMetrics(snapshot.racers).verified;
  const boats=verified?snapshot.racers.map(r=>r.boat).sort((a,b)=>a-b):[];
- const recent50Verified=verified&&snapshot.racers.every(r=>r.recent50Verified===true);
+ // A per-racer flag alone is not enough to run the morning scoring pipeline.
+ // Require six distinct source-verified numeric records, matched by registration ID.
+ const recentRecords=Array.isArray(snapshot?.verifiedRecent50Records)?snapshot.verifiedRecent50Records:[];
+ const ids=verified?snapshot.racers.map(r=>String(r.racerId)):[];
+ const recentById=new Map(recentRecords.map(r=>[String(r?.racerId),r]));
+ const recent50Verified=verified&&recentRecords.length===6&&recentById.size===6&&
+  ids.every(id=>{
+   const r=recentById.get(id);
+   return r?.verified===true&&r?.sourceVerified===true&&
+    typeof r.winRate==='number'&&Number.isFinite(r.winRate)&&r.winRate>=0&&r.winRate<=100;
+  });
  const coursesVerified=verified&&snapshot.racers.every(r=>r.entryCourseVerified===true);
  const missing=[];
  if(!verified)missing.push('six_verified_official_racers');
