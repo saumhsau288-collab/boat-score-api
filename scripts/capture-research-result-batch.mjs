@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import {captureOfficialResultEvidence} from './capture-official-result-evidence.mjs';
 import {parseOfficialResultFinishRows} from './parse-official-result-finish-rows.mjs';
+import {inspectOfficialResultMarkup} from './inspect-official-result-markup.mjs';
 import {verifyOfficialResultEvidencePair} from './verify-official-result-evidence-pair.mjs';
 export async function captureResultBatch(selections,{fetcher=fetch,now=()=>new Date().toISOString(),outputDir='prediction-captures'}={}){
  if(!Array.isArray(selections)||selections.length<1||selections.length>24)throw Error('batch_size_must_be_1_to_24');
@@ -21,6 +22,10 @@ export async function captureResultBatch(selections,{fetcher=fetch,now=()=>new D
    const pair=verifyOfficialResultEvidencePair(metadata,rawHtml);
    integrity=pair.status;
    const parsed=parseOfficialResultFinishRows(rawHtml);
+   if(!parsed.verified){
+    const markup=inspectOfficialResultMarkup(rawHtml);
+    fs.writeFileSync(outputDir+'/'+name+'-markup.json',JSON.stringify(markup,null,2)+'\n');
+   }
    parserStatus=parsed.reason??'six_rows_structurally_parsed';
    matchedRows=parsed.verified?6:0;
    fs.writeFileSync(outputDir+'/'+name+'-structure.json',JSON.stringify({...parsed,independentlyAuthenticated:false,eligibleForCalibration:false},null,2)+'\n');
