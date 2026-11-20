@@ -326,6 +326,42 @@ jobs:
           retention-days: 30
 
 
+  multi-venue-active-venues-research:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture official historical racelists from seven held venues
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '04,13,14,15,17,21,22'
+          CAPTURE_RACES: '1,2,3'
+        run: node scripts/capture-historical-racelist-batch.mjs
+      - name: Capture official results for same historical races
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '04,13,14,15,17,21,22'
+          CAPTURE_RACES: '1,2,3'
+        run: node scripts/capture-research-result-batch.mjs
+      - name: Match racer IDs and compare first and second candidates by venue
+        if: always()
+        run: |
+          node scripts/join-historical-racelist-result-identities.mjs
+          node scripts/run-historical-first-second-diagnostic.mjs
+          node scripts/run-three-feature-historical-baseline.mjs
+      - name: Save source evidence and venue-level diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-venue-active-research-${{ github.run_id }}
+          path: prediction-captures/
+          if-no-files-found: warn
+          retention-days: 30
+
   multi-venue-historical-research:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
     runs-on: ubuntu-latest
