@@ -26,7 +26,7 @@ assert.equal(duplicated.compared,0);
 assert.equal(duplicated.held,2);
 assert.equal(duplicated.mainHitRate,null);
 assert.equal(duplicated.holdReasons.duplicate_saved_capture_race,2);
-for(const spoofed of ['https://boatrace.jp.evil.example/result','https://example.com/result','http://www.boatrace.jp/result','https://boatrace.jp@evil.example/result']) {
+for(const spoofed of ['https://boatrace.jp.evil.example/result','https://example.com/result','http://www.boatrace.jp/result','https://boatrace.jp@evil.example/result','https://fake.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&hd=20261118','https://boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&hd=20261118']) {
  const report=compare(capture,[{...result,sourceUrl:spoofed}]);
  assert.equal(report.compared,0,'Spoofed or non-official origin must be held');
  assert.equal(report.holdReasons.missing_official_result_source,1);
