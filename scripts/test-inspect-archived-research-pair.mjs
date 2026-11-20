@@ -13,4 +13,5 @@ assert.equal(out.missing.includes('authenticated_pre_cutoff_score_snapshot'),tru
 assert.equal(out.eligibleForHistoricalAccuracy,false);
 assert.equal(out.eligibleForWeightTuning,false);
 assert.equal(inspect({},{}).officialSixVerified,false);
+assert.equal(inspect({...official,racers:official.racers.map((r,i)=>i===0?{...r,racerId:'bad'}:r)},makulabo).officialSixVerified,false);
 console.log('Archived evidence diagnostic synthetic tests passed');
