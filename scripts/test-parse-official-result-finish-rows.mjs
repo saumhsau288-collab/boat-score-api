@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {parseOfficialResultFinishRows as parse} from './parse-official-result-finish-rows.mjs';
+const row=(finish,boat,id)=>'<tr><td>'+finish+'</td><td>'+boat+'</td><td><a href="/owpc/pc/data/racersearch/profile?toban='+id+'">racer</a></td></tr>';
+const table=rows=>'<table><tbody>'+rows.join('')+'</tbody></table>';
+const good=table(Array.from({length:6},(_,i)=>row(i+1,6-i,4001+i)));
+assert.equal(parse(good).verified,true);
+assert.deepEqual(parse(good).finishByBoat.map(v=>v.finish),[6,5,4,3,2,1]);
+assert.equal(parse(good+good).reason,'ambiguous_result_tables');
+assert.equal(parse(good.replace('toban=4001','toban=4002')).verified,false);
+assert.equal(parse(good.replace('<td>6</td><td>1</td>','<td>5</td><td>1</td>')).verified,false);
+assert.equal(parse('<table><tr><td>1</td></tr></table>').verified,false);
+console.log('Official result six-boat finish parser tests passed');
