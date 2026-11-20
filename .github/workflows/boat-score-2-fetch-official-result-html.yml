@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/boat-score-2-fetch-official-result-html.yml'
+      - 'scripts/parse-saved-official-result-pages.mjs'
+      - 'scripts/test-parse-saved-official-result-pages.mjs'
+      - 'scripts/fetch-official-result-pages-research.mjs'
+      - 'scripts/test-fetch-official-result-pages-research.mjs'
   workflow_dispatch:
     inputs:
       capture_run_id:
