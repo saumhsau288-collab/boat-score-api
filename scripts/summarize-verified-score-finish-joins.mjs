@@ -7,15 +7,19 @@ import {verifyHistoricalRaceJoin} from './verify-historical-race-join.mjs';
 export function summarizeVerifiedScoreFinishJoins(records){
  if(!Array.isArray(records))throw new TypeError('records_must_be_array');
  const races=[];const excludedReasons={};const seen=new Set();
+ const countExcluded=reason=>{excludedReasons[reason]=(excludedReasons[reason]??0)+1;};
  for(const record of records){
   const gate=verifyHistoricalRaceJoin(record);
   const key=record?.expected?.date+'|'+record?.expected?.venue+'|'+record?.expected?.race;
   if(gate.eligible&&seen.has(key)){
-   excludedReasons.duplicate_race_identity=(excludedReasons.duplicate_race_identity??0)+1;
+   countExcluded('duplicate_race_identity');
    continue;
   }
   if(gate.eligible)seen.add(key);
-  if(!gate.eligible){excludedReasons[gate.reason]=(excludedReasons[gate.reason]??0)+1;continue;}
+  if(!gate.eligible){countExcluded(gate.reason);continue;}
+  if(races.length>0&&races.some(r=>r.date===record.expected.date&&r.venue===record.expected.venue&&r.race===record.expected.race)){
+   countExcluded('duplicate_race_identity');continue;
+  }
   const ranked=[...record.scoreInputsByBoat].sort((a,b)=>b.score-a.score||a.boat-b.boat);
   // A tied highest score has no uniquely ranked first choice; do not count it as a hit.
   const topScoreTied=ranked[0].score===ranked[1].score;
