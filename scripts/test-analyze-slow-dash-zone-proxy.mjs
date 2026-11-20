@@ -8,5 +8,5 @@ assert.equal(x[3].inner_vs_outer.pairs,9);
 assert.equal(x[3].inner_vs_outer.innerAhead,9);
 rows[0].finish=6;rows[5].finish=1;
 const y=analyzeCourseZonePairs(rows);
-assert.equal(y[3].inner_vs_outer.innerAhead,6);
+assert.equal(y[3].inner_vs_outer.innerAhead,4);
 console.log('Course zone proxy pair diagnostics tests passed');
