@@ -37,6 +37,7 @@ on:
       - 'scripts/retry-research-unpublished-results.mjs'
       - 'scripts/analyze-research-score-rank-finishes.mjs'
       - 'scripts/audit-research-severe-finish-disagreements.mjs'
+      - 'scripts/analyze-research-severe-racer-attributes.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -118,6 +119,7 @@ jobs:
           node scripts/compare-research-scores-official-finishes.mjs research-official-racelists
           node scripts/analyze-research-score-rank-finishes.mjs research-official-racelists
           node scripts/audit-research-severe-finish-disagreements.mjs research-official-racelists
+          node scripts/analyze-research-severe-racer-attributes.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
