@@ -79,3 +79,10 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - The handler can therefore fail at HTTP fetch, table recognition, strict row parsing, or six-boat validation; the archived `beforeinfo_unverified` label does not distinguish these. `beforeinfo_http_403` corresponds to a non-OK response in this candidate code, but its exact deployed provenance remains unverified.
 - Source-only inspection does not show that any official HTML was successfully fetched for the 13 `beforeinfo_unverified` races. No post-hoc official HTML should be presented as original pre-race input.
 - Safe next diagnostic: collect read-only per-stage response status, parser candidate counts, and six-boat verification with source/capture timestamps in a separately archived research probe; avoid exposing personally identifying or secret data, and do not change scoring or production.
+
+## Timing of archived `mode=beforeinfo` capture
+
+- Research CI run 44698264842 succeeded: 14 ready records, capture started at 08:42 JST; 10 ready responses were received during 08:00–08:59 JST and 4 during 09:00–09:59 JST.
+- `scheduledTrigger:true` but `scheduledMorningWindow:false` under the collector's defined 07:45–08:30 JST window. A scheduled workflow can start later than its configured nominal schedule.
+- All 14 reported `six_verified_start_rows_required`; 13 `beforeinfo_unverified` and 1 `beforeinfo_http_403`. Morning capture time is consistent with some races not yet having published exhibition/start data, but this is a hypothesis only: official publication and deadline timestamps were not authenticated.
+- This capture cannot validate a separate near-deadline (10 minutes before) refresh path. Do not conclude that the near-deadline code fails from these morning observations.
