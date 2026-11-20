@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {evaluateWeightCandidates as evaluate} from './evaluate-historical-weight-candidates.mjs';
+import {evaluateRacer,validateResearchWeights,SCORE_WEIGHTS} from '../boat-score-2-scoring.js';
 const empty=evaluate([]);
 assert.equal(empty.status,'insufficient_verified_history');
 assert.equal(empty.eligibleForDeployment,false);
@@ -28,4 +29,11 @@ assert.equal(report.trainRaces,48);
 assert.equal(report.holdoutRaces,12);
 assert.equal(report.candidates.length,6);
 assert.equal(report.eligibleForDeployment,false);
+assert.equal(report.proposedResearchWeights,null);
+assert.equal(validateResearchWeights(SCORE_WEIGHTS),true);
+assert.equal(validateResearchWeights({...SCORE_WEIGHTS,exhibitionScore:-1}),false);
+const sample=featureInputsByBoat[0];
+assert.equal(evaluateRacer(sample).status,'evaluated');
+assert.equal(evaluateRacer(sample,{...SCORE_WEIGHTS,nationalWinRate:46}).status,'invalid_weights');
+assert.equal(evaluateRacer({...sample,localWinRate:0}).score,evaluateRacer({...sample,localWinRate:sample.nationalWinRate}).score);
 console.log('Historical weight candidate evidence gate tests passed');
