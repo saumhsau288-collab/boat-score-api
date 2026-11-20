@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {identifyMakulaboSampleScope as identify} from './identify-makulabo-sample-scope.mjs';
+const html='<h2>枠番別ヒートマップ</h2><p>直近50走分を集計（その枠での走りが少ない選手はある分だけ・全場）</p>';
+const result=identify(html);
+assert.equal(result.verified,true);
+assert.equal(result.scope,'same_labelled_frame_recent_up_to_50_all_venues');
+assert.equal(result.fewerThan50Allowed,true);
+assert.equal(result.independentPreRaceAuthentication,false);
+assert.equal(identify('<p>直近50走分</p>').verified,false);
+assert.equal(identify('<script>直近50走分を集計（その枠での走りが少ない選手はある分だけ・全場）</script>').verified,false);
+assert.equal(identify(null).verified,false);
+console.log('Makulabo published sample-scope diagnostics tests passed');
