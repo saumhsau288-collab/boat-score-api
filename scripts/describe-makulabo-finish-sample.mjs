@@ -22,7 +22,11 @@ export function describeMakulaboFinishSample(extracted){
   return {boat:r.boat,sourceName:r.name,runs:r.runs,
     finishCountsValid:valid,finishCounts:valid?[...counts]:null,
     firstPlaceRate:valid?Math.round(10000*counts[0]/r.runs)/100:null,
+    top2Rate:valid?Math.round(10000*(counts[0]+counts[1])/r.runs)/100:null,
+    top3Rate:valid?Math.round(10000*(counts[0]+counts[1]+counts[2])/r.runs)/100:null,
     firstPlaceWilson95:valid?wilson95(counts[0],r.runs):null,
+    top2Wilson95:valid?wilson95(counts[0]+counts[1],r.runs):null,
+    top3Wilson95:valid?wilson95(counts[0]+counts[1]+counts[2],r.runs):null,
     exactly50Runs:valid&&r.runs===50,
     sampleSizeWithin50:valid&&r.runs<=50,
     sampleSizeWarning:!valid?'invalid_counts':r.runs<10?'very_small_sample':r.runs<30?'small_sample':null};
