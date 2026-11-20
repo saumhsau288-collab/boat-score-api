@@ -89,7 +89,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p research-input
-          gh run download 44682109013 --repo "$GITHUB_REPOSITORY" --name boat-score-2-ready-race-result-targets-44682109013 --dir research-input
+          run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow boat-score-2-capture-inventory.yml --status success --limit 10 --json databaseId --jq '.[0].databaseId')
+          test -n "$run_id"
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "boat-score-2-ready-race-result-targets-$run_id" --dir research-input
       - name: Fetch first three official HTML pages as unverified research
         run: |
           mkdir -p research-results
