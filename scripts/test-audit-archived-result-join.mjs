@@ -13,6 +13,8 @@ assert.equal(result.status,'structural_match_only');
 assert.equal(result.matchedBoats,6);
 assert.equal(result.predictionTimestampStructureValid,true);
 assert.equal(result.eligibleForWeightTuning,false);
+assert.equal(result.historicalGateEligible,false);
+assert.match(result.historicalGateReason,/official_cutoff_unverified|schedule_/);
 assert.equal(audit(receipt,html,{...prediction,expected:{...prediction.expected,race:2}}).reason,'race_identity_mismatch');
 assert.equal(audit(receipt,html,{...prediction,scoreInputsByBoat:prediction.scoreInputsByBoat.map((r,i)=>i===0?{...r,racerId:'4999'}:r)}).reason,'racer_identity_mismatch');
 console.log('Archived result join audit tests passed');
