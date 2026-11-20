@@ -33,6 +33,7 @@ jobs:
           node scripts/test-compare-research-score-phases.mjs
           node scripts/test-audit-saved-research-race.mjs
           node scripts/test-map-verified-finish-to-entry-course.mjs
+          node scripts/test-compare-research-scores-to-finish.mjs
           node --check scripts/capture-official-daily-venue-candidates.mjs
           node scripts/test-classify-daily-venue-evidence.mjs
       - name: Probe official race schedule without claiming verification
