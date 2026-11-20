@@ -11,6 +11,8 @@ on:
       - 'scripts/diagnose-research-racelist-labels.mjs'
       - 'scripts/diagnose-research-racelist-tables.mjs'
       - 'scripts/preview-research-racelist-rows.mjs'
+      - 'scripts/extract-research-official-racers.mjs'
+      - 'scripts/audit-research-official-racers.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -43,6 +45,8 @@ jobs:
         run: node scripts/diagnose-research-racelist-tables.mjs research-official-racelists
       - name: Preview racer candidate row cell positions
         run: node scripts/preview-research-racelist-rows.mjs research-official-racelists
+      - name: Extract official six-racer records (post-hoc only)
+        run: node scripts/audit-research-official-racers.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
