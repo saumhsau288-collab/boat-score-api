@@ -50,6 +50,7 @@ on:
       - 'scripts/audit-research-local-zero-saved-agreement.mjs'
       - 'scripts/audit-research-local-zero-official-finishes.mjs'
       - 'scripts/audit-research-saved-response-provenance.mjs'
+      - 'scripts/audit-research-saved-missing-inputs.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -126,6 +127,7 @@ jobs:
           node scripts/join-research-saved-predictions.mjs research-official-racelists "$CAPTURE"
           node scripts/audit-research-saved-score-schema.mjs "$CAPTURE" research-official-racelists
           node scripts/audit-research-saved-response-provenance.mjs "$CAPTURE" research-official-racelists
+          node scripts/audit-research-saved-missing-inputs.mjs "$CAPTURE" research-official-racelists
           node scripts/compare-research-saved-scores.mjs research-official-racelists "$CAPTURE"
           node scripts/audit-research-score-disagreements.mjs research-official-racelists
           node scripts/audit-research-disagreement-boat-position.mjs research-official-racelists
