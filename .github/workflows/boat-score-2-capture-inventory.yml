@@ -1,6 +1,12 @@
 name: Inventory stored Boat Score 2 morning captures
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/inventory_morning_capture_artifacts.py'
+      - 'scripts/test_inventory_morning_capture_artifacts.py'
+      - '.github/workflows/boat-score-2-capture-inventory.yml'
   pull_request:
     paths:
       - 'scripts/inventory_morning_capture_artifacts.py'
@@ -22,7 +28,7 @@ jobs:
           python3 -m py_compile scripts/inventory_morning_capture_artifacts.py
           python3 -m unittest discover -s scripts -p 'test_inventory_morning_capture_artifacts.py' -v
       - name: Count retained morning raw artifacts
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/inventory_morning_capture_artifacts.py
