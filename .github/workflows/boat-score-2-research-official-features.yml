@@ -34,6 +34,9 @@ jobs:
           node scripts/test-extract-grouped-official-six.mjs
           node scripts/test-select-research-official-metrics.mjs
           node scripts/test-describe-official-table-structure.mjs
+          node scripts/test-run-saved-makulabo-research.mjs
+          node scripts/test-evaluate-verified-makulabo-research.mjs
+          node --check scripts/capture-research-makulabo-join.mjs
           node scripts/test-report-research-snapshot-readiness.mjs
           node scripts/test-evaluate-captured-research-snapshot.mjs
           node scripts/test-compare-research-score-phases.mjs
@@ -65,6 +68,14 @@ jobs:
           else
             echo 'No official snapshot was saved; readiness unavailable.'
           fi
+      - name: Research-only public Makulabo same-race join
+        if: always()
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: node scripts/capture-research-makulabo-join.mjs
       - name: Save research snapshot, even when incomplete
         if: always()
         uses: actions/upload-artifact@v4
@@ -72,6 +83,7 @@ jobs:
           name: research-official-features-${{ github.run_id }}
           path: |
             prediction-captures/research-official-*.json
+            prediction-captures/research-makulabo-*.json
             prediction-captures/daily-venue-candidates-*.json
           retention-days: 90
           if-no-files-found: warn
