@@ -286,3 +286,42 @@ jobs:
             prediction-captures/historical-first-second-diagnostic.json
           if-no-files-found: warn
           retention-days: 30
+
+  historical-replay-from-archived-evidence:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download previously verified source-capture artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          gh run download 44817586878 --repo "${{ github.repository }}" --name "research-historical-racelists-44817586878" --dir prediction-captures
+          gh run download 44816328162 --repo "${{ github.repository }}" --name "research-result-source-44816328162" --dir prediction-captures
+      - name: Verify racer IDs and compute first/second diagnostics
+        run: |
+          node scripts/join-historical-racelist-result-identities.mjs
+          node scripts/run-three-feature-historical-baseline.mjs
+          node scripts/run-historical-first-second-diagnostic.mjs
+          node scripts/run-historical-first-place-miss-diagnostic.mjs
+      - name: Save race-by-race validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-first-second-replay-${{ github.run_id }}
+          path: |
+            prediction-captures/historical-racelist-result-join.json
+            prediction-captures/historical-three-feature-baseline.json
+            prediction-captures/historical-first-second-diagnostic.json
+            prediction-captures/historical-first-place-misses.json
+          if-no-files-found: warn
+          retention-days: 30
+
