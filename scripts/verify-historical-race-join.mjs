@@ -18,7 +18,10 @@ export function verifyHistoricalRaceJoin({expected, source, schedule, scoreInput
   if (!Number.isFinite(receivedAt) || receivedAt !== source.sourceCapturedAtEpochMs) return fail('capture_timestamp_unverified');
   if (receivedAt >= official.cutoffEpochMs) return fail('capture_not_before_cutoff');
   if (!Array.isArray(scoreInputsByBoat) || scoreInputsByBoat.length !== 6 ||
-      scoreInputsByBoat.some((v,i) => !v || v.boat !== i+1 || v.verified !== true))
+      scoreInputsByBoat.some((v,i) => !v || v.boat !== i+1 || v.verified !== true ||
+        typeof v.score !== 'number' || !Number.isFinite(v.score) ||
+        !/^\d{4}$/.test(String(v.racerId ?? ''))) ||
+      new Set(scoreInputsByBoat.map(v=>String(v.racerId))).size !== 6)
     return fail('six_boat_inputs_unverified');
   if (!Array.isArray(finishByBoat) || finishByBoat.length !== 6 ||
       finishByBoat.some((v,i) => !v || v.boat !== i+1 || !Number.isInteger(v.finish) || v.finish < 1 || v.finish > 6) ||
