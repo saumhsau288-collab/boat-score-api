@@ -24,7 +24,9 @@ const complete=report({...snapshot,racers:racers.map(r=>({...r,recent50Verified:
 assert.equal(complete.readyForResearchMorningScoring,false);
 const verifiedRecent50Records=racers.map(r=>({racerId:r.racerId,winRate:50,verified:true,sourceVerified:true}));
 const fullySourced=report({...snapshot,verifiedRecent50Records});
-assert.equal(fullySourced.readyForResearchMorningScoring,true);
+assert.equal(fullySourced.readyForResearchMorningScoring,false);
+assert(fullySourced.missing.includes('independent_pre_race_authentication'));
+assert.equal(report({...snapshot,verifiedRecent50Records,preRaceIndependentlyVerified:true}).readyForResearchMorningScoring,true);
 assert.equal(fullySourced.readyForResearchPrestartScoring,false);
 const prestartRacers=racers.map((r,i)=>({...r,entryCourse:i+1,entryCourseVerified:true,
  startTiming:0.12,startTimingVerified:true,exhibitionTime:6.8,exhibitionTimeVerified:true}));
