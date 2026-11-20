@@ -139,6 +139,8 @@ jobs:
           node scripts/test-replay-historical-race-with-current-scoring.mjs
           node --check scripts/capture-historical-racelist-batch.mjs
           node scripts/test-join-historical-racelist-result-identities.mjs
+          node scripts/test-evaluate-three-feature-historical-baseline.mjs
+          node --check scripts/run-three-feature-historical-baseline.mjs
           node scripts/test-evaluate-venue-specific-weights.mjs
           node scripts/test-summarize-venue-course-tendencies.mjs
           node scripts/test-summarize-venue-racer-podiums.mjs
@@ -251,6 +253,9 @@ jobs:
       - name: Audit historical racer identities against finish rows
         if: always()
         run: node scripts/join-historical-racelist-result-identities.mjs
+      - name: Compare historical official-metric partial rankings to actual finishes
+        if: always()
+        run: node scripts/run-three-feature-historical-baseline.mjs
       - name: Upload historical racelist source and extraction diagnostics
         if: always()
         uses: actions/upload-artifact@v4
