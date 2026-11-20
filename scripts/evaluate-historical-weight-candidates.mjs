@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import {pathToFileURL} from 'node:url';
+import {resolve} from 'node:path';
 // Research-only chronological out-of-sample evaluation of candidate weights.
 // Historical inputs must be independently authenticated before using this function.
 import {verifyHistoricalRaceJoin} from './verify-historical-race-join.mjs';
@@ -45,4 +48,14 @@ export function evaluateWeightCandidates(records,{minTrain=100,minHoldout=30}={}
   .sort((a,b)=>b.train.winRate-a.train.winRate||a.name.localeCompare(b.name));
  return {status:'research_comparison_only',total:records.length,eligible:eligible.length,excluded:exclusions,trainRaces:train.length,holdoutRaces:holdout.length,candidates:ranked,
   eligibleForDeployment:false,warning:'No automatic weight changes. Source verification flags require independent evidence, and holdout is evaluation only.'};
+}
+
+if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
+ const input=process.argv[2];
+ if(!input)throw Error('Usage: node scripts/evaluate-historical-weight-candidates.mjs verified-historical-records.json [report.json]');
+ const report=evaluateWeightCandidates(JSON.parse(fs.readFileSync(input,'utf8')));
+ const output=JSON.stringify(report,null,2)+'\n';
+ if(process.argv[3])fs.writeFileSync(process.argv[3],output);
+ console.log(output);
+ if(report.status!=='research_comparison_only')process.exitCode=2;
 }
