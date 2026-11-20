@@ -15,12 +15,14 @@ export function describeMakulaboFinishSample(extracted){
     finishCountsValid:valid,finishCounts:valid?[...counts]:null,
     firstPlaceRate:valid?Math.round(10000*counts[0]/r.runs)/100:null,
     exactly50Runs:valid&&r.runs===50,
-    sampleSizeWithin50:valid&&r.runs<=50};
+    sampleSizeWithin50:valid&&r.runs<=50,
+    sampleSizeWarning:!valid?'invalid_counts':r.runs<10?'very_small_sample':r.runs<30?'small_sample':null};
  });
  return {status:'finish_sample_diagnostic',racers,
   allCountsValid:racers.every(r=>r.finishCountsValid),
   allExactly50Runs:racers.every(r=>r.exactly50Runs),
   allSampleSizesWithin50:racers.every(r=>r.sampleSizeWithin50),
+  lowSampleBoats:racers.filter(r=>r.sampleSizeWarning==='very_small_sample'||r.sampleSizeWarning==='small_sample').map(r=>r.boat),
   identityVerified:false,morningScoreApplied:false,eligibleForCalibration:false,
-  note:'Finish-table sample sizes and counts do not prove a recent-50 sample, a course-specific rate, or a verified racer identity.'};
+  note:'Finish counts are descriptive only; the sample scope, racer identity and pre-race timing require separate evidence. Rates from small samples are unstable.'};
 }
