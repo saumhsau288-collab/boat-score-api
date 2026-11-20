@@ -149,7 +149,9 @@ class InventoryTests(unittest.TestCase):
                 {'httpStatus': 200, 'response': {'ready': False}},
                 {'httpStatus': 503, 'response': None}]
         result = summarize_capture({'authenticatedBeforeRace': False, 'records': rows})
-        self.assertEqual(result, {'captured': 3, 'http200': 2, 'ready': 1, 'usableSixPlusSix': 1})
+        self.assertEqual(result, {'captured': 3, 'http200': 2, 'ready': 1, 'usableSixPlusSix': 1,
+                                  'readyWithoutSixBoatInputs': 1,
+                                  'readyWithoutAuthenticatedPreRaceEvidence': 1})
 
     def test_rejects_malformed_raw_capture_rows(self):
         payload = {'authenticatedBeforeRace': False, 'records': [None]}
