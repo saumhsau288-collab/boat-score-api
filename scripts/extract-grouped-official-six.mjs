@@ -19,10 +19,12 @@ export function extractGroupedOfficialSix(html){
  const rowDiagnostics={boatRows:0,linkedRows:0,numericMetricRows:0};
  for(const row of grid.rows){
   if(row.every(c=>c.tag==='th'))continue;
-  const boats=row.slice(0,1).filter(c=>c.originRow===grid.rows.indexOf(row)&&/^[1-6]$/.test(clean(c.html)));
-  // Never infer the boat from row order or from an arbitrary numeric statistic.
+  const boats=row.slice(0,1).filter(c=>c.originRow===grid.rows.indexOf(row)&&/^[1-6]$/.test(clean(c.html).normalize('NFKC')));
+  // Accept explicit full-width boat digits, but never infer a boat from row order.
   if(boats.length!==1)continue;
-  const boat=number(boats[0].html);
+  const boat=Number(clean(boats[0].html).normalize('NFKC'));
+  const cellClassMatch=boats[0].html.match(/is-boatColor([1-6])/i);
+  if(cellClassMatch&&Number(cellClassMatch[1])!==boat)continue;
   rowDiagnostics.boatRows++;
   const links=[...new Set(row.flatMap(c=>[...c.html.matchAll(/<a\b[^>]*href=["']([^"']*racersearch\/profile\?[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi)].map(m=>m[0])))];
   const profiles=links.map(link=>{
