@@ -164,3 +164,36 @@ jobs:
           path: archived-evidence/research-evidence-readiness.json
           if-no-files-found: warn
           retention-days: 30
+
+  research-result-source-diagnostic:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Attempt real archived official result capture
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUE: '18'
+          CAPTURE_RACE: '1'
+        run: node scripts/run-research-official-result-capture.mjs
+      - name: Validate captured source integrity
+        continue-on-error: true
+        run: |
+          for file in prediction-captures/research-result-*.html; do
+            if [ -f "$file" ]; then
+              node scripts/verify-official-result-evidence-pair.mjs "${file%.html}.json" "$file"
+            fi
+          done
+      - name: Upload real result source diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-result-source-${{ github.run_id }}
+          path: prediction-captures/research-result-*
+          if-no-files-found: warn
+          retention-days: 30
