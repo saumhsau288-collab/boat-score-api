@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {quarantineResearchAnomalousSchedule as quarantine} from './quarantine-research-anomalous-schedule.mjs';
+const make=times=>({status:'daily_candidates_not_authenticated',candidates:times.map((time,i)=>({race:i+1,cutoffCandidateJst:time,refreshAuthorized:false}))});
+const unusual=make(['10:45','11:12','11:39','14:11','14:13','14:14','14:16','14:17','14:23','14:29','14:35','14:46']);
+const result=quarantine(unusual);
+assert.equal(result.status,'schedule_quarantined');
+assert.equal(result.eligibleCandidates.length,0);
+assert.equal(result.quarantinedCandidates.length,12);
+assert.equal(result.refreshAuthorized,false);
+const normal=make(Array.from({length:12},(_,i)=>String(10+Math.floor((45+i*27)/60)).padStart(2,'0')+':'+String((45+i*27)%60).padStart(2,'0')));
+const plausible=quarantine(normal);
+assert.equal(plausible.status,'schedule_plausible_still_unverified');
+assert.equal(plausible.eligibleCandidates.length,12);
+assert.equal(plausible.refreshAuthorized,false);
+assert.equal(quarantine(null).status,'invalid_schedule');
+console.log('Research anomalous cutoff quarantine tests passed');
