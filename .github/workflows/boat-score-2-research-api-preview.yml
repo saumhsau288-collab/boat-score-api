@@ -29,6 +29,7 @@ jobs:
           node --experimental-default-type=module boat-score-2-adapter.test.mjs
           node --experimental-default-type=module boat-score-2-morning.test.mjs
           node --experimental-default-type=module boat-score-2-morning-pipeline.test.mjs
+          node --experimental-default-type=module boat-score-2-official.test.mjs
       - name: Require Cloudflare credentials
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -80,6 +81,13 @@ jobs:
                 const probeData=await probe.json();
                 if(probe.status!==422||probeData.status!=='insufficient_data'||probeData.liveData!==false)
                   throw Error('Deployed source-evaluation API contract mismatch: '+probe.status+' '+JSON.stringify(probeData).slice(0,250));
+                const invalidOfficial=await fetch(process.env.RESEARCH_PREVIEW_URL+
+                  '/api/research/official-racelist?venue=25&date=20261121&race=1',
+                  {signal:AbortSignal.timeout(15000)});
+                const invalidData=await invalidOfficial.json();
+                if(invalidOfficial.status!==400||invalidData.status!=='invalid_selection')
+                  throw Error('Official racelist selection validation failed');
+                console.log('Official racelist endpoint rejects invalid venue as expected');
                 console.log('Research API rejects unverified official/recent50 data as expected');
                 console.log('Isolated research API preview health verified:',url);
                 process.exit(0);
