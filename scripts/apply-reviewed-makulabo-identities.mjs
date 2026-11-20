@@ -30,6 +30,6 @@ export function applyReviewedMakulaboIdentities(snapshot,html,review){
  }
  extracted.reviewedIdentityPairs=reviewed;
  const result=evaluateVerifiedMakulaboResearch(snapshot,extracted);
- return {...result,manualIdentityReviewApplied:true,eligibleForCalibration:false,
+ return {...result,manualIdentityReviewApplied:result.status==='makulabo_identity_joined'||result.status==='research_morning_evaluated',eligibleForCalibration:false,
   warning:'Human identity approval is not proof of verified recent-50 win rate or pre-race prediction.'};
 }
