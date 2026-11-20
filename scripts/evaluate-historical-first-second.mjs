@@ -18,6 +18,8 @@ export function evaluateHistoricalFirstSecond(racelist,result){
   firstCandidate:firstTied?null:ranked[0].racerId,secondCandidate:secondTied?null:ranked[1].racerId,
   firstTied,secondTied,firstCorrect:firstTied?null:ranked[0].finish===1,
   secondCorrect:secondTied?null:ranked[1].finish===2,
+  secondCandidateActualFinish:secondTied?null:ranked[1].finish,
+  secondCandidateWon:secondTied?null:ranked[1].finish===1,
   orderedPairCorrect:firstTied||secondTied?null:ranked[0].finish===1&&ranked[1].finish===2,
   actualFirst:rows.find(r=>r.finish===1)?.racerId,actualSecond:rows.find(r=>r.finish===2)?.racerId,
   predictionCreatedAfterRace:true,preRaceHistoricalValidityVerified:false,
