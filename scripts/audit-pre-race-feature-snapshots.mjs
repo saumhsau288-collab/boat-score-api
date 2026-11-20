@@ -10,7 +10,8 @@ export function auditPreRaceFeatureSnapshots(capture) {
   const six=Array.isArray(boats)&&boats.length===6&&
     new Set(boats.map(x=>x?.boat)).size===6&&
     boats.every(x=>Number.isInteger(x?.boat)&&x.boat>=1&&x.boat<=6);
-  const complete=six&&boats.every(x=>fields.every(f=>typeof x[f]==='number'&&Number.isFinite(x[f])));
+  const limits={nationalWinRate:10,localWinRate:10,motorTwoWinRate:100,recent50WinRate:100,exhibitionScore:100};
+  const complete=six&&boats.every(x=>fields.every(f=>typeof x[f]==='number'&&Number.isFinite(x[f])&&x[f]>=0&&x[f]<=limits[f]));
   const timing=Number.isFinite(Date.parse(r?.receivedAt))&&
     Number.isFinite(Date.parse(r?.officialCutoffAt))&&
     Date.parse(r.receivedAt)<Date.parse(r.officialCutoffAt);
