@@ -27,3 +27,13 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - The code reports `method`, `predictionMode`, `startAdjustmentApplied`, and other verification flags, but **does not return the complete original six-racer metric vector**.
 - The formula is confirmed for the candidate branch source, **not yet confirmed as the exact deployed code revision that produced the archived saved scores**. Do not assume all archived records used the same adjustment state.
 - Do not confuse the rank-based 70/30 candidate Worker formula with the separate unused `boat-score-2-scoring.js` 45/25/15/10/5 module.
+
+
+## 2026-11-20 local-zero sensitivity and result boundary
+
+- Research CI run 44693976730: among 14 saved-ready race comparisons, 6 races had a local win rate of 0.00. Using national win rate as fallback rather than raw 0.00 changed six-racer rank order in 5 races, and top-ranked boat in 1 race (Fukuoka 5R).
+- Research CI run 44694072117: among those 5 rank-changed races, the raw-zero proxy matched the saved top-ranked boat in 5/5, while fallback matched 4/5. Exact six-boat ranking matched saved in 0/5 for raw zero and 2/5 for fallback. Agreement with saved outputs is not an outcome metric.
+- Research CI run 44694871525: official finishes verified for 4/5 rank-changed races. Only Fukuoka 5R changed the top boat: raw-zero proxy favored boat 2 (finished 5th), fallback proxy favored boat 6 (finished 3rd). One retrospective case does not validate the fallback's predictive advantage.
+- Research CI run 44694959754 succeeded after the reporting fix. The six zero-local races and five ranking-changed races must not be conflated.
+- This discrepancy remains a **candidate implementation gap** relative to the user's intended fallback policy, not a confirmed diagnosis of the deployed preview. The candidate worker's score origin, input timestamps, and deployed SHA remain unverified.
+- The official results are post-hoc, and no authorized production weights, Worker or deployment were changed.
