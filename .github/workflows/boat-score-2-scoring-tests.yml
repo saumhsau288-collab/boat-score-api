@@ -256,11 +256,20 @@ jobs:
       - name: Compare historical official-metric partial rankings to actual finishes
         if: always()
         run: node scripts/run-three-feature-historical-baseline.mjs
+      - name: Print complete historical baseline summary
+        if: always()
+        run: |
+          if test -f prediction-captures/historical-three-feature-baseline.json; then
+            node -e "const x=require('./prediction-captures/historical-three-feature-baseline.json'); console.log(JSON.stringify({total:x.total,scored:x.scored,firstPlaceCorrect:x.firstPlaceCorrect,firstPlaceTies:x.firstPlaceTies,firstPlaceHitRate:x.firstPlaceHitRate,topThreePodiumHits:x.topThreePodiumHits,meanTopThreePodiumHits:x.meanTopThreePodiumHits,excludedReasons:x.excludedReasons,eligibleForWeightTuning:false}))"
+          fi
       - name: Upload historical racelist source and extraction diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: research-historical-racelists-${{ github.run_id }}
-          path: prediction-captures/research-historical-racelist-*
+          path: |
+            prediction-captures/research-historical-racelist-*
+            prediction-captures/historical-racelist-result-join.json
+            prediction-captures/historical-three-feature-baseline.json
           if-no-files-found: warn
           retention-days: 30
