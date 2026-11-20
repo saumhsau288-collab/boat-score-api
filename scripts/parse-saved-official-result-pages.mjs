@@ -1,11 +1,15 @@
 // Research-only parser: saved official result HTML, never pre-race authentication.
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 const ascii=s=>s.replace(/[０-９]/g,c=>String(c.charCodeAt(0)-65296));
 export function parseSavedOfficialResultPages(report){
  if(!Array.isArray(report?.pages))throw Error('Expected pages[]');
  const rows=report.pages.map(p=>{
   const base={date:p.date,venue:p.venue,race:p.race,url:p.url,sha256:p.sha256??null,resultVerified:false,officialCutoffVerified:false};
   if(p.status!=='raw_html_saved'||typeof p.html!=='string')return {...base,status:'not_saved',reason:p.error??'No HTML'};
+  if(typeof p.sha256!=='string'||!/^([a-f0-9]{64})$/.test(p.sha256)||
+     crypto.createHash('sha256').update(p.html).digest('hex')!==p.sha256)
+   return {...base,status:'needs_review',reason:'raw_html_checksum_unconfirmed'};
   let u;
   try { u=new URL(p.url); } catch { return {...base,status:'needs_review',reason:'invalid_result_url'}; }
   const h=p.html;
