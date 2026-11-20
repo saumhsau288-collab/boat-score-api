@@ -17,6 +17,17 @@ const decided=k=>valid.filter(r=>r[k]!==null).length;
 const firstCorrect=valid.filter(r=>r.firstCorrect===true);
 const firstWrong=valid.filter(r=>r.firstCorrect===false);
 const rate=(a,b)=>b?a/b:null;
+const venueBreakdown=Object.values(valid.reduce((acc,r)=>{
+ const v=String(r.venue).padStart(2,'0');
+ const x=acc[v]??={venue:v,races:0,firstCorrect:0,secondCorrect:0,orderedPairCorrect:0,secondPredictedWon:0,topTwoContainsWinner:0};
+ x.races++;
+ if(r.firstCorrect===true)x.firstCorrect++;
+ if(r.secondCorrect===true)x.secondCorrect++;
+ if(r.orderedPairCorrect===true)x.orderedPairCorrect++;
+ if(r.secondCandidateWon===true)x.secondPredictedWon++;
+ if(r.firstCorrect===true||r.secondCandidateWon===true)x.topTwoContainsWinner++;
+ return acc;
+},{})).sort((a,b)=>a.venue.localeCompare(b.venue));
 const summary={status:'first_second_historical_partial_diagnostic',races:rows.length,scored:valid.length,
  first:{correct:count('firstCorrect'),decided:decided('firstCorrect')},
  second:{correct:count('secondCorrect'),decided:decided('secondCorrect')},
@@ -30,6 +41,6 @@ const summary={status:'first_second_historical_partial_diagnostic',races:rows.le
  secondWhenFirstWrong:{correct:firstWrong.filter(r=>r.secondCorrect===true).length,
   decided:firstWrong.filter(r=>r.secondCorrect!==null).length,
   rate:rate(firstWrong.filter(r=>r.secondCorrect===true).length,firstWrong.filter(r=>r.secondCorrect!==null).length)},
- fullCurrentScore:false,eligibleForWeightTuning:false,eligibleForDeployment:false,rows};
+ venueBreakdown,fullCurrentScore:false,eligibleForWeightTuning:false,eligibleForDeployment:false,rows};
 fs.writeFileSync(path.join(dir,'historical-first-second-diagnostic.json'),JSON.stringify(summary,null,2)+'\n');
 console.log(JSON.stringify({...summary,rows:undefined}));
