@@ -14,6 +14,9 @@ export function verifyHistoricalRaceJoin({expected, source, schedule, scoreInput
   });
   if (!selected.verified) return fail('schedule_' + selected.reason);
   if (selected.cutoffJst !== source.cutoffJst) return fail('schedule_cutoff_mismatch');
+  const receivedAt = Date.parse(source.receivedAt);
+  if (!Number.isFinite(receivedAt) || receivedAt !== source.sourceCapturedAtEpochMs) return fail('capture_timestamp_unverified');
+  if (receivedAt >= official.cutoffEpochMs) return fail('capture_not_before_cutoff');
   if (!Array.isArray(scoreInputsByBoat) || scoreInputsByBoat.length !== 6 ||
       scoreInputsByBoat.some((v,i) => !v || v.boat !== i+1 || v.verified !== true))
     return fail('six_boat_inputs_unverified');
