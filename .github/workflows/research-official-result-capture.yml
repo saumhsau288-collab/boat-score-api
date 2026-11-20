@@ -42,14 +42,14 @@ jobs:
           node scripts/test-verify-official-result-evidence-pair.mjs
           node scripts/test-parse-official-result-finish-rows.mjs
       - name: Capture official result evidence
-        if: github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         env:
-          CAPTURE_DATE: ${{ inputs.date }}
-          CAPTURE_VENUE: ${{ inputs.venue }}
-          CAPTURE_RACE: ${{ inputs.race }}
+          CAPTURE_DATE: ${{ github.event_name == 'workflow_dispatch' && inputs.date || '20261120' }}
+          CAPTURE_VENUE: ${{ github.event_name == 'workflow_dispatch' && inputs.venue || '18' }}
+          CAPTURE_RACE: ${{ github.event_name == 'workflow_dispatch' && inputs.race || '1' }}
         run: node scripts/run-research-official-result-capture.mjs
       - name: Verify captured HTML against receipt
-        if: github.event_name == 'workflow_dispatch'
+        if: always()
         run: |
           for file in prediction-captures/research-result-*.html; do
             if [ -f "$file" ]; then
