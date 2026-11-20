@@ -15,4 +15,8 @@ assert.equal(noHeader.diagnostics.tableCount,1);
 assert.equal(noHeader.diagnostics.matchingHeaderTables,0);
 assert.equal(noHeader.diagnostics.matchingMappedTables,0);
 assert.equal(extractOfficialMetrics(html.replace('4002','4001')).verified,false);
+const grouped=extractOfficialMetrics('<table><tr><th>枠</th><th>全国</th><th>当地</th><th>モーター</th></tr><tr><th>写真</th><th>勝率</th><th>勝率</th><th>2連率</th></tr></table>');
+assert.equal(grouped.verified,false);
+assert.equal(grouped.reason,'grouped_official_headers_need_verified_column_mapping');
+assert.equal(grouped.diagnostics.groupedHeaderTables,1);
 console.log('Official metric extraction tests passed');
