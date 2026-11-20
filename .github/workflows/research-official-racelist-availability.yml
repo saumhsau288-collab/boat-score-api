@@ -31,6 +31,7 @@ on:
       - 'scripts/preview-research-official-result-tables.mjs'
       - 'scripts/extract-research-official-finishes.mjs'
       - 'scripts/compare-research-scores-official-finishes.mjs'
+      - 'scripts/diagnose-research-unverified-finishes.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -63,6 +64,8 @@ jobs:
         run: node scripts/preview-research-official-result-tables.mjs research-official-racelists
       - name: Extract six-boat official finishing order with strict checks
         run: node scripts/extract-research-official-finishes.mjs research-official-racelists
+      - name: Diagnose official results failing strict six-boat verification
+        run: node scripts/diagnose-research-unverified-finishes.mjs research-official-racelists
       - name: Audit archived HTML structure
         run: node scripts/audit-research-official-racelist-structure.mjs research-official-racelists
       - name: Audit source field labels
