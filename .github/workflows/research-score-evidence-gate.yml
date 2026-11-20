@@ -6,6 +6,8 @@ on:
     paths:
       - 'scripts/inspect-score-evidence-research.mjs'
       - 'scripts/test-inspect-score-evidence-research.mjs'
+      - 'scripts/validate-research-feature-snapshot.mjs'
+      - 'scripts/test-validate-research-feature-snapshot.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -19,3 +21,4 @@ jobs:
         with:
           node-version: '22'
       - run: node scripts/test-inspect-score-evidence-research.mjs
+      - run: node scripts/test-validate-research-feature-snapshot.mjs
