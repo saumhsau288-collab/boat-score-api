@@ -45,15 +45,37 @@ jobs:
           main = "boat-score-2-research-preview-worker.js"
           compatibility_date = "2026-11-01"
           EOF
-          npx --yes wrangler@4 deploy --config wrangler.research-api-preview.toml
+          set -o pipefail
+          npx --yes wrangler@4 deploy --config wrangler.research-api-preview.toml 2>&1 | tee wrangler-deploy.log
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from 'node:fs';
+          const log=readFileSync('wrangler-deploy.log','utf8');
+          const urls=[...log.matchAll(/https:\/\/[^\s\x1b]+\.workers\.dev\/?/g)].map(m=>m[0]);
+          const target=urls.find(u=>u.includes('boat-score-2-research-api-preview.'));
+          if(!target)throw Error('Wrangler did not report a workers.dev preview URL; inspect deploy output and Worker routes.');
+          appendFileSync(process.env.GITHUB_ENV,'RESEARCH_PREVIEW_URL='+target.replace(/\/$/,'')+'\n');
+          console.log('Wrangler reported research preview URL:',target);
+          NODE
       - name: Verify deployed research API health
         run: |
           node --input-type=module <<'NODE'
-          const url='https://boat-score-2-research-api-preview.saumh-sau-288.workers.dev/health';
-          const response=await fetch(url,{signal:AbortSignal.timeout(15000)});
-          if(!response.ok)throw Error('Health HTTP '+response.status);
-          const data=await response.json();
-          if(data.service!=='boat-score-2-research-preview'||data.liveData!==false)
-            throw Error('Unexpected preview API response');
-          console.log('Isolated research API preview health verified');
+          const url=process.env.RESEARCH_PREVIEW_URL+'/health';
+          let last='';
+          for(let attempt=1;attempt<=6;attempt++){
+            try{
+              const response=await fetch(url,{signal:AbortSignal.timeout(15000),redirect:'manual'});
+              const body=await response.text();
+              console.log('Health attempt',attempt,'HTTP',response.status,'URL',url);
+              if(response.ok){
+                const data=JSON.parse(body);
+                if(data.service!=='boat-score-2-research-preview'||data.liveData!==false)
+                  throw Error('Unexpected preview API response');
+                console.log('Isolated research API preview health verified:',url);
+                process.exit(0);
+              }
+              last='HTTP '+response.status+' response: '+body.slice(0,300);
+            }catch(e){last=String(e);}
+            if(attempt<6)await new Promise(resolve=>setTimeout(resolve,5000));
+          }
+          throw Error('Preview health failed after retries at '+url+'; '+last);
           NODE
