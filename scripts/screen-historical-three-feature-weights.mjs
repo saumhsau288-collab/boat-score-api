@@ -9,15 +9,23 @@ function score(row,weights){
  return KEYS.reduce((s,k,i)=>s+weights[i]*(k==='localWinRate'&&row[k]===0?row.nationalWinRate:row[k])/LIMIT[i],0);
 }
 function evaluate(records,weights){
- let correct=0,ties=0,podium=0;
+ let correct=0,ties=0,secondCorrect=0,exactFirstSecond=0,secondTies=0,podium=0;
  for(const r of records){
   const ranked=[...r.rows].sort((a,b)=>score(b,weights)-score(a,weights)||a.boat-b.boat);
   if(Math.abs(score(ranked[0],weights)-score(ranked[1],weights))<1e-9)ties++;
   else if(ranked[0].winner)correct++;
+  if(Math.abs(score(ranked[1],weights)-score(ranked[2],weights))<1e-9)secondTies++;
+  else if(ranked[1].finish===2)secondCorrect++;
+  if(Math.abs(score(ranked[0],weights)-score(ranked[1],weights))>=1e-9&&
+    Math.abs(score(ranked[1],weights)-score(ranked[2],weights))>=1e-9&&
+    ranked[0].finish===1&&ranked[1].finish===2)exactFirstSecond++;
   podium+=ranked.slice(0,3).filter(x=>x.podium).length;
  }
  return {races:records.length,correct,ties,decided:records.length-ties,
   winRate:records.length===ties?null:correct/(records.length-ties),
+  secondCorrect,secondTies,secondRate:records.length===secondTies?null:secondCorrect/(records.length-secondTies),
+  exactFirstSecond,exactFirstSecondRate:records.length===ties||records.length===secondTies?null:
+   exactFirstSecond/(records.length-records.filter(r=>{const a=[...r.rows].sort((x,y)=>score(y,weights)-score(x,weights)||x.boat-y.boat);return Math.abs(score(a[0],weights)-score(a[1],weights))<1e-9||Math.abs(score(a[1],weights)-score(a[2],weights))<1e-9;}).length),
   podiumHits:podium,podiumPrecision:records.length?podium/(3*records.length):null};
 }
 export function screenHistoricalThreeFeatureWeights(races,{minTrain=100,minHoldout=30}={}){
@@ -45,12 +53,15 @@ export function screenHistoricalThreeFeatureWeights(races,{minTrain=100,minHoldo
   weights:Object.fromEntries(KEYS.map((k,j)=>[k,w[j]])),
   train:evaluate(train,w),holdout:evaluate(holdout,w)}))
   .sort((a,b)=>(b.train.winRate??-1)-(a.train.winRate??-1)||
-   b.train.podiumPrecision-a.train.podiumPrecision||a.name.localeCompare(b.name));
+   (b.train.exactFirstSecondRate??-1)-(a.train.exactFirstSecondRate??-1)||
+   (b.train.secondRate??-1)-(a.train.secondRate??-1)||a.name.localeCompare(b.name));
  const base=ranked.find(r=>r.name==='baseline'),best=ranked[0];
  const improved=best.name!=='baseline'&&best.train.winRate>base.train.winRate&&
   best.holdout.winRate>base.holdout.winRate&&
-  best.train.podiumPrecision>=base.train.podiumPrecision&&
-  best.holdout.podiumPrecision>=base.holdout.podiumPrecision;
+  (best.train.exactFirstSecondRate??-1)>=(base.train.exactFirstSecondRate??-1)&&
+  (best.holdout.exactFirstSecondRate??-1)>=(base.holdout.exactFirstSecondRate??-1)&&
+  (best.train.secondRate??-1)>=(base.train.secondRate??-1)&&
+  (best.holdout.secondRate??-1)>=(base.holdout.secondRate??-1);
  return {status:'historical_three_feature_research_only',trainRaces:train.length,holdoutRaces:holdout.length,
   candidates:ranked,proposedWeights:improved?best.weights:null,
   eligibleForDeployment:false,warning:'Historical pre-race metric validity and missing 15% of current features remain unverified; never deploy from this report.'};
