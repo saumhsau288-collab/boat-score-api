@@ -17,7 +17,7 @@ export async function captureHistoricalRacelistBatch(selections,{fetcher=fetch,o
   let result={date:String(selection.date),venue:String(selection.venue).padStart(2,'0'),race:selection.race,
    status:'fetch_failed',sixRacersParsed:false,preRaceHistoricalValidityVerified:false,eligibleForCalibration:false};
   try{
-   const response=await fetcher(url.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
+   const response=await fetcher(url.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(7000)});
    const finalUrl=new URL(response.url||url.url);
    const body=await response.text();
    if(!response.ok||finalUrl.protocol!=='https:'||finalUrl.hostname!=='www.boatrace.jp'||
@@ -34,6 +34,7 @@ export async function captureHistoricalRacelistBatch(selections,{fetcher=fetch,o
    fs.writeFileSync(outputDir+'/'+prefix+'.json',JSON.stringify(result,null,2)+'\n');
   }catch(e){result.error=String(e.message||e);}
   results.push(result);
+  console.log(JSON.stringify({event:'historical_racelist_capture_progress',completed:results.length,total:selections.length,date:result.date,venue:result.venue,race:result.race,status:result.status,parsed:result.sixRacersParsed,error:result.error??null}));
  }
  const summary={status:'historical_racelist_research_batch',requested:results.length,
   captured:results.filter(r=>r.status==='official_racelist_source_captured').length,
