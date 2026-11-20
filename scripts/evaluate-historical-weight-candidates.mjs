@@ -43,14 +43,20 @@ export function evaluateWeightCandidates(records,{minTrain=100,minHoldout=30}={}
  const candidates=[baseline,...FEATURES.map((_,i)=>baseline.map((w,j)=>j===i?w+5:w-5/(FEATURES.length-1))).filter(w=>w.every(n=>n>=0))];
  const score=(f,w)=>FEATURES.reduce((n,k,j)=>n+(k==='localWinRate'&&f[k]===0?f.nationalWinRate:f[k])/LIMITS[j]*w[j],0);
  const metric=(rows,w)=>{
-  let wins=0,ties=0;
+  let wins=0,ties=0,podiumHits=0,podiumTotal=0,topScorePodiumHits=0;
   for(const r of rows){
    const sorted=[...r.featureInputsByBoat].sort((a,b)=>score(b,w)-score(a,w));
    if(Math.abs(score(sorted[0],w)-score(sorted[1],w))<1e-9){ties++;continue;}
    const winner=r.finishByBoat.find(f=>f.finish===1)?.boat;
    if(sorted[0].boat===winner)wins++;
+   const podium=new Set(r.finishByBoat.filter(f=>f.finish<=3).map(f=>f.boat));
+   podiumHits+=sorted.slice(0,3).filter(f=>podium.has(f.boat)).length;
+   podiumTotal+=3;
+   if(podium.has(sorted[0].boat))topScorePodiumHits++;
   }
-  return {races:rows.length,wins,ties,winRate:wins/rows.length};
+  return {races:rows.length,wins,ties,winRate:wins/rows.length,
+   topScorePodiumHits,topScorePodiumRate:topScorePodiumHits/rows.length,
+   podiumHits,podiumTotal,podiumPrecision:podiumTotal?podiumHits/podiumTotal:0};
  };
  const ranked=candidates.map((w,i)=>({name:i===0?'baseline':'candidate_'+i,weights:Object.fromEntries(FEATURES.map((k,j)=>[k,w[j]])),train:metric(train,w),holdout:metric(holdout,w)}))
   .sort((a,b)=>b.train.winRate-a.train.winRate||a.name.localeCompare(b.name));
