@@ -20,7 +20,9 @@ export async function captureOfficialBeforeinfo(selection,fetcher=fetch,now=()=>
   const finalUrl=new URL(response.url||target.url);
   const expected=new URL(target.url);
   const sourceMatches=finalUrl.origin===expected.origin&&finalUrl.pathname===expected.pathname&&
-   ['rno','jcd','hd'].every(k=>finalUrl.searchParams.get(k)===expected.searchParams.get(k));
+   ['rno','jcd','hd'].every(k=>finalUrl.searchParams.getAll(k).length===1&&
+    finalUrl.searchParams.get(k)===expected.searchParams.get(k))&&
+   [...finalUrl.searchParams.keys()].every(k=>['rno','jcd','hd'].includes(k));
   const contentType=response.headers.get('content-type')||'';
   const html=await response.text();
   const bytes=Buffer.byteLength(html,'utf8');
