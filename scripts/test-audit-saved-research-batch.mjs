@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {auditSavedResearchBatch} from './audit-saved-research-batch.mjs';
+const out=auditSavedResearchBatch([]);
+assert.equal(out.status,'descriptive_batch_summary');
+assert.equal(out.submitted,0);
+assert.equal(out.compared,0);
+assert.equal(out.mode,'offline_saved_research_only');
+assert.equal(out.eligibleForCalibration,false);
+assert.equal(auditSavedResearchBatch(null).status,'held');
+console.log('Offline saved research batch runner tests passed');
