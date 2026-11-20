@@ -92,4 +92,5 @@ jobs:
           node scripts/test-compare-research-scores-to-finish.mjs
           node scripts/test-diagnose-research-score-finish-gap.mjs
           node scripts/test-summarize-research-finish-gaps.mjs
+          node scripts/test-audit-saved-research-batch.mjs
 
