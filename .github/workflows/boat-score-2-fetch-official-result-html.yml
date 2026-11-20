@@ -41,6 +41,7 @@ jobs:
           node --check scripts/fetch-official-result-pages-research.mjs
           node scripts/test-build-official-result-request-manifest.mjs
           node scripts/test-fetch-official-result-pages-research.mjs
+          node scripts/test-parse-saved-official-result-pages.mjs
       - name: Download saved prediction capture
         env:
           GH_TOKEN: ${{ github.token }}
