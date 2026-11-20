@@ -9,6 +9,7 @@ on:
       - 'scripts/test-parse-saved-official-result-pages.mjs'
       - 'scripts/fetch-official-result-pages-research.mjs'
       - 'scripts/test-fetch-official-result-pages-research.mjs'
+      - 'scripts/backtest-comparison-eligibility.mjs'
       - 'scripts/compare-saved-capture-results.mjs'
       - 'scripts/test-compare-saved-capture-results.mjs'
   workflow_dispatch:
