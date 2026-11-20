@@ -16,6 +16,14 @@ export function classifyHistoricalPredictionReview({evidenceAudit,savedPredictio
     new Set(officialResult.finishOrder).size!==6||
     officialResult.finishOrder.some(b=>!Number.isInteger(b)||b<1||b>6))
   missing.push('verified_official_finish_order');
+ // All timestamps must be explicit ISO instants; compare actual milliseconds, not strings.
+ const parseTime=value=>typeof value==='string'&&/^20\\d{2}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)&&Number.isFinite(Date.parse(value))?Date.parse(value):null;
+ const savedAt=parseTime(savedPrediction?.savedAt);
+ const deadlineAt=parseTime(savedPrediction?.raceDeadlineAt);
+ const officialDeadlineAt=parseTime(officialResult?.raceDeadlineAt);
+ if(savedAt===null||deadlineAt===null||officialDeadlineAt===null||
+    deadlineAt!==officialDeadlineAt||savedAt>=deadlineAt)
+  missing.push('authenticated_prediction_before_official_deadline');
  const keys=[savedPrediction?.raceKey,officialResult?.raceKey,evidenceAudit?.raceKey];
  if(keys.some(k=>typeof k!=='string'||!/^[0-9]{8}-([0-9]{1,2})-([0-9]{1,2})$/.test(k))||
     new Set(keys).size!==1)missing.push('matching_race_identity');
