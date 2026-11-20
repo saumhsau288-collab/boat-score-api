@@ -12,8 +12,10 @@ export function describeOfficialTableStructure(html){
   const rows=[...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>m[1]);
   const thPerRow=rows.map(row=>(row.match(/<th\b/gi)||[]).length);
   const tdPerRow=rows.map(row=>(row.match(/<td\b/gi)||[]).length);
+  const profileLinksPerRow=rows.map(row=>(row.match(/racersearch\/profile\?/gi)||[]).length);
   const headerLabels=[...new Set([...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>clean(m[1])).filter(s=>labels.includes(s)))];
   return {index,rowCount:rows.length,headerCellsPerRow:thPerRow.slice(0,32),dataCellsPerRow:tdPerRow.slice(0,32),
+   profileLinksPerRow:profileLinksPerRow.slice(0,32),
    profileLinkCount:(table.match(/racersearch\/profile\?/gi)||[]).length,
    visibleHeaderLabels:headerLabels,gridValid:grid.valid,gridReason:grid.reason??null,
    gridColumnCount:grid.valid?grid.columns:null,
