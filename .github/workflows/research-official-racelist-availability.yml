@@ -26,6 +26,7 @@ on:
       - 'scripts/compare-research-saved-scores.mjs'
       - 'scripts/audit-research-score-disagreements.mjs'
       - 'scripts/audit-research-disagreement-boat-position.mjs'
+      - 'scripts/fetch-research-official-results.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -50,6 +51,8 @@ jobs:
           test -s research-queue/feature-collection-queue.json
       - name: Archive official race-list pages without treating them as pre-race evidence
         run: node scripts/fetch-research-official-racelists.mjs research-queue/feature-collection-queue.json research-official-racelists
+      - name: Archive official result page availability without assuming completed races
+        run: node scripts/fetch-research-official-results.mjs research-queue/feature-collection-queue.json research-official-racelists
       - name: Audit archived HTML structure
         run: node scripts/audit-research-official-racelist-structure.mjs research-official-racelists
       - name: Audit source field labels
