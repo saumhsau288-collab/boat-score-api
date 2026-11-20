@@ -40,6 +40,8 @@ on:
       - 'scripts/test-select-research-verified-refreshes.mjs'
       - 'scripts/inspect-research-deadline-header-links.mjs'
       - 'scripts/test-inspect-research-deadline-header-links.mjs'
+      - 'scripts/compare-research-official-race-schedules.mjs'
+      - 'scripts/test-compare-research-official-race-schedules.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -70,3 +72,4 @@ jobs:
       - run: node scripts/test-build-research-daily-refresh-candidates.mjs
       - run: node scripts/test-select-research-verified-refreshes.mjs
       - run: node scripts/test-inspect-research-deadline-header-links.mjs
+      - run: node scripts/test-compare-research-official-race-schedules.mjs
