@@ -6,7 +6,7 @@ const dir=process.argv[2]||'prediction-captures';
 const files=fs.readdirSync(dir).filter(f=>/^research-historical-racelist-\d{8}-\d{2}-\d{1,2}\.json$/.test(f));
 const score=r=>45*r.nationalWinRate/10+25*(r.localWinRate===0?r.nationalWinRate:r.localWinRate)/10+15*r.motorTwoWinRate/100;
 const stats={};for(const t of [3,5,10])stats[t]={pairs:0,innerAhead:0,innerWinner:0,outerWinner:0,innerSecond:0,outerSecond:0,innerHigherScore:0,outerHigherScore:0,tiedScore:0,innerLowerScorePairs:0,innerLowerScoreAhead:0,innerHigherScorePairs:0,innerHigherScoreAhead:0};
-const perRace=[];let parsedCourses=0,joinedRaces=0;
+const perRace=[];let parsedCourses=0,joinedRaces=0;const raceLevel=Object.fromEntries([3,5,10].map(t=>[t,{racesWithLowerScoredInner:0,racesInnerAheadMajority:0,racesOuterAheadMajority:0,racesTied:0}]));
 for(const f of files){
  const key=f.slice('research-historical-racelist-'.length,-5),base='research-result-'+key;
  const htmlPath=path.join(dir,base+'.html'),resultPath=path.join(dir,base+'-structure.json');
@@ -19,6 +19,7 @@ for(const f of files){
  joinedRaces++;
  const rows=joined.rows.map(r=>({...r,entryCourse:courses.coursesByBoat.find(c=>c.boat===r.boat).entryCourse,score:score(r)}));
  if(rows.some(r=>!Number.isFinite(r.score)))continue;
+ const raceCounts=Object.fromEntries([3,5,10].map(t=>[t,{ahead:0,behind:0}]));
  for(let i=0;i<6;i++)for(let j=i+1;j<6;j++){
   const [inner,outer]=[rows[i],rows[j]].sort((a,b)=>a.entryCourse-b.entryCourse);
   const gap=Math.abs(inner.score-outer.score);
@@ -28,11 +29,13 @@ for(const f of files){
    if(inner.finish<outer.finish)s.innerAhead++;
    if(inner.finish===1)s.innerWinner++;if(outer.finish===1)s.outerWinner++;
    if(inner.finish===2)s.innerSecond++;if(outer.finish===2)s.outerSecond++;
+   if(inner.score<outer.score){if(inner.finish<outer.finish)raceCounts[threshold].ahead++;else raceCounts[threshold].behind++;}
    if(inner.score>outer.score){s.innerHigherScore++;s.innerHigherScorePairs++;if(inner.finish<outer.finish)s.innerHigherScoreAhead++;}else if(inner.score<outer.score){s.outerHigherScore++;s.innerLowerScorePairs++;if(inner.finish<outer.finish)s.innerLowerScoreAhead++;}else s.tiedScore++;
   }
  }
- perRace.push({key,status:'paired',courses:courses.coursesByBoat,actualFirstCourse:rows.find(r=>r.finish===1)?.entryCourse,actualSecondCourse:rows.find(r=>r.finish===2)?.entryCourse});
+ for(const threshold of [3,5,10]){const counts=raceCounts[threshold];if(counts.ahead+counts.behind===0)continue;const summary=raceLevel[threshold];summary.racesWithLowerScoredInner++;if(counts.ahead>counts.behind)summary.racesInnerAheadMajority++;else if(counts.ahead<counts.behind)summary.racesOuterAheadMajority++;else summary.racesTied++;}
+ perRace.push({key,status:'paired',raceCounts,courses:courses.coursesByBoat,actualFirstCourse:rows.find(r=>r.finish===1)?.entryCourse,actualSecondCourse:rows.find(r=>r.finish===2)?.entryCourse});
 }
-const report={status:'retrospective_actual_course_close_ability_diagnostic',parsedCourses,joinedRaces,stats,perRace,eligibleForWeightTuning:false,eligibleForDeployment:false,warning:'Actual course and results are post-race descriptors. Official historical racelist metrics are not independently authenticated as pre-race snapshots. Pairwise observations are dependent and not a predictive holdout.'};
+const report={status:'retrospective_actual_course_close_ability_diagnostic',parsedCourses,joinedRaces,stats,raceLevel,perRace,eligibleForWeightTuning:false,eligibleForDeployment:false,warning:'Actual course and results are post-race descriptors. Official historical racelist metrics are not independently authenticated as pre-race snapshots. Pairwise observations are dependent and not a predictive holdout.'};
 fs.writeFileSync(path.join(dir,'actual-course-close-ability-diagnostic.json'),JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({...report,perRace:undefined}));
