@@ -18,7 +18,8 @@ export function selectResearchVerifiedRefreshes({schedule,verifiedCutoffs=[]}={}
   if(target!==candidate.refreshCandidateAt){
    rejected.push({race:candidate.race,reason:'candidate_conflicts_with_verified_cutoff'});continue;
   }
-  authorized.push({race:candidate.race,refreshAt:target,sourceUrl:verified.sourceUrl});
+  // A caller-provided verified:true is not independent authentication. Never authorize.
+  rejected.push({race:candidate.race,reason:'independent_authentication_not_implemented'});
  }
- return {status:'verified_cutoff_gate_only_no_network_execution',authorized,rejected,networkExecuted:false};
+ return {status:'independent_authentication_required_no_network_execution',authorized,rejected,networkExecuted:false};
 }
