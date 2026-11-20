@@ -15,10 +15,14 @@ for(const file of files){
 }
 const scored=rows.filter(x=>x.status==='three_feature_diagnostic_only');
 const summary={status:'retrospective_partial_baseline_diagnostic',total:rows.length,scored:scored.length,
- firstPlaceCorrect:scored.filter(x=>x.firstPlaceCorrect).length,
+ firstPlaceCorrect:scored.filter(x=>x.firstPlaceCorrect===true).length,
+ firstPlaceTies:scored.filter(x=>x.firstPlaceScoreTied===true).length,
+ unambiguousFirstPlacePredictions:scored.filter(x=>x.firstPlaceScoreTied===false).length,
  topThreePodiumHits:scored.reduce((n,x)=>n+x.topThreePodiumHits,0),
  missingScoreWeight:15,currentFiveFeaturePrediction:false,eligibleForWeightTuning:false,rows};
 fs.writeFileSync(path.join(dir,'historical-three-feature-baseline.json'),JSON.stringify(summary,null,2)+'\n');
 console.log(JSON.stringify({status:summary.status,total:summary.total,scored:summary.scored,
- firstPlaceCorrect:summary.firstPlaceCorrect,topThreePodiumHits:summary.topThreePodiumHits,
+ firstPlaceCorrect:summary.firstPlaceCorrect,firstPlaceTies:summary.firstPlaceTies,
+ unambiguousFirstPlacePredictions:summary.unambiguousFirstPlacePredictions,
+ topThreePodiumHits:summary.topThreePodiumHits,
  eligibleForWeightTuning:false}));
