@@ -284,6 +284,7 @@ jobs:
             prediction-captures/historical-three-feature-baseline.json
             prediction-captures/historical-first-place-misses.json
             prediction-captures/historical-first-second-diagnostic.json
+            prediction-captures/official-actual-course-markup-inspection.json
           if-no-files-found: warn
           retention-days: 30
 
@@ -348,6 +349,7 @@ jobs:
         run: |
           node scripts/join-historical-racelist-result-identities.mjs
           node scripts/run-historical-first-second-diagnostic.mjs
+          node scripts/inspect-archived-actual-course-markup.mjs
       - name: Preserve second-place error analysis
         if: always()
         uses: actions/upload-artifact@v4
