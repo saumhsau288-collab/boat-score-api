@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {buildFeatureCollectionQueue} from './build-research-feature-collection-queue.mjs';
+const rows=[{date:'20261120',venue:2,race:1,receivedAt:'2026-11-20T00:00:00Z',responseSha256:'a'.repeat(64),response:{ready:true}},{date:'20261120',venue:2,race:1,response:{ready:true}},{date:'20261120',venue:2,race:2,response:{ready:false}}];
+const report=buildFeatureCollectionQueue({date:'20261120',records:rows});
+assert.equal(report.readyRaceCandidates,1);
+assert.equal(report.calibrationEligible,0);
+assert.equal(report.queue[0].officialRaceListUrl,'https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261120&jcd=02&rno=1');
+assert.equal(report.queue[0].status,'NEEDS_INDEPENDENT_PRE_RACE_FEATURE_SNAPSHOT');
+assert.throws(()=>buildFeatureCollectionQueue({}),/records_required/);
+console.log('feature collection queue tests passed');
