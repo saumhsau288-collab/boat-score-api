@@ -40,4 +40,8 @@ assert.equal(verifiedBody.sourceVerification,'provided_source_flags_checked_not_
 const mismatch=await sourceRequest({official,recent50:recent50.map((r,i)=>i===1?{...r,racerId:'9999'}:r)});
 assert.equal(mismatch.status,422);
 assert.equal((await mismatch.json()).status,'insufficient_data');
+const invalidSelection=await call('/api/research/official-racelist?venue=25&date=20261121&race=1');
+assert.equal(invalidSelection.status,400);
+assert.equal((await invalidSelection.json()).status,'invalid_selection');
+assert.equal((await call('/api/research/official-racelist',{method:'POST'})).status,405);
 console.log('Isolated research preview API tests passed');
