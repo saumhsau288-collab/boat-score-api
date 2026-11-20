@@ -34,6 +34,7 @@ assert.equal(report(prestart).readyForResearchPrestartScoring,true);
 assert.deepEqual(report(prestart).missingPrestart,[]);
 assert.equal(report({...prestart,preRaceIndependentlyVerified:false}).readyForResearchPrestartScoring,false);
 assert.equal(report({...prestart,weather:null}).readyForResearchPrestartScoring,false);
+assert.equal(report({...prestart,racers:prestartRacers.map((r,i)=>i===1?{...r,entryCourse:1}:r)}).readyForResearchPrestartScoring,false);
 assert.equal(report({...prestart,racers:prestartRacers.map((r,i)=>i===0?{...r,startTimingVerified:false}:r)}).readyForResearchPrestartScoring,false);
 assert.equal(report({...snapshot,verifiedRecent50Records:verifiedRecent50Records.map(r=>({...r,sourceVerified:false}))}).readyForResearchMorningScoring,false);
 assert.equal(report({...snapshot,verifiedRecent50Records:[...verifiedRecent50Records.slice(0,5),verifiedRecent50Records[0]]}).readyForResearchMorningScoring,false);
