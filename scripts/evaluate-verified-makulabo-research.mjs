@@ -20,9 +20,10 @@ export function evaluateVerifiedMakulaboResearch(snapshot,extracted){
  // The verified table gives first-place percentages, not necessarily the
  // recent50WinRate required by the existing scoring pipeline.
  // Accept a separately authenticated winRate only when the adapter supplies it.
- const byId=new Map((Array.isArray(extracted?.verifiedWinRates)?extracted.verifiedWinRates:[]).map(r=>[String(r?.racerId),r]));
+ const records=Array.isArray(extracted?.verifiedWinRates)?extracted.verifiedWinRates:[];
+ const byId=new Map(records.map(r=>[String(r?.racerId),r]));
  const recent50=joined.racers.map(r=>byId.get(r.racerId));
- if(recent50.some(r=>!r||r.verified!==true||
+ if(records.length!==6||byId.size!==6||recent50.some(r=>!r||r.verified!==true||r.sourceVerified!==true||
     typeof r.winRate!=='number'||!Number.isFinite(r.winRate)||r.winRate<0||r.winRate>100))
   return {...summary,reason:'verified_recent50_win_rate_required_not_first_place_percentage'};
  const scored=evaluateCapturedResearchSnapshot(snapshot,recent50);
