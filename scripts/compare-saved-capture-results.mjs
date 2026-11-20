@@ -36,7 +36,9 @@ export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
  const captureKeyCounts=new Map();
  for(const r of records){const key=raceKey(r);
   if(key===null)continue;captureKeyCounts.set(key,(captureKeyCounts.get(key)||0)+1);}
- for(const r of records){
+ for(const raw of records){
+  // Malformed saved records are held individually rather than aborting the batch.
+  const r=raw&&typeof raw==='object'?raw:{};
   const key=raceKey(r);
   const official=byKey.get(key),actual=verifiedPodium(official);
   const reasons=[];
