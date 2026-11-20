@@ -8,6 +8,10 @@ assert.equal(result.allCountsValid,true);
 assert.equal(result.allExactly50Runs,true);
 assert.equal(result.allSampleSizesWithin50,true);
 assert.equal(result.racers[0].firstPlaceRate,40);
+assert.equal(result.racers[0].top2Rate,60);
+assert.equal(result.racers[0].top3Rate,76);
+assert.ok(result.racers[0].top2Wilson95.lowerPercent<60);
+assert.ok(result.racers[0].top3Wilson95.upperPercent>76);
 assert.ok(result.racers[0].firstPlaceWilson95.lowerPercent>25);
 assert.ok(result.racers[0].firstPlaceWilson95.upperPercent<55);
 assert.deepEqual(result.lowSampleBoats,[]);
@@ -18,6 +22,8 @@ const invalid=describe({verified:true,parsedRows:rows.map((r,i)=>i===2?{...r,run
 assert.equal(invalid.allCountsValid,false);
 assert.equal(invalid.allExactly50Runs,false);
 assert.equal(invalid.racers[2].firstPlaceRate,null);
+assert.equal(invalid.racers[2].top2Rate,null);
+assert.equal(invalid.racers[2].top3Wilson95,null);
 assert.equal(invalid.racers[2].firstPlaceWilson95,null);
 assert.equal(invalid.racers[2].sampleSizeWarning,'invalid_counts');
 const extended=describe({verified:true,parsedRows:rows.map((r,i)=>i===2?{...r,runs:51,counts:[21,10,8,6,4,2]}:r)});
@@ -30,6 +36,8 @@ const short=describe({verified:true,parsedRows:rows.map((r,i)=>i===4?{...r,runs:
 assert.deepEqual(short.lowSampleBoats,[5]);
 assert.equal(short.racers[4].sampleSizeWarning,'very_small_sample');
 assert.equal(short.racers[4].firstPlaceRate,0);
+assert.equal(short.racers[4].top2Rate,0);
+assert.equal(short.racers[4].top3Rate,0);
 assert.equal(short.racers[4].firstPlaceWilson95.lowerPercent,0);
 assert.ok(short.racers[4].firstPlaceWilson95.upperPercent>70);
 assert.equal(short.eligibleForCalibration,false);
