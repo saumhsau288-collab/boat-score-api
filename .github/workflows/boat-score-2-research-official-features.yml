@@ -29,6 +29,7 @@ jobs:
         run: |
           node --check scripts/capture-research-official-features.mjs
           node scripts/test-classify-official-capture-html.mjs
+          node scripts/test-evaluate-captured-research-snapshot.mjs
           node --check scripts/capture-official-daily-venue-candidates.mjs
           node scripts/test-classify-daily-venue-evidence.mjs
       - name: Probe official race schedule without claiming verification
