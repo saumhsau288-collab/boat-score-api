@@ -309,7 +309,7 @@ if __name__ == '__main__':
         }
         with open(manifest_path, 'w', encoding='utf-8') as out:
             json.dump(manifest, out, ensure_ascii=False, indent=2)
-            out.write('\\n')
+            out.write('\n')
         print('READY_RACE_MANIFEST_SUMMARY ' + json.dumps({
             'uniqueReadyRaceKeys': len(requests), 'eligibleForAccuracy': 0
         }), flush=True)
