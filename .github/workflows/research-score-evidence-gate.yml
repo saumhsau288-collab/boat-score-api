@@ -26,6 +26,8 @@ on:
       - 'scripts/test-inspect-research-cutoff-evidence.mjs'
       - 'scripts/inspect-research-requested-race-url.mjs'
       - 'scripts/test-inspect-research-requested-race-url.mjs'
+      - 'scripts/inspect-research-canonical-race-identity.mjs'
+      - 'scripts/test-inspect-research-canonical-race-identity.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -49,3 +51,4 @@ jobs:
       - run: node scripts/test-evaluate-research-race-deadline-refresh.mjs
       - run: node scripts/test-inspect-research-cutoff-evidence.mjs
       - run: node scripts/test-inspect-research-requested-race-url.mjs
+      - run: node scripts/test-inspect-research-canonical-race-identity.mjs
