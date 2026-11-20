@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import {classifyHistoricalPredictionReview as classify} from './classify-historical-prediction-review.mjs';
 const raceKey='20261120-18-1';
 const evidenceAudit={status:'evidence_fields_complete',readyForHistoricalCalibration:true,raceKey};
-const savedPrediction={preRaceVerified:true,predictorVersionVerified:true,raceKey,rankedBoats:[1,2,3,4,5,6]};
-const officialResult={sourceVerified:true,raceKey,finishOrder:[2,1,3,4,5,6]};
+const savedPrediction={preRaceVerified:true,predictorVersionVerified:true,raceKey,savedAt:'2026-11-20T01:00:00Z',raceDeadlineAt:'2026-11-20T02:00:00Z',rankedBoats:[1,2,3,4,5,6]};
+const officialResult={sourceVerified:true,raceKey,raceDeadlineAt:'2026-11-20T02:00:00Z',finishOrder:[2,1,3,4,5,6]};
 const missing=classify({evidenceAudit:{status:'incomplete_evidence'},savedPrediction,officialResult});
 assert.equal(missing.status,'not_evaluable');
 assert.equal(missing.predictionMiss,false);
@@ -19,4 +19,6 @@ const hit=classify({evidenceAudit,savedPrediction,officialResult:{...officialRes
 assert.equal(hit.firstPlaceHit,true);
 assert.equal(hit.exactTop3OrderHit,true);
 assert.equal(classify({evidenceAudit,savedPrediction,officialResult:{...officialResult,raceKey:'20261120-18-2'}}).status,'not_evaluable');
+assert.equal(classify({evidenceAudit,savedPrediction:{...savedPrediction,savedAt:'2026-11-20T02:00:00Z'},officialResult}).status,'not_evaluable');
+assert.equal(classify({evidenceAudit,savedPrediction:{...savedPrediction,raceDeadlineAt:'2026-11-20T03:00:00Z'},officialResult}).status,'not_evaluable');
 console.log('Historical prediction review evidence gate tests passed');
