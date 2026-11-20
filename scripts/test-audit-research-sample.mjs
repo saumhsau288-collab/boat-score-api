@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {auditResearchSample as audit} from './audit-research-sample.mjs';
-const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i}));
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i,sourceVerified:true}));
 const samples=racers.map(r=>({boat:r.boat,racerId:r.racerId,sourceVerified:true,sourceName:r.name,runs:50,finishCountsValid:true,finishCounts:[10,10,10,10,5,5]}));
 const official={status:'captured_research_inputs',date:'20261120',venue:18,race:1,racers};
 const makulabo={status:'held',identityReview:{verified:false},finishSample:{racers:samples}};
@@ -12,6 +12,10 @@ assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=
 assert.equal(audit(official,{...makulabo,finishSample:{racers:samples.map((r,i)=>i===4?{...r,runs:50,finishCounts:[0,0,0,0,1,0]}:r)}}).rows[4].sampleValid,false);
 const authenticated=audit(official,{...makulabo,status:'ok',identityReview:{verified:true}});
 assert.equal(authenticated.identitySafe,true);
+const duplicateOfficialBoat=audit({...official,racers:racers.map((r,i)=>i===5?{...r,boat:1}:r)},{...makulabo,status:'ok',identityReview:{verified:true}});
+assert.equal(duplicateOfficialBoat.identitySafe,false);
+assert(duplicateOfficialBoat.reasons.includes('six_unique_source_verified_official_boats_required'));
+assert.equal(audit({...official,racers:racers.map((r,i)=>i===0?{...r,sourceVerified:false}:r)},{...makulabo,status:'ok',identityReview:{verified:true}}).identitySafe,false);
 assert.equal(authenticated.readyForResearchMorningScoring,false);
 const wrongId=audit(official,{...makulabo,status:'ok',identityReview:{verified:true},finishSample:{racers:samples.map((s,i)=>i===5?{...s,racerId:'9999'}:s)}});
 assert.equal(wrongId.identitySafe,false);
