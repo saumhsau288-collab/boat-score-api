@@ -30,6 +30,8 @@ on:
       - 'scripts/test-inspect-research-canonical-race-identity.mjs'
       - 'scripts/inspect-research-deadline-time-sequence.mjs'
       - 'scripts/test-inspect-research-deadline-time-sequence.mjs'
+      - 'scripts/map-research-deadline-table-columns.mjs'
+      - 'scripts/test-map-research-deadline-table-columns.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -55,3 +57,4 @@ jobs:
       - run: node scripts/test-inspect-research-requested-race-url.mjs
       - run: node scripts/test-inspect-research-canonical-race-identity.mjs
       - run: node scripts/test-inspect-research-deadline-time-sequence.mjs
+      - run: node scripts/test-map-research-deadline-table-columns.mjs
