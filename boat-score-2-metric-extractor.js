@@ -7,10 +7,18 @@ export function extractOfficialMetrics(html){
  if(typeof html!=='string'||html.length>2_000_000)
   return {verified:false,reason:'invalid_html',racers:[]};
  const tables=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map(m=>m[1]);
- const diagnostics={tableCount:tables.length,matchingHeaderTables:0,matchingMappedTables:0,candidateMetricRows:0};
+ const diagnostics={tableCount:tables.length,matchingHeaderTables:0,matchingMappedTables:0,candidateMetricRows:0,
+  groupedHeaderTables:0,groupedHeaderLabels:[]};
  for(const table of tables){
   const headers=[...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>clean(m[1]));
   const find=regex=>headers.findIndex(h=>regex.test(h));
+  // Official racelists can use grouped headers 全国 / 当地 / モーター,
+  // followed by subheaders 勝率 / 2連率. Flag this layout; do not
+  // guess rowspan/colspan offsets or silently read the wrong metric.
+  if(headers.some(h=>h==='全国')&&headers.some(h=>h==='当地')&&headers.some(h=>h==='モーター')){
+   diagnostics.groupedHeaderTables++;
+   diagnostics.groupedHeaderLabels=['全国','当地','モーター'];
+  }
   const boatIdx=find(/^(?:枠|艇番|枠番)$/);
   const nationalIdx=find(/全国.*勝率/),localIdx=find(/当地.*勝率/);
   const motorIdx=find(/モーター.*(?:2連対率|2連率)/);
@@ -36,5 +44,6 @@ export function extractOfficialMetrics(html){
   if(metrics.length===6&&new Set(metrics.map(r=>r.boat)).size===6)
    return {verified:true,racers:metrics.sort((a,b)=>a.boat-b.boat),source:'official_html_table'};
  }
- return {verified:false,reason:'metric_table_not_verified',racers:[],diagnostics};
+ return {verified:false,reason:diagnostics.groupedHeaderTables&&!diagnostics.matchingHeaderTables?
+  'grouped_official_headers_need_verified_column_mapping':'metric_table_not_verified',racers:[],diagnostics};
 }
