@@ -9,6 +9,7 @@ import {parseOfficialBoatRows} from '../boat-score-2-boat-mapping.js';
 import {buildResearchFeatureSnapshot} from '../boat-score-2-research-feature-snapshot.js';
 import {classifyOfficialCaptureHtml} from './classify-official-capture-html.mjs';
 import {selectResearchOfficialMetrics} from './select-research-official-metrics.mjs';
+import {describeOfficialTableStructure} from './describe-official-table-structure.mjs';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
 const race=Number(process.env.CAPTURE_RACE);
@@ -37,6 +38,7 @@ try {
    boatMappingReason:mapped.reason??null,
    groupedParserReason:selected.groupedReason??null,
    groupedTableAttempts:selected.groupedTableAttempts??null,
+   tableShapes:describeOfficialTableStructure(body),
    groupedVerified:selected.source==='official_grouped_html_table',
    selectedRacerCount:selected.verified?selected.racers.length:0,
    selectedBoats:selected.verified?selected.racers.map(r=>r.boat):[],
