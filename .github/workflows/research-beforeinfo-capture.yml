@@ -10,6 +10,8 @@ on:
       - 'scripts/test-diagnose-official-beforeinfo-html.mjs'
       - 'scripts/verify-beforeinfo-evidence-pair.mjs'
       - 'scripts/test-verify-beforeinfo-evidence-pair.mjs'
+      - 'scripts/audit-research-sample.mjs'
+      - 'scripts/test-audit-research-sample.mjs'
       - '.github/workflows/research-beforeinfo-capture.yml'
   workflow_dispatch:
     inputs:
@@ -42,6 +44,7 @@ jobs:
           node scripts/test-report-research-snapshot-readiness.mjs
           node scripts/test-diagnose-official-beforeinfo-html.mjs
           node scripts/test-verify-beforeinfo-evidence-pair.mjs
+          node scripts/test-audit-research-sample.mjs
       - name: Capture source metadata only
         if: github.event_name == 'workflow_dispatch'
         env:
