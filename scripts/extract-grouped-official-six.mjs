@@ -23,7 +23,7 @@ export function extractGroupedOfficialSix(html){
   // Accept explicit full-width boat digits, but never infer a boat from row order.
   if(boats.length!==1)continue;
   const boat=Number(clean(boats[0].html).normalize('NFKC'));
-  const cellClassMatch=boats[0].html.match(/is-boatColor([1-6])/i);
+  const cellClassMatch=String(boats[0].attrs??'').match(/\bis-boatColor([1-6])\b/i);
   if(cellClassMatch&&Number(cellClassMatch[1])!==boat)continue;
   rowDiagnostics.boatRows++;
   const links=[...new Set(row.flatMap(c=>[...c.html.matchAll(/<a\b[^>]*href=["']([^"']*racersearch\/profile\?[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi)].map(m=>m[0])))];
