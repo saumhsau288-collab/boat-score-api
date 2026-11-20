@@ -8,4 +8,6 @@ assert.equal(r.completeSixBoatFeatures,1);
 assert.equal(r.rows[0].receivedBeforeClaimedCutoff,true);
 assert.equal(r.eligibleForHistoricalCalibration,0);
 assert.equal(auditPreRaceFeatureSnapshots({records:[{response:{ready:true}}]}).completeSixBoatFeatures,0);
+const bad={records:[{response:{ready:true,scoreInputsByBoat:Array.from({length:6},(_,i)=>({boat:i+1,...fields,motorTwoWinRate:i===0?120:40}))}}]};
+assert.equal(auditPreRaceFeatureSnapshots(bad).completeSixBoatFeatures,0);
 console.log('pre-race feature snapshot audit tests passed');
