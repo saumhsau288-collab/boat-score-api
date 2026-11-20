@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {describeOfficialTableStructure as describe} from './describe-official-table-structure.mjs';
+const html='<table><tr><th rowspan="2">枠</th><th colspan="2">全国</th></tr><tr><th>勝率</th><th>2連率</th></tr><tr><td>1</td><td>6.50</td><td>42</td></tr></table>';
+const result=describe(html);
+assert.equal(result.length,1);
+assert.equal(result[0].rowCount,3);
+assert.equal(result[0].gridValid,true);
+assert.equal(result[0].gridColumnCount,3);
+assert.deepEqual(result[0].headerCellsPerRow,[2,2,0]);
+assert.deepEqual(result[0].dataCellsPerRow,[0,0,3]);
+assert.equal(JSON.stringify(result).includes('6.50'),false);
+console.log('Official table structural diagnostics tests passed');
