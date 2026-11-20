@@ -52,6 +52,7 @@ export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
    const url=new URL(official.sourceUrl);
    // Require the official result page to identify the same race as the saved prediction.
    if(url.pathname!=='/owpc/pc/race/raceresult'||
+      ['hd','jcd','rno'].some(key=>url.searchParams.getAll(key).length!==1)||
       url.searchParams.get('hd')!==String(r.date)||
       Number(url.searchParams.get('jcd'))!==Number(r.venue)||
       Number(url.searchParams.get('rno'))!==Number(r.race))
