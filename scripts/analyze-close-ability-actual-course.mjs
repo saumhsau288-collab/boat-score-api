@@ -20,8 +20,8 @@ for(const f of files){
  const joined=joinHistoricalRacelistAndResults(JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')),JSON.parse(fs.readFileSync(resultPath,'utf8')));
  if(joined.status!=='retrospective_racer_identity_join'){perRace.push({key,status:'finish_join_missing',reason:joined.reason});continue;}
  joinedRaces++;
- const rows=joined.rows.map(r=>({...r,entryCourse:courses.coursesByBoat.find(c=>c.boat===r.boat).entryCourse,score:score(r)}));
- if(rows.some(r=>!Number.isFinite(r.score)))continue;
+ const rows=joined.rows.map(r=>({...r,entryCourse:courses.coursesByBoat.find(c=>c.boat===r.boat)?.entryCourse,score:score(r)}));
+ if(rows.length!==6||rows.some(r=>!Number.isFinite(r.score)||!Number.isInteger(r.entryCourse))||new Set(rows.map(r=>r.entryCourse)).size!==6){perRace.push({key,status:'invalid_course_or_score_join'});continue;}
  const zones=analyzeCourseZonePairs(rows);for(const [threshold,categories] of Object.entries(zones))for(const [category,values] of Object.entries(categories)){const target=zoneProxyTotals[threshold][category]??{};for(const [k,v] of Object.entries(values))target[k]=(target[k]??0)+v;zoneProxyTotals[threshold][category]=target;}
  for(const [threshold,categories] of Object.entries(zones))for(const [category,values] of Object.entries(categories)){if(values.pairs===0)continue;const s=zoneRaceMajorities[threshold][category];s.races++;if(values.innerAhead>values.pairs-values.innerAhead)s.innerAheadMajority++;else if(values.innerAhead<values.pairs-values.innerAhead)s.outerAheadMajority++;else s.tied++;}
  const raceCounts=Object.fromEntries([3,5,10].map(t=>[t,{ahead:0,behind:0}]));
