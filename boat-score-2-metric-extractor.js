@@ -8,8 +8,12 @@ export function extractOfficialMetrics(html){
   return {verified:false,reason:'invalid_html',racers:[]};
  const tables=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map(m=>m[1]);
  const diagnostics={tableCount:tables.length,matchingHeaderTables:0,matchingMappedTables:0,candidateMetricRows:0,
-  groupedHeaderTables:0,groupedHeaderLabels:[]};
+  groupedHeaderTables:0,groupedHeaderLabels:[],
+  tablesWithRowspan:0,tablesWithColspan:0,tableRowCounts:[]};
  for(const table of tables){
+  if(/<t[dh]\\b[^>]*\\browspan\\s*=/i.test(table))diagnostics.tablesWithRowspan++;
+  if(/<t[dh]\\b[^>]*\\bcolspan\\s*=/i.test(table))diagnostics.tablesWithColspan++;
+  diagnostics.tableRowCounts.push((table.match(/<tr\\b/gi)||[]).length);
   const headers=[...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>clean(m[1]));
   const find=regex=>headers.findIndex(h=>regex.test(h));
   // Official racelists can use grouped headers 全国 / 当地 / モーター,
