@@ -55,3 +55,11 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - `predictionMode`: `base_stats_only` in all 14; `method`: `weighted_national50_local20_motor30_unvalidated` in all 14.
 - Therefore the archived score outputs were unadjusted for verified exhibition/start in this capture. This does not prove the deployed app cannot apply adjustments in other races or at other capture times.
 - The saved method label does not independently authenticate the underlying numeric formula. Retrospective comparisons cannot authorize changes to production weights.
+
+## Explicit missing inputs in the 14 saved ready responses
+
+- Research CI run 44696904545 completed successfully. All 14/14 ready saved responses contained a `missingInputs` array.
+- All 14/14 listed each of `last50`, `course`, `exhibition`, `start`, and `weather` as missing.
+- These are predictor-reported missing-input labels, not an independently verified root-cause diagnosis of upstream sources or data retrieval. The saved outputs must not be described as using any of these five inputs.
+- Together with all 14 `base_stats_only` and all adjustment flags false, this narrows the scope of valid retrospective analysis to archived base-stat scores. It does not demonstrate failure of all app modes or times.
+- Next investigation should distinguish whether the API failed to fetch data, failed to parse or validate six-racer data, or intentionally excluded unavailable/late inputs; do not fill missing values with invented measurements.
