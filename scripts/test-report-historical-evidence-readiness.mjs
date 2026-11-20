@@ -3,6 +3,8 @@ import {reportHistoricalEvidenceReadiness} from './report-historical-evidence-re
 const report=reportHistoricalEvidenceReadiness({records:[],archivedPairs:[{official:{date:'20261120',venue:'18',race:1,racers:[]},makulabo:{}}]});
 assert.equal(report.eligibleForHistoricalWeightComparison,0);
 assert.equal(report.archivedPairCount,1);
+assert.equal(report.archived[0].boats.length,6);
+assert.equal(report.archived[0].boats[0].sourceIdentityVerified,false);
 assert.equal(report.archivedMissingCounts.six_verified_official_racer_identities,1);
 assert.equal(report.archivedMissingCounts.authenticated_pre_cutoff_score_snapshot,1);
 assert.equal(report.eligibleForDeployment,false);
