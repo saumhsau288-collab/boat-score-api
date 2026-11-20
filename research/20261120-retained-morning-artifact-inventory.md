@@ -16,3 +16,16 @@ The counts include repeat capture attempts, not unique races. The raw response `
 **Calibration status:** `accuracyCalculationPermitted:false`, `officialResultOverlap:null`. No official result join was made. No independently authenticated pre-race capture/cutoff evidence was established. Do not calculate hit rate, fit weights, or call these 167 verified historical predictions.
 
 Next: obtain independently sourced official result and cutoff evidence, immutable capture timestamp/provenance, original predictor version, and six-racer input vectors, while retaining the deployed predictor identity. Keep deployed Boat Score and Boat Score 2 unchanged during research.
+
+## De-duplicated ready race identities
+
+Follow-up successful inventory [44681169333](https://github.com/saumhsau288-collab/boat-score-api/actions/runs/44681169333) counted unique (date, venue, race) keys across retained artifacts for each day:
+
+| Date | Ready records | Unique ready keys | Duplicate ready attempts |
+|---|---:|---:|---:|
+| 2026-11-18 | 107 | 80 | 27 |
+| 2026-11-19 | 46 | 39 | 7 |
+| 2026-11-20 | 14 | 14 | 0 |
+| **Total** | **167** | **133** | **34** |
+
+These are raw ready response keys, not 133 independently authenticated historical predictions. They are not eligible for hit-rate or score-weight calibration until independently verified pre-race capture evidence and official results exist.
