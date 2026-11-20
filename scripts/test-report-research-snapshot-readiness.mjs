@@ -29,11 +29,13 @@ assert.equal(fullySourced.readyForResearchPrestartScoring,false);
 const prestartRacers=racers.map((r,i)=>({...r,entryCourse:i+1,entryCourseVerified:true,
  startTiming:0.12,startTimingVerified:true,exhibitionTime:6.8,exhibitionTimeVerified:true}));
 const prestart={...snapshot,racers:prestartRacers,verifiedRecent50Records,
- weather:{verified:true,sourceVerified:true,windSpeed:2},preRaceIndependentlyVerified:true};
+ weather:{verified:true,sourceVerified:true,windSpeed:2,windDirection:'北',waveHeight:1},preRaceIndependentlyVerified:true};
 assert.equal(report(prestart).readyForResearchPrestartScoring,true);
 assert.deepEqual(report(prestart).missingPrestart,[]);
 assert.equal(report({...prestart,preRaceIndependentlyVerified:false}).readyForResearchPrestartScoring,false);
 assert.equal(report({...prestart,weather:null}).readyForResearchPrestartScoring,false);
+assert.equal(report({...prestart,weather:{...prestart.weather,windDirection:null}}).readyForResearchPrestartScoring,false);
+assert.equal(report({...prestart,weather:{...prestart.weather,waveHeight:null}}).readyForResearchPrestartScoring,false);
 assert.equal(report({...prestart,racers:prestartRacers.map((r,i)=>i===1?{...r,entryCourse:1}:r)}).readyForResearchPrestartScoring,false);
 assert.equal(report({...prestart,racers:prestartRacers.map((r,i)=>i===0?{...r,startTimingVerified:false}:r)}).readyForResearchPrestartScoring,false);
 assert.equal(report({...snapshot,verifiedRecent50Records:verifiedRecent50Records.map(r=>({...r,sourceVerified:false}))}).readyForResearchMorningScoring,false);
