@@ -31,8 +31,6 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
-        env:
-          GH_TOKEN: ${{ github.token }}
           READY_RACE_MANIFEST_PATH: ready-race-result-targets.json
         run: python3 scripts/inventory_morning_capture_artifacts.py
       - name: Upload deduplicated official-result retrieval manifest (unverified)
