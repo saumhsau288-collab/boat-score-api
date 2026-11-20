@@ -201,9 +201,7 @@ def inventory(repository, token):
                 with zipfile.ZipFile(io.BytesIO(data)) as archive:
                     raw_files = [n for n in archive.namelist()
                                  if (n.startswith('prediction-captures/') or '/' not in n)
-                                 and n.endswith('.json')
-                                 and not n.endswith(('-quality.json', '-score-inputs.json',
-                                                     '-response-shape.json'))]
+                                 and re.fullmatch(r'20[0-9]{6}-[0-9]+\.json', n.rsplit('/', 1)[-1])]
                     if len(raw_files) != 1:
                         raise ValueError('Expected one raw capture JSON per artifact')
                     payload = json.loads(archive.read(raw_files[0]))
