@@ -21,4 +21,9 @@ assert.equal(hit.exactTop3OrderHit,true);
 assert.equal(classify({evidenceAudit,savedPrediction,officialResult:{...officialResult,raceKey:'20261120-18-2'}}).status,'not_evaluable');
 assert.equal(classify({evidenceAudit,savedPrediction:{...savedPrediction,savedAt:'2026-11-20T02:00:00Z'},officialResult}).status,'not_evaluable');
 assert.equal(classify({evidenceAudit,savedPrediction:{...savedPrediction,raceDeadlineAt:'2026-11-20T03:00:00Z'},officialResult}).status,'not_evaluable');
+for(const badKey of ['20260230-18-1','20261120-25-1','20261120-18-13']){
+ const bad=classify({evidenceAudit:{...evidenceAudit,raceKey:badKey},savedPrediction:{...savedPrediction,raceKey:badKey},officialResult:{...officialResult,raceKey:badKey}});
+ assert.equal(bad.status,'not_evaluable');
+ assert.ok(bad.missing.includes('valid_race_date_venue_and_number'));
+}
 console.log('Historical prediction review evidence gate tests passed');
