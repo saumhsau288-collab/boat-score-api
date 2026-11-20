@@ -6,6 +6,8 @@ const row=i=>'<tr><td>'+i+'</td><td><a href="/owpc/pc/data/racersearch/profile?t
 const html='<table>'+header+Array.from({length:6},(_,i)=>row(i+1)).join('')+'</table>';
 const good=extract(html);
 assert.equal(good.verified,true);
+assert.equal(extract('<html><table><tr><td>別の表</td></tr></table>'+html+'</html>').verified,true);
+assert.equal(extract(html+html).verified,false);
 assert.equal(good.racers.length,6);
 assert.equal(good.racers[0].racerId,'4001');
 assert.equal(good.racers[0].nationalWinRate,6.5);
