@@ -45,3 +45,13 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - `sourceBranch`, `sourceCommit` and `version` top-level fields are absent in all 14/14. This is not evidence of the exact deployed SHA.
 - The archived method label differs from the rank-based 70/30 candidate source method. The candidate branch code is therefore NOT authenticated as the scorer for the saved capture; previous 70/30 proxy rankings are exploratory counterfactuals, not reproductions of the actual archived scoring logic.
 - The 50/20/30 proportions are reported by the saved method string, not independently verified arithmetic. Do not infer an exact formula from the label alone.
+
+## Verified adjustment flags in saved ready responses
+
+- Research CI run 44696732870 completed successfully and inspected 14/14 saved ready responses.
+- `startAdjustmentApplied`: true 0, false 14, unknown 0.
+- `exhibitionAdjustmentApplied`: true 0, false 14, unknown 0.
+- `startCoursesVerified`: true 0, false 14, unknown 0.
+- `predictionMode`: `base_stats_only` in all 14; `method`: `weighted_national50_local20_motor30_unvalidated` in all 14.
+- Therefore the archived score outputs were unadjusted for verified exhibition/start in this capture. This does not prove the deployed app cannot apply adjustments in other races or at other capture times.
+- The saved method label does not independently authenticate the underlying numeric formula. Retrospective comparisons cannot authorize changes to production weights.
