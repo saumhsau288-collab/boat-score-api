@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {evaluateWeatherStages} from './evaluate-weather-prediction-stages.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:8-i,localWinRate:8-i,motorTwoWinRate:40,recent50WinRate:20,exhibitionScore:50}));
+const selection={date:'20261121',venue:'18',race:1};
+const noWeather=evaluateWeatherStages({selection,racers});
+assert.equal(noWeather.morning.status,'evaluated');
+assert.equal(noWeather.weatherStage.status,'weather_missing_or_invalid');
+const observed=evaluateWeatherStages({selection,racers,weather:{windDirection:'north',windSpeed:4,waveHeight:3,capturedAt:'2026-11-21T09:00:00+09:00'}});
+assert.equal(observed.weatherStage.status,'observation_only_no_calibrated_adjustment');
+assert.deepEqual(observed.weatherStage.ranking,observed.morning.ranking);
+assert.equal(observed.eligibleForDeployment,false);
+console.log('Weather stage does not invent venue wind correction');
