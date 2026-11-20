@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {compareResearchScoresToFinish as compare} from './compare-research-scores-to-finish.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i,sourceVerified:true,
+ nationalWinRate:i===0?9:5,localWinRate:i===0?9:5,motorTwoWinRate:50}));
+const snapshot={status:'captured_research_inputs',source:'verified_official_metrics',date:'20261120',venue:2,race:1,racers};
+const recent50=racers.map(r=>({racerId:r.racerId,winRate:20,verified:true}));
+const result={date:'20261120',venue:2,race:1,verified:true,finishOrder:[3,1,5,2,4,6]};
+const courses=[2,1,4,3,5,6].map((entryCourse,i)=>({boat:i+1,entryCourse,verified:true}));
+const out=compare(snapshot,recent50,result,courses);
+assert.equal(out.status,'research_score_result_compared');
+assert.equal(out.actualPodiumBoats,'3-1-5');
+assert.equal(out.actualPodiumEntryCourses,'4-2-5');
+assert.equal(out.rows[0].boat,3);
+assert.equal(out.rows[0].entryCourse,4);
+assert.equal(out.eligibleForCalibration,false);
+assert.equal(out.authenticatedHistoricalPrediction,false);
+assert.equal(compare(snapshot,recent50,{...result,race:2},courses).reason,'race_identity_mismatch');
+assert.equal(compare(snapshot,recent50,result,courses.slice(0,5)).status,'held');
+assert.equal(compare(snapshot,[],result,courses).status,'held');
+console.log('Research score-to-course-result descriptive comparison tests passed');
