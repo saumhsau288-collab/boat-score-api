@@ -86,3 +86,10 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - `scheduledTrigger:true` but `scheduledMorningWindow:false` under the collector's defined 07:45–08:30 JST window. A scheduled workflow can start later than its configured nominal schedule.
 - All 14 reported `six_verified_start_rows_required`; 13 `beforeinfo_unverified` and 1 `beforeinfo_http_403`. Morning capture time is consistent with some races not yet having published exhibition/start data, but this is a hypothesis only: official publication and deadline timestamps were not authenticated.
 - This capture cannot validate a separate near-deadline (10 minutes before) refresh path. Do not conclude that the near-deadline code fails from these morning observations.
+
+## Morning schedule versus near-deadline refresh evidence
+
+- Inspected `.github/workflows/boat-score-2-capture-morning-predictions.yml`: schedule `0 23 * * *` (08:00 JST), and the read-only collector `scripts/capture-existing-boat-score-2-predictions.mjs` requests `mode=beforeinfo` on the preview selected-race API. The collector archives raw responses and timing; this is a morning workflow, not proof of a separate near-deadline scheduler.
+- The archived Nov 20 run started at 08:42 JST and did not authenticate official race cutoff times. A `mode=beforeinfo` request alone does not establish that official exhibition data was published or that a 10-minute-before-deadline refresh happened.
+- Inspected the candidate `fix-boat-score-2-syntax-20261115/worker.js` source for the selected-race beforeinfo fetch and verification gates. No authenticated deployment revision or independent near-deadline run evidence was established by this inspection.
+- Keep the intended 08:00 base prediction and near-deadline refresh as distinct requirements. Do not claim the latter is implemented, absent, functioning, or broken without reviewing its actual deployment and scheduler evidence.
