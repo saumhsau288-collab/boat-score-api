@@ -24,16 +24,19 @@ export function reportResearchSnapshotReadiness(snapshot){
   r.entryCourseVerified===true&&Number.isInteger(r.entryCourse)&&r.entryCourse>=1&&r.entryCourse<=6&&
   r.startTimingVerified===true&&typeof r.startTiming==='number'&&Number.isFinite(r.startTiming)&&
   r.exhibitionTimeVerified===true&&typeof r.exhibitionTime==='number'&&Number.isFinite(r.exhibitionTime));
+ const entryCourses=verified?snapshot.racers.map(r=>r.entryCourse):[];
+ const uniqueEntryCoursesVerified=entryCourses.length===6&&new Set(entryCourses).size===6;
  const weatherVerified=snapshot?.weather?.verified===true&&snapshot.weather.sourceVerified===true&&
   typeof snapshot.weather.windSpeed==='number'&&Number.isFinite(snapshot.weather.windSpeed)&&snapshot.weather.windSpeed>=0;
  const prestartAuthenticated=snapshot?.preRaceIndependentlyVerified===true;
  const readyForResearchPrestartScoring=verified&&recent50Verified&&coursesVerified&&
-  prestartFieldsVerified&&weatherVerified&&prestartAuthenticated;
+  prestartFieldsVerified&&uniqueEntryCoursesVerified&&weatherVerified&&prestartAuthenticated;
  const missingPrestart=[];
  if(!verified)missingPrestart.push('six_verified_official_racers');
  if(!recent50Verified)missingPrestart.push('six_independently_verified_recent50_records');
  if(!coursesVerified)missingPrestart.push('six_verified_entry_courses');
  if(!prestartFieldsVerified)missingPrestart.push('six_verified_start_timing_and_exhibition');
+ if(!uniqueEntryCoursesVerified)missingPrestart.push('six_unique_entry_courses');
  if(!weatherVerified)missingPrestart.push('verified_weather');
  if(!prestartAuthenticated)missingPrestart.push('independent_pre_race_authentication');
  const missing=[];
