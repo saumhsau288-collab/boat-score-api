@@ -53,6 +53,8 @@ on:
       - 'scripts/test-inspect-research-refresh-candidate-integrity.mjs'
       - 'scripts/classify-research-candidate-timing.mjs'
       - 'scripts/test-classify-research-candidate-timing.mjs'
+      - 'scripts/audit-research-prediction-provenance.mjs'
+      - 'scripts/test-audit-research-prediction-provenance.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -90,3 +92,4 @@ jobs:
       - run: node scripts/test-describe-research-schedule-disruption.mjs
       - run: node scripts/test-inspect-research-refresh-candidate-integrity.mjs
       - run: node scripts/test-classify-research-candidate-timing.mjs
+      - run: node scripts/test-audit-research-prediction-provenance.mjs
