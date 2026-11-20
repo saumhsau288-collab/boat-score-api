@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {compareResearchScorePhases as compare} from './compare-research-score-phases.mjs';
+const six=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:6,localWinRate:0,motorTwoWinRate:50,recent50WinRate:20,exhibitionScore:80}));
+const out=compare(six);
+assert.equal(out.status,'compared_research_formulas');
+assert.equal(out.comparableRows,6);
+assert.equal(out.rows[0].entryCourse,null);
+assert.equal(out.rows[0].morningScore,57.37);
+assert.equal(out.rows[0].preStartScore,58.5);
+assert.equal(compare(six.slice(0,5)).status,'held');
+assert.equal(compare(six.map(r=>({...r,exhibitionScore:undefined}))).comparableRows,0);
+console.log('Research scoring phase comparison tests passed');
