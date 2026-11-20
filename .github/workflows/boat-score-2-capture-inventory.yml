@@ -31,4 +31,15 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          READY_RACE_MANIFEST_PATH: ready-race-result-targets.json
         run: python3 scripts/inventory_morning_capture_artifacts.py
+      - name: Upload deduplicated official-result retrieval manifest (unverified)
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-ready-race-result-targets-${{ github.run_id }}
+          path: ready-race-result-targets.json
+          retention-days: 30
+          if-no-files-found: error
