@@ -10,6 +10,8 @@ on:
       - 'scripts/test-validate-research-feature-snapshot.mjs'
       - 'scripts/link-research-feature-snapshots.mjs'
       - 'scripts/test-link-research-feature-snapshots.mjs'
+      - 'scripts/build-research-feature-collection-queue.mjs'
+      - 'scripts/test-build-research-feature-collection-queue.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -25,3 +27,4 @@ jobs:
       - run: node scripts/test-inspect-score-evidence-research.mjs
       - run: node scripts/test-validate-research-feature-snapshot.mjs
       - run: node scripts/test-link-research-feature-snapshots.mjs
+      - run: node scripts/test-build-research-feature-collection-queue.mjs
