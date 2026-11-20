@@ -18,9 +18,11 @@ export function auditResearchSample(official,makulabo){
   racers.every(r=>samples.some(s=>s.boat===r.boat&&String(s.racerId)===String(r.racerId)&&s.sourceVerified===true));
  const officialBoatsValid=racers.length===6&&new Set(racers.map(r=>r.boat)).size===6&&
   racers.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6&&r.sourceVerified===true);
+ const candidateSourceIdsVerified=candidatesAlign&&candidates.every(c=>
+  c.sourceRacerId!=null&&String(c.sourceRacerId)===String(c.officialRacerId));
  const manualReviewOutstanding=candidates.some(c=>c.manualReviewRequired===true)&&
   makulabo?.identityReview?.manualReviewApproved!==true;
- const identitySafe=official?.status==='captured_research_inputs'&&officialBoatsValid&&idsMatch&&candidatesAlign&&
+ const identitySafe=official?.status==='captured_research_inputs'&&officialBoatsValid&&idsMatch&&candidatesAlign&&candidateSourceIdsVerified&&
   !manualReviewOutstanding&&
   makulabo?.identityReview?.verified===true&&makulabo?.status!=='held';
  const byBoat=new Map(samples.map(r=>[r.boat,r]));
@@ -35,6 +37,8 @@ export function auditResearchSample(official,makulabo){
    candidateMatchStatus:candidate?.matchStatus??null,
    manualReviewRequired:candidate?.manualReviewRequired??null,
    sourceRacerIdProvided:s?.racerId!=null,
+   candidateSourceRacerIdProvided:candidate?.sourceRacerId!=null,
+   candidateSourceRacerIdMatched:candidate?.sourceRacerId!=null&&String(candidate.sourceRacerId)===String(r.racerId),
    registrationIdMatched:Boolean(s&&s.sourceVerified===true&&String(s.racerId)===String(r.racerId)),
    runs:valid?runs:null,sampleValid:valid,exactly50:valid&&runs===50,
    insufficientSample:!valid||runs<50};
@@ -43,12 +47,13 @@ export function auditResearchSample(official,makulabo){
  const countsConsistent=sampleBoatsUnique&&rows.length===6&&rows.every(r=>r.sampleValid);
  const complete=countsConsistent&&rows.every(r=>r.exactly50);
  return {status:'research_sample_audit_only',date:official?.date??null,venue:official?.venue??null,
-  race:official?.race??null,rows,countsConsistent,allExactly50:complete,identitySafe,manualReviewOutstanding,
+  race:official?.race??null,rows,countsConsistent,allExactly50:complete,identitySafe,manualReviewOutstanding,candidateSourceIdsVerified,
   eligibleForCalibration:false,readyForResearchMorningScoring:false,
   reasons:[...(!officialBoatsValid?['six_unique_source_verified_official_boats_required']:[]),
    ...(!sampleBoatsUnique?['six_unique_sample_boats_required']:[]),
    ...(!idsMatch?['six_source_verified_registration_id_matches_required']:[]),
    ...(!candidatesAlign?['candidate_identity_evidence_incomplete_or_mismatched']:[]),
+   ...(!candidateSourceIdsVerified?['independent_source_registration_ids_missing_or_mismatched']:[]),
    ...(manualReviewOutstanding?['explicit_manual_identity_review_required']:[]),
    ...(!identitySafe?['identity_not_independently_verified']:[]),
    ...(!countsConsistent?['finish_counts_inconsistent_or_missing']:[]),
