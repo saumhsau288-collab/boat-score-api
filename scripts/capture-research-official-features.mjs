@@ -46,4 +46,4 @@ fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify({file,status:result.status,racers:result.racers?.length||0,diagnostic:result.diagnostic??null,eligibleForCalibration:false}));
 // A green CI run must not be mistaken for a verified six-racer extraction.
 // The workflow's artifact upload runs with if: always() even when this step fails.
-if(result.status!=='captured_research_inputs'&&result.status!=='no_race_notice_detected')process.exitCode=2;
+if(result.status!=='captured_research_inputs')process.exitCode=2;
