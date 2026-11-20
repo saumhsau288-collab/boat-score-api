@@ -288,10 +288,12 @@ if __name__ == '__main__':
     if summary:
         with open(summary, 'a', encoding='utf-8') as f:
             f.write('## Stored Boat Score 2 morning raw captures\n\n')
-            f.write('| Date JST | Artifacts | Attempts | HTTP 200 | Ready | 6+6 format |\n')
-            f.write('|---|---:|---:|---:|---:|---:|\n')
-            for day, c in result['byCaptureDate'].items():
-                f.write(f"| {day} | {c['artifacts']} | {c['captured']} | {c['http200']} | {c['ready']} | {c['usableSixPlusSix']} |\n")
+            f.write('| Date JST | Artifacts | Attempts | HTTP 200 | Ready | Unique ready races | Duplicate ready attempts | Missing six-boat vectors | Unauthenticated ready |\n')
+            f.write('|---|---:|---:|---:|---:|---:|---:|---:|---:|\n')
+            for day, counts in result['byCaptureDate'].items():
+                d = result['diagnosticsByDate'][day]
+                f.write(f"| {day} | {counts['artifacts']} | {counts['captured']} | {counts['http200']} | {counts['ready']} | {d['uniqueReadyRaceKeys']} | {d['duplicateReadyAttempts']} | {counts['readyWithoutSixBoatInputs']} | {counts['readyWithoutAuthenticatedPreRaceEvidence']} |\n")
+            f.write('\nUnique ready races are raw (date, venue, race) keys, NOT authenticated pre-race predictions. No accuracy claims.\n')
             for day, diagnostic in result['diagnosticsByDate'].items():
                 f.write(f'\n### {day}: response diagnostics\n\n')
                 f.write('| Response state | Count |\n|---|---:|\n')
