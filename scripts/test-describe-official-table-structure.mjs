@@ -8,5 +8,6 @@ assert.equal(result[0].gridValid,true);
 assert.equal(result[0].gridColumnCount,3);
 assert.deepEqual(result[0].headerCellsPerRow,[2,2,0]);
 assert.deepEqual(result[0].dataCellsPerRow,[0,0,3]);
+assert.deepEqual(result[0].profileLinksPerRow,[0,0,0]);
 assert.equal(JSON.stringify(result).includes('6.50'),false);
 console.log('Official table structural diagnostics tests passed');
