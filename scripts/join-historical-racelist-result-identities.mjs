@@ -40,4 +40,5 @@ if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(new URL(import.
  const report=auditHistoricalBatch(dir);
  fs.writeFileSync(path.join(dir,'historical-racelist-result-join.json'),JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify({status:report.status,races:report.races,matchedRaces:report.matchedRaces,matchedRacers:report.matchedRacers,fullCurrentScoreReplayReady:0}));
+ for(const row of report.results)console.log(JSON.stringify({event:'historical_identity_join_detail',date:row.date,venue:row.venue,race:row.race,status:row.status,reason:row.reason??null,matchedRacers:row.matchedRacers}));
 }
