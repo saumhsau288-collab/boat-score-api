@@ -49,4 +49,9 @@ for(const badTime of ['2026-11-18T00:00:00','2026-11-18 00:00:00','2026-11-18T00
 assert.equal(compare({...capture,records:[{...capture.records[0],receivedAt:'2026-11-18T09:00:00+09:00'}]},[result]).compared,1);
 assert.equal(compare({...capture,records:[{...capture.records[0],receivedAt:'2026-11-18T00:30:00Z'}]},[result]).compared,0,'Capture at cutoff is not before cutoff');
 assert.equal(compare({...capture,records:[{...capture.records[0],receivedAt:'2026-11-18T09:31:00+09:00'}]},[result]).compared,0,'Timezone offset must not mask post-cutoff capture');
+for(const date of ['20260230','20261301','20260001']){
+ const report=compare({...capture,records:[{...capture.records[0],date}]},[{...result,date}]);
+ assert.equal(report.compared,0,'Impossible date must never be compared');
+ assert.equal(report.holdReasons.invalid_saved_capture_race_key,1);
+}
 console.log('Saved capture / official result comparison eligibility tests passed');
