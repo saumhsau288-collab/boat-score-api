@@ -15,10 +15,14 @@ export function summarizeHistoricalPredictionReviews(records){
  const unique=reviews.map(r=>counts.get(r.raceKey)>1?
   {...r,status:'not_evaluable',missing:['duplicate_race_key'],predictionMiss:false}:r);
  const valid=unique.filter(r=>r.status==='evaluated_historical_prediction');
+ const missingEvidenceCounts={};
+ for(const review of unique.filter(r=>r.status==='not_evaluable'))
+  for(const reason of review.missing??[])
+   missingEvidenceCounts[reason]=(missingEvidenceCounts[reason]??0)+1;
  const hits=field=>valid.filter(r=>r[field]===true).length;
  const pct=n=>valid.length?Math.round(n/valid.length*10000)/100:null;
  return {status:'research_batch_summary',total:records.length,evaluable:valid.length,
-  notEvaluable:unique.length-valid.length,
+  notEvaluable:unique.length-valid.length,missingEvidenceCounts,
   firstPlaceHits:hits('firstPlaceHit'),top3SetHits:hits('top3SetHit'),
   exactTop3OrderHits:hits('exactTop3OrderHit'),
   firstPlaceHitRatePercent:pct(hits('firstPlaceHit')),
