@@ -80,4 +80,13 @@ for(const wrong of [
  assert.equal(report.compared,0,'Official URL must identify same race and result page');
  assert.equal(report.holdReasons.official_result_url_race_mismatch,1);
 }
+for(const duplicateQuery of [
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&rno=2&jcd=01&hd=20261118',
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&jcd=02&hd=20261118',
+ 'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=1&jcd=01&hd=20261118&hd=20261117'
+]) {
+ const report=compare(capture,[{...result,sourceUrl:duplicateQuery}]);
+ assert.equal(report.compared,0,'Ambiguous official race identity must not count');
+ assert.equal(report.holdReasons.official_result_url_race_mismatch,1);
+}
 console.log('Saved capture / official result comparison eligibility tests passed');
