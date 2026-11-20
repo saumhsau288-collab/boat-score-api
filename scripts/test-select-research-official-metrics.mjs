@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {selectResearchOfficialMetrics as select} from './select-research-official-metrics.mjs';
+const header='<tr><th rowspan="2">枠</th><th rowspan="2">選手</th><th colspan="2">全国</th><th colspan="2">当地</th><th colspan="2">モーター</th></tr><tr><th>勝率</th><th>2連率</th><th>勝率</th><th>2連率</th><th>番号</th><th>2連率</th></tr>';
+const row=i=>'<tr><td>'+i+'</td><td><a href="/owpc/pc/data/racersearch/profile?toban='+(4000+i)+'">選手'+i+'</a></td><td>6.50</td><td>42</td><td>5.20</td><td>36</td><td>12</td><td>44</td></tr>';
+const table='<table>'+header+Array.from({length:6},(_,i)=>row(i+1)).join('')+'</table>';
+const result=select('<html><table><tr><td>無関係</td></tr></table>'+table+'</html>');
+assert.equal(result.verified,true);
+assert.equal(result.source,'official_grouped_html_table');
+assert.equal(result.racers.length,6);
+assert.equal(result.racers[5].racerId,'4006');
+assert.equal(select(table+table).verified,false);
+assert.equal(select(table.replace('4002','4001')).verified,false);
+assert.equal(select(table.replace('6.50','不明')).verified,false);
+console.log('Official research extractor selection tests passed');
