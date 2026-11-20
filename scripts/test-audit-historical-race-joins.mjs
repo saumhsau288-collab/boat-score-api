@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {auditHistoricalRaceJoins} from './audit-historical-race-joins.mjs';
+assert.deepEqual(auditHistoricalRaceJoins([]),{total:0,eligible:0,excluded:0,reasons:{},accuracyCalculationPermitted:false});
+const x=auditHistoricalRaceJoins([{},{}]);
+assert.equal(x.total,2);
+assert.equal(x.eligible,0);
+assert.equal(x.excluded,2);
+assert.equal(x.reasons['official_cutoff_unverified:invalid_expected_race,official_domain_unverified,source_document_unverified,race_identity_mismatch,cutoff_label_unverified,source_capture_unverified'],2);
+assert.equal(x.accuracyCalculationPermitted,false);
+console.log('Historical batch audit: empty and missing-evidence cases passed');
