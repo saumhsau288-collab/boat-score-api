@@ -50,6 +50,12 @@ jobs:
           node --check scripts/compare-saved-capture-results.mjs
           node scripts/test-compare-saved-capture-results.mjs
           node scripts/test-fetch-official-result-pages-research.mjs
+      - name: Record offline test result separately from real-race evidence
+        if: success()
+        run: |
+          echo '## Offline validation passed' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Parser and saved-prediction comparison regression tests passed.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This is synthetic-test success only; verified historical comparisons and accuracy are not established.' >> "$GITHUB_STEP_SUMMARY"
   fetch-results:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
