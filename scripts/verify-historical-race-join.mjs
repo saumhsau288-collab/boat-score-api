@@ -27,6 +27,12 @@ export function verifyHistoricalRaceJoin({expected, source, schedule, scoreInput
       typeof v.capturedAt !== 'string' || !Number.isFinite(Date.parse(v.capturedAt)) ||
       Date.parse(v.capturedAt) >= official.cutoffEpochMs))
     return fail('score_inputs_not_verified_before_cutoff');
+  // Input timestamps alone do not prove the score was produced before the race.
+  if (scoreInputsByBoat.some(v => v.scoreComputedBeforeCutoffVerified !== true ||
+      typeof v.scoreComputedAt !== 'string' || !Number.isFinite(Date.parse(v.scoreComputedAt)) ||
+      Date.parse(v.scoreComputedAt) >= official.cutoffEpochMs ||
+      Date.parse(v.scoreComputedAt) < Date.parse(v.capturedAt)))
+    return fail('score_generation_not_authenticated_before_cutoff');
   if (!Array.isArray(finishByBoat) || finishByBoat.length !== 6 ||
       finishByBoat.some((v,i) => !v || v.boat !== i+1 || !Number.isInteger(v.finish) || v.finish < 1 || v.finish > 6) ||
       new Set(finishByBoat.map(v=>v.finish)).size !== 6)
