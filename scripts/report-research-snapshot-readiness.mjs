@@ -27,7 +27,10 @@ export function reportResearchSnapshotReadiness(snapshot){
  const entryCourses=verified?snapshot.racers.map(r=>r.entryCourse):[];
  const uniqueEntryCoursesVerified=entryCourses.length===6&&new Set(entryCourses).size===6;
  const weatherVerified=snapshot?.weather?.verified===true&&snapshot.weather.sourceVerified===true&&
-  typeof snapshot.weather.windSpeed==='number'&&Number.isFinite(snapshot.weather.windSpeed)&&snapshot.weather.windSpeed>=0;
+  typeof snapshot.weather.windSpeed==='number'&&Number.isFinite(snapshot.weather.windSpeed)&&snapshot.weather.windSpeed>=0&&
+  ((typeof snapshot.weather.windDirection==='string'&&snapshot.weather.windDirection.trim().length>0)||
+   (typeof snapshot.weather.windDirection==='number'&&Number.isFinite(snapshot.weather.windDirection)&&snapshot.weather.windDirection>=0&&snapshot.weather.windDirection<360))&&
+  typeof snapshot.weather.waveHeight==='number'&&Number.isFinite(snapshot.weather.waveHeight)&&snapshot.weather.waveHeight>=0;
  const prestartAuthenticated=snapshot?.preRaceIndependentlyVerified===true;
  const readyForResearchPrestartScoring=verified&&recent50Verified&&coursesVerified&&
   prestartFieldsVerified&&uniqueEntryCoursesVerified&&weatherVerified&&prestartAuthenticated;
