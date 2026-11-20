@@ -64,4 +64,10 @@ assert.equal(parsedOnlyReport.holdReasons.no_independently_verified_result,1);
 const conflictingOfficial=compare(capture,[result,{...result,finishOrder:[2,1,3,4,5,6]}]);
 assert.equal(conflictingOfficial.compared,0);
 assert.equal(conflictingOfficial.holdReasons.no_independently_verified_result,1);
+// A six-ticket prediction with repeated combinations is not a valid six-pick forecast.
+const duplicateTickets=[picks[0],picks[0],...picks.slice(2)];
+const duplicatePickReport=compare({...capture,records:[{...capture.records[0],response:{ready:true,main:duplicateTickets,upset:picks}}]},[result]);
+assert.equal(duplicatePickReport.compared,0);
+assert.equal(duplicatePickReport.holdReasons.invalid_picks,1);
+assert.equal(duplicatePickReport.mainHitRate,null);
 console.log('Saved capture / official result comparison eligibility tests passed');
