@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {describeMakulaboIdentityReview as describe} from './describe-makulabo-identity-review.mjs';
+const official=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'選手名前'+(i+1)}));
+const parsedRows=official.map(r=>({boat:r.boat,name:r.name}));
+parsedRows[2]={boat:3,name:'選手名前'};
+const report=describe(official,{verified:true,parsedRows});
+assert.equal(report.status,'identity_review_required');
+assert.equal(report.verified,false);
+assert.equal(report.candidates.length,6);
+assert.equal(report.candidates[2].identityEvidence,'abbreviated_name_review_required');
+assert.equal(report.candidates[2].manualReviewRequired,true);
+assert.equal(report.candidates[0].identityEvidence,'exact_name');
+assert.equal(report.scoreChangeApplied,false);
+assert.equal(describe(official,{verified:false,parsedRows}).status,'identity_review_unavailable');
+console.log('Makulabo identity review diagnostics tests passed');
