@@ -15,6 +15,8 @@ export function parseSavedOfficialResultPages(report){
   const table=h.match(/<table\b[^>]*class="is-w495"[^>]*>([\s\S]*?)<\/table>/i)?.[1];
   if(!table||!/<th>着<\/th>/.test(table))return {...base,status:'needs_review',reason:'finish_table_missing'};
   const matches=[...table.matchAll(/<tr>\s*<td class="is-fs14">([^<]+)<\/td>\s*<td class="is-fs14 is-fBold is-boatColor([1-6])">([1-6])<\/td>/g)];
+  // Reject contradictory color/boat identifiers instead of trusting the visible digit alone.
+  if(matches.some(m=>m[2]!==m[3]))return {...base,status:'needs_review',reason:'boat_color_mismatch'};
   const finishes=matches.map(m=>({rank:Number(ascii(m[1].trim())),boat:Number(m[3])}));
   const podium=finishes.filter(x=>x.rank>=1&&x.rank<=3).sort((a,b)=>a.rank-b.rank);
   if(podium.length!==3||podium.some((x,i)=>x.rank!==i+1)||new Set(podium.map(x=>x.boat)).size!==3)
