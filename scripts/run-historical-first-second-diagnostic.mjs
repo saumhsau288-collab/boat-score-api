@@ -14,10 +14,19 @@ const rows=files.map(file=>{
 const valid=rows.filter(r=>r.status==='partial_first_second_diagnostic');
 const count=k=>valid.filter(r=>r[k]===true).length;
 const decided=k=>valid.filter(r=>r[k]!==null).length;
+const firstCorrect=valid.filter(r=>r.firstCorrect===true);
+const firstWrong=valid.filter(r=>r.firstCorrect===false);
+const rate=(a,b)=>b?a/b:null;
 const summary={status:'first_second_historical_partial_diagnostic',races:rows.length,scored:valid.length,
  first:{correct:count('firstCorrect'),decided:decided('firstCorrect')},
  second:{correct:count('secondCorrect'),decided:decided('secondCorrect')},
  orderedPair:{correct:count('orderedPairCorrect'),decided:decided('orderedPairCorrect')},
+ conditionalSecondGivenFirstCorrect:{correct:firstCorrect.filter(r=>r.secondCorrect===true).length,
+  decided:firstCorrect.filter(r=>r.secondCorrect!==null).length,
+  rate:rate(firstCorrect.filter(r=>r.secondCorrect===true).length,firstCorrect.filter(r=>r.secondCorrect!==null).length)},
+ secondWhenFirstWrong:{correct:firstWrong.filter(r=>r.secondCorrect===true).length,
+  decided:firstWrong.filter(r=>r.secondCorrect!==null).length,
+  rate:rate(firstWrong.filter(r=>r.secondCorrect===true).length,firstWrong.filter(r=>r.secondCorrect!==null).length)},
  fullCurrentScore:false,eligibleForWeightTuning:false,eligibleForDeployment:false,rows};
 fs.writeFileSync(path.join(dir,'historical-first-second-diagnostic.json'),JSON.stringify(summary,null,2)+'\n');
 console.log(JSON.stringify({...summary,rows:undefined}));
