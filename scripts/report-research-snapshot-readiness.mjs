@@ -12,8 +12,9 @@ export function reportResearchSnapshotReadiness(snapshot){
  // Require six distinct source-verified numeric records, matched by registration ID.
  const recentRecords=Array.isArray(snapshot?.verifiedRecent50Records)?snapshot.verifiedRecent50Records:[];
  const ids=verified?snapshot.racers.map(r=>String(r.racerId)):[];
+ const racerIdsUnique=ids.length===6&&new Set(ids).size===6;
  const recentById=new Map(recentRecords.map(r=>[String(r?.racerId),r]));
- const recent50Verified=verified&&recentRecords.length===6&&recentById.size===6&&
+ const recent50Verified=verified&&racerIdsUnique&&recentRecords.length===6&&recentById.size===6&&
   ids.every(id=>{
    const r=recentById.get(id);
    return r?.verified===true&&r?.sourceVerified===true&&
@@ -32,10 +33,11 @@ export function reportResearchSnapshotReadiness(snapshot){
    (typeof snapshot.weather.windDirection==='number'&&Number.isFinite(snapshot.weather.windDirection)&&snapshot.weather.windDirection>=0&&snapshot.weather.windDirection<360))&&
   typeof snapshot.weather.waveHeight==='number'&&Number.isFinite(snapshot.weather.waveHeight)&&snapshot.weather.waveHeight>=0;
  const prestartAuthenticated=snapshot?.preRaceIndependentlyVerified===true;
- const readyForResearchPrestartScoring=verified&&recent50Verified&&coursesVerified&&
+ const readyForResearchPrestartScoring=verified&&racerIdsUnique&&recent50Verified&&coursesVerified&&
   prestartFieldsVerified&&uniqueEntryCoursesVerified&&weatherVerified&&prestartAuthenticated;
  const missingPrestart=[];
  if(!verified)missingPrestart.push('six_verified_official_racers');
+ if(!racerIdsUnique)missingPrestart.push('six_unique_racer_registration_ids');
  if(!recent50Verified)missingPrestart.push('six_independently_verified_recent50_records');
  if(!coursesVerified)missingPrestart.push('six_verified_entry_courses');
  if(!prestartFieldsVerified)missingPrestart.push('six_verified_start_timing_and_exhibition');
@@ -44,6 +46,7 @@ export function reportResearchSnapshotReadiness(snapshot){
  if(!prestartAuthenticated)missingPrestart.push('independent_pre_race_authentication');
  const missing=[];
  if(!verified)missing.push('six_verified_official_racers');
+ if(!racerIdsUnique)missing.push('six_unique_racer_registration_ids');
  if(!recent50Verified)missing.push('six_independently_verified_recent50_records');
  if(!coursesVerified)missing.push('six_verified_entry_courses');
  if(snapshot?.preRaceIndependentlyVerified!==true)missing.push('independent_pre_race_authentication');
