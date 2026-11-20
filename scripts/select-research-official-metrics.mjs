@@ -14,5 +14,5 @@ export function selectResearchOfficialMetrics(html){
   const validated=validateOfficialMetrics(grouped.racers);
   if(validated.verified)return {verified:true,source:grouped.source,racers:grouped.racers,legacyReason:legacy.reason??null,groupedReason:null};
  }
- return {verified:false,source:null,racers:[],legacyReason:legacy.reason??null,groupedReason:grouped.reason??null};
+ return {verified:false,source:null,racers:[],legacyReason:legacy.reason??null,groupedReason:grouped.reason??null,groupedTableAttempts:grouped.tableAttempts??null};
 }
