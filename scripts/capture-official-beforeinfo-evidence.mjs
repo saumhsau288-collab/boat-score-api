@@ -10,7 +10,7 @@ export function officialBeforeinfoUrl(selection){
  url.searchParams.set('hd',String(selection.date));
  return {status:'ok',url:url.toString()};
 }
-export async function captureOfficialBeforeinfo(selection,fetcher=fetch,now=()=>new Date().toISOString()){
+export async function captureOfficialBeforeinfo(selection,fetcher=fetch,now=()=>new Date().toISOString(),includeRawHtml=false){
  const target=officialBeforeinfoUrl(selection);
  if(target.status!=='ok')return {...target,verified:false,eligibleForCalibration:false};
  const requestedAt=now();
@@ -33,7 +33,8 @@ export async function captureOfficialBeforeinfo(selection,fetcher=fetch,now=()=>
    verified:false,preRaceIndependentlyVerified:false,eligibleForCalibration:false,
    reason:acceptable?'raw_source_only_not_parsed_or_cutoff_verified':'source_identity_or_response_invalid',
    // No extraction without a separately tested six-boat parser and cutoff evidence.
-   racers:[],weather:null};
+   racers:[],weather:null,
+   ...(acceptable&&includeRawHtml===true?{rawHtml:html}:{})};
  }catch(error){
   return {status:'beforeinfo_fetch_failed',sourceUrl:target.url,requestedAt,
    errorType:error?.name||'Error',verified:false,eligibleForCalibration:false};
