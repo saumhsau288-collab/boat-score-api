@@ -18,6 +18,7 @@ on:
       - 'scripts/normalize-research-racer-features.mjs'
       - 'scripts/audit-normalized-research-racers.mjs'
       - 'scripts/build-research-racer-comparison.mjs'
+      - 'scripts/audit-research-prediction-feature-coverage.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -60,6 +61,8 @@ jobs:
         run: node scripts/audit-normalized-research-racers.mjs research-official-racelists
       - name: Build descriptive racer comparison tables
         run: node scripts/build-research-racer-comparison.mjs research-official-racelists
+      - name: Audit coverage of required original prediction features
+        run: node scripts/audit-research-prediction-feature-coverage.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
