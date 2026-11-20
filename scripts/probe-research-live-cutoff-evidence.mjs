@@ -1,3 +1,4 @@
+import {buildResearchDailyRefreshCandidates} from './build-research-daily-refresh-candidates.mjs';
 import {planResearchUnverifiedRefresh} from './plan-research-unverified-refresh.mjs';
 import {inspectResearchRaceCutoffCandidate} from './inspect-research-race-cutoff-candidate.mjs';
 import {mapResearchDeadlineTableColumns} from './map-research-deadline-table-columns.mjs';
@@ -14,6 +15,7 @@ try {
  const response=await fetch(url,{signal:AbortSignal.timeout(12000),headers:{'User-Agent':'Mozilla/5.0 (BoatScore2Research/1.0)'}});
  const html=await response.text();
  const result=inspectResearchCutoffEvidence({requestedUrl:url,responseUrl:response.url,httpStatus:response.status,contentType:response.headers.get('content-type'),html,race});
+ const dailyRefreshCandidates=buildResearchDailyRefreshCandidates({html,requestedUrl:url,responseUrl:response.url,race});
  const refreshCandidate=planResearchUnverifiedRefresh({html,requestedUrl:url,responseUrl:response.url,race});
  const raceCutoffCandidate=inspectResearchRaceCutoffCandidate({html,requestedUrl:url,responseUrl:response.url,race});
  const deadlineTable=mapResearchDeadlineTableColumns(html);
@@ -23,5 +25,5 @@ try {
  const structure=describeResearchRacePageMarkers(html,race);
  const canonical=inspectResearchCanonicalRaceIdentity(html,{race});
  const raceUrl=inspectResearchRequestedRaceUrl({requestedUrl:url,responseUrl:response.url,race});
- console.log(JSON.stringify({race,httpStatus:response.status,htmlLength:html.length,sourceUrl:url,raceUrlStatus:raceUrl.status,raceUrlVerified:raceUrl.verified,canonicalStatus:canonical.status,structure,cutoffContext,deadlineSequence,deadlineMarkup,deadlineTable,raceCutoffCandidate,refreshCandidate,...result,productionChanged:false},null,2));
+ console.log(JSON.stringify({race,httpStatus:response.status,htmlLength:html.length,sourceUrl:url,raceUrlStatus:raceUrl.status,raceUrlVerified:raceUrl.verified,canonicalStatus:canonical.status,structure,cutoffContext,deadlineSequence,deadlineMarkup,deadlineTable,raceCutoffCandidate,refreshCandidate,dailyRefreshCandidates,...result,productionChanged:false},null,2));
 } catch(e) {console.log(JSON.stringify({race,status:'fetch_failed',error:String(e.message||e),verified:false,productionChanged:false},null,2));}
