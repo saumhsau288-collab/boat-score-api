@@ -8,6 +8,8 @@ on:
       - 'scripts/run-research-beforeinfo-capture.mjs'
       - 'scripts/diagnose-official-beforeinfo-html.mjs'
       - 'scripts/test-diagnose-official-beforeinfo-html.mjs'
+      - 'scripts/verify-beforeinfo-evidence-pair.mjs'
+      - 'scripts/test-verify-beforeinfo-evidence-pair.mjs'
       - '.github/workflows/research-beforeinfo-capture.yml'
   workflow_dispatch:
     inputs:
@@ -39,6 +41,7 @@ jobs:
           node scripts/test-capture-official-beforeinfo-evidence.mjs
           node scripts/test-report-research-snapshot-readiness.mjs
           node scripts/test-diagnose-official-beforeinfo-html.mjs
+          node scripts/test-verify-beforeinfo-evidence-pair.mjs
       - name: Capture source metadata only
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -51,6 +54,7 @@ jobs:
         run: |
           for file in prediction-captures/research-beforeinfo-*.html; do
             if [ -f "$file" ]; then
+              node scripts/verify-beforeinfo-evidence-pair.mjs "${file%.html}.json" "$file"
               node scripts/diagnose-official-beforeinfo-html.mjs "$file" > "${file%.html}-diagnostic.json"
             fi
           done
