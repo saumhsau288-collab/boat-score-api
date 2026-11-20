@@ -6,11 +6,13 @@ on:
     paths:
       - 'boat-score-2-*.js'
       - 'boat-score-2-*.mjs'
+      - 'scripts/*.mjs'
       - '.github/workflows/boat-score-2-scoring-tests.yml'
   pull_request:
     paths:
       - 'boat-score-2-*.js'
       - 'boat-score-2-*.mjs'
+      - 'scripts/*.mjs'
       - '.github/workflows/boat-score-2-scoring-tests.yml'
   workflow_dispatch:
 
@@ -82,3 +84,10 @@ jobs:
           node --experimental-default-type=module --check scripts/check-boat-score-2-history.mjs
           node --experimental-default-type=module boat-score-2-local-rate-fallback.test.mjs
           node --experimental-default-type=module boat-score-2-html-diagnostics.test.mjs
+          node scripts/test-classify-official-capture-html.mjs
+          node scripts/test-evaluate-captured-research-snapshot.mjs
+          node scripts/test-compare-research-score-phases.mjs
+          node scripts/test-audit-saved-research-race.mjs
+          node scripts/test-map-verified-finish-to-entry-course.mjs
+          node scripts/test-compare-research-scores-to-finish.mjs
+
