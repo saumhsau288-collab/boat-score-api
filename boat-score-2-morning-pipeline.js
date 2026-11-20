@@ -10,7 +10,7 @@ export function evaluateMorningFromSources({official, recent50}={}){
  const byId=new Map();
  for(const item of recent50){
    const id=String(item?.racerId??'');
-   if(!/^\d{4}$/.test(id)||byId.has(id)||item?.verified!==true||
+   if(!/^\d{4}$/.test(id)||byId.has(id)||item?.verified!==true||item?.sourceVerified!==true||
       typeof item.winRate!=='number'||!Number.isFinite(item.winRate)||
       item.winRate<0||item.winRate>100)
      return {status:'insufficient_data',source:'recent50',reason:'unverified_or_invalid'};
