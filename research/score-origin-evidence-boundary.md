@@ -71,3 +71,11 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - `exhibitionVerification` was `beforeinfo_unverified` in 13/14 and `beforeinfo_http_403` in 1/14.
 - HTTP 403 is a response reported by the app for one race; the remaining 13 `beforeinfo_unverified` labels do not identify whether transport, parsing, timing, or missing official data was the cause.
 - These flags are archived application diagnostics, not independently authenticated root-cause analysis. No evidence that adjustments were applied to these 14 scores.
+
+## Candidate preview parser gate inspection (source-only)
+
+- Inspected `fix-boat-score-2-syntax-20261115/worker.js` (candidate branch, not authenticated deployed SHA). The `mode=beforeinfo` handler fetches the official `/owpc/pc/race/beforeinfo` page when no complete verified cache exists, allows up to two 9-second timeout attempts, and rejects non-OK HTTP responses or pages over 1 MB.
+- `extractOfficialStartExhibition` requires a table containing `スタート展示`, parses six rows matching a strict boat/ST text pattern, and returns verified only for six unique boats. The `extractOfficialExhibition` parser requires a table with `展示タイム` and `チルト`, six rows with expected cell positions and valid exhibition time/tilt, and six unique boats.
+- The handler can therefore fail at HTTP fetch, table recognition, strict row parsing, or six-boat validation; the archived `beforeinfo_unverified` label does not distinguish these. `beforeinfo_http_403` corresponds to a non-OK response in this candidate code, but its exact deployed provenance remains unverified.
+- Source-only inspection does not show that any official HTML was successfully fetched for the 13 `beforeinfo_unverified` races. No post-hoc official HTML should be presented as original pre-race input.
+- Safe next diagnostic: collect read-only per-stage response status, parser candidate counts, and six-boat verification with source/capture timestamps in a separately archived research probe; avoid exposing personally identifying or secret data, and do not change scoring or production.
