@@ -55,5 +55,11 @@ const invalidNumbers=extract(officialHtml.replace('6.50<br>42<br>55','6.50<br>42
 assert.equal(invalidNumbers.verified,false);
 assert.deepEqual(invalidNumbers.rowDiagnostics,{boatRows:6,linkedRows:6,numericMetricRows:5});
 assert.equal(extract(officialHtml.replace('選手2','別名2')).verified,true);
+const fullwidthHtml=officialHtml.replace(/<td rowspan="4">([1-6])<\/td>/g,(_,n)=>'<td class="is-boatColor'+n+'" rowspan="4">'+String.fromCharCode(0xff10+Number(n))+'</td>');
+const fullwidthResult=extract(fullwidthHtml);
+assert.equal(fullwidthResult.verified,true,JSON.stringify(fullwidthResult));
+assert.deepEqual(fullwidthResult.racers.map(r=>r.boat),[1,2,3,4,5,6]);
+assert.equal(extract(fullwidthHtml.replace('is-boatColor2','is-boatColor3')).verified,false);
+assert.equal(extract(fullwidthHtml.replace('is-boatColor2','is-boatColor3')).candidateRows,5);
 
 console.log('Grouped official six-racer extraction tests passed');
