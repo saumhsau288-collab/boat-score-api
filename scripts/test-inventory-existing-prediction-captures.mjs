@@ -3,4 +3,10 @@ import {inventoryExistingPredictionCaptures} from './inventory-existing-predicti
 const x=inventoryExistingPredictionCaptures([{date:'20261118',authenticatedBeforeRace:false,records:[{response:{ready:true,prediction:{main:['1-2-3']},scoreInputsByBoat:[1,2,3,4,5,6]}},{response:{ready:false}}]}]);
 assert.equal(x.records,2);assert.equal(x.ready,1);assert.equal(x.withPrediction,1);
 assert.equal(x.withSixBoatInputs,1);assert.equal(x.withVerifiedPreRaceEvidence,0);
+assert.equal(x.readyWithoutSixBoatInputs,0);
+assert.equal(x.readyWithoutAuthenticatedPreRaceEvidence,1);
+const missing=inventoryExistingPredictionCaptures([{date:'20261120',records:[{response:{ready:true}},{response:{ready:true,scoreInputsByBoat:[1,2,3,4,5,6]}}]}]);
+assert.equal(missing.readyWithoutSixBoatInputs,1);
+assert.equal(missing.readyWithoutAuthenticatedPreRaceEvidence,2);
+assert.equal(missing.byFile[0].readyWithoutSixBoatInputs,1);
 console.log('Existing predictor capture inventory test passed');
