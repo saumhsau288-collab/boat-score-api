@@ -6,6 +6,10 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {evaluateRace,SCORE_WEIGHTS} from '../boat-score-2-scoring.js';
 import {auditPreCutoffScoreReceipt} from './audit-pre-cutoff-score-receipt.mjs';
+export function verifySourceRunProvenance(source,provenance){
+ const cutoff=Date.parse(source?.cutoffAt),created=Date.parse(provenance?.created_at),started=Date.parse(provenance?.run_started_at);
+ return Number.isFinite(cutoff)&&Number.isFinite(created)&&Number.isFinite(started)&&created<=started&&started<cutoff&&provenance?.conclusion==='success'&&Number.isSafeInteger(provenance?.id)&&provenance.id>0&&typeof provenance?.head_sha==='string'&&/^[a-f0-9]{40}$/.test(provenance.head_sha);
+}
 export function buildScoreCapture(source,now=new Date().toISOString()){
  const fail=(reason)=>({status:'held',reason,eligibleForWeightTuning:false});
  if(!source||!Array.isArray(source.racers)||source.racers.length!==6)return fail('six_source_racers_required');
@@ -23,11 +27,13 @@ export function buildScoreCapture(source,now=new Date().toISOString()){
  return {status:'research_score_captured',receipt,receiptSha256:createHash('sha256').update(JSON.stringify(receipt)).digest('hex'),authenticatedHistoricalPrediction:false,eligibleForWeightTuning:false};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
- const [input,output,evidenceFile]=process.argv.slice(2);
- if(!input||!output||!evidenceFile)throw Error('Usage: node scripts/capture-research-precutoff-score.mjs verified-input.json receipt.json archived-source-evidence');
+ const [input,output,evidenceFile,provenanceFile]=process.argv.slice(2);
+ if(!input||!output||!evidenceFile||!provenanceFile)throw Error('Usage: node scripts/capture-research-precutoff-score.mjs verified-input.json receipt.json archived-source-evidence source-run-provenance.json');
  const source=JSON.parse(fs.readFileSync(input,'utf8'));
  const evidenceHash=createHash('sha256').update(fs.readFileSync(evidenceFile)).digest('hex');
- const result=evidenceHash===source.sourceEvidenceSha256?buildScoreCapture(source):{status:'held',reason:'source_evidence_bytes_hash_mismatch',eligibleForWeightTuning:false};
+ const provenance=JSON.parse(fs.readFileSync(provenanceFile,'utf8'));
+ const result=evidenceHash!==source.sourceEvidenceSha256?{status:'held',reason:'source_evidence_bytes_hash_mismatch',eligibleForWeightTuning:false}:
+ !verifySourceRunProvenance(source,provenance)?{status:'held',reason:'source_run_not_independently_before_cutoff',eligibleForWeightTuning:false}:buildScoreCapture(source);
  fs.mkdirSync(path.dirname(output),{recursive:true});
  fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n');
  console.log(JSON.stringify({status:result.status,reason:result.reason??null,output}));
