@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {validateResearchJoin} from './validate-research-join-integrity.mjs';
+const base={date:'20261120',venue:2,race:1};
+const racers=Array.from({length:6},(_,i)=>({boat:i+1}));
+const capture={records:[{...base,response:{ready:true}}]};
+const comparison={races:[{...base,racers}]};
+const coverage={records:[{...base}]};
+assert.equal(validateResearchJoin({capture,comparison,coverage}).matchedReadyCount,1);
+assert.throws(()=>validateResearchJoin({capture,comparison:{races:[...comparison.races,...comparison.races]},coverage}),/duplicate_race_key/);
+assert.throws(()=>validateResearchJoin({capture,comparison:{races:[{...base,racers:racers.slice(1)}]},coverage}),/six_unique_racers_required/);
+assert.throws(()=>validateResearchJoin({capture,comparison,coverage:{records:[]}}),/unmatched_ready_race/);
+assert.throws(()=>validateResearchJoin({capture:{records:[{...base,date:'bad',response:{ready:true}}]},comparison,coverage}),/invalid_race_key/);
+console.log('Research join integrity tests passed');
