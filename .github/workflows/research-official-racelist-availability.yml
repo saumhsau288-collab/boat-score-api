@@ -22,6 +22,7 @@ on:
       - 'scripts/join-research-saved-predictions.mjs'
       - 'scripts/validate-research-join-integrity.mjs'
       - 'scripts/test-validate-research-join-integrity.mjs'
+      - 'scripts/audit-research-saved-score-schema.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -80,6 +81,7 @@ jobs:
         run: |
           CAPTURE=$(find research-saved-capture -name '20261120-44639859914.json' -type f | head -1)
           node scripts/join-research-saved-predictions.mjs research-official-racelists "$CAPTURE"
+          node scripts/audit-research-saved-score-schema.mjs "$CAPTURE" research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
