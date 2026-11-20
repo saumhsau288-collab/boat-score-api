@@ -3,12 +3,15 @@
 // Never infer a six-boat finish order from raw HTML.
 import fs from 'node:fs';
 import {captureOfficialResultEvidence} from './capture-official-result-evidence.mjs';
+import {parseOfficialResultFinishRows} from './parse-official-result-finish-rows.mjs';
 const selection={date:process.env.CAPTURE_DATE,venue:process.env.CAPTURE_VENUE,race:Number(process.env.CAPTURE_RACE)};
 const result=await captureOfficialResultEvidence(selection,fetch,()=>new Date().toISOString(),true);
 fs.mkdirSync('prediction-captures',{recursive:true});
 const prefix='prediction-captures/research-result-'+String(selection.date)+'-'+String(selection.venue)+'-'+String(selection.race);
 if(typeof result.rawHtml==='string'){
  fs.writeFileSync(prefix+'.html',result.rawHtml);
+ const parsed=parseOfficialResultFinishRows(result.rawHtml);
+ fs.writeFileSync(prefix+'-structure.json',JSON.stringify({...parsed,eligibleForCalibration:false,independentlyAuthenticated:false},null,2)+'\n');
  delete result.rawHtml;
 }
 fs.writeFileSync(prefix+'.json',JSON.stringify(result,null,2)+'\n');
