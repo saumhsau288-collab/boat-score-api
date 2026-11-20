@@ -15,4 +15,14 @@ assert.equal(result.closeAbilityReview.affectsScore,false);
 assert.equal(result.liveData,false);
 assert.equal(result.sourceVerification,'caller_asserted_not_independently_audited');
 assert.equal((await call('/api/research/evaluate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...payload,verified:false})})).status,422);
+const sourceRequest=async body=>call('/api/research/evaluate-sources',{
+ method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)
+});
+const missing=await sourceRequest({});
+assert.equal(missing.status,422);
+const unverified=await sourceRequest({official:{verified:false,racers:[]},recent50:[]});
+assert.equal(unverified.status,422);
+const missingResult=await unverified.json();
+assert.equal(missingResult.status,'insufficient_data');
+assert.equal(missingResult.liveData,false);
 console.log('Isolated research preview API tests passed');
