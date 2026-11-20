@@ -22,6 +22,16 @@ class InventoryTests(unittest.TestCase):
             source, None, 302, 'Found', {}, 'https://api.github.com/b')
         self.assertIn('Authorization', redirected.headers)
 
+    def test_ready_capture_missing_evidence_counts(self):
+        rows = [
+            {'venue': 1, 'race': 1, 'httpStatus': 200, 'response': {'ready': True}},
+            {'venue': 1, 'race': 2, 'httpStatus': 200, 'response': {'ready': True, 'scoreInputsByBoat': [1,2,3,4,5,6]}},
+            {'venue': 1, 'race': 3, 'httpStatus': 200, 'response': {'ready': False}}]
+        result = summarize_capture({'authenticatedBeforeRace': False, 'records': rows})
+        self.assertEqual(result['ready'], 2)
+        self.assertEqual(result['readyWithoutSixBoatInputs'], 1)
+        self.assertEqual(result['readyWithoutAuthenticatedPreRaceEvidence'], 2)
+
     def test_diagnoses_http_and_readiness_states(self):
         rows = [
             {'venue': 1, 'race': 1, 'httpStatus': 200, 'response': {'ready': True}},
