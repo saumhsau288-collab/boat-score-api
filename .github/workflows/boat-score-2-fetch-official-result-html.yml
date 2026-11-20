@@ -1,6 +1,10 @@
 name: Boat Score 2 fetch official result HTML (research only)
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/boat-score-2-fetch-official-result-html.yml'
   workflow_dispatch:
     inputs:
       capture_run_id:
@@ -24,6 +28,7 @@ permissions:
 
 jobs:
   fetch-results:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -69,3 +74,44 @@ jobs:
           path: research-results/
           if-no-files-found: error
           retention-days: 30
+
+  probe-manifest:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download saved 133-key retrieval manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p research-input
+          gh run download 44682109013 --repo "$GITHUB_REPOSITORY" --name boat-score-2-ready-race-result-targets-44682109013 --dir research-input
+      - name: Fetch first three official HTML pages as unverified research
+        run: |
+          mkdir -p research-results
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import {fetchOfficialResultPages} from './scripts/fetch-official-result-pages-research.mjs';
+          import {parseSavedOfficialResultPages} from './scripts/parse-saved-official-result-pages.mjs';
+          const m=JSON.parse(fs.readFileSync('research-input/ready-race-result-targets.json','utf8'));
+          if(m.method!=='retained_raw_ready_race_identity_manifest'||m.uniqueReadyRaceKeys!==133||m.requests.length!==133)throw Error('Unexpected saved manifest');
+          const records=m.requests.map(r=>({date:r.date,venue:r.venue,race:r.race,response:{ready:true}}));
+          const raw=await fetchOfficialResultPages({records},{limit:3});
+          const parsed=parseSavedOfficialResultPages(raw);
+          fs.writeFileSync('research-results/official-raw-probe.json',JSON.stringify(raw,null,2));
+          fs.writeFileSync('research-results/official-parsed-probe.json',JSON.stringify(parsed,null,2));
+          const summary={targets:raw.targets,saved:raw.pages.filter(x=>x.status==='raw_html_saved').length,failed:raw.pages.filter(x=>x.status==='fetch_failed').length,parsed:parsed.parsed,verifiedResults:0,eligibleForAccuracy:0};
+          console.log(JSON.stringify(summary));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'## Official HTML research probe\\n\\n'+JSON.stringify(summary)+'\\n\\nNo authenticated historical prediction or accuracy claim.\\n');
+          NODE
+      - name: Archive bounded research evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-official-html-probe-${{ github.run_id }}
+          path: research-results/
+          retention-days: 30
+          if-no-files-found: error
