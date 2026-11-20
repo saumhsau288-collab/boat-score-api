@@ -24,17 +24,18 @@ try {
  if(!response.ok||!officialHost||!/text\/html/i.test(response.headers.get('content-type')||'')||body.length>2_000_000)
   result={status:'invalid_official_response',httpStatus:response.status,receivedAt,officialHost};
  else {
+  const noRaceText=/本日のレースはありません|レースは開催されておりません|開催しておりません|開催はありません/.test(body.replace(/<[^>]+>/g,' ').replace(/\\s+/g,' '));
   const parsed=extractOfficialMetrics(body);
   const mapped=parseOfficialBoatRows(body);
   const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,
    boatMappingReason:mapped.reason??null,boatMappingVerified:mapped.verified===true,
    verifiedBoatCount:mapped.verified?mapped.racers?.length??0:0,
-   tableCount:(body.match(/<table\\b/gi)||[]).length,
+   tableCount:(body.match(/<table\\b/gi)||[]).length,explicitNoRaceNotice:noRaceText,
    hasNationalLabel:body.includes('全国'),hasLocalLabel:body.includes('当地'),
    hasMotorLabel:body.includes('モーター'),
    // Structural indicators only: never store personal page contents or infer metrics.
   };
-  const snapshot=buildResearchFeatureSnapshot({date,venue,race,capturedAt:receivedAt,official:parsed.verified?parsed.racers:null});
+  const snapshot=noRaceText?{status:'no_race_notice_detected',eligibleForCalibration:false,reason:'explicit_no_race_text_on_official_racelist'}:buildResearchFeatureSnapshot({date,venue,race,capturedAt:receivedAt,official:parsed.verified?parsed.racers:null});
   result={...snapshot,diagnostic,requestedAt,receivedAt,sourceUrl:target.url,responseSha256:digest,
    httpStatus:response.status,finalUrl:finalUrl.toString(),preRaceIndependentlyVerified:false};
  }
