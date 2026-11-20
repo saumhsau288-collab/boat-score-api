@@ -352,6 +352,7 @@ jobs:
           node scripts/run-historical-first-second-diagnostic.mjs
           node scripts/inspect-archived-actual-course-markup.mjs
           node scripts/analyze-close-ability-actual-course.mjs
+          node scripts/test-analyze-slow-dash-zone-proxy.mjs
       - name: Preserve second-place error analysis
         if: always()
         uses: actions/upload-artifact@v4
