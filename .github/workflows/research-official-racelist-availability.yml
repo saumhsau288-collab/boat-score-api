@@ -1,0 +1,36 @@
+name: Research official race-list availability (post-hoc only)
+on:
+  push:
+    branches:
+      - research/score-evidence-gate-20261120
+    paths:
+      - '.github/workflows/research-official-racelist-availability.yml'
+      - 'scripts/fetch-research-official-racelists.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download independently generated research queue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p research-queue
+          gh run download 44687771820 --repo "${{ github.repository }}" --name research-score-evidence-summary --dir research-queue
+          test -s research-queue/feature-collection-queue.json
+      - name: Archive official race-list pages without treating them as pre-race evidence
+        run: node scripts/fetch-research-official-racelists.mjs research-queue/feature-collection-queue.json research-official-racelists
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-official-racelist-posthoc
+          path: research-official-racelists/
+          retention-days: 7
