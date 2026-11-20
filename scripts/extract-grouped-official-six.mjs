@@ -2,6 +2,9 @@
 import {identifyOfficialGroupedMetricColumns} from './identify-official-grouped-metric-columns.mjs';
 const clean=s=>String(s).replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
 const number=s=>{const t=clean(s).replace(/[%％]/g,'');return /^\d+(?:\.\d+)?$/.test(t)?Number(t):null;};
+// A stacked official cell must have exactly three numeric entries in header order.
+// Reject extra or missing values rather than shifting the percentage index.
+const stackedValues=s=>{const t=clean(s).replace(/[%％]/g,'');return /^\d+(?:\.\d+)?(?:\s+\d+(?:\.\d+)?){2}$/.test(t)?t.split(/\s+/).map(Number):null;};
 export function extractGroupedOfficialSix(html){
  const tables=typeof html==='string'?[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(m=>m[0]):[];
  if(tables.length!==1){
@@ -19,14 +22,29 @@ export function extractGroupedOfficialSix(html){
   // Never infer the boat from row order or from an arbitrary numeric statistic.
   if(boats.length!==1)continue;
   const boat=number(boats[0].html);
-  const links=[...new Set(row.flatMap(c=>[...c.html.matchAll(/<a\b[^>]*href=["']([^"']*racersearch\/profile\?[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi)].map(m=>m[0])))];
-  if(links.length!==1)continue;
-  const m=links[0].match(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
-  let id;
-  try{id=new URL(m[1],'https://www.boatrace.jp').searchParams.get('toban');}catch{continue;}
-  if(!/^\d{4}$/.test(id||''))continue;
-  const name=clean(m[2]);
-  const values=Object.fromEntries(Object.entries(columns).map(([key,col])=>[key,number(row[col]?.html)]));
+  const links=[...new Set(row.flatMap(c=>[...c.html.matchAll(/<a\\b[^>]*href=["']([^"']*racersearch\\/profile\\?[^"']*)["'][^>]*>([\\s\\S]*?)<\\/a>/gi)].map(m=>m[0])))];
+  const profiles=links.map(link=>{
+   const m=link.match(/<a\\b[^>]*href=["']([^"']+)["'][^>]*>([\\s\\S]*?)<\\/a>/i);
+   if(!m)return null;
+   try{
+    const id=new URL(m[1],'https://www.boatrace.jp').searchParams.get('toban');
+    return /^\\d{4}$/.test(id||'')?{id,name:clean(m[2])}:null;
+   }catch{return null;}
+  }).filter(Boolean);
+  const ids=[...new Set(profiles.map(p=>p.id))];
+  const names=[...new Set(profiles.map(p=>p.name).filter(Boolean))];
+  if(ids.length!==1||names.length!==1)continue;
+  const id=ids[0],name=names[0];
+  let values;
+  if(layout.mode==='stacked_triplet'){
+   const national=stackedValues(row[columns.nationalWinRate]?.html);
+   const local=stackedValues(row[columns.localWinRate]?.html);
+   const motor=stackedValues(row[columns.motorTwoWinRate]?.html);
+   if(!national||!local||!motor)continue;
+   values={nationalWinRate:national[0],localWinRate:local[0],motorTwoWinRate:motor[1]};
+  }else{
+   values=Object.fromEntries(Object.entries(columns).map(([key,col])=>[key,number(row[col]?.html)]));
+  }
   if(!name||values.nationalWinRate===null||values.localWinRate===null||values.motorTwoWinRate===null||
    values.nationalWinRate>10||values.localWinRate>10||values.motorTwoWinRate>100)continue;
   found.push({boat,racerId:id,name,...values,sourceVerified:true});
