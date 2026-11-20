@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {validateFeatureSnapshot} from './validate-research-feature-snapshot.mjs';
+const sources=Object.fromEntries(['nationalWinRate','localWinRate','motorTwoWinRate','recent50WinRate','exhibitionScore','startTiming'].map(k=>[k,'https://example.org/source']));
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),entryCourse:i+1,nationalWinRate:6,localWinRate:0,motorTwoWinRate:40,recent50WinRate:50,exhibitionScore:50,startTiming:0.15,sources}));
+const input={date:'20261120',venue:2,race:1,capturedAt:'2026-11-20T00:00:00Z',officialCutoffAt:'2026-11-20T01:00:00Z',officialCutoffSourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',racers};
+const ok=validateFeatureSnapshot(input);
+assert.equal(ok.structurallyComplete,true);
+assert.equal(ok.calibrationEligible,false);
+assert.equal(ok.independentlyAuthenticated,false);
+assert(validateFeatureSnapshot({...input,racers:racers.map((r,i)=>i===0?{...r,entryCourse:2}:r)}).errors.includes('invalid_entry_courses'));
+assert(validateFeatureSnapshot({...input,capturedAt:'2026-11-20T02:00:00Z'}).errors.includes('capture_before_cutoff_not_established'));
+assert(validateFeatureSnapshot({...input,racers:racers.map((r,i)=>i===0?{...r,sources:{}}:r)}).errors.includes('missing_source_nationalWinRate'));
+console.log('research feature snapshot schema tests passed');
