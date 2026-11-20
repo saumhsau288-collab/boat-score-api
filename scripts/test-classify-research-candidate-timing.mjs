@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {classifyResearchCandidateTiming as classify} from './classify-research-candidate-timing.mjs';
+const candidates=Array.from({length:12},(_,i)=>({race:i+1,refreshCandidateAt:new Date(Date.UTC(2026,10,20,1,35+i*27)).toISOString()}));
+const result=classify({candidates},'2026-11-20T01:35:00.000Z');
+assert.equal(result.status,'timing_classified_not_authenticated');
+assert.equal(result.entries[0].status,'refresh_window_already_passed');
+assert.equal(result.entries[1].status,'refresh_window_in_future');
+assert.equal(result.refreshAuthorized,false);
+assert.equal(classify({candidates},'bad').status,'invalid_timing_evidence');
+const broken=structuredClone(candidates);broken[0].refreshCandidateAt='bad';
+assert.equal(classify({candidates:broken},'2026-11-20T01:35:00.000Z').status,'invalid_timing_evidence');
+console.log('Research refresh timing tests passed');

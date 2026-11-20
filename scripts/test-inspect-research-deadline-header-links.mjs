@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {inspectResearchDeadlineHeaderLinks as inspect} from './inspect-research-deadline-header-links.mjs';
+const race={date:'20261120',venue:2,race:1};
+const cell=i=>'<th><a href="/owpc/pc/race/racelist?rno='+i+'&amp;jcd=02&amp;hd=20261120">'+i+'R</a></th>';
+const html=cells=>'<table><tr><th>レース</th>'+cells.join('')+'</tr></table>';
+const cells=Array.from({length:12},(_,i)=>cell(i+1));
+assert.equal(inspect(html(cells),race).status,'header_links_consistent_not_authenticated');
+assert.equal(inspect(html(cells),race).verified,false);
+const wrongDate=[...cells];wrongDate[4]=wrongDate[4].replace('20261120','20261119');
+assert.equal(inspect(html(wrongDate),race).status,'header_links_inconsistent');
+const wrongRace=[...cells];wrongRace[6]=wrongRace[6].replace('rno=7','rno=8');
+assert.equal(inspect(html(wrongRace),race).status,'header_links_inconsistent');
+const wrongVenue=[...cells];wrongVenue[0]=wrongVenue[0].replace('jcd=02','jcd=03');
+assert.equal(inspect(html(wrongVenue),race).status,'header_links_inconsistent');
+const missing=[...cells];missing[2]=missing[2].replace(/href="[^"]+"/,'');
+assert.equal(inspect(html(missing),race).status,'header_links_inconsistent');
+console.log('Research deadline header link tests passed');

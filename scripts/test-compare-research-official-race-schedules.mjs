@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {compareResearchOfficialRaceSchedules as compare} from './compare-research-official-race-schedules.mjs';
+const date='20261120',venue=2;
+const times=['10:45','11:12','11:39','12:06','12:33','13:00','13:27','13:54','14:21','14:48','15:15','15:42'];
+const html=values=>'<table><tr><th>レース</th>'+Array.from({length:12},(_,i)=>'<th><a href="/owpc/pc/race/racelist?rno='+(i+1)+'&amp;jcd=02&amp;hd=20261120">'+(i+1)+'R</a></th>').join('')+'</tr><tr><td>締切予定時刻</td>'+values.map(t=>'<td>'+t+'</td>').join('')+'</tr></table>';
+const page=(race,values=times)=>({race,html:html(values),requestedUrl:'https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261120&jcd=02&rno='+race,responseUrl:'https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261120&jcd=02&rno='+race});
+assert.equal(compare([page(1),page(2)],{date,venue}).status,'cross_page_schedule_consistent_not_authenticated');
+assert.equal(compare([page(1),page(2)],{date,venue}).verified,false);
+assert.equal(compare([page(1),page(2,times.map((x,i)=>i===5?'13:01':x))],{date,venue}).status,'cross_page_schedule_conflict');
+assert.equal(compare([page(1)],{date,venue}).status,'insufficient_pages');
+console.log('Cross-page cutoff schedule comparison tests passed');

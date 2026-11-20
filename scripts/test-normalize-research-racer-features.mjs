@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {normalizeResearchRacer} from './normalize-research-racer-features.mjs';
+const zero=normalizeResearchRacer({boat:5,nationalWinRate:4.6,localWinRate:0,averageST:null});
+assert.equal(zero.rawLocalWinRate,0);
+assert.equal(zero.effectiveLocalWinRate,4.6);
+assert.equal(zero.winRateAverage,4.6);
+assert.equal(zero.localWinRateFallbackApplied,true);
+assert.equal(zero.averageSTMissing,true);
+const normal=normalizeResearchRacer({boat:1,nationalWinRate:4.2,localWinRate:5.2,averageST:0.14});
+assert.equal(normal.winRateAverage,4.7);
+assert.equal(normal.effectiveLocalWinRate,5.2);
+assert.equal(normal.localWinRateFallbackApplied,false);
+assert.throws(()=>normalizeResearchRacer({nationalWinRate:4.2,localWinRate:null}),/win_rates_required/);
+console.log('research racer normalization tests passed');

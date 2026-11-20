@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {inspectResearchCutoffIntervals as inspect} from './inspect-research-cutoff-intervals.mjs';
+const t=['10:45','11:12','11:39','14:11','14:13','14:14','14:16','14:17','14:23','14:29','14:35','14:46'];
+const rows=t.map((time,i)=>({race:i+1,time}));
+const result=inspect(rows);
+assert.equal(result.status,'schedule_intervals_need_review');
+assert.ok(result.anomalies.some(x=>x.fromRace===3&&x.toRace===4&&x.reason==='unusually_long'));
+assert.ok(result.anomalies.some(x=>x.fromRace===4&&x.toRace===5&&x.reason==='unusually_short'));
+assert.equal(result.refreshAuthorized,false);
+const normal=Array.from({length:12},(_,i)=>({race:i+1,time:String(10+Math.floor((i*27+30)/60)).padStart(2,'0')+':'+String((i*27+30)%60).padStart(2,'0')}));
+assert.equal(inspect(normal).status,'schedule_intervals_plausible_not_authenticated');
+assert.equal(inspect([{race:1,time:'10:00'}]).status,'invalid_race_times');
+console.log('Research cutoff interval diagnostics tests passed');

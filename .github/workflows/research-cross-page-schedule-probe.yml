@@ -1,0 +1,17 @@
+name: Research cross-page official schedule probe (read only)
+on:
+  push:
+    branches: [research/score-evidence-gate-20261120]
+    paths:
+      - 'scripts/probe-research-cross-page-schedule.mjs'
+      - 'scripts/compare-research-official-race-schedules.mjs'
+      - '.github/workflows/research-cross-page-schedule-probe.yml'
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/probe-research-cross-page-schedule.mjs

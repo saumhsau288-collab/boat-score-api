@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {auditResearchPredictionProvenance as audit} from './audit-research-prediction-provenance.mjs';
+const capture={authenticatedBeforeRace:false,records:[{response:{ready:true,rankedScores:[]}},{response:{ready:false}},{response:{ready:true,sourceCommit:'a'.repeat(40),sourceBranch:'preview',version:'v2'}}]};
+const result=audit(capture);
+assert.equal(result.readyResponses,2);
+assert.equal(result.withCommit,1);
+assert.equal(result.withBranch,1);
+assert.equal(result.withVersion,1);
+assert.equal(result.fullyIdentified,1);
+assert.equal(result.authenticated,0);
+assert.equal(result.calibrationEligible,false);
+assert.equal(audit({authenticatedBeforeRace:false,records:[{response:{ready:true}}]}).fullyIdentified,0);
+assert.equal(audit(null).status,'invalid_capture');
+console.log('Research prediction provenance audit tests passed');

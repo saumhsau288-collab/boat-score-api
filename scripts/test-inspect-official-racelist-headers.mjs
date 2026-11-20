@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {inspectOfficialRaceListHeaders} from './inspect-official-racelist-headers.mjs';
+const valid=inspectOfficialRaceListHeaders('<html><table><tr><th>平均ST</th><th>全国</th><th>当地</th></tr><tr><th>勝率</th></tr></table></html>');
+assert.equal(valid.splitHeaderCandidate,true);
+assert.equal(valid.verifiedWinRateValues,false);
+assert.equal(valid.authenticatedBeforeRace,false);
+assert.equal(inspectOfficialRaceListHeaders('<html>全国 当地</html>').splitHeaderCandidate,false);
+assert.equal(inspectOfficialRaceListHeaders('<script>全国 当地 勝率 平均ST</script>').splitHeaderCandidate,false);
+assert.throws(()=>inspectOfficialRaceListHeaders(null),/html_required/);
+console.log('split official race-list header tests passed');

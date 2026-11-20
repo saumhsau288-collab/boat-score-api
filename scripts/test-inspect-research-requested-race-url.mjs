@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {inspectResearchRequestedRaceUrl as inspect} from './inspect-research-requested-race-url.mjs';
+const race={date:'20261120',venue:2,race:1};
+const url='https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261120&jcd=02&rno=1';
+assert.equal(inspect({requestedUrl:url,responseUrl:url,race}).status,'request_and_response_race_url_consistent_not_authenticated');
+assert.equal(inspect({requestedUrl:url,responseUrl:url,race}).verified,false);
+assert.equal(inspect({requestedUrl:url,responseUrl:url.replace('rno=1','rno=2'),race}).status,'race_url_mismatch');
+assert.equal(inspect({requestedUrl:url,responseUrl:'https://evil.example/',race}).status,'unexpected_official_url');
+assert.equal(inspect({requestedUrl:url+'&rno=1',responseUrl:url,race}).status,'race_url_mismatch');
+console.log('Research official race URL identity tests passed');

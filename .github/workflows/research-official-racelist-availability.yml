@@ -1,0 +1,156 @@
+name: Research official race-list availability (post-hoc only)
+on:
+  push:
+    branches:
+      - research/score-evidence-gate-20261120
+    paths:
+      - '.github/workflows/research-official-racelist-availability.yml'
+      - 'scripts/fetch-research-official-racelists.mjs'
+      - 'scripts/audit-research-official-racelist-structure.mjs'
+      - 'scripts/audit-research-official-field-labels.mjs'
+      - 'scripts/diagnose-research-racelist-labels.mjs'
+      - 'scripts/diagnose-research-racelist-tables.mjs'
+      - 'scripts/preview-research-racelist-rows.mjs'
+      - 'scripts/extract-research-official-racers.mjs'
+      - 'scripts/audit-research-official-racers.mjs'
+      - 'scripts/report-research-racer-extraction-failures.mjs'
+      - 'scripts/diagnose-research-fifth-boat.mjs'
+      - 'scripts/normalize-research-racer-features.mjs'
+      - 'scripts/audit-normalized-research-racers.mjs'
+      - 'scripts/build-research-racer-comparison.mjs'
+      - 'scripts/audit-research-prediction-feature-coverage.mjs'
+      - 'scripts/join-research-saved-predictions.mjs'
+      - 'scripts/validate-research-join-integrity.mjs'
+      - 'scripts/test-validate-research-join-integrity.mjs'
+      - 'scripts/audit-research-saved-score-schema.mjs'
+      - 'scripts/compare-research-saved-scores.mjs'
+      - 'scripts/audit-research-score-disagreements.mjs'
+      - 'scripts/audit-research-disagreement-boat-position.mjs'
+      - 'scripts/fetch-research-official-results.mjs'
+      - 'scripts/diagnose-research-official-result-structure.mjs'
+      - 'scripts/preview-research-official-result-tables.mjs'
+      - 'scripts/extract-research-official-finishes.mjs'
+      - 'scripts/compare-research-scores-official-finishes.mjs'
+      - 'scripts/diagnose-research-unverified-finishes.mjs'
+      - 'scripts/diagnose-research-missing-result-pages.mjs'
+      - 'scripts/classify-research-missing-results.mjs'
+      - 'scripts/retry-research-unpublished-results.mjs'
+      - 'scripts/analyze-research-score-rank-finishes.mjs'
+      - 'scripts/audit-research-severe-finish-disagreements.mjs'
+      - 'scripts/analyze-research-severe-racer-attributes.mjs'
+      - 'scripts/summarize-research-weight-review.mjs'
+      - 'scripts/analyze-research-all-verified-racers.mjs'
+      - 'scripts/compare-research-ranking-baselines.mjs'
+      - 'scripts/compare-research-paired-baselines.mjs'
+      - 'scripts/audit-research-paired-race-differences.mjs'
+      - 'scripts/audit-research-winrate-improvements.mjs'
+      - 'scripts/compare-research-candidate-formula-proxy.mjs'
+      - 'scripts/audit-research-candidate-formula-disagreements.mjs'
+      - 'scripts/audit-research-local-zero-sensitivity.mjs'
+      - 'scripts/audit-research-local-zero-saved-agreement.mjs'
+      - 'scripts/audit-research-local-zero-official-finishes.mjs'
+      - 'scripts/audit-research-saved-response-provenance.mjs'
+      - 'scripts/audit-research-saved-missing-inputs.mjs'
+      - 'scripts/audit-research-saved-beforeinfo-timing.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test strict research join integrity
+        run: node scripts/test-validate-research-join-integrity.mjs
+      - name: Download independently generated research queue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p research-queue
+          gh run download 44687771820 --repo "${{ github.repository }}" --name research-score-evidence-summary --dir research-queue
+          test -s research-queue/feature-collection-queue.json
+      - name: Archive official race-list pages without treating them as pre-race evidence
+        run: node scripts/fetch-research-official-racelists.mjs research-queue/feature-collection-queue.json research-official-racelists
+      - name: Archive official result page availability without assuming completed races
+        run: node scripts/fetch-research-official-results.mjs research-queue/feature-collection-queue.json research-official-racelists
+      - name: Diagnose official result page HTML structure without claiming finish order
+        run: node scripts/diagnose-research-official-result-structure.mjs research-official-racelists
+      - name: Preview official result table rows before extracting finish positions
+        run: node scripts/preview-research-official-result-tables.mjs research-official-racelists
+      - name: Extract six-boat official finishing order with strict checks
+        run: node scripts/extract-research-official-finishes.mjs research-official-racelists
+      - name: Diagnose official results failing strict six-boat verification
+        run: node scripts/diagnose-research-unverified-finishes.mjs research-official-racelists
+      - name: Diagnose official pages lacking result tables
+        run: node scripts/diagnose-research-missing-result-pages.mjs research-official-racelists
+      - name: Classify missing official results and exclude cancelled races
+        run: node scripts/classify-research-missing-results.mjs research-official-racelists
+      - name: Retry only unpublished official results, never cancelled races
+        run: node scripts/retry-research-unpublished-results.mjs research-official-racelists
+      - name: Audit archived HTML structure
+        run: node scripts/audit-research-official-racelist-structure.mjs research-official-racelists
+      - name: Audit source field labels
+        run: node scripts/audit-research-official-field-labels.mjs research-official-racelists
+      - name: Diagnose actual label formats
+        run: node scripts/diagnose-research-racelist-labels.mjs research-official-racelists
+      - name: Diagnose table layout and header cells
+        run: node scripts/diagnose-research-racelist-tables.mjs research-official-racelists
+      - name: Preview racer candidate row cell positions
+        run: node scripts/preview-research-racelist-rows.mjs research-official-racelists
+      - name: Extract official six-racer records (post-hoc only)
+        run: node scripts/audit-research-official-racers.mjs research-official-racelists
+      - name: Report incomplete six-racer records
+        run: node scripts/report-research-racer-extraction-failures.mjs research-official-racelists
+      - name: Diagnose failed fifth-boat fields
+        run: node scripts/diagnose-research-fifth-boat.mjs research-official-racelists
+      - name: Audit normalized win rates for all extracted racers
+        run: node scripts/audit-normalized-research-racers.mjs research-official-racelists
+      - name: Build descriptive racer comparison tables
+        run: node scripts/build-research-racer-comparison.mjs research-official-racelists
+      - name: Audit coverage of required original prediction features
+        run: node scripts/audit-research-prediction-feature-coverage.mjs research-official-racelists
+      - name: Download original saved prediction capture for identity join
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p research-saved-capture
+          gh api repos/${{ github.repository }}/actions/artifacts/14586303082/zip > research-saved-capture/capture.zip
+          unzip -q research-saved-capture/capture.zip -d research-saved-capture
+          find research-saved-capture -name '20261120-44639859914.json' -type f | grep -q .
+      - name: Join saved predictions to research comparisons (not historical validation)
+        run: |
+          CAPTURE=$(find research-saved-capture -name '20261120-44639859914.json' -type f | head -1)
+          node scripts/join-research-saved-predictions.mjs research-official-racelists "$CAPTURE"
+          node scripts/audit-research-saved-score-schema.mjs "$CAPTURE" research-official-racelists
+          node scripts/audit-research-saved-response-provenance.mjs "$CAPTURE" research-official-racelists
+          node scripts/audit-research-saved-missing-inputs.mjs "$CAPTURE" research-official-racelists
+          node scripts/audit-research-saved-beforeinfo-timing.mjs "$CAPTURE" research-official-racelists
+          node scripts/compare-research-saved-scores.mjs research-official-racelists "$CAPTURE"
+          node scripts/audit-research-score-disagreements.mjs research-official-racelists
+          node scripts/audit-research-disagreement-boat-position.mjs research-official-racelists
+          node scripts/compare-research-scores-official-finishes.mjs research-official-racelists
+          node scripts/analyze-research-score-rank-finishes.mjs research-official-racelists
+          node scripts/audit-research-severe-finish-disagreements.mjs research-official-racelists
+          node scripts/analyze-research-severe-racer-attributes.mjs research-official-racelists
+          node scripts/summarize-research-weight-review.mjs research-official-racelists
+          node scripts/analyze-research-all-verified-racers.mjs research-official-racelists
+          node scripts/compare-research-ranking-baselines.mjs research-official-racelists
+          node scripts/compare-research-paired-baselines.mjs research-official-racelists
+          node scripts/audit-research-paired-race-differences.mjs research-official-racelists
+          node scripts/audit-research-winrate-improvements.mjs research-official-racelists
+          node scripts/compare-research-candidate-formula-proxy.mjs research-official-racelists
+          node scripts/audit-research-candidate-formula-disagreements.mjs research-official-racelists
+          node scripts/audit-research-local-zero-sensitivity.mjs research-official-racelists
+          node scripts/audit-research-local-zero-saved-agreement.mjs research-official-racelists
+          node scripts/audit-research-local-zero-official-finishes.mjs research-official-racelists
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-official-racelist-posthoc
+          path: research-official-racelists/
+          retention-days: 7

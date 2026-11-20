@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {inspectResearchDeadlineTimeSequence as inspect} from './inspect-research-deadline-time-sequence.mjs';
+const times=['10:45','11:12','11:39','14:11','14:13','14:14','14:16','14:17','14:23','14:29','14:35','14:46'];
+const x=inspect('<div>締切予定時刻</div><div>'+times.map(t=>'<span>'+t+'</span>').join('')+'</div>');
+assert.equal(x.status,'twelve_times_found_unmapped');
+assert.deepEqual(x.times,times);
+assert.equal(x.verified,false);
+assert.equal(inspect('<div>締切予定時刻 10:45</div>').status,'incomplete_time_sequence');
+assert.equal(inspect('<div>展示タイム 10:45</div>').status,'deadline_label_missing');
+console.log('Research deadline time sequence tests passed');

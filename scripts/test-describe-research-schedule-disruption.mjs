@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {describeResearchScheduleDisruption as describe} from './describe-research-schedule-disruption.mjs';
+const result=describe({status:'schedule_quarantined',anomalies:[{reason:'unusually_long'},{reason:'unusually_short'},{reason:'unusually_short'}]});
+assert.equal(result.status,'possible_schedule_disruption_needs_official_confirmation');
+assert.equal(result.possibleDisruption,true);
+assert.equal(result.correctedTimes,null);
+assert.equal(result.refreshAuthorized,false);
+assert.equal(describe({status:'schedule_quarantined',anomalies:[{reason:'unusually_short'}]}).possibleDisruption,false);
+assert.equal(describe(null).status,'no_quarantined_schedule');
+console.log('Research schedule disruption diagnostics tests passed');

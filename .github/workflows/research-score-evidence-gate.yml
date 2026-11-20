@@ -1,0 +1,95 @@
+name: Research score evidence gate tests
+on:
+  push:
+    branches:
+      - research/score-evidence-gate-20261120
+    paths:
+      - 'scripts/inspect-score-evidence-research.mjs'
+      - 'scripts/test-inspect-score-evidence-research.mjs'
+      - 'scripts/validate-research-feature-snapshot.mjs'
+      - 'scripts/test-validate-research-feature-snapshot.mjs'
+      - 'scripts/link-research-feature-snapshots.mjs'
+      - 'scripts/test-link-research-feature-snapshots.mjs'
+      - 'scripts/build-research-feature-collection-queue.mjs'
+      - 'scripts/test-build-research-feature-collection-queue.mjs'
+      - 'scripts/inspect-official-racelist-headers.mjs'
+      - 'scripts/test-inspect-official-racelist-headers.mjs'
+      - 'scripts/extract-research-official-racers.mjs'
+      - 'scripts/test-extract-research-official-racers.mjs'
+      - 'scripts/normalize-research-racer-features.mjs'
+      - 'scripts/test-normalize-research-racer-features.mjs'
+      - 'scripts/classify-research-deadline-refresh.mjs'
+      - 'scripts/test-classify-research-deadline-refresh.mjs'
+      - 'scripts/evaluate-research-race-deadline-refresh.mjs'
+      - 'scripts/test-evaluate-research-race-deadline-refresh.mjs'
+      - 'scripts/inspect-research-cutoff-evidence.mjs'
+      - 'scripts/test-inspect-research-cutoff-evidence.mjs'
+      - 'scripts/inspect-research-requested-race-url.mjs'
+      - 'scripts/test-inspect-research-requested-race-url.mjs'
+      - 'scripts/inspect-research-canonical-race-identity.mjs'
+      - 'scripts/test-inspect-research-canonical-race-identity.mjs'
+      - 'scripts/inspect-research-deadline-time-sequence.mjs'
+      - 'scripts/test-inspect-research-deadline-time-sequence.mjs'
+      - 'scripts/map-research-deadline-table-columns.mjs'
+      - 'scripts/test-map-research-deadline-table-columns.mjs'
+      - 'scripts/plan-research-unverified-refresh.mjs'
+      - 'scripts/test-plan-research-unverified-refresh.mjs'
+      - 'scripts/build-research-daily-refresh-candidates.mjs'
+      - 'scripts/test-build-research-daily-refresh-candidates.mjs'
+      - 'scripts/select-research-verified-refreshes.mjs'
+      - 'scripts/test-select-research-verified-refreshes.mjs'
+      - 'scripts/inspect-research-deadline-header-links.mjs'
+      - 'scripts/test-inspect-research-deadline-header-links.mjs'
+      - 'scripts/compare-research-official-race-schedules.mjs'
+      - 'scripts/test-compare-research-official-race-schedules.mjs'
+      - 'scripts/test-research-cross-date-schedule-contamination.mjs'
+      - 'scripts/inspect-research-cutoff-intervals.mjs'
+      - 'scripts/test-inspect-research-cutoff-intervals.mjs'
+      - 'scripts/quarantine-research-anomalous-schedule.mjs'
+      - 'scripts/test-quarantine-research-anomalous-schedule.mjs'
+      - 'scripts/describe-research-schedule-disruption.mjs'
+      - 'scripts/test-describe-research-schedule-disruption.mjs'
+      - 'scripts/inspect-research-refresh-candidate-integrity.mjs'
+      - 'scripts/test-inspect-research-refresh-candidate-integrity.mjs'
+      - 'scripts/classify-research-candidate-timing.mjs'
+      - 'scripts/test-classify-research-candidate-timing.mjs'
+      - 'scripts/audit-research-prediction-provenance.mjs'
+      - 'scripts/test-audit-research-prediction-provenance.mjs'
+      - '.github/workflows/research-score-evidence-gate.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/test-inspect-score-evidence-research.mjs
+      - run: node scripts/test-validate-research-feature-snapshot.mjs
+      - run: node scripts/test-link-research-feature-snapshots.mjs
+      - run: node scripts/test-build-research-feature-collection-queue.mjs
+      - run: node scripts/test-inspect-official-racelist-headers.mjs
+      - run: node scripts/test-extract-research-official-racers.mjs
+      - run: node scripts/test-normalize-research-racer-features.mjs
+      - run: node scripts/test-classify-research-deadline-refresh.mjs
+      - run: node scripts/test-evaluate-research-race-deadline-refresh.mjs
+      - run: node scripts/test-inspect-research-cutoff-evidence.mjs
+      - run: node scripts/test-inspect-research-requested-race-url.mjs
+      - run: node scripts/test-inspect-research-canonical-race-identity.mjs
+      - run: node scripts/test-inspect-research-deadline-time-sequence.mjs
+      - run: node scripts/test-map-research-deadline-table-columns.mjs
+      - run: node scripts/test-plan-research-unverified-refresh.mjs
+      - run: node scripts/test-build-research-daily-refresh-candidates.mjs
+      - run: node scripts/test-select-research-verified-refreshes.mjs
+      - run: node scripts/test-inspect-research-deadline-header-links.mjs
+      - run: node scripts/test-compare-research-official-race-schedules.mjs
+      - run: node scripts/test-research-cross-date-schedule-contamination.mjs
+      - run: node scripts/test-inspect-research-cutoff-intervals.mjs
+      - run: node scripts/test-quarantine-research-anomalous-schedule.mjs
+      - run: node scripts/test-describe-research-schedule-disruption.mjs
+      - run: node scripts/test-inspect-research-refresh-candidate-integrity.mjs
+      - run: node scripts/test-classify-research-candidate-timing.mjs
+      - run: node scripts/test-audit-research-prediction-provenance.mjs

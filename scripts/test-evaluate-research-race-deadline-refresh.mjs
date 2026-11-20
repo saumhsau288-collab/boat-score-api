@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {evaluateRaceDeadlineRefresh as check} from './evaluate-research-race-deadline-refresh.mjs';
+const race={date:'20261120',venue:2,race:3};
+const c={...race,verified:true,source:'official',sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',cutoffAt:'2026-11-20T06:30:00.000Z'};
+const now='2026-11-20T06:20:00.000Z';
+assert.equal(check({now,race,cutoffs:[c]}).eligible,true);
+assert.equal(check({now,race,cutoffs:[]}).status,'cutoff_evidence_missing');
+assert.equal(check({now,race,cutoffs:[c,c]}).status,'ambiguous_cutoff_evidence');
+assert.equal(check({now,race,cutoffs:[{...c,verified:false}]}).status,'official_cutoff_unverified');
+assert.equal(check({now,race,cutoffs:[{...c,race:4}]}).status,'cutoff_evidence_missing');
+assert.equal(check({now,race:{...race,venue:0},cutoffs:[c]}).status,'invalid_race_identity');
+console.log('Research race-specific deadline evidence tests passed');
