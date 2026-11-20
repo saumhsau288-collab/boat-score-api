@@ -48,6 +48,15 @@ export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
   if(!actual)reasons.push('no_independently_verified_result');
   if(!isOfficialBoatraceSource(official?.sourceUrl))
    reasons.push('missing_official_result_source');
+  else {
+   const url=new URL(official.sourceUrl);
+   // Require the official result page to identify the same race as the saved prediction.
+   if(url.pathname!=='/owpc/pc/race/raceresult'||
+      url.searchParams.get('hd')!==String(r.date)||
+      Number(url.searchParams.get('jcd'))!==Number(r.venue)||
+      Number(url.searchParams.get('rno'))!==Number(r.race))
+    reasons.push('official_result_url_race_mismatch');
+  }
   const cutoff=explicitTimezoneTimestamp(official?.officialCutoffAt);
   const captured=explicitTimezoneTimestamp(r.receivedAt);
   if(!Number.isFinite(cutoff)||!Number.isFinite(captured)||captured>=cutoff)
