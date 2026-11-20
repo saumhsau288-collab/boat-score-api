@@ -125,7 +125,7 @@ jobs:
           node scripts/test-inspect-archived-research-pair.mjs
 
   archived-evidence-diagnostic:
-    if: github.ref == 'refs/heads/research-cutoff-join-gate-20261120' && github.event_name == 'push'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
