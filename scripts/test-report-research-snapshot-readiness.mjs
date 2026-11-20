@@ -33,6 +33,11 @@ const prestartRacers=racers.map((r,i)=>({...r,entryCourse:i+1,entryCourseVerifie
 const prestart={...snapshot,racers:prestartRacers,verifiedRecent50Records,
  weather:{verified:true,sourceVerified:true,windSpeed:2,windDirection:'北',waveHeight:1},preRaceIndependentlyVerified:true};
 assert.equal(report(prestart).readyForResearchPrestartScoring,true);
+const duplicateIdRacers=prestartRacers.map((r,i)=>i===5?{...r,racerId:prestartRacers[0].racerId}:r);
+const duplicateIdReport=report({...prestart,racers:duplicateIdRacers});
+assert.equal(duplicateIdReport.readyForResearchMorningScoring,false);
+assert.equal(duplicateIdReport.readyForResearchPrestartScoring,false);
+assert(duplicateIdReport.missing.includes('six_unique_racer_registration_ids'));
 assert.deepEqual(report(prestart).missingPrestart,[]);
 assert.equal(report({...prestart,preRaceIndependentlyVerified:false}).readyForResearchPrestartScoring,false);
 assert.equal(report({...prestart,weather:null}).readyForResearchPrestartScoring,false);
