@@ -247,7 +247,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p prediction-captures
-          gh run download "${{ github.run_id }}" --repo "${{ github.repository }}" --name "research-result-source-${{ github.run_id }}" --dir prediction-captures
+          gh run download 44816328162 --repo "${{ github.repository }}" --name "research-result-source-44816328162" --dir prediction-captures
       - name: Audit historical racer identities against finish rows
         if: always()
         run: node scripts/join-historical-racelist-result-identities.mjs
