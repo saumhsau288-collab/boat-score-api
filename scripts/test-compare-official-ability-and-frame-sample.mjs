@@ -3,7 +3,7 @@ import {compareOfficialAbilityAndFrameSample as compare} from './compare-officia
 import {describeMakulaboFinishSample} from './describe-makulabo-finish-sample.mjs';
 import {summarizeMakulaboFinishComparison} from './summarize-makulabo-finish-comparison.mjs';
 const counts=[[22,12,9,5,2,0],[8,15,7,8,5,6],[11,7,11,7,9,4],[6,4,15,9,6,9],[0,0,0,0,1,0],[1,2,8,8,12,18]];
-const sample=summarize(describeMakulaboFinishSample({verified:true,parsedRows:counts.map((counts,i)=>({boat:i+1,name:'R'+i,counts,runs:counts.reduce((a,b)=>a+b,0)}))}));
+const sample=summarizeMakulaboFinishComparison(describeMakulaboFinishSample({verified:true,parsedRows:counts.map((counts,i)=>({boat:i+1,name:'R'+i,counts,runs:counts.reduce((a,b)=>a+b,0)}))}));
 const snapshot={status:'captured_research_inputs',source:'verified_official_metrics',racers:counts.map((_,i)=>({boat:i+1,racerId:String(4000+i),name:'R'+i,sourceVerified:true,nationalWinRate:5,localWinRate:i===4?0:4,motorTwoWinRate:40}))};
 const result=compare(snapshot,sample);
 assert.equal(result.status,'descriptive_cross_source_comparison');
