@@ -25,7 +25,7 @@ export function classifyHistoricalPredictionReview({evidenceAudit,savedPredictio
     deadlineAt!==officialDeadlineAt||savedAt>=deadlineAt)
   missing.push('authenticated_prediction_before_official_deadline');
  const keys=[savedPrediction?.raceKey,officialResult?.raceKey,evidenceAudit?.raceKey];
- const match=typeof keys[0]==='string'?keys[0].match(/^(20\\d{6})-(\\d{1,2})-(\\d{1,2})$/):null;
+ const match=typeof keys[0]==='string'?keys[0].match(/^(20\d{6})-(\d{1,2})-(\d{1,2})$/):null;
  const date=match?.[1]??'',venue=Number(match?.[2]),race=Number(match?.[3]);
  const y=Number(date.slice(0,4)),m=Number(date.slice(4,6)),d=Number(date.slice(6,8));
  const validCalendar=Boolean(match)&&m>=1&&m<=12&&d>=1&&d<=31&&
