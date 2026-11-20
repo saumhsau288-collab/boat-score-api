@@ -5,7 +5,7 @@ const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name
  exhibitionScore:null,exhibitionScoreVerified:false}));
 const snapshot={status:'captured_research_inputs',source:'verified_official_metrics',
  date:'20261120',venue:2,race:1,racers};
-const recent50=racers.map(r=>({racerId:r.racerId,winRate:20,verified:true}));
+const recent50=racers.map(r=>({racerId:r.racerId,winRate:20,verified:true,sourceVerified:true}));
 const out=audit(snapshot,recent50);
 assert.equal(out.status,'research_morning_audited');
 assert.equal(out.morning.status,'evaluated');
