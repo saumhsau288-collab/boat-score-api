@@ -3,7 +3,7 @@ import {evaluateCapturedResearchSnapshot as evaluate} from './evaluate-captured-
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i,sourceVerified:true,
  nationalWinRate:i===0?9:5,localWinRate:i===0?9:5,motorTwoWinRate:50}));
 const snapshot={source:'verified_official_metrics',status:'captured_research_inputs',date:'20261120',venue:2,race:1,racers};
-const recent50=racers.map(r=>({racerId:r.racerId,winRate:50,verified:true}));
+const recent50=racers.map(r=>({racerId:r.racerId,winRate:50,verified:true,sourceVerified:true}));
 assert.equal(evaluate(snapshot,recent50).status,'evaluated');
 assert.equal(evaluate(snapshot,recent50).eligibleForCalibration,false);
 assert.equal(evaluate(snapshot,recent50).predictionEngine,'research_morning_pipeline_not_deployed_worker');
