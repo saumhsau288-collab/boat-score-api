@@ -138,6 +138,9 @@ jobs:
           import {parseSavedOfficialResultPages} from './scripts/parse-saved-official-result-pages.mjs';
           const m=JSON.parse(fs.readFileSync('research-input/ready-race-result-targets.json','utf8'));
           if(m.method!=='retained_raw_ready_race_identity_manifest'||m.uniqueReadyRaceKeys!==133||m.requests.length!==133)throw Error('Unexpected saved manifest');
+          const byDate=Object.fromEntries([...new Set(m.requests.map(r=>r.date))].sort().map(date=>[date,m.requests.filter(r=>r.date===date).length]));
+          console.log('Saved candidate race identities by date:',JSON.stringify(byDate));
+          console.log('Manifest contains race identities only, NOT authenticated saved trifecta picks or verified outcomes.');
           const records=m.requests.map(r=>({date:r.date,venue:r.venue,race:r.race,response:{ready:true}}));
           const raw=await fetchOfficialResultPages({records},{limit:12});
           const parsed=parseSavedOfficialResultPages(raw);
