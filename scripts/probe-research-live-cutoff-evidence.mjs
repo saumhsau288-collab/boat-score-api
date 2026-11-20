@@ -1,3 +1,4 @@
+import {inspectResearchCutoffIntervals} from './inspect-research-cutoff-intervals.mjs';
 import {inspectResearchDeadlineHeaderLinks} from './inspect-research-deadline-header-links.mjs';
 import {buildResearchDailyRefreshCandidates} from './build-research-daily-refresh-candidates.mjs';
 import {planResearchUnverifiedRefresh} from './plan-research-unverified-refresh.mjs';
@@ -21,11 +22,12 @@ try {
  const raceCutoffCandidate=inspectResearchRaceCutoffCandidate({html,requestedUrl:url,responseUrl:response.url,race});
  const deadlineHeaderLinks=inspectResearchDeadlineHeaderLinks(html,race);
  const deadlineTable=mapResearchDeadlineTableColumns(html);
+ const cutoffIntervals=inspectResearchCutoffIntervals(deadlineTable.raceTimes);
  const deadlineMarkup=inspectResearchDeadlineMarkup(html);
  const deadlineSequence=inspectResearchDeadlineTimeSequence(html);
  const cutoffContext=describeResearchCutoffLabelContext(html);
  const structure=describeResearchRacePageMarkers(html,race);
  const canonical=inspectResearchCanonicalRaceIdentity(html,{race});
  const raceUrl=inspectResearchRequestedRaceUrl({requestedUrl:url,responseUrl:response.url,race});
- console.log(JSON.stringify({race,httpStatus:response.status,htmlLength:html.length,sourceUrl:url,raceUrlStatus:raceUrl.status,raceUrlVerified:raceUrl.verified,canonicalStatus:canonical.status,structure,cutoffContext,deadlineSequence,deadlineMarkup,deadlineTable,deadlineHeaderLinks,raceCutoffCandidate,refreshCandidate,dailyRefreshCandidates,...result,productionChanged:false},null,2));
+ console.log(JSON.stringify({race,httpStatus:response.status,htmlLength:html.length,sourceUrl:url,raceUrlStatus:raceUrl.status,raceUrlVerified:raceUrl.verified,canonicalStatus:canonical.status,structure,cutoffContext,deadlineSequence,deadlineMarkup,deadlineTable,cutoffIntervals,deadlineHeaderLinks,raceCutoffCandidate,refreshCandidate,dailyRefreshCandidates,...result,productionChanged:false},null,2));
 } catch(e) {console.log(JSON.stringify({race,status:'fetch_failed',error:String(e.message||e),verified:false,productionChanged:false},null,2));}
