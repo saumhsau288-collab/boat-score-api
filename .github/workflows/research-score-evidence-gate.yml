@@ -14,6 +14,8 @@ on:
       - 'scripts/test-build-research-feature-collection-queue.mjs'
       - 'scripts/inspect-official-racelist-headers.mjs'
       - 'scripts/test-inspect-official-racelist-headers.mjs'
+      - 'scripts/extract-research-official-racers.mjs'
+      - 'scripts/test-extract-research-official-racers.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -31,3 +33,4 @@ jobs:
       - run: node scripts/test-link-research-feature-snapshots.mjs
       - run: node scripts/test-build-research-feature-collection-queue.mjs
       - run: node scripts/test-inspect-official-racelist-headers.mjs
+      - run: node scripts/test-extract-research-official-racers.mjs
