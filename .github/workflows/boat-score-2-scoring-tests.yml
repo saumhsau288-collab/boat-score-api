@@ -121,3 +121,4 @@ jobs:
           node scripts/test-normalize-saved-prediction-for-join.mjs
           node scripts/test-audit-research-sample.mjs
           node scripts/test-summarize-verified-score-finish-joins.mjs
+          node scripts/test-inspect-archived-research-pair.mjs
