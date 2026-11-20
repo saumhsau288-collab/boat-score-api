@@ -22,13 +22,13 @@ export function extractGroupedOfficialSix(html){
   // Never infer the boat from row order or from an arbitrary numeric statistic.
   if(boats.length!==1)continue;
   const boat=number(boats[0].html);
-  const links=[...new Set(row.flatMap(c=>[...c.html.matchAll(/<a\\b[^>]*href=["']([^"']*racersearch\\/profile\\?[^"']*)["'][^>]*>([\\s\\S]*?)<\\/a>/gi)].map(m=>m[0])))];
+  const links=[...new Set(row.flatMap(c=>[...c.html.matchAll(/<a\b[^>]*href=["']([^"']*racersearch\/profile\?[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi)].map(m=>m[0])))];
   const profiles=links.map(link=>{
-   const m=link.match(/<a\\b[^>]*href=["']([^"']+)["'][^>]*>([\\s\\S]*?)<\\/a>/i);
+   const m=link.match(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
    if(!m)return null;
    try{
     const id=new URL(m[1],'https://www.boatrace.jp').searchParams.get('toban');
-    return /^\\d{4}$/.test(id||'')?{id,name:clean(m[2])}:null;
+    return /^\d{4}$/.test(id||'')?{id,name:clean(m[2])}:null;
    }catch{return null;}
   }).filter(Boolean);
   const ids=[...new Set(profiles.map(p=>p.id))];
