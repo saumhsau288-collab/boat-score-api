@@ -19,6 +19,7 @@ on:
       - 'scripts/audit-normalized-research-racers.mjs'
       - 'scripts/build-research-racer-comparison.mjs'
       - 'scripts/audit-research-prediction-feature-coverage.mjs'
+      - 'scripts/join-research-saved-predictions.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -63,6 +64,18 @@ jobs:
         run: node scripts/build-research-racer-comparison.mjs research-official-racelists
       - name: Audit coverage of required original prediction features
         run: node scripts/audit-research-prediction-feature-coverage.mjs research-official-racelists
+      - name: Download original saved prediction capture for identity join
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p research-saved-capture
+          gh api repos/${{ github.repository }}/actions/artifacts/14586303082/zip > research-saved-capture/capture.zip
+          unzip -q research-saved-capture/capture.zip -d research-saved-capture
+          find research-saved-capture -name '20261120-44639859914.json' -type f | grep -q .
+      - name: Join saved predictions to research comparisons (not historical validation)
+        run: |
+          CAPTURE=$(find research-saved-capture -name '20261120-44639859914.json' -type f | head -1)
+          node scripts/join-research-saved-predictions.mjs research-official-racelists "$CAPTURE"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
