@@ -19,4 +19,9 @@ const grouped=extractOfficialMetrics('<table><tr><th>枠</th><th>全国</th><th>
 assert.equal(grouped.verified,false);
 assert.equal(grouped.reason,'grouped_official_headers_need_verified_column_mapping');
 assert.equal(grouped.diagnostics.groupedHeaderTables,1);
+assert.deepEqual(grouped.diagnostics.tableRowCounts,[2]);
+const merged=extractOfficialMetrics('<table><tr><th colspan="2">全国</th><th rowspan="2">当地</th><th>モーター</th></tr></table>');
+assert.equal(merged.verified,false);
+assert.equal(merged.diagnostics.tablesWithColspan,1);
+assert.equal(merged.diagnostics.tablesWithRowspan,1);
 console.log('Official metric extraction tests passed');
