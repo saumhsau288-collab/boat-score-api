@@ -29,7 +29,7 @@ try {
   const noRaceText=page.explicitNoRaceNotice;
   const parsed=extractOfficialMetrics(body);
   const mapped=parseOfficialBoatRows(body);
-  const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,
+  const diagnostic={parserReason:parsed.reason??null,metricsVerified:parsed.verified===true,metricStructure:parsed.diagnostics??null,
    boatMappingReason:mapped.reason??null,boatMappingVerified:mapped.verified===true,
    verifiedBoatCount:mapped.verified?mapped.racers?.length??0:0,
    tableCount:page.tableCount,explicitNoRaceNotice:noRaceText,
