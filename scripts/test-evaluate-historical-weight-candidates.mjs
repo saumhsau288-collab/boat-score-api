@@ -15,12 +15,12 @@ assert.equal(evaluate([valid,valid]).excluded.duplicate_race,1);
 assert.equal(evaluate([{...valid,featureInputsByBoat:undefined}]).excluded.authenticated_pre_cutoff_features_missing,1);
 assert.equal(evaluate([{...valid,source:{...source,resultVerified:false}}]).eligible,0);
 const records=[];
-for(let day=1;day<=5;day++)for(let race=1;race<=12;race++){
+for(let day=1;day<=5;day++)for(let venue=1;venue<=12;venue++){
  const date='202611'+String(day).padStart(2,'0');
  const when=date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6);
  const t=when+'T08:00:00+09:00';
  const c=when+'T08:05:00+09:00';
- records.push({...valid,expected:{date,venue:'02',race},source:{...source,date,race,receivedAt:t,sourceCapturedAtEpochMs:Date.parse(t)},scoreInputsByBoat:scoreInputsByBoat.map(v=>({...v,capturedAt:t,scoreComputedAt:c}))});
+ records.push({...valid,expected:{date,venue:String(venue).padStart(2,'0'),race:3},source:{...source,date,venue:String(venue).padStart(2,'0'),race:3,receivedAt:t,sourceCapturedAtEpochMs:Date.parse(t)},scoreInputsByBoat:scoreInputsByBoat.map(v=>({...v,capturedAt:t,scoreComputedAt:c}))});
 }
 const report=evaluate(records,{minTrain:24,minHoldout:12});
 assert.equal(report.status,'research_comparison_only');
