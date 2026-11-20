@@ -123,6 +123,7 @@ jobs:
           node scripts/test-audit-research-sample.mjs
           node scripts/test-summarize-verified-score-finish-joins.mjs
           node scripts/test-inspect-archived-research-pair.mjs
+          node scripts/test-audit-pre-cutoff-score-receipt.mjs
 
   archived-evidence-diagnostic:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
