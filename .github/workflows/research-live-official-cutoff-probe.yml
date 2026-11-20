@@ -1,0 +1,22 @@
+name: Research live official cutoff probe (read only)
+on:
+  push:
+    branches:
+      - research/score-evidence-gate-20261120
+    paths:
+      - 'scripts/probe-research-live-cutoff-evidence.mjs'
+      - '.github/workflows/research-live-official-cutoff-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe official source without modifying app or weights
+        run: node scripts/probe-research-live-cutoff-evidence.mjs
