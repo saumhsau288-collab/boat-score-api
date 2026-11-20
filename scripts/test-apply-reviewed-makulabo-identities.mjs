@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import {applyReviewedMakulaboIdentities as apply} from './apply-reviewed-makulabo-identities.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'山田太郎'+(i+1),
+ sourceVerified:true,nationalWinRate:6,localWinRate:5,motorTwoWinRate:40}));
+const snapshot={status:'captured_research_inputs',source:'verified_official_metrics',date:'20261120',venue:18,race:1,racers};
+const tr=(cells,tag)=>'<tr>'+cells.map(x=>'<'+tag+'>'+x+'</'+tag+'>').join('')+'</tr>';
+const headers=['枠','選手','1 着','2 着','3 着','4 着','5 着','6 着','走','平均'];
+const rows=racers.map(r=>[String(r.boat),r.boat===3?'山田太郎':r.name,'24','10','6','4','0','5','49','2.20']);
+const html='<table>'+tr(headers,'th')+rows.map(r=>tr(r,'td')).join('')+'</table>';
+const approval={boat:3,racerId:'4003',officialName:'山田太郎3',sourceName:'山田太郎',reviewed:true};
+const review={date:'20261120',venue:18,race:1,approvals:[approval]};
+const held=apply(snapshot,html,{...review,approvals:[]});
+assert.equal(held.reason,'complete_explicit_review_required');
+assert.equal(apply(snapshot,html,{...review,date:'20261119'}).reason,'review_race_identity_mismatch');
+assert.equal(apply(snapshot,html,{...review,approvals:[{...approval,racerId:'4004'}]}).reason,'review_pair_not_confirmed');
+const result=apply(snapshot,html,review);
+assert.equal(result.status,'makulabo_identity_joined',JSON.stringify(result));
+assert.equal(result.racers.length,6);
+assert.equal(result.manualIdentityReviewApplied,true);
+assert.equal(result.morningScoreApplied,false);
+assert.equal(result.eligibleForCalibration,false);
+assert.equal(apply(snapshot,html.replace('山田太郎1','別人'),review).status,'held');
+console.log('Explicit race-scoped Makulabo identity approval tests passed');
