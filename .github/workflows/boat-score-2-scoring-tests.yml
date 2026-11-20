@@ -90,4 +90,5 @@ jobs:
           node scripts/test-audit-saved-research-race.mjs
           node scripts/test-map-verified-finish-to-entry-course.mjs
           node scripts/test-compare-research-scores-to-finish.mjs
+          node scripts/test-diagnose-research-score-finish-gap.mjs
 
