@@ -41,7 +41,7 @@ if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
  const date=process.env.CAPTURE_DATE||'20261120';
  const venues=(process.env.CAPTURE_VENUES||process.env.CAPTURE_VENUE||'18').split(',').map(v=>v.trim().padStart(2,'0'));
  const races=(process.env.CAPTURE_RACES||'1,2,3,4,5,6,7,8,9,10,11,12').split(',').map(Number);
- if(races.some(r=>!Number.isInteger(r)||r<1||r>12)||venues.some(v=>!/^\\d{2}$/.test(v)||Number(v)<1||Number(v)>24))throw Error('invalid_venue_or_race_numbers');
+ if(races.some(r=>!Number.isInteger(r)||r<1||r>12)||venues.some(v=>!/^[0-9]{2}$/.test(v)||Number(v)<1||Number(v)>24))throw Error('invalid_venue_or_race_numbers');
  const selections=venues.flatMap(venue=>races.map(race=>({date,venue,race})));
  const summary=await captureResultBatch(selections);
  console.log(JSON.stringify(summary,null,2));
