@@ -3,6 +3,7 @@
 import {evaluateVerifiedPayload} from './boat-score-2-adapter.js';
 import {evaluateMorningFromSources} from './boat-score-2-morning-pipeline.js';
 import {fetchOfficialRacelist} from './boat-score-2-official.js';
+import {evaluateMorningFromOfficialPage} from './boat-score-2-official-pipeline.js';
 
 const json=(data,status=200)=>new Response(JSON.stringify(data),{
   status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store',
@@ -17,6 +18,15 @@ export default {
       'access-control-allow-headers':'content-type'}});
     if(url.pathname==='/health'&&request.method==='GET')
       return json({status:'ok',service:'boat-score-2-research-preview',deployedScoring:false,liveData:false});
+    if(url.pathname==='/api/research/official-metrics'){
+      if(request.method!=='GET')return json({error:'method_not_allowed'},405);
+      const selection={venue:url.searchParams.get('venue'),date:url.searchParams.get('date'),race:url.searchParams.get('race')};
+      const result=await evaluateMorningFromOfficialPage(selection,[]);
+      return json({previewOnly:true,liveData:true,scoringApplied:false,
+        recent50Connected:false,sourceVerification:'official_metrics_only',...result},
+        result.status==='invalid_selection'?400:result.status==='fetch_failed'||result.status==='upstream_error'?502:
+        result.status==='insufficient_data'?422:200);
+    }
     if(url.pathname==='/api/research/official-racelist'){
       if(request.method!=='GET')return json({error:'method_not_allowed'},405);
       const selection={venue:url.searchParams.get('venue'),date:url.searchParams.get('date'),race:url.searchParams.get('race')};
