@@ -28,6 +28,7 @@ jobs:
           node --experimental-default-type=module boat-score-2-research-preview-worker.test.mjs
           node --experimental-default-type=module boat-score-2-adapter.test.mjs
           node --experimental-default-type=module boat-score-2-morning.test.mjs
+          node --experimental-default-type=module boat-score-2-morning-pipeline.test.mjs
       - name: Require Cloudflare credentials
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
