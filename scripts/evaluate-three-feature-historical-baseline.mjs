@@ -13,10 +13,11 @@ export function evaluateThreeFeatureHistoricalBaseline(racelist,result){
   r.localWinRate<0||r.localWinRate>10||r.motorTwoWinRate<0||r.motorTwoWinRate>100))
   return {status:'held',reason:'invalid_official_metrics',eligibleForWeightTuning:false};
  scored.sort((a,b)=>b.partialScore-a.partialScore||a.boat-b.boat);
+ const firstPlaceScoreTied=Math.abs(scored[0].partialScore-scored[1].partialScore)<1e-9;
  const winner=scored.find(r=>r.winner);
  return {status:'three_feature_diagnostic_only',date:racelist.date,venue:racelist.venue,race:racelist.race,
-  firstPlaceCandidateRacerId:scored[0].racerId,actualWinnerRacerId:winner.racerId,
-  firstPlaceCorrect:scored[0].racerId===winner.racerId,
+  firstPlaceCandidateRacerId:firstPlaceScoreTied?null:scored[0].racerId,actualWinnerRacerId:winner.racerId,
+  firstPlaceScoreTied,firstPlaceCorrect:firstPlaceScoreTied?null:scored[0].racerId===winner.racerId,
   topThreePodiumHits:scored.slice(0,3).filter(r=>r.podium).length,
   scores:scored.map(r=>({racerId:r.racerId,boat:r.boat,partialScore:Math.round(r.partialScore*100)/100,finish:r.finish})),
   scoreWeightCoverage:85,missingScoreWeight:15,missingFeatures:['recent50WinRate','exhibitionScore'],
