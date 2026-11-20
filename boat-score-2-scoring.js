@@ -16,7 +16,15 @@ const LIMITS = Object.freeze({
   recent50WinRate: 100,
   exhibitionScore: 100
 });
-export function evaluateRacer(input) {
+export function validateResearchWeights(weights) {
+  const keys=Object.keys(SCORE_WEIGHTS);
+  return !!weights && typeof weights==='object' && !Array.isArray(weights) &&
+    Object.keys(weights).length===keys.length &&
+    keys.every(k=>Number.isFinite(weights[k])&&weights[k]>=0&&weights[k]<=100) &&
+    Math.abs(keys.reduce((n,k)=>n+weights[k],0)-100)<1e-8;
+}
+export function evaluateRacer(input,weights=SCORE_WEIGHTS) {
+  if(!validateResearchWeights(weights))return {status:'invalid_weights',score:null};
   // A reported local 0.00 is treated as no local sample; use national rate for scoring.
   input = input && input.localWinRate === 0 && Number.isFinite(input.nationalWinRate) ? {...input,localWinRate:input.nationalWinRate} : input;
   const keys = Object.keys(SCORE_WEIGHTS);
@@ -25,15 +33,15 @@ export function evaluateRacer(input) {
   const invalid = keys.filter(k => input[k] < 0 || input[k] > LIMITS[k]);
   if (invalid.length) return {status:'invalid_data',invalid,score:null};
   const score = keys.reduce((total,k) =>
-    total + input[k] / LIMITS[k] * SCORE_WEIGHTS[k],0);
+    total + input[k] / LIMITS[k] * weights[k],0);
   return {status:'evaluated',score:Math.round(score*100)/100};
 }
-export function evaluateRace(racers) {
+export function evaluateRace(racers,weights=SCORE_WEIGHTS) {
   if (!Array.isArray(racers) || racers.length !== 6 ||
       new Set(racers.map(r=>r.boat)).size !== 6 ||
       racers.some(r=>!Number.isInteger(r.boat)||r.boat<1||r.boat>6)) {
     return {status:'invalid_race',racers:[]};
   }
-  const results = racers.map(r=>({boat:r.boat,...evaluateRacer(r)}));
+  const results = racers.map(r=>({boat:r.boat,...evaluateRacer(r,weights)}));
   return {status:results.every(r=>r.status==='evaluated')?'evaluated':'insufficient_data',racers:results};
 }
