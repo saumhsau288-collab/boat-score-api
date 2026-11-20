@@ -23,8 +23,11 @@ export function evaluateWeightCandidates(records,{minTrain=100,minHoldout=30}={}
  }
  eligible.sort((a,b)=>a.expected.date.localeCompare(b.expected.date)||Number(a.expected.venue)-Number(b.expected.venue)||a.expected.race-b.expected.race);
  if(eligible.length<minTrain+minHoldout)return {status:'insufficient_verified_history',total:records.length,eligible:eligible.length,excluded:exclusions,required:minTrain+minHoldout,eligibleForDeployment:false};
- const split=eligible.length-minHoldout,train=eligible.slice(0,split),holdout=eligible.slice(split);
- if(train.at(-1).expected.date>=holdout[0].expected.date)return {status:'chronological_day_split_required',eligible:eligible.length,eligibleForDeployment:false};
+ const target=eligible.length-minHoldout;
+ let split=target;
+ while(split>0&&eligible[split-1].expected.date===eligible[split].expected.date)split--;
+ if(split<minTrain)return {status:'chronological_day_split_required',eligible:eligible.length,eligibleForDeployment:false};
+ const train=eligible.slice(0,split),holdout=eligible.slice(split);
  const baseline=FEATURES.map(k=>SCORE_WEIGHTS[k]);
  const candidates=[baseline,...FEATURES.map((_,i)=>baseline.map((w,j)=>j===i?w+5:w-5/(FEATURES.length-1)))];
  const score=(f,w)=>FEATURES.reduce((n,k,j)=>n+f[k]/LIMITS[j]*w[j],0);
