@@ -19,6 +19,10 @@ jobs:
         with:
           ref: fix-boat-score-2-syntax-20261115
           persist-credentials: false
+      - name: Fail closed if latest morning scoring is not integrated
+        run: |
+          echo "::error::Preview Worker is checked out from the legacy development branch. The latest research morning scoring and close-ability annotations have not been integrated into this Worker. Do not deploy stale code as the updated preview."
+          exit 1
       - name: Check Worker JavaScript
         run: node --input-type=module --check < worker.js
       - name: Test historical statistics engine
