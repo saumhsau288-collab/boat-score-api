@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {describeMakulaboFinishSample as describe} from './describe-makulabo-finish-sample.mjs';
+const rows=Array.from({length:6},(_,i)=>({boat:i+1,name:'選手'+(i+1),
+ runs:50,counts:[20,10,8,6,4,2]}));
+const result=describe({verified:true,parsedRows:rows});
+assert.equal(result.status,'finish_sample_diagnostic');
+assert.equal(result.allCountsValid,true);
+assert.equal(result.allExactly50Runs,true);
+assert.equal(result.racers[0].firstPlaceRate,40);
+assert.equal(result.identityVerified,false);
+assert.equal(result.morningScoreApplied,false);
+assert.equal(result.eligibleForCalibration,false);
+const invalid=describe({verified:true,parsedRows:rows.map((r,i)=>i===2?{...r,runs:49}:r)});
+assert.equal(invalid.allCountsValid,false);
+assert.equal(invalid.allExactly50Runs,false);
+assert.equal(invalid.racers[2].firstPlaceRate,null);
+assert.equal(describe({verified:false,parsedRows:rows}).status,'unavailable');
+console.log('Makulabo six-boat finish sample diagnostic tests passed');
