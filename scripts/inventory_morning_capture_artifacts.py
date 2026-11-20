@@ -284,6 +284,35 @@ if __name__ == '__main__':
             'transportErrorCategories': diagnostic['transportErrorCategories'],
         }, ensure_ascii=False, sort_keys=True), flush=True)
     print(json.dumps(result, ensure_ascii=False, indent=2))
+    manifest_path = os.environ.get('READY_RACE_MANIFEST_PATH')
+    if manifest_path and not result['errors']:
+        # Identity keys only: no raw API bodies, names, predictions or credentials.
+        # The output is a research retrieval manifest, not validated outcomes.
+        requests = []
+        for day, diagnostic in sorted(result['diagnosticsByDate'].items()):
+            for venue, race in sorted(set(
+                    (row['venue'], row['race'])
+                    for row in diagnostic['readyRaceIdentities'])):
+                requests.append({
+                    'date': day, 'venue': venue, 'race': race,
+                    'officialResultPageUrl':
+                        f"https://www.boatrace.jp/owpc/pc/race/raceresult?rno={race}&jcd={venue:02d}&hd={day}",
+                    'resultVerified': False,
+                    'authenticatedPreRace': False,
+                })
+        manifest = {
+            'method': 'retained_raw_ready_race_identity_manifest',
+            'uniqueReadyRaceKeys': len(requests),
+            'requests': requests,
+            'eligibleForAccuracy': 0,
+            'warning': 'Retrieval targets only. Raw ready API responses are not independently authenticated pre-race predictions; result pages have not been fetched or verified.'
+        }
+        with open(manifest_path, 'w', encoding='utf-8') as out:
+            json.dump(manifest, out, ensure_ascii=False, indent=2)
+            out.write('\\n')
+        print('READY_RACE_MANIFEST_SUMMARY ' + json.dumps({
+            'uniqueReadyRaceKeys': len(requests), 'eligibleForAccuracy': 0
+        }), flush=True)
     summary = os.environ.get('GITHUB_STEP_SUMMARY')
     if summary:
         with open(summary, 'a', encoding='utf-8') as f:
