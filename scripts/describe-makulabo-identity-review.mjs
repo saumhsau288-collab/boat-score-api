@@ -13,16 +13,20 @@ export function describeMakulaboIdentityReview(official,extracted){
   const source=extracted.parsedRows.find(s=>s.boat===r.boat);
   const identity=matched.matches.find(m=>m.boat===r.boat);
   const officialName=normalizeRacerName(r.name),sourceName=normalizeRacerName(source?.name);
-  const exactRegistration=String(source?.racerId??'')===String(r.racerId)&&/^\d{4}$/.test(String(r.racerId));
+  const officialId=String(r.racerId);
+  const sourceId=String(source?.racerId??'');
+  const hasSourceId=/^\d{4}$/.test(sourceId);
+  const exactRegistration=hasSourceId&&sourceId===officialId&&/^\d{4}$/.test(officialId);
+  const registrationConflict=hasSourceId&&sourceId!==officialId;
   const exactName=officialName.length>0&&officialName===sourceName;
   const abbreviated=sourceName.length>=1&&officialName.startsWith(sourceName)&&sourceName!==officialName;
   return {boat:r.boat,officialRacerId:String(r.racerId),officialName:r.name,
    sourceName:source?.name??null,sourceRacerId:source?.racerId??null,
    sameLabelledBoat:source?.boat===r.boat,
    matchMethod:identity?.method??null,matchStatus:identity?.status??'unverified',
-   identityEvidence:exactRegistration?'exact_registration':exactName?'exact_name':
+   identityEvidence:registrationConflict?'registration_conflict':exactRegistration?'exact_registration':exactName?'exact_name':
     abbreviated?'abbreviated_name_review_required':'unverified',
-   manualReviewRequired:!exactRegistration&&!exactName};
+   manualReviewRequired:registrationConflict||(!exactRegistration&&!exactName)};
  });
  return {status:'identity_review_required',verified:false,scoreChangeApplied:false,
   candidates,reason:'abbreviated_or_other_identity_requires_explicit_review'};
