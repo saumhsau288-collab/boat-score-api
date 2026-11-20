@@ -1,0 +1,67 @@
+name: Diagnose real official Boat Score 2 research data (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      venue:
+        description: 'BOATRACE venue code 01-24'
+        required: true
+        default: '01'
+        type: string
+      date:
+        description: 'Race date YYYYMMDD'
+        required: true
+        default: '20261121'
+        type: string
+      race:
+        description: 'Race number 1-12'
+        required: true
+        default: '1'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    env:
+      VENUE: ${{ inputs.venue }}
+      RACE_DATE: ${{ inputs.date }}
+      RACE: ${{ inputs.race }}
+      API_BASE: https://boat-score-2-research-api-preview.saumh-sau-288.workers.dev
+    steps:
+      - name: Fetch and report real official source diagnostics
+        run: |
+          node --input-type=module <<'NODE'
+          import {appendFileSync} from 'node:fs';
+          const venue=process.env.VENUE,date=process.env.RACE_DATE,race=process.env.RACE;
+          if(!/^(0[1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^20\d{6}$/.test(date)||
+             !/^(?:[1-9]|1[0-2])$/.test(race))throw Error('Invalid venue, date, or race input');
+          const query=new URLSearchParams({venue,date,race});
+          const lines=['## Official racelist diagnostic','',`Selection: venue ${venue}, date ${date}, race ${race}`,''];
+          for(const route of ['official-racelist','official-metrics']){
+            const url=`${process.env.API_BASE}/api/research/${route}?${query}`;
+            try{
+              const response=await fetch(url,{signal:AbortSignal.timeout(25000)});
+              const body=await response.json();
+              const safe={
+                status:body.status,verified:body.verified??null,reason:body.reason??null,
+                racerCount:body.racers?.length??0,
+                racerIds:(body.racers||[]).map(r=>({boat:r.boat,racerId:r.racerId})),
+                diagnostics:body.diagnostics??null,
+                mapping:body.mapping?{verified:body.mapping.verified,
+                  reason:body.mapping.reason,candidateRows:body.mapping.candidateRows}:null,
+                httpStatus:body.httpStatus??null
+              };
+              console.log(route,'HTTP',response.status,JSON.stringify(safe));
+              lines.push(`### ${route}`,`HTTP ${response.status}`, '```json',
+                JSON.stringify(safe,null,2),'```','');
+            }catch(error){
+              console.log(route,'fetch error',String(error));
+              lines.push(`### ${route}`,`Fetch error: ${String(error)}`,'');
+            }
+          }
+          lines.push('These are live-source diagnostics, not validated predictions. Missing or unverified data must not be filled with guessed values.');
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
+          NODE
