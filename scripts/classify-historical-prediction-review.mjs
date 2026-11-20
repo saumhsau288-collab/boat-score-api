@@ -17,7 +17,7 @@ export function classifyHistoricalPredictionReview({evidenceAudit,savedPredictio
     officialResult.finishOrder.some(b=>!Number.isInteger(b)||b<1||b>6))
   missing.push('verified_official_finish_order');
  // All timestamps must be explicit ISO instants; compare actual milliseconds, not strings.
- const parseTime=value=>typeof value==='string'&&/^20\\d{2}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)&&Number.isFinite(Date.parse(value))?Date.parse(value):null;
+ const parseTime=value=>typeof value==='string'&&/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)&&Number.isFinite(Date.parse(value))?Date.parse(value):null;
  const savedAt=parseTime(savedPrediction?.savedAt);
  const deadlineAt=parseTime(savedPrediction?.raceDeadlineAt);
  const officialDeadlineAt=parseTime(officialResult?.raceDeadlineAt);
