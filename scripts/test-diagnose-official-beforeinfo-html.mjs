@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {diagnoseOfficialBeforeinfoHtml} from './diagnose-official-beforeinfo-html.mjs';
+const html='<html><table><tr><th>展示タイム</th><td>6.75</td></tr><tr><td>ST</td></tr></table>風向 風速 波高';
+const result=diagnoseOfficialBeforeinfoHtml(html);
+assert.equal(result.status,'structure_diagnostic_only');
+assert.equal(result.tableCount,1);
+assert.equal(result.rowCount,2);
+assert.equal(result.cellCount,3);
+assert.equal(result.labelPresence['展示タイム'],true);
+assert.equal(result.labelPresence['進入'],false);
+assert.equal(result.labelPresence['風向'],true);
+assert.equal(result.verified,false);
+assert.equal(result.eligibleForCalibration,false);
+assert.deepEqual(result.racers,[]);
+assert.equal(diagnoseOfficialBeforeinfoHtml('').status,'empty_html');
+console.log('Official beforeinfo HTML diagnostic tests passed');
