@@ -45,6 +45,8 @@ on:
       - 'scripts/test-research-cross-date-schedule-contamination.mjs'
       - 'scripts/inspect-research-cutoff-intervals.mjs'
       - 'scripts/test-inspect-research-cutoff-intervals.mjs'
+      - 'scripts/quarantine-research-anomalous-schedule.mjs'
+      - 'scripts/test-quarantine-research-anomalous-schedule.mjs'
       - '.github/workflows/research-score-evidence-gate.yml'
   workflow_dispatch:
 jobs:
@@ -78,3 +80,4 @@ jobs:
       - run: node scripts/test-compare-research-official-race-schedules.mjs
       - run: node scripts/test-research-cross-date-schedule-contamination.mjs
       - run: node scripts/test-inspect-research-cutoff-intervals.mjs
+      - run: node scripts/test-quarantine-research-anomalous-schedule.mjs
