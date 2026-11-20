@@ -5,11 +5,13 @@ const number=s=>{const t=clean(s).replace(/[%％]/g,'');return /^\d+(?:\.\d+)?$/
 export function extractGroupedOfficialSix(html){
  const tables=typeof html==='string'?[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(m=>m[0]):[];
  if(tables.length!==1){
-  const results=tables.map(t=>extractGroupedOfficialSix(t)).filter(r=>r.verified);
-  return results.length===1?results[0]:{verified:false,reason:results.length?'multiple_verified_grouped_tables':'no_verified_grouped_table',racers:[]};
+  const attempts=tables.map(t=>extractGroupedOfficialSix(t));
+  const results=attempts.filter(r=>r.verified);
+  return results.length===1?results[0]:{verified:false,reason:results.length?'multiple_verified_grouped_tables':'no_verified_grouped_table',racers:[],
+   tableAttempts:attempts.map((a,i)=>({index:i,verified:a.verified,reason:a.reason??null,candidateRows:a.candidateRows??0,columns:a.columns??null}))};
  }
  const layout=identifyOfficialGroupedMetricColumns(html);
- if(!layout.verified)return {verified:false,reason:layout.reason,racers:[]};
+ if(!layout.verified)return {verified:false,reason:layout.reason,racers:[],columns:layout.candidates??null};
  const {grid,columns}=layout,found=[];
  for(const row of grid.rows){
   if(row.every(c=>c.tag==='th'))continue;
