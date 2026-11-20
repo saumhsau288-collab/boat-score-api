@@ -20,6 +20,6 @@ try{
  assert.equal(summary.eligibleForCalibration,0);
  assert.equal(summary.results[1].status,'official_result_fetch_failed');
  assert.equal(fs.existsSync(path.join(dir,'research-result-batch-summary.json')),true);
- assert.throws(()=>captureResultBatch([...selections,selections[0]],{fetcher,outputDir:dir}),/duplicate/);
+ await assert.rejects(()=>captureResultBatch([...selections,selections[0]],{fetcher,outputDir:dir}),/duplicate/);
  console.log('Multi-race result batch capture tests passed');
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
