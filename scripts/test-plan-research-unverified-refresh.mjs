@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {planResearchUnverifiedRefresh as plan} from './plan-research-unverified-refresh.mjs';
+const race={date:'20261120',venue:2,race:1};
+const url='https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261120&jcd=02&rno=1';
+const header=Array.from({length:12},(_,i)=>'<th><a href="?rno='+(i+1)+'">'+(i+1)+'R</a></th>').join('');
+const times=['10:45','11:12','11:39','12:06','12:33','13:00','13:27','13:54','14:21','14:48','15:15','15:42'];
+const row=times.map(x=>'<td>'+x+'</td>').join('');
+const html='<table><tr><th>レース</th>'+header+'</tr><tr><td>締切予定時刻</td>'+row+'</tr></table>';
+const ok=plan({html,requestedUrl:url,responseUrl:url,race});
+assert.equal(ok.status,'candidate_refresh_time_not_authorized');
+assert.equal(ok.refreshCandidateAt,'2026-11-20T01:35:00.000Z');
+assert.equal(ok.refreshAuthorized,false);
+assert.equal(plan({html,requestedUrl:url,responseUrl:url,race:{...race,date:'20261121'}}).refreshAuthorized,false);
+assert.equal(plan({html:html.replace('10:45','25:99'),requestedUrl:url,responseUrl:url,race}).refreshAuthorized,false);
+console.log('Research refresh candidate tests passed');
