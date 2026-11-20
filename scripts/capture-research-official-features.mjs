@@ -15,16 +15,18 @@ const requestedAt=new Date().toISOString();
 let result;
 try {
  const response=await fetch(target.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
+ const finalUrl=new URL(response.url||target.url);
+ const officialHost=finalUrl.protocol==='https:'&&finalUrl.hostname==='www.boatrace.jp'&&finalUrl.pathname==='/owpc/pc/race/racelist';
  const body=await response.text();
  const receivedAt=new Date().toISOString();
  const digest=crypto.createHash('sha256').update(body).digest('hex');
- if(!response.ok||!/text\/html/i.test(response.headers.get('content-type')||'')||body.length>2_000_000)
-  result={status:'invalid_official_response',httpStatus:response.status,receivedAt};
+ if(!response.ok||!officialHost||!/text\/html/i.test(response.headers.get('content-type')||'')||body.length>2_000_000)
+  result={status:'invalid_official_response',httpStatus:response.status,receivedAt,officialHost};
  else {
   const parsed=extractOfficialMetrics(body);
   const snapshot=buildResearchFeatureSnapshot({date,venue,race,capturedAt:receivedAt,official:parsed.verified?parsed.racers:null});
   result={...snapshot,requestedAt,receivedAt,sourceUrl:target.url,responseSha256:digest,
-   httpStatus:response.status,preRaceIndependentlyVerified:false};
+   httpStatus:response.status,finalUrl:finalUrl.toString(),preRaceIndependentlyVerified:false};
  }
 }catch(error){result={status:'fetch_failed',error:String(error?.message||error),requestedAt};}
 fs.mkdirSync('prediction-captures',{recursive:true});
