@@ -6,6 +6,8 @@ on:
       - 'scripts/capture-official-result-evidence.mjs'
       - 'scripts/test-capture-official-result-evidence.mjs'
       - 'scripts/run-research-official-result-capture.mjs'
+      - 'scripts/verify-official-result-evidence-pair.mjs'
+      - 'scripts/test-verify-official-result-evidence-pair.mjs'
       - '.github/workflows/research-official-result-capture.yml'
   workflow_dispatch:
     inputs:
@@ -33,7 +35,9 @@ jobs:
         with:
           node-version: '22'
       - name: Test result capture source checks
-        run: node scripts/test-capture-official-result-evidence.mjs
+        run: |
+          node scripts/test-capture-official-result-evidence.mjs
+          node scripts/test-verify-official-result-evidence-pair.mjs
       - name: Capture official result evidence
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -41,6 +45,14 @@ jobs:
           CAPTURE_VENUE: ${{ inputs.venue }}
           CAPTURE_RACE: ${{ inputs.race }}
         run: node scripts/run-research-official-result-capture.mjs
+      - name: Verify captured HTML against receipt
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          for file in prediction-captures/research-result-*.html; do
+            if [ -f "$file" ]; then
+              node scripts/verify-official-result-evidence-pair.mjs "${file%.html}.json" "$file"
+            fi
+          done
       - name: Preserve research evidence
         if: always()
         uses: actions/upload-artifact@v4
