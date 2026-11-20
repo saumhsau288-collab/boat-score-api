@@ -37,6 +37,7 @@ assert.ok(report.candidates[0].train.podiumPrecision>=0&&report.candidates[0].tr
 assert.ok(report.candidates[0].holdout.topScorePodiumRate>=0&&report.candidates[0].holdout.topScorePodiumRate<=1);
 assert.equal(report.eligibleForDeployment,false);
 assert.equal(report.proposedResearchWeights,null);
+assert.equal(report.proposalReason,'no_confirmed_out_of_sample_improvement_without_podium_regression');
 assert.equal(validateResearchWeights(SCORE_WEIGHTS),true);
 assert.equal(validateResearchWeights({...SCORE_WEIGHTS,exhibitionScore:-1}),false);
 const sample=featureInputsByBoat[0];
