@@ -18,12 +18,13 @@ export function extractOfficialRacers(html){
   const local=cells[5].match(/^(\d+(?:\.\d+)?)(?:\s|$)/);
   const motor=cells[6].match(/^\d+\s+(\d+(?:\.\d+)?)(?:\s|$)/);
   const racer={boat,racerId:identity[1],class:identity[2],name:identity[3].trim(),averageST:start?number(start[0]):null,nationalWinRate:national?number(national[1]):null,localWinRate:local?number(local[1]):null,motorTwoWinRate:motor?number(motor[1]):null,sourceRow:index};
-  if(!racer.name||racer.averageST===null||racer.averageST<0||racer.averageST>1||racer.nationalWinRate===null||racer.nationalWinRate>10||racer.localWinRate===null||racer.localWinRate>10||racer.motorTwoWinRate===null||racer.motorTwoWinRate>100){errors.push('invalid_values_row_'+index);continue;}
+  if(!racer.name||(racer.averageST!==null&&(racer.averageST<0||racer.averageST>1))||racer.nationalWinRate===null||racer.nationalWinRate>10||racer.localWinRate===null||racer.localWinRate>10||racer.motorTwoWinRate===null||racer.motorTwoWinRate>100){errors.push('invalid_values_row_'+index);continue;}
+  racer.missingFields=racer.averageST===null?['averageST']:[];
   racers.push(racer);
  }
  const uniqueBoats=new Set(racers.map(x=>x.boat));
  const uniqueIds=new Set(racers.map(x=>x.racerId));
  const complete=racers.length===6&&uniqueBoats.size===6&&uniqueIds.size===6;
  if(!complete)errors.push('six_unique_racers_not_confirmed');
- return {racers:racers.sort((a,b)=>a.boat-b.boat),completeSixRacers:complete,authenticatedBeforeRace:false,calibrationEligible:false,errors};
+ return {racers:racers.sort((a,b)=>a.boat-b.boat),completeSixRacers:complete,completeSixRacerST:complete&&racers.every(x=>x.averageST!==null),authenticatedBeforeRace:false,calibrationEligible:false,errors};
 }
