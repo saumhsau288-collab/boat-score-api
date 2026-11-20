@@ -25,4 +25,19 @@ assert.equal(unverified.status,422);
 const missingResult=await unverified.json();
 assert.equal(missingResult.status,'insufficient_data');
 assert.equal(missingResult.liveData,false);
+const official=Array.from({length:6},(_,i)=>({
+ boat:i+1,racerId:String(4001+i),name:'選手'+(i+1),sourceVerified:true,
+ nationalWinRate:i===0?9:5,localWinRate:i===0?9:5,motorTwoWinRate:50
+}));
+const recent50=official.map(r=>({racerId:r.racerId,winRate:50,verified:true,sourceVerified:true}));
+const verified=await sourceRequest({official,recent50});
+assert.equal(verified.status,200);
+const verifiedBody=await verified.json();
+assert.equal(verifiedBody.status,'evaluated');
+assert.equal(verifiedBody.category,'favorite');
+assert.deepEqual(verifiedBody.sources,['official_racelist','verified_recent50']);
+assert.equal(verifiedBody.sourceVerification,'provided_source_flags_checked_not_independently_fetched');
+const mismatch=await sourceRequest({official,recent50:recent50.map((r,i)=>i===1?{...r,racerId:'9999'}:r)});
+assert.equal(mismatch.status,422);
+assert.equal((await mismatch.json()).status,'insufficient_data');
 console.log('Isolated research preview API tests passed');
