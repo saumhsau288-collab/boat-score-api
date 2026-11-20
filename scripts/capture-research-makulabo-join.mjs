@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import {runSavedMakulaboResearch} from './run-saved-makulabo-research.mjs';
 import {extractMakulaboFinishTable} from '../boat-score-2-makulabo-source-table.js';
 import {describeMakulaboIdentityReview} from './describe-makulabo-identity-review.mjs';
+import {buildMakulaboReviewTemplate} from './build-makulabo-review-template.mjs';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
 const race=Number(process.env.CAPTURE_RACE);
@@ -27,7 +28,8 @@ if(!fs.existsSync(officialPath)){
    result={...runSavedMakulaboResearch(snapshot,html),httpStatus:response.status};
    if(result.reason==='abbreviated_name_requires_review'||result.reason==='official_identity_mismatch'){
     const extracted=extractMakulaboFinishTable(html);
-    result={...result,identityReview:describeMakulaboIdentityReview(snapshot.racers,extracted)};
+    const identityReview=describeMakulaboIdentityReview(snapshot.racers,extracted);
+    result={...result,identityReview,reviewTemplate:buildMakulaboReviewTemplate(snapshot,identityReview)};
    }
   }
  }catch(error){
