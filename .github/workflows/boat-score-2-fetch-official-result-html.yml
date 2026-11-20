@@ -9,6 +9,8 @@ on:
       - 'scripts/test-parse-saved-official-result-pages.mjs'
       - 'scripts/fetch-official-result-pages-research.mjs'
       - 'scripts/test-fetch-official-result-pages-research.mjs'
+      - 'scripts/compare-saved-capture-results.mjs'
+      - 'scripts/test-compare-saved-capture-results.mjs'
   workflow_dispatch:
     inputs:
       capture_run_id:
@@ -44,6 +46,8 @@ jobs:
           node --check scripts/parse-saved-official-result-pages.mjs
           node --check scripts/test-parse-saved-official-result-pages.mjs
           node scripts/test-parse-saved-official-result-pages.mjs
+          node --check scripts/compare-saved-capture-results.mjs
+          node scripts/test-compare-saved-capture-results.mjs
           node scripts/test-fetch-official-result-pages-research.mjs
   fetch-results:
     if: github.event_name == 'workflow_dispatch'
