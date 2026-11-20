@@ -137,6 +137,7 @@ jobs:
           node scripts/test-inspect-official-result-markup.mjs
           node scripts/test-summarize-parsed-official-results.mjs
           node scripts/test-replay-historical-race-with-current-scoring.mjs
+          node --check scripts/capture-historical-racelist-batch.mjs
           node scripts/test-evaluate-venue-specific-weights.mjs
           node scripts/test-summarize-venue-course-tendencies.mjs
           node scripts/test-summarize-venue-racer-podiums.mjs
@@ -220,5 +221,30 @@ jobs:
         with:
           name: research-result-source-${{ github.run_id }}
           path: prediction-captures/research-result-*
+          if-no-files-found: warn
+          retention-days: 30
+
+  historical-racelist-replay-input-diagnostic:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch historical Tokuyama official racelist fields
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '18'
+          CAPTURE_RACES: '1,2,3,4,5,6,7,8,9,10,11,12'
+        run: node scripts/capture-historical-racelist-batch.mjs
+      - name: Upload historical racelist source and extraction diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-historical-racelists-${{ github.run_id }}
+          path: prediction-captures/research-historical-racelist-*
           if-no-files-found: warn
           retention-days: 30
