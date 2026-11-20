@@ -5,7 +5,7 @@ export function validateResearchJoin({capture,comparison,coverage}){
  function unique(rows,label){
   const seen=new Set();
   for(const r of rows){
-   if(!/^20\\d{6}$/.test(String(r.date))||!Number.isInteger(Number(r.venue))||Number(r.venue)<1||Number(r.venue)>24||!Number.isInteger(Number(r.race))||Number(r.race)<1||Number(r.race)>12)throw Error(label+'_invalid_race_key');
+   if(!/^20\d{6}$/.test(String(r.date))||!Number.isInteger(Number(r.venue))||Number(r.venue)<1||Number(r.venue)>24||!Number.isInteger(Number(r.race))||Number(r.race)<1||Number(r.race)>12)throw Error(label+'_invalid_race_key');
    const k=key(r);
    if(seen.has(k))throw Error(label+'_duplicate_race_key:'+k);
    seen.add(k);
