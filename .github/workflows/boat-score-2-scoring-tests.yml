@@ -325,3 +325,44 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+
+  multi-venue-historical-research:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture historical official racelists across six venues
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '01,02,06,12,20,24'
+          CAPTURE_RACES: '1,2,3,4'
+        run: node scripts/capture-historical-racelist-batch.mjs
+      - name: Capture independent official finishes across the same venues
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '01,02,06,12,20,24'
+          CAPTURE_RACES: '1,2,3,4'
+        run: node scripts/capture-research-result-batch.mjs
+      - name: Join real racer identities and calculate first and second predictions
+        if: always()
+        run: |
+          node scripts/join-historical-racelist-result-identities.mjs
+          node scripts/run-historical-first-second-diagnostic.mjs
+          node scripts/run-three-feature-historical-baseline.mjs
+      - name: Preserve source HTML, six-racer evidence and per-race metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-venue-historical-research-${{ github.run_id }}
+          path: |
+            prediction-captures/research-historical-racelist-*
+            prediction-captures/research-result-*
+            prediction-captures/historical-racelist-result-join.json
+            prediction-captures/historical-first-second-diagnostic.json
+            prediction-captures/historical-three-feature-baseline.json
+          if-no-files-found: warn
+          retention-days: 30
