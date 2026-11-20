@@ -89,4 +89,11 @@ for(const duplicateQuery of [
  assert.equal(report.compared,0,'Ambiguous official race identity must not count');
  assert.equal(report.holdReasons.official_result_url_race_mismatch,1);
 }
+// Corrupted capture entries must be held without hiding a valid adjacent race.
+const mixedRecords=compare({...capture,records:[null,{...capture.records[0]}]},[result]);
+assert.equal(mixedRecords.rows.length,2);
+assert.equal(mixedRecords.held,1);
+assert.equal(mixedRecords.compared,1);
+assert.equal(mixedRecords.rows[0].reasons.includes('invalid_saved_capture_race_key'),true);
+assert.equal(mixedRecords.rows[1].status,'compared');
 console.log('Saved capture / official result comparison eligibility tests passed');
