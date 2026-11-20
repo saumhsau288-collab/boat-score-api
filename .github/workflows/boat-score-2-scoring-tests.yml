@@ -97,4 +97,5 @@ jobs:
           node scripts/test-build-official-table-grid.mjs
           node scripts/test-identify-official-grouped-metric-columns.mjs
           node scripts/test-extract-grouped-official-six.mjs
+          node scripts/test-select-research-official-metrics.mjs
 
