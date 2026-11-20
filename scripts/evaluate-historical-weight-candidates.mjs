@@ -18,8 +18,10 @@ export function evaluateWeightCandidates(records,{minTrain=100,minHoldout=30}={}
   if(seen.has(id)){reject('duplicate_race');continue;}
   seen.add(id);
   if(!Array.isArray(r.featureInputsByBoat)||r.featureInputsByBoat.length!==6||
-   r.featureInputsByBoat.some((f,i)=>f?.boat!==i+1||f?.racerId!==r.scoreInputsByBoat[i].racerId||
-    f?.sourceVerified!==true||FEATURES.some((k,j)=>typeof f[k]!=='number'||!Number.isFinite(f[k])||f[k]<0||f[k]>LIMITS[j]))){
+   r.featureInputsByBoat.some((f,i)=>f?.boat!==i+1||String(f?.racerId)!==String(r.scoreInputsByBoat[i].racerId)||
+    f?.sourceVerified!==true||typeof f.capturedAt!=='string'||!Number.isFinite(Date.parse(f.capturedAt))||
+    Date.parse(f.capturedAt)>=gate.cutoffEpochMs||Date.parse(f.capturedAt)>Date.parse(r.scoreInputsByBoat[i].scoreComputedAt)||
+    FEATURES.some((k,j)=>typeof f[k]!=='number'||!Number.isFinite(f[k])||f[k]<0||f[k]>LIMITS[j]))){
    reject('authenticated_pre_cutoff_features_missing');continue;
   }
   // The archived pre-cutoff score must match the unchanged baseline formula.
