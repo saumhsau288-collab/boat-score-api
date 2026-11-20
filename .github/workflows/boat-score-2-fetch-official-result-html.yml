@@ -85,6 +85,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validate official result parser before network probe
+        run: |
+          node --check scripts/parse-saved-official-result-pages.mjs
+          node scripts/test-parse-saved-official-result-pages.mjs
+          node scripts/test-fetch-official-result-pages-research.mjs
       - name: Download saved 133-key retrieval manifest
         env:
           GH_TOKEN: ${{ github.token }}
