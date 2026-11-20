@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {classifyDeadlineRefresh as check} from './classify-research-deadline-refresh.mjs';
+const cutoff={verified:true,source:'official',sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',date:'20261120',venue:2,race:3,cutoffAt:'2026-11-20T06:30:00.000Z'};
+assert.equal(check({now:'2026-11-20T06:19:59.000Z',cutoff}).status,'too_early');
+assert.equal(check({now:'2026-11-20T06:20:00.000Z',cutoff}).status,'eligible_for_read_only_probe');
+assert.equal(check({now:'2026-11-20T06:22:00.000Z',cutoff}).eligible,true);
+assert.equal(check({now:'2026-11-20T06:22:01.000Z',cutoff}).status,'window_passed');
+assert.equal(check({now:'2026-11-20T06:20:00.000Z',cutoff:{...cutoff,verified:false}}).status,'official_cutoff_unverified');
+assert.equal(check({now:'2026-11-20T06:20:00.000Z',cutoff:{...cutoff,sourceUrl:'https://boatrace.jp.evil.example/'}}).eligible,false);
+assert.equal(check({now:'2026-11-20T06:20:00.000Z',cutoff:{...cutoff,venue:25}}).status,'invalid_race_identity');
+assert.equal(check({now:'2026-11-20T06:20:00.000Z',cutoff,windowMinutes:8}).status,'invalid_window');
+console.log('Research deadline refresh eligibility gate tests passed');
