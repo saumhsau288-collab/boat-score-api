@@ -16,9 +16,8 @@ export function buildVerifiedRacerCourseResults(records){
     !Number.isInteger(c.entryCourse)||c.entryCourse<1||c.entryCourse>6||
     String(c.racerId)!==String(r.scoreInputsByBoat[i].racerId))||
    new Set(courses.map(c=>c.entryCourse)).size!==6){reject('verified_racer_entry_course_missing');continue;}
-  // Entry evidence must precede race start, but may be after betting cutoff.
-  if(courses.some(c=>typeof c.capturedAt!=='string'||!Number.isFinite(Date.parse(c.capturedAt))||
-    Date.parse(c.capturedAt)<gate.cutoffEpochMs)){reject('entry_course_timestamp_invalid');continue;}
+  // Actual entry course may be verified from a post-race official source; never treat it as a pre-cutoff prediction input.
+  if(courses.some(c=>typeof c.capturedAt!=='string'||!Number.isFinite(Date.parse(c.capturedAt)))){reject('entry_course_timestamp_invalid');continue;}
   seen.add(id);
   for(let i=0;i<6;i++){
    const racerId=String(r.scoreInputsByBoat[i].racerId),finish=r.finishByBoat[i].finish;
