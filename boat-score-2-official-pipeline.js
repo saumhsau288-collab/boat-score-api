@@ -20,7 +20,7 @@ export async function inspectOfficialMetricsPage(selection,fetcher=fetch){
   const checked=validateOfficialMetrics(parsed.racers);
   if(!checked.verified)return {status:'insufficient_data',source:'official',reason:checked.reason};
   return {status:'official_verified',venue:selection.venue,date:selection.date,
-   race:Number(selection.race),source:target.url,racers:checked.racers};
+   race:Number(selection.race),source:target.url,racers:parsed.racers};
  }catch(error){return {status:'fetch_failed',error:String(error?.message||error)};}
 }
 export async function evaluateMorningFromOfficialPage(selection,recent50,fetcher=fetch){
