@@ -18,11 +18,13 @@ export function auditResearchSample(official,makulabo){
    runs:valid?runs:null,sampleValid:valid,exactly50:valid&&runs===50,
    insufficientSample:!valid||runs<50};
  });
- const complete=rows.length===6&&rows.every(r=>r.sampleValid&&r.exactly50);
+ const sampleBoatsUnique=samples.length===6&&new Set(samples.map(r=>r.boat)).size===6;
+ const complete=sampleBoatsUnique&&rows.length===6&&rows.every(r=>r.sampleValid&&r.exactly50);
  return {status:'research_sample_audit_only',date:official?.date??null,venue:official?.venue??null,
   race:official?.race??null,rows,allExactly50:complete,identitySafe,
   eligibleForCalibration:false,readyForResearchMorningScoring:false,
-  reasons:[...(!identitySafe?['identity_not_independently_verified']:[]),
+  reasons:[...(!sampleBoatsUnique?['six_unique_sample_boats_required']:[]),
+   ...(!identitySafe?['identity_not_independently_verified']:[]),
    ...(!complete?['not_all_six_have_exactly_50_verified_finish_counts']:[]),
    'finish_counts_do_not_prove_pre_race_recent50'],
   note:'No first-place rates are used as prediction inputs. This report is not a prediction.'};
