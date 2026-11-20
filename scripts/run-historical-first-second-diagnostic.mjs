@@ -43,6 +43,9 @@ const summary={status:'first_second_historical_partial_diagnostic',races:rows.le
   rate:rate(firstWrong.filter(r=>r.secondCorrect===true).length,firstWrong.filter(r=>r.secondCorrect!==null).length)},
  secondCandidateFinishDistribution:Object.fromEntries([1,2,3,4,5,6].map(f=>[String(f),valid.filter(r=>r.secondCandidateActualFinish===f).length])),
  secondCandidateFinishWhenFirstCorrect:Object.fromEntries([1,2,3,4,5,6].map(f=>[String(f),firstCorrect.filter(r=>r.secondCandidateActualFinish===f).length])),
+ actualSecondBaselineRankDistribution:Object.fromEntries([1,2,3,4,5,6].map(rank=>[String(rank),valid.filter(r=>r.actualSecondBaselineRank===rank).length])),
+ actualSecondBaselineRankWhenFirstCorrect:Object.fromEntries([1,2,3,4,5,6].map(rank=>[String(rank),firstCorrect.filter(r=>r.actualSecondBaselineRank===rank).length])),
+ firstCorrectSecondMissScoreGaps:firstCorrect.filter(r=>r.secondCorrect===false).map(r=>({date:r.date,venue:r.venue,race:r.race,actualSecondBaselineRank:r.actualSecondBaselineRank,scoreGap:Number(r.actualSecondScoreGapFromPredictedSecond.toFixed(4))})),
  firstCorrectSecondMisses:valid.filter(r=>r.firstCorrect===true&&r.secondCorrect===false).map(r=>({date:r.date,venue:r.venue,race:r.race,secondCandidate:r.secondCandidate,secondCandidateActualFinish:r.secondCandidateActualFinish,actualSecond:r.actualSecond})),
  venueBreakdown,fullCurrentScore:false,eligibleForWeightTuning:false,eligibleForDeployment:false,rows};
 fs.writeFileSync(path.join(dir,'historical-first-second-diagnostic.json'),JSON.stringify(summary,null,2)+'\n');
