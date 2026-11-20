@@ -37,3 +37,11 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - Research CI run 44694959754 succeeded after the reporting fix. The six zero-local races and five ranking-changed races must not be conflated.
 - This discrepancy remains a **candidate implementation gap** relative to the user's intended fallback policy, not a confirmed diagnosis of the deployed preview. The candidate worker's score origin, input timestamps, and deployed SHA remain unverified.
 - The official results are post-hoc, and no authorized production weights, Worker or deployment were changed.
+
+## Archived response metadata resolves a major candidate-formula mismatch
+
+- Research CI run 44695952749 examined all 14 saved-ready deployed responses: `method` is present in 14/14 and uniformly `weighted_national50_local20_motor30_unvalidated`; `predictionMode` is present in 14/14 and uniformly `base_stats_only`.
+- `startAdjustmentApplied`, `exhibitionAdjustmentApplied`, `startCoursesVerified` and `missingInputs` fields are present in 14/14. Their actual values require the follow-up flag-count audit; presence alone does not mean an adjustment was applied.
+- `sourceBranch`, `sourceCommit` and `version` top-level fields are absent in all 14/14. This is not evidence of the exact deployed SHA.
+- The archived method label differs from the rank-based 70/30 candidate source method. The candidate branch code is therefore NOT authenticated as the scorer for the saved capture; previous 70/30 proxy rankings are exploratory counterfactuals, not reproductions of the actual archived scoring logic.
+- The 50/20/30 proportions are reported by the saved method string, not independently verified arithmetic. Do not infer an exact formula from the label alone.
