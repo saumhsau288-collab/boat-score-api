@@ -326,6 +326,39 @@ jobs:
           retention-days: 30
 
 
+  multi-venue-cached-second-place-analysis:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reuse captured 21-race evidence without another official-site download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          gh run download 44823630627 --repo "${{ github.repository }}" --name "multi-venue-active-research-44823630627" --dir prediction-captures
+      - name: Report missing identity joins and second-place finish distribution
+        run: |
+          node scripts/join-historical-racelist-result-identities.mjs
+          node scripts/run-historical-first-second-diagnostic.mjs
+      - name: Preserve second-place error analysis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cached-second-place-analysis-${{ github.run_id }}
+          path: |
+            prediction-captures/historical-racelist-result-join.json
+            prediction-captures/historical-first-second-diagnostic.json
+          if-no-files-found: warn
+          retention-days: 30
+
   multi-venue-active-venues-research:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
     runs-on: ubuntu-latest
