@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {analyzeCourseZonePairs} from './analyze-slow-dash-zone-proxy.mjs';
+const rows=Array.from({length:6},(_,i)=>({entryCourse:i+1,finish:i+1,nationalWinRate:5,localWinRate:5,motorTwoWinRate:50}));
+const x=analyzeCourseZonePairs(rows);
+assert.equal(x[3].both_inner_1to3.pairs,3);
+assert.equal(x[3].both_outer_4to6.pairs,3);
+assert.equal(x[3].inner_vs_outer.pairs,9);
+assert.equal(x[3].inner_vs_outer.innerAhead,9);
+rows[0].finish=6;rows[5].finish=1;
+const y=analyzeCourseZonePairs(rows);
+assert.equal(y[3].inner_vs_outer.innerAhead,6);
+console.log('Course zone proxy pair diagnostics tests passed');
