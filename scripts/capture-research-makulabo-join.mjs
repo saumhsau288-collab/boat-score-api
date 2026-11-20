@@ -8,6 +8,7 @@ import {describeMakulaboIdentityReview} from './describe-makulabo-identity-revie
 import {buildMakulaboReviewTemplate} from './build-makulabo-review-template.mjs';
 import {describeMakulaboFinishSample} from './describe-makulabo-finish-sample.mjs';
 import {identifyMakulaboSampleScope} from './identify-makulabo-sample-scope.mjs';
+import {summarizeMakulaboFinishComparison} from './summarize-makulabo-finish-comparison.mjs';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
 const race=Number(process.env.CAPTURE_RACE);
@@ -31,6 +32,7 @@ if(!fs.existsSync(officialPath)){
    result={...runSavedMakulaboResearch(snapshot,html),httpStatus:response.status,
     sourceUrl:url,observedAt:new Date().toISOString(),
     finishSample:describeMakulaboFinishSample(extracted),
+    finishComparison:summarizeMakulaboFinishComparison(describeMakulaboFinishSample(extracted)),
     sampleScope:identifyMakulaboSampleScope(html),
     recent50WinRateVerified:false,preRaceIndependentlyVerified:false};
    if(result.reason==='abbreviated_name_requires_review'||result.reason==='official_identity_mismatch'){
@@ -47,5 +49,6 @@ fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify({file,status:result.status,reason:result.reason??null,
  racers:result.racers?.length??0,morningScoreApplied:result.morningScoreApplied===true,
  eligibleForCalibration:false,identityReview:result.identityReview??null,
- finishSample:result.finishSample??null,sampleScope:result.sampleScope??null}));
+ finishSample:result.finishSample??null,sampleScope:result.sampleScope??null,
+ finishComparison:result.finishComparison??null}));
 // Research source availability does not change the official capture success gate.
