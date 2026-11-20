@@ -87,6 +87,7 @@ jobs:
           node scripts/test-classify-official-capture-html.mjs
           node scripts/test-describe-makulabo-identity-review.mjs
           node --check scripts/capture-research-makulabo-join.mjs
+          node scripts/test-apply-reviewed-makulabo-identities.mjs
           node scripts/test-run-saved-makulabo-research.mjs
           node scripts/test-evaluate-verified-makulabo-research.mjs
           node scripts/test-report-research-snapshot-readiness.mjs
