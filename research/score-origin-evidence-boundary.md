@@ -101,3 +101,11 @@ In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race
 - Therefore the candidate scheduled-preview implementation is **morning batch retry/continuation**, not an authenticated per-race ten-minutes-before-deadline refresh. A 10-minute periodic cron must never be conflated with a deadline-relative trigger.
 - The preview selected-race API has an on-demand `mode=beforeinfo` fetch/verification path, but on-demand fetch does not establish automated deadline-relative invocation. Deployment status and actual scheduler executions remain unverified.
 - Preserve the requirement: morning base ranking and per-race near-deadline refreshed ranking are separate snapshots, with independently captured timestamps, official deadline evidence, and six-boat input verification.
+
+## Existing official cutoff evidence and deadline-refresh readiness
+
+- Inspected `scripts/extract-official-cutoff-candidate.mjs`: parses one explicit `締切予定時刻` / related label from official racelist HTML and returns `candidate_needs_official_page_identity_verification` with `verified:false`. This is **not** an authenticated official cutoff.
+- `scripts/capture-official-cutoff-source.mjs` fetches official race-list pages and archives URL, status, response hash, page identity and cutoff candidate, but deliberately sets `verified:false` and `officialCutoffAt:null`. It does not establish pre-race provenance.
+- `scripts/audit-morning-official-cutoffs.mjs` requires `verified:true`, official URL, exact date/venue/race and an offset-aware cutoff timestamp before classifying timing; otherwise reports `official_cutoff_unverified`.
+- Consequently a safe deadline-relative refresh must first obtain and authenticate a race-specific cutoff; only then schedule/check a target near cutoff minus 10 minutes, fetch `mode=beforeinfo`, record the response and six-boat verification, and compare baseline versus refreshed scores without overwriting the morning snapshot.
+- No automatic deadline-relative scheduler, its deployed revision, or its run logs have been verified. This section is an implementation acceptance gate, not a claim that the feature already exists.
