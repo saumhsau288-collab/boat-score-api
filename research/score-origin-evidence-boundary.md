@@ -15,3 +15,15 @@
 - The `worker.js` on that named branch contains `rankedScores` handling, start/exhibition score adjustments and trifecta ranking. It is substantially different from the research branch's `worker.js`, which does not expose `rankedScores`.
 - The branch's start adjustment applies only after six verified start rows; the exhibition adjustment also requires six verified exhibition rows. This is source-code inspection, not proof either adjustment was applied to a saved response.
 - Next: trace the base-score calculation within the named preview Worker, identify the exact deployment commit SHA from Cloudflare/GitHub evidence, and capture a six-racer input vector. Do not equate a matching endpoint path or branch name with verified deployed provenance.
+
+## Candidate preview Worker base-score formula traced
+
+In `fix-boat-score-2-syntax-20261115/worker.js`, the `/api/predict/selected-race` handler calls `buildMorningRaceInputs(date,venue,race,official)` for its base score, then conditionally applies verified exhibition and verified start adjustments.
+
+- Six-racer `nationwide.winRate` and `motor.secondPlaceRate` are required. If all six local win rates are valid, average national and local win rates for ranking; otherwise rank national win rates alone.
+- For each metric, assign rank points 6,5,4,3,2,1 with boat-number tie-breaks.
+- Base score: `7 * averageWinRateRankPoints + 3 * motorTwoWinRateRankPoints`, plus optional `(nationwideTop2RankPoints + nationwideTop3RankPoints) / 100` when six racers' nationwide place rates are valid.
+- `mode=beforeinfo` conditionally applies small exhibition/start timing adjustments, only with six verified rows. `rankedScores` in the response is **after** these conditional adjustments.
+- The code reports `method`, `predictionMode`, `startAdjustmentApplied`, and other verification flags, but **does not return the complete original six-racer metric vector**.
+- The formula is confirmed for the candidate branch source, **not yet confirmed as the exact deployed code revision that produced the archived saved scores**. Do not assume all archived records used the same adjustment state.
+- Do not confuse the rank-based 70/30 candidate Worker formula with the separate unused `boat-score-2-scoring.js` 45/25/15/10/5 module.
