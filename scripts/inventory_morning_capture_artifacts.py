@@ -232,9 +232,17 @@ def inventory(repository, token):
                 errors.append({'artifactId': artifact.get('id'), 'reason': str(exc)})
         if len(artifacts) < 100:
             break
+    # De-duplicate ready race identities across multiple archived runs per date.
+    # This is still raw-response evidence, never authenticated pre-race evidence.
+    unique_ready = {}
+    for day, bucket in diagnostics.items():
+        ids = [(row['venue'], row['race']) for row in bucket['readyRaceIdentities']]
+        unique_ready[day] = {'uniqueReadyRaceKeys': len(set(ids)),
+                             'duplicateReadyAttempts': len(ids) - len(set(ids))}
     diagnostic_output = {}
     for day, bucket in sorted(diagnostics.items()):
         diagnostic_output[day] = {
+            **unique_ready[day],
             'states': dict(sorted(bucket['states'].items())),
             'byVenue': {venue: dict(sorted(c.items()))
                         for venue, c in sorted(bucket['byVenue'].items(), key=lambda x: int(x[0]))},
