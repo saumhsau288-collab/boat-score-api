@@ -115,3 +115,4 @@ jobs:
           node scripts/test-describe-official-table-structure.mjs
 
           node scripts/test-verify-historical-race-join.mjs
+          node scripts/test-audit-historical-race-joins.mjs
