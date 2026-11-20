@@ -13,5 +13,6 @@ assert.deepEqual(result[0].spanMaxPerRow,[2,1,1]);
 assert.equal(result[0].headerCellsByRow[0][0].label,'枠');
 assert.equal(result[0].headerCellsByRow[0][1].colspan,2);
 assert.equal(result[0].headerCellsByRow[1][0].label,'勝率');
+assert.equal(Array.isArray(result[0].boatCellTypes),true);
 assert.equal(JSON.stringify(result).includes('6.50'),false);
 console.log('Official table structural diagnostics tests passed');
