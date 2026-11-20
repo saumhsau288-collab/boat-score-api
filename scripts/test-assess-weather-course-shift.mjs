@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {assessWeatherCourseShift} from './assess-weather-course-shift.mjs';
+const comparison={status:'venue_course_shift_comparison',date:'20261121',venue:'18',targetRace:8,flaggedCourses:[4]};
+const observation=(hour,windSpeed)=>({date:'20261121',venue:'18',observedAt:`2026-11-21T${hour}:00:00+09:00`,verified:true,windSpeed,waveHeight:2,windDirection:'north'});
+const observations=[observation('09',1),observation('10',2),observation('11',4),observation('12',5)];
+const result=assessWeatherCourseShift(comparison,observations,'2026-11-21T12:30:00+09:00');
+assert.equal(result.weatherChangeObserved,true);
+assert.equal(result.extraSixStatus,'out_of_sample_validation_required');
+assert.equal(result.weatherImpactConfirmed,false);
+assert.deepEqual(result.extraSixPicks,[]);
+const stale=assessWeatherCourseShift(comparison,observations,'2026-11-21T16:00:00+09:00');
+assert.equal(stale.weatherFresh,false);
+const future=assessWeatherCourseShift(comparison,[...observations,observation('13',12)],'2026-11-21T12:30:00+09:00');
+assert.equal(future.validWeatherObservations,4);
+console.log('Verified weather observation and cutoff safety tests passed');

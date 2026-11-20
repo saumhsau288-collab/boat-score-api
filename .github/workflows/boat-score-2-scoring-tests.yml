@@ -2,7 +2,7 @@ name: Validate Boat Score 2 scoring modules
 
 on:
   push:
-    branches: [main]
+    branches: [main, research-cutoff-join-gate-20261120]
     paths:
       - 'boat-score-2-*.js'
       - 'boat-score-2-*.mjs'
@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   scoring-tests:
@@ -43,6 +44,8 @@ jobs:
           node --experimental-default-type=module boat-score-2-scoring.test.mjs
           node --experimental-default-type=module boat-score-2-classification.test.mjs
           node --experimental-default-type=module boat-score-2-morning.test.mjs
+          node --experimental-default-type=module --check boat-score-2-research-preview-worker.js
+          node --experimental-default-type=module boat-score-2-research-preview-worker.test.mjs
           node --experimental-default-type=module boat-score-2-adapter.test.mjs
           node --experimental-default-type=module boat-score-2-official.test.mjs
           node --experimental-default-type=module boat-score-2-boat-mapping.test.mjs
@@ -99,6 +102,8 @@ jobs:
           node scripts/test-run-saved-makulabo-research.mjs
           node scripts/test-evaluate-verified-makulabo-research.mjs
           node scripts/test-report-research-snapshot-readiness.mjs
+          node --check scripts/capture-official-beforeinfo-evidence.mjs
+          node scripts/test-capture-official-beforeinfo-evidence.mjs
           node scripts/test-evaluate-captured-research-snapshot.mjs
           node scripts/test-compare-research-score-phases.mjs
           node scripts/test-audit-saved-research-race.mjs
@@ -114,3 +119,326 @@ jobs:
           node scripts/test-select-research-official-metrics.mjs
           node scripts/test-describe-official-table-structure.mjs
 
+          node scripts/test-verify-historical-race-join.mjs
+          node scripts/test-audit-historical-race-joins.mjs
+          node scripts/test-normalize-saved-prediction-for-join.mjs
+          node scripts/test-audit-research-sample.mjs
+          node scripts/test-summarize-verified-score-finish-joins.mjs
+          node scripts/test-inspect-archived-research-pair.mjs
+          node scripts/test-audit-pre-cutoff-score-receipt.mjs
+          node scripts/test-capture-research-precutoff-score.mjs
+          node scripts/test-evaluate-historical-weight-candidates.mjs
+          node scripts/test-report-historical-evidence-readiness.mjs
+          node scripts/test-compare-research-weight-application.mjs
+          node scripts/test-capture-official-result-evidence.mjs
+          node scripts/test-verify-official-result-evidence-pair.mjs
+          node scripts/test-parse-official-result-finish-rows.mjs
+          node scripts/test-inspect-research-result-join.mjs
+          node scripts/test-audit-archived-result-join.mjs
+          node scripts/test-capture-research-result-batch.mjs
+          node scripts/test-inspect-official-result-markup.mjs
+          node scripts/test-summarize-parsed-official-results.mjs
+          node scripts/test-replay-historical-race-with-current-scoring.mjs
+          node --check scripts/capture-historical-racelist-batch.mjs
+          node scripts/test-join-historical-racelist-result-identities.mjs
+          node scripts/test-evaluate-three-feature-historical-baseline.mjs
+          node scripts/test-explain-historical-first-place-misses.mjs
+          node scripts/test-screen-historical-three-feature-weights.mjs
+          node scripts/test-evaluate-historical-first-second.mjs
+          node --check scripts/run-historical-first-second-diagnostic.mjs
+          node --check scripts/run-historical-first-place-miss-diagnostic.mjs
+          node --check scripts/run-three-feature-historical-baseline.mjs
+          node scripts/test-evaluate-venue-specific-weights.mjs
+          node scripts/test-summarize-venue-course-tendencies.mjs
+          node scripts/test-summarize-venue-racer-podiums.mjs
+          node scripts/test-join-verified-racer-entry-course-results.mjs
+          node scripts/test-build-prior-racer-course-rates.mjs
+          node scripts/test-evaluate-weather-prediction-stages.mjs
+          node scripts/test-analyze-same-day-course-impact.mjs
+          node scripts/test-compare-venue-course-shift.mjs
+          node scripts/test-assess-weather-course-shift.mjs
+          node scripts/test-evaluate-same-day-weather-lift.mjs
+          node scripts/test-evaluate-weather-racer-identity-lift.mjs
+          node scripts/test-audit-extra-six-cutoff-evidence.mjs
+
+  archived-evidence-diagnostic:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retrieve actual saved race artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p archived-evidence
+          gh run download 44670651345 --repo "${{ github.repository }}" --name research-official-features-44670651345 --dir archived-evidence
+      - name: Produce research-only evidence readiness report
+        run: |
+          node scripts/report-historical-evidence-readiness.mjs \
+            archived-evidence/research-official-20261120-18-1.json \
+            archived-evidence/research-makulabo-20261120-18-1.json \
+            > archived-evidence/research-evidence-readiness.json
+          cat archived-evidence/research-evidence-readiness.json
+      - name: Upload diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-archived-evidence-diagnostic-${{ github.run_id }}
+          path: archived-evidence/research-evidence-readiness.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  research-result-source-diagnostic:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Attempt real archived official result capture
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUE: '18'
+          CAPTURE_RACES: '1,2,3,4,5,6,7,8,9,10,11,12'
+        run: node scripts/capture-research-result-batch.mjs
+      - name: Summarize actual racer finish outcomes
+        if: always()
+        run: node scripts/summarize-parsed-official-results.mjs
+      - name: Validate captured source integrity
+        continue-on-error: true
+        run: |
+          for file in prediction-captures/research-result-*.html; do
+            if [ -f "$file" ]; then
+              node scripts/verify-official-result-evidence-pair.mjs "${file%.html}.json" "$file"
+            fi
+          done
+      - name: Print captured result structure diagnostic
+        if: always()
+        run: |
+          if [ -f prediction-captures/research-result-20261120-18-1-markup.json ]; then
+            cat prediction-captures/research-result-20261120-18-1-markup.json
+          fi
+      - name: Upload real result source diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-result-source-${{ github.run_id }}
+          path: prediction-captures/research-result-*
+          if-no-files-found: warn
+          retention-days: 30
+
+  historical-racelist-replay-input-diagnostic:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch historical Tokuyama official racelist fields
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '18'
+          CAPTURE_RACES: '1,2,3,4,5,6,7,8,9,10,11,12'
+        run: node scripts/capture-historical-racelist-batch.mjs
+      - name: Retrieve actual official finish sources from this run
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          gh run download 44816328162 --repo "${{ github.repository }}" --name "research-result-source-44816328162" --dir prediction-captures
+      - name: Audit historical racer identities against finish rows
+        if: always()
+        run: node scripts/join-historical-racelist-result-identities.mjs
+      - name: Compare historical official-metric partial rankings to actual finishes
+        if: always()
+        run: node scripts/run-three-feature-historical-baseline.mjs
+      - name: Count historical first-place, second-place and ordered pair predictions
+        if: always()
+        run: node scripts/run-historical-first-second-diagnostic.mjs
+      - name: Explain each missed first-place prediction by racer score component
+        if: always()
+        run: node scripts/run-historical-first-place-miss-diagnostic.mjs
+      - name: Print complete historical baseline summary
+        if: always()
+        run: |
+          if test -f prediction-captures/historical-three-feature-baseline.json; then
+            node -e "const x=require('./prediction-captures/historical-three-feature-baseline.json'); console.log(JSON.stringify({total:x.total,scored:x.scored,firstPlaceCorrect:x.firstPlaceCorrect,firstPlaceTies:x.firstPlaceTies,firstPlaceHitRate:x.firstPlaceHitRate,topThreePodiumHits:x.topThreePodiumHits,meanTopThreePodiumHits:x.meanTopThreePodiumHits,excludedReasons:x.excludedReasons,eligibleForWeightTuning:false}))"
+          fi
+      - name: Upload historical racelist source and extraction diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-historical-racelists-${{ github.run_id }}
+          path: |
+            prediction-captures/research-historical-racelist-*
+            prediction-captures/historical-racelist-result-join.json
+            prediction-captures/historical-three-feature-baseline.json
+            prediction-captures/historical-first-place-misses.json
+            prediction-captures/historical-first-second-diagnostic.json
+            prediction-captures/official-actual-course-markup-inspection.json
+            prediction-captures/actual-course-close-ability-diagnostic.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  historical-replay-from-archived-evidence:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download previously verified source-capture artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          gh run download 44817586878 --repo "${{ github.repository }}" --name "research-historical-racelists-44817586878" --dir prediction-captures
+          gh run download 44816328162 --repo "${{ github.repository }}" --name "research-result-source-44816328162" --dir prediction-captures
+      - name: Verify racer IDs and compute first/second diagnostics
+        run: |
+          node scripts/join-historical-racelist-result-identities.mjs
+          node scripts/run-three-feature-historical-baseline.mjs
+          node scripts/run-historical-first-second-diagnostic.mjs
+          node scripts/run-historical-first-place-miss-diagnostic.mjs
+      - name: Save race-by-race validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-first-second-replay-${{ github.run_id }}
+          path: |
+            prediction-captures/historical-racelist-result-join.json
+            prediction-captures/historical-three-feature-baseline.json
+            prediction-captures/historical-first-second-diagnostic.json
+            prediction-captures/historical-first-place-misses.json
+          if-no-files-found: warn
+          retention-days: 30
+
+
+  multi-venue-cached-second-place-analysis:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reuse captured 21-race evidence without another official-site download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          gh run download 44823630627 --repo "${{ github.repository }}" --name "multi-venue-active-research-44823630627" --dir prediction-captures
+      - name: Report missing identity joins and second-place finish distribution
+        run: |
+          node scripts/join-historical-racelist-result-identities.mjs
+          node scripts/run-historical-first-second-diagnostic.mjs
+          node scripts/inspect-archived-actual-course-markup.mjs
+          node scripts/analyze-close-ability-actual-course.mjs
+          node scripts/test-analyze-slow-dash-zone-proxy.mjs
+      - name: Preserve second-place error analysis
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cached-second-place-analysis-${{ github.run_id }}
+          path: |
+            prediction-captures/historical-racelist-result-join.json
+            prediction-captures/historical-first-second-diagnostic.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  multi-venue-active-venues-research:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture official historical racelists from seven held venues
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '04,13,14,15,17,21,22'
+          CAPTURE_RACES: '1,2,3'
+        run: node scripts/capture-historical-racelist-batch.mjs
+      - name: Capture official results for same historical races
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '04,13,14,15,17,21,22'
+          CAPTURE_RACES: '1,2,3'
+        run: node scripts/capture-research-result-batch.mjs
+      - name: Match racer IDs and compare first and second candidates by venue
+        if: always()
+        run: |
+          node scripts/join-historical-racelist-result-identities.mjs
+          node scripts/run-historical-first-second-diagnostic.mjs
+          node scripts/run-three-feature-historical-baseline.mjs
+      - name: Save source evidence and venue-level diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-venue-active-research-${{ github.run_id }}
+          path: prediction-captures/
+          if-no-files-found: warn
+          retention-days: 30
+
+  multi-venue-historical-research:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/research-cutoff-join-gate-20261120') || (github.event_name == 'pull_request' && github.head_ref == 'research-cutoff-join-gate-20261120')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture historical official racelists across six venues
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '01,02,06,12,20,24'
+          CAPTURE_RACES: '1,2,3,4'
+        run: node scripts/capture-historical-racelist-batch.mjs
+      - name: Capture independent official finishes across the same venues
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUES: '01,02,06,12,20,24'
+          CAPTURE_RACES: '1,2,3,4'
+        run: node scripts/capture-research-result-batch.mjs
+      - name: Join real racer identities and calculate first and second predictions
+        if: always()
+        run: |
+          node scripts/join-historical-racelist-result-identities.mjs
+          node scripts/run-historical-first-second-diagnostic.mjs
+          node scripts/run-three-feature-historical-baseline.mjs
+      - name: Preserve source HTML, six-racer evidence and per-race metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-venue-historical-research-${{ github.run_id }}
+          path: |
+            prediction-captures/research-historical-racelist-*
+            prediction-captures/research-result-*
+            prediction-captures/historical-racelist-result-join.json
+            prediction-captures/historical-first-second-diagnostic.json
+            prediction-captures/historical-three-feature-baseline.json
+          if-no-files-found: warn
+          retention-days: 30

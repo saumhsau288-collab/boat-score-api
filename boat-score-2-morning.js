@@ -23,10 +23,20 @@ export function morningRaceScore(racers){
     return {status:'insufficient_data',racers:results};
   const ranked=[...results].sort((a,b)=>b.score-a.score||a.boat-b.boat);
   const gap=Math.round((ranked[0].score-ranked[1].score)*100)/100;
+  // Research annotation only: morning boat numbers are NOT verified entry courses,
+  // and neither slow/dash launch style nor actual start timing is known at 08:00.
+  // Do not award course bonuses or substitute post-race actual course data.
+  const closeAbilityReview={status:gap<=5?'review':'not_flagged',
+    scoreGap:gap,threshold:5,thresholdValidated:false,
+    topTwoBoats:ranked.slice(0,2).map(r=>r.boat),
+    topTwoBoatZones:ranked.slice(0,2).map(r=>r.boat<=3?'boats_1to3':'boats_4to6'),
+    actualEntryCourse:'unknown',slowDash:'unknown',
+    affectsScore:false,affectsRanking:false,
+    note:'Exploratory flag only; boat-number zone is not actual entry or verified slow/dash. No validated predictive lift.'};
   const inside=results.find(r=>r.boat===1);
   const category=ranked[0].boat===1&&gap>=12?'favorite':
     ranked[0].boat!==1&&ranked[0].score-inside.score>=12?'upset_candidate':'uncertain';
-  return {status:'evaluated',phase:'morning',category,ranked,scoreGap:gap,calibrated:false};
+  return {status:'evaluated',phase:'morning',category,ranked,scoreGap:gap,closeAbilityReview,calibrated:false};
 }
 export function morningShortlists(races,limit=20){
   if(!Array.isArray(races)||!Number.isInteger(limit)||limit<1||limit>100)

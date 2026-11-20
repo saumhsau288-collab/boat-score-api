@@ -1,0 +1,59 @@
+name: Research live official source capture (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Race date YYYYMMDD'
+        required: true
+        type: string
+      venue:
+        description: 'Venue 01-24'
+        required: true
+        type: string
+      race:
+        description: 'Race 1-12'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  capture:
+    if: github.ref == 'refs/heads/research-cutoff-join-gate-20261120'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch official pre-race racelist
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: ${{ inputs.date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: node scripts/capture-research-official-features.mjs
+      - name: Fetch official exhibition and start evidence
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: ${{ inputs.date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: node scripts/run-research-beforeinfo-capture.mjs
+      - name: Diagnose raw exhibition evidence
+        continue-on-error: true
+        run: |
+          for file in prediction-captures/research-beforeinfo-*.html; do
+            if [ -f "$file" ]; then
+              node scripts/verify-beforeinfo-evidence-pair.mjs "${file%.html}.json" "$file"
+              node scripts/diagnose-official-beforeinfo-html.mjs "$file" > "${file%.html}-diagnostic.json"
+            fi
+          done
+      - name: Preserve actual source data without substituting missing values
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-live-official-${{ github.run_id }}
+          path: prediction-captures/
+          if-no-files-found: warn
+          retention-days: 30

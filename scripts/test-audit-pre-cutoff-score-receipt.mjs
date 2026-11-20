@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {auditPreCutoffScoreReceipt as audit} from './audit-pre-cutoff-score-receipt.mjs';
+const valid={race:{date:'20261120',venue:18,race:1},cutoffAt:'2026-11-20T09:00:00+09:00',capturedAt:'2026-11-20T08:00:00+09:00',scoreComputedAt:'2026-11-20T08:05:00+09:00',officialSourceVerified:true,cutoffSourceVerified:true,sourceEvidenceSha256:'a'.repeat(64),scoreAlgorithmVersion:'research-v1',archivedBeforeCutoffVerified:true,scores:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4551+i),score:40+i}))};
+assert.equal(audit(valid).readyForIndependentReview,true);
+assert.equal(audit(valid).authenticatedHistoricalPrediction,false);
+assert.equal(audit({...valid,archivedBeforeCutoffVerified:false}).missing.includes('independent_archive_timestamp_evidence'),true);
+assert.equal(audit({...valid,scoreComputedAt:'2026-11-20T09:01:00+09:00'}).readyForIndependentReview,false);
+assert.equal(audit({...valid,scores:valid.scores.map((r,i)=>i===5?{...r,racerId:'4551'}:r)}).readyForIndependentReview,false);
+assert.equal(audit({...valid,scores:valid.scores.map((r,i)=>i===5?{...r,score:NaN}:r)}).readyForIndependentReview,false);
+assert.equal(audit({...valid,sourceEvidenceSha256:null}).readyForIndependentReview,false);
+console.log('Pre-cutoff score receipt gate tests passed');

@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {evaluateVenueSpecificWeights} from './evaluate-venue-specific-weights.mjs';
+const records=[{expected:{date:'20261120',venue:18,race:1}},{expected:{date:'20261120',venue:'01',race:2}},{expected:{venue:25,race:1}}];
+const result=evaluateVenueSpecificWeights(records);
+assert.equal(result.venues.length,24);
+assert.equal(result.invalidRecords,1);
+assert.equal(result.venues.find(v=>v.venue==='18').submitted,1);
+assert.equal(result.venues.find(v=>v.venue==='01').submitted,1);
+assert.equal(result.totalVerifiedEligible,0);
+assert.equal(result.venues.every(v=>v.proposedResearchWeights===null),true);
+assert.equal(result.eligibleForDeployment,false);
+console.log('Venue-specific historical weight evaluation tests passed');

@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {summarizeVenueRacerPodiums} from './summarize-venue-racer-podiums.mjs';
+const result=summarizeVenueRacerPodiums([{expected:{date:'20261120',venue:'18',race:1}}]);
+assert.equal(result.venues.length,24);
+assert.equal(result.acceptedRaces,0);
+assert.equal(result.rejected,1);
+assert.deepEqual(result.venues.find(v=>v.venue==='18').racers,[]);
+assert.equal(result.eligibleForDeployment,false);
+assert.throws(()=>summarizeVenueRacerPodiums([],{minimumStarts:0}),/invalid_minimum/);
+console.log('Venue-specific racer podium summary tests passed');

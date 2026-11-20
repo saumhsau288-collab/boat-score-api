@@ -1,0 +1,59 @@
+name: Deploy isolated Boat Score 2 research API preview (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: boat-score-2-research-api-preview
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout isolated research branch
+        uses: actions/checkout@v4
+        with:
+          ref: research-cutoff-join-gate-20261120
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate preview API without touching existing app
+        run: |
+          node --experimental-default-type=module --check boat-score-2-research-preview-worker.js
+          node --experimental-default-type=module boat-score-2-research-preview-worker.test.mjs
+          node --experimental-default-type=module boat-score-2-adapter.test.mjs
+          node --experimental-default-type=module boat-score-2-morning.test.mjs
+      - name: Require Cloudflare credentials
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CF_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN"; exit 1; }
+          test -n "$CF_ACCOUNT" || { echo "::error::Missing CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+      - name: Deploy distinct research API Worker (not existing UI)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          cat > wrangler.research-api-preview.toml <<'EOF'
+          name = "boat-score-2-research-api-preview"
+          main = "boat-score-2-research-preview-worker.js"
+          compatibility_date = "2026-11-01"
+          EOF
+          npx --yes wrangler@4 deploy --config wrangler.research-api-preview.toml
+      - name: Verify deployed research API health
+        run: |
+          node --input-type=module <<'NODE'
+          const url='https://boat-score-2-research-api-preview.saumh-sau-288.workers.dev/health';
+          const response=await fetch(url,{signal:AbortSignal.timeout(15000)});
+          if(!response.ok)throw Error('Health HTTP '+response.status);
+          const data=await response.json();
+          if(data.service!=='boat-score-2-research-preview'||data.liveData!==false)
+            throw Error('Unexpected preview API response');
+          console.log('Isolated research API preview health verified');
+          NODE

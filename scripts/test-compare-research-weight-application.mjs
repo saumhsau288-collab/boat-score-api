@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {compareResearchWeightApplication} from './compare-research-weight-application.mjs';
+import {SCORE_WEIGHTS,evaluateRace} from '../boat-score-2-scoring.js';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:7-i/2,localWinRate:0,motorTwoWinRate:45,recent50WinRate:20,exhibitionScore:50}));
+const result=compareResearchWeightApplication([],racers);
+assert.equal(result.status,'held');
+assert.equal(result.reason,'insufficient_verified_history');
+assert.equal(result.applied,false);
+assert.equal(result.adjusted,null);
+assert.deepEqual(result.baseline,evaluateRace(racers));
+assert.equal(SCORE_WEIGHTS.nationalWinRate,45);
+console.log('Research score weight application gate tests passed');

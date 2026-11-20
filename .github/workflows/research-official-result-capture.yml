@@ -1,0 +1,68 @@
+name: Research official result evidence capture
+on:
+  push:
+    branches: [research-cutoff-join-gate-20261120]
+    paths:
+      - 'scripts/capture-official-result-evidence.mjs'
+      - 'scripts/test-capture-official-result-evidence.mjs'
+      - 'scripts/run-research-official-result-capture.mjs'
+      - 'scripts/verify-official-result-evidence-pair.mjs'
+      - 'scripts/test-verify-official-result-evidence-pair.mjs'
+      - 'scripts/parse-official-result-finish-rows.mjs'
+      - 'scripts/test-parse-official-result-finish-rows.mjs'
+      - '.github/workflows/research-official-result-capture.yml'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Completed race date YYYYMMDD'
+        required: true
+        type: string
+      venue:
+        description: 'Venue 01-24'
+        required: true
+        type: string
+      race:
+        description: 'Race 1-12'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test result capture source checks
+        run: |
+          node scripts/test-capture-official-result-evidence.mjs
+          node scripts/test-verify-official-result-evidence-pair.mjs
+          node scripts/test-parse-official-result-finish-rows.mjs
+      - name: Capture official result evidence
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: ${{ github.event_name == 'workflow_dispatch' && inputs.date || '20261120' }}
+          CAPTURE_VENUE: ${{ github.event_name == 'workflow_dispatch' && inputs.venue || '18' }}
+          CAPTURE_RACE: ${{ github.event_name == 'workflow_dispatch' && inputs.race || '1' }}
+        run: node scripts/run-research-official-result-capture.mjs
+      - name: Verify captured HTML against receipt
+        if: always()
+        run: |
+          for file in prediction-captures/research-result-*.html; do
+            if [ -f "$file" ]; then
+              node scripts/verify-official-result-evidence-pair.mjs "${file%.html}.json" "$file"
+            fi
+          done
+      - name: Preserve research evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-official-result-${{ github.run_id }}
+          path: |
+            prediction-captures/research-result-*.json
+            prediction-captures/research-result-*.html
+          if-no-files-found: warn
+          retention-days: 30

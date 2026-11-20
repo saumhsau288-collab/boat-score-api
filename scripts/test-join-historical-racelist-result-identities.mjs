@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {joinHistoricalRacelistAndResults as join} from './join-historical-racelist-result-identities.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i,nationalWinRate:5,localWinRate:5,motorTwoWinRate:40}));
+const finishByBoat=racers.map((r,i)=>({boat:r.boat,racerId:r.racerId,finish:6-i}));
+const list={status:'official_racelist_source_captured',sixRacersParsed:true,racers};
+const result={verified:true,finishByBoat};
+const ok=join(list,result);
+assert.equal(ok.status,'retrospective_racer_identity_join');
+assert.equal(ok.matchedRacers,6);
+assert.equal(ok.rows.filter(x=>x.podium).length,3);
+assert.equal(ok.fullCurrentScoreReplayReady,false);
+assert.equal(join(list,{...result,finishByBoat:finishByBoat.map((f,i)=>i===0?{...f,racerId:'4999'}:f)}).reason,'racer_identity_mismatch');
+assert.equal(join({...list,sixRacersParsed:false},result).status,'held');
+console.log('Historical racelist-result racer identity join tests passed');

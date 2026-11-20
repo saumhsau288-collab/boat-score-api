@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {explainHistoricalFirstPlaceMiss as explain} from './explain-historical-first-place-misses.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'R'+i,nationalWinRate:8-i,localWinRate:8-i,motorTwoWinRate:60-i*5}));
+const list={status:'official_racelist_source_captured',sixRacersParsed:true,racers,date:'20261120',venue:'18',race:1};
+const finishes=racers.map((r,i)=>({boat:r.boat,racerId:r.racerId,finish:i===1?1:i===0?2:i+1}));
+const miss=explain(list,{verified:true,finishByBoat:finishes});
+assert.equal(miss.status,'miss');
+assert.equal(miss.predicted.racerId,'4001');
+assert.equal(miss.actualWinner.racerId,'4002');
+assert.equal(miss.winnerMinusPredictedComponents.nationalWinRate,-4.5);
+assert.equal(miss.eligibleForWeightTuning,false);
+const correct=explain(list,{verified:true,finishByBoat:racers.map((r,i)=>({boat:r.boat,racerId:r.racerId,finish:i+1}))});
+assert.equal(correct.status,'correct');
+console.log('Historical winner versus predicted racer score-component tests passed');

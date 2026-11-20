@@ -4,6 +4,15 @@ const official=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),na
 const recent50=official.map(r=>({racerId:r.racerId,winRate:50,verified:true,sourceVerified:true}));
 assert.equal(evaluateMorningFromSources({official,recent50}).status,'evaluated');
 assert.equal(evaluateMorningFromSources({official,recent50}).category,'favorite');
+assert.equal(evaluateMorningFromSources({official,recent50}).closeAbilityReview.status,'not_flagged');
+assert.equal(evaluateMorningFromSources({official,recent50}).closeAbilityReview.affectsRanking,false);
+const equalOfficial=official.map(r=>({...r,nationalWinRate:6,localWinRate:6}));
+const equalResult=evaluateMorningFromSources({official:equalOfficial,recent50});
+assert.equal(equalResult.status,'evaluated');
+assert.equal(equalResult.closeAbilityReview.status,'review');
+assert.equal(equalResult.closeAbilityReview.actualEntryCourse,'unknown');
+assert.equal(equalResult.closeAbilityReview.slowDash,'unknown');
+assert.equal(equalResult.closeAbilityReview.affectsScore,false);
 assert.equal(evaluateMorningFromSources({official,recent50:recent50.slice(1)}).status,'insufficient_data');
 assert.equal(evaluateMorningFromSources({official,recent50:recent50.map((r,i)=>i===0?{...r,verified:false}:r)}).status,'insufficient_data');
 assert.equal(evaluateMorningFromSources({official,recent50:recent50.map((r,i)=>i===0?{...r,sourceVerified:false}:r)}).status,'insufficient_data');
