@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/research-official-racelist-availability.yml'
       - 'scripts/fetch-research-official-racelists.mjs'
+      - 'scripts/audit-research-official-racelist-structure.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -28,6 +29,8 @@ jobs:
           test -s research-queue/feature-collection-queue.json
       - name: Archive official race-list pages without treating them as pre-race evidence
         run: node scripts/fetch-research-official-racelists.mjs research-queue/feature-collection-queue.json research-official-racelists
+      - name: Audit archived HTML structure
+        run: node scripts/audit-research-official-racelist-structure.mjs research-official-racelists
       - uses: actions/upload-artifact@v4
         if: always()
         with:
