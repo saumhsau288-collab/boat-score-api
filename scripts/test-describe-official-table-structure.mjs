@@ -10,5 +10,8 @@ assert.deepEqual(result[0].headerCellsPerRow,[2,2,0]);
 assert.deepEqual(result[0].dataCellsPerRow,[0,0,3]);
 assert.deepEqual(result[0].profileLinksPerRow,[0,0,0]);
 assert.deepEqual(result[0].spanMaxPerRow,[2,1,1]);
+assert.equal(result[0].headerCellsByRow[0][0].label,'枠');
+assert.equal(result[0].headerCellsByRow[0][1].colspan,2);
+assert.equal(result[0].headerCellsByRow[1][0].label,'勝率');
 assert.equal(JSON.stringify(result).includes('6.50'),false);
 console.log('Official table structural diagnostics tests passed');
