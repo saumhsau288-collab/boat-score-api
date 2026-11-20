@@ -51,7 +51,9 @@ assert.equal(officialResult.racers[0].racerId,'4001');
 assert.equal(officialResult.racers[0].nationalWinRate,6.5);
 assert.equal(officialResult.racers[0].localWinRate,5.2);
 assert.equal(officialResult.racers[0].motorTwoWinRate,44);
-assert.equal(extract(officialHtml.replace('6.50<br>42<br>55','6.50<br>42')).verified,false);
+const invalidNumbers=extract(officialHtml.replace('6.50<br>42<br>55','6.50<br>42'));
+assert.equal(invalidNumbers.verified,false);
+assert.deepEqual(invalidNumbers.rowDiagnostics,{boatRows:6,linkedRows:6,numericMetricRows:5});
 assert.equal(extract(officialHtml.replace('選手2','別名2')).verified,true);
 
 console.log('Grouped official six-racer extraction tests passed');
