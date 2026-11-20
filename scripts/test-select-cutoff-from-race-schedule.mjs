@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {selectCutoffFromRaceSchedule as pick} from './select-cutoff-from-race-schedule.mjs';
+const raceNumbers=Array.from({length:12},(_,i)=>i+1);
+const cutoffTimes=['08:43','09:09','09:35','10:01','10:28','10:58','11:30','12:03','12:38','13:11','13:46','14:23'];
+const input={expectedRace:3,raceNumbers,cutoffTimes,sourceVerified:true};
+assert.deepEqual(pick(input),{verified:true,cutoffJst:'09:35',reason:null});
+assert.equal(pick({...input,sourceVerified:false}).verified,false);
+assert.equal(pick({...input,raceNumbers:[...raceNumbers.slice(0,2),4,...raceNumbers.slice(3)]}).verified,false);
+assert.equal(pick({...input,cutoffTimes:['08:43']}).verified,false);
+assert.equal(pick({...input,cutoffTimes:cutoffTimes.map((t,i)=>i===2?'--:--':t)}).verified,false);
+console.log('12-race schedule selector: five synthetic cases passed');
