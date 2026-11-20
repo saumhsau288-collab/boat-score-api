@@ -25,6 +25,7 @@ export function describeOfficialTableStructure(html){
    visibleHeaderLabels:headerLabels,gridValid:grid.valid,gridReason:grid.reason??null,
    gridColumnCount:grid.valid?grid.columns:null,
    mappingVerified:mapping.verified,mappingReason:mapping.reason??null,
-   mappingCandidates:mapping.candidates??null};
+   mappingCandidates:mapping.candidates??null,
+   headerGridLabels:mapping.headerGridLabels??null};
  });
 }
