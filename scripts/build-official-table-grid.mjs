@@ -12,7 +12,7 @@ export function buildOfficialTableGrid(table){
    while(grid[y][x]!==undefined)x++;
    const attrs=m[2],attr=(name)=>{const z=attrs.match(new RegExp('(?:^|\\s)'+name+'\\s*=\\s*(?:"(\\d+)"|\'(\\d+)\'|(\\d+))','i'));return z?Number(z[1]||z[2]||z[3]):1;};
    const width=attr('colspan'),height=attr('rowspan');
-   if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>12||height>24)return {valid:false,reason:'invalid_span'};
+   if(!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1||width>64||height>64)return {valid:false,reason:'invalid_span'};
    const cell={tag:m[1].toLowerCase(),html:m[3],originRow:y,originColumn:x};
    for(let dy=0;dy<height;dy++){
     grid[y+dy]??=[];
