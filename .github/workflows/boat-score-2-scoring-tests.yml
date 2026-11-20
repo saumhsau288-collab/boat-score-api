@@ -138,6 +138,7 @@ jobs:
           node scripts/test-summarize-parsed-official-results.mjs
           node scripts/test-replay-historical-race-with-current-scoring.mjs
           node --check scripts/capture-historical-racelist-batch.mjs
+          node scripts/test-join-historical-racelist-result-identities.mjs
           node scripts/test-evaluate-venue-specific-weights.mjs
           node scripts/test-summarize-venue-course-tendencies.mjs
           node scripts/test-summarize-venue-racer-podiums.mjs
@@ -240,6 +241,16 @@ jobs:
           CAPTURE_VENUES: '18'
           CAPTURE_RACES: '1,2,3,4,5,6,7,8,9,10,11,12'
         run: node scripts/capture-historical-racelist-batch.mjs
+      - name: Retrieve actual official finish sources from this run
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          gh run download "${{ github.run_id }}" --repo "${{ github.repository }}" --name "research-result-source-${{ github.run_id }}" --dir prediction-captures
+      - name: Audit historical racer identities against finish rows
+        if: always()
+        run: node scripts/join-historical-racelist-result-identities.mjs
       - name: Upload historical racelist source and extraction diagnostics
         if: always()
         uses: actions/upload-artifact@v4
