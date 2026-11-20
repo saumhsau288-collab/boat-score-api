@@ -1,0 +1,45 @@
+name: Research archived snapshot evidence diagnostic
+on:
+  push:
+    branches: [research-cutoff-join-gate-20261120]
+    paths:
+      - 'scripts/inspect-archived-research-pair.mjs'
+      - 'scripts/test-inspect-archived-research-pair.mjs'
+      - '.github/workflows/research-archived-snapshot-diagnostic.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify diagnostic behavior
+        run: node scripts/test-inspect-archived-research-pair.mjs
+      - name: Retrieve archived 20 November research evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p archived-evidence
+          gh run download 44670651345 --repo "${{ github.repository }}" --name research-official-features-44670651345 --dir archived-evidence
+          find archived-evidence -type f -maxdepth 3 -print
+      - name: Diagnose actual archived evidence without fabricating missing fields
+        run: |
+          node scripts/inspect-archived-research-pair.mjs \
+            archived-evidence/research-official-20261120-18-1.json \
+            archived-evidence/research-makulabo-20261120-18-1.json \
+            > archived-evidence/research-evidence-readiness.json
+          cat archived-evidence/research-evidence-readiness.json
+      - name: Save read-only diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archived-research-evidence-readiness-${{ github.run_id }}
+          path: archived-evidence/research-evidence-readiness.json
+          if-no-files-found: warn
+          retention-days: 30
