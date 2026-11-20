@@ -134,6 +134,7 @@ jobs:
           node scripts/test-inspect-research-result-join.mjs
           node scripts/test-audit-archived-result-join.mjs
           node scripts/test-capture-research-result-batch.mjs
+          node scripts/test-inspect-official-result-markup.mjs
           node scripts/test-evaluate-venue-specific-weights.mjs
           node scripts/test-summarize-venue-course-tendencies.mjs
           node scripts/test-summarize-venue-racer-podiums.mjs
@@ -202,6 +203,12 @@ jobs:
               node scripts/verify-official-result-evidence-pair.mjs "${file%.html}.json" "$file"
             fi
           done
+      - name: Print captured result structure diagnostic
+        if: always()
+        run: |
+          if [ -f prediction-captures/research-result-20261120-18-1-markup.json ]; then
+            cat prediction-captures/research-result-20261120-18-1-markup.json
+          fi
       - name: Upload real result source diagnostic
         if: always()
         uses: actions/upload-artifact@v4
