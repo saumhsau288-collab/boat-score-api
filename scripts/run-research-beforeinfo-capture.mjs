@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Research-only on-demand capture. Saves source metadata, never raw HTML or invented boat data.
+// Research-only on-demand capture. Saves official HTML and separate source metadata; never invents boat data.
 import fs from 'node:fs';
 import {captureOfficialBeforeinfo} from './capture-official-beforeinfo-evidence.mjs';
 const date=process.env.CAPTURE_DATE;
