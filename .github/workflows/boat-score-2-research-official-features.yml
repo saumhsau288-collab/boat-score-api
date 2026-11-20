@@ -26,11 +26,14 @@ jobs:
         with:
           node-version: '22'
       - name: Validate standalone script
-        run: node --check scripts/capture-research-official-features.mjs
+        run: |
+          node --check scripts/capture-research-official-features.mjs
+          node --check scripts/capture-official-daily-venue-candidates.mjs
+          node scripts/test-classify-daily-venue-evidence.mjs
       - name: Probe official race schedule without claiming verification
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
-        run: node scripts/probe-official-race-schedule.mjs
+        run: node scripts/capture-official-daily-venue-candidates.mjs
       - name: Capture source-proven six-racer metrics
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
@@ -44,6 +47,6 @@ jobs:
           name: research-official-features-${{ github.run_id }}
           path: |
             prediction-captures/research-official-*.json
-            prediction-captures/research-schedule-*.json
+            prediction-captures/daily-venue-candidates-*.json
           retention-days: 90
           if-no-files-found: warn
