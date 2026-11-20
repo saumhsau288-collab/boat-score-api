@@ -25,6 +25,8 @@ assert.equal('rawHtml' in rejectedRaw,false);
 assert.match(good.responseSha256,/^[a-f0-9]{64}$/);
 const wrong=await captureOfficialBeforeinfo(selection,fake(target.url.replace('rno=1','rno=2')),clock);
 assert.equal(wrong.status,'beforeinfo_source_rejected');
+assert.equal((await captureOfficialBeforeinfo(selection,fake(target.url+'&rno=2'),clock)).status,'beforeinfo_source_rejected');
+assert.equal((await captureOfficialBeforeinfo(selection,fake(target.url+'&unexpected=1'),clock)).status,'beforeinfo_source_rejected');
 assert.equal((await captureOfficialBeforeinfo(selection,fake(target.url,'application/json'),clock)).status,'beforeinfo_source_rejected');
 assert.equal((await captureOfficialBeforeinfo(selection,fake(target.url,'text/html',false),clock)).status,'beforeinfo_source_rejected');
 console.log('Official beforeinfo evidence capture synthetic tests passed');
