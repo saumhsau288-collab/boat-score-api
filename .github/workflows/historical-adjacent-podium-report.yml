@@ -200,6 +200,7 @@ jobs:
             console.log("LOCAL_ABOVE_NATIONAL="+JSON.stringify(r.localAboveNational));
             console.log("BOAT_ONE_TOP_LOCAL_ADVANTAGE="+JSON.stringify(r.boatOneTopLocalAdvantage));
             console.log("TRIFECTA_FRIENDLY_PROFILES="+JSON.stringify(r.trifectaFriendlyProfiles));
+            console.log("TRIFECTA_PROFILE_TIME_SPLIT="+JSON.stringify(r.trifectaProfileTimeSplit));
             console.log("TOP_SCORE_WIN_THRESHOLDS="+JSON.stringify(r.topScoreWinThresholds));
             console.log("SECOND_CHOICE_BY_BOAT_ONE_LOCAL_ADVANTAGE="+JSON.stringify(r.secondChoiceByBoatOneLocalAdvantage));
           '
