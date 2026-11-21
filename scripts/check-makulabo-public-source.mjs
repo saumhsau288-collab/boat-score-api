@@ -21,7 +21,7 @@ try {
   canvasCount:(html.match(/<canvas\\b/gi)||[]).length,
   hasRegistrationNumberLabel:/登録番号|登録No\\.?|登番/.test(normalized),
   hasWinRateLabel:/勝率|1着率|１着率/.test(normalized),
-  hasScriptDataMarkers:/__NEXT_DATA__|__NUXT__|application\\/json/.test(html),
+  hasScriptDataMarkers:html.includes('__NEXT_DATA__')||html.includes('__NUXT__')||html.includes('application/json'),
   hasHeatmapImageMarker:/heatmap[^\\s"'<>]*\\.(?:png|jpe?g|webp)/i.test(html),
   note:'Reachability and page markers only. Not six verified racers or a proven 50-race sample.'};
  console.log(JSON.stringify(result,null,2));
