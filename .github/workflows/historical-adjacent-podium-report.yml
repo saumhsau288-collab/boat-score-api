@@ -2,6 +2,8 @@ name: Historical adjacent podium descriptive report
 on:
   pull_request:
     paths:
+      - 'scripts/assess-prospective-admission.mjs'
+      - 'scripts/test-assess-prospective-admission.mjs'
       - 'scripts/prepare-strict-prospective-snapshot.mjs'
       - 'scripts/test-prepare-strict-prospective-snapshot.mjs'
       - 'scripts/build-prospective-race-record.mjs'
@@ -78,7 +80,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run archive parser tests
-        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs scripts/test-audit-intervening-frame-baseline.mjs scripts/test-audit-between-vs-not-between.mjs scripts/test-audit-between-by-rank.mjs scripts/test-audit-daily-ability-rank.mjs scripts/test-audit-prospective-readiness.mjs scripts/test-validate-prospective-snapshot.mjs scripts/test-evaluate-chronological-heuristics.mjs scripts/test-evaluate-two-stage-archive.mjs scripts/test-assess-archive-promotion.mjs scripts/test-audit-holdout-order-by-winner.mjs scripts/test-audit-holdout-winner-confusion.mjs scripts/test-audit-conditional-finish-order.mjs scripts/test-evaluate-ordered-triples.mjs scripts/test-evaluate-ordered-triple-coverage.mjs scripts/test-audit-daily-triple-coverage.mjs scripts/test-audit-second-third-ability-order.mjs scripts/test-audit-inside-versus-ability.mjs scripts/test-audit-inside-ability-gap.mjs scripts/test-audit-inside-gap-by-winner.mjs scripts/test-audit-inside-gap-uncertainty.mjs scripts/test-audit-snapshot-timing.mjs scripts/test-build-prospective-race-record.mjs scripts/test-prepare-strict-prospective-snapshot.mjs
+        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs scripts/test-audit-intervening-frame-baseline.mjs scripts/test-audit-between-vs-not-between.mjs scripts/test-audit-between-by-rank.mjs scripts/test-audit-daily-ability-rank.mjs scripts/test-audit-prospective-readiness.mjs scripts/test-validate-prospective-snapshot.mjs scripts/test-evaluate-chronological-heuristics.mjs scripts/test-evaluate-two-stage-archive.mjs scripts/test-assess-archive-promotion.mjs scripts/test-audit-holdout-order-by-winner.mjs scripts/test-audit-holdout-winner-confusion.mjs scripts/test-audit-conditional-finish-order.mjs scripts/test-evaluate-ordered-triples.mjs scripts/test-evaluate-ordered-triple-coverage.mjs scripts/test-audit-daily-triple-coverage.mjs scripts/test-audit-second-third-ability-order.mjs scripts/test-audit-inside-versus-ability.mjs scripts/test-audit-inside-ability-gap.mjs scripts/test-audit-inside-gap-by-winner.mjs scripts/test-audit-inside-gap-uncertainty.mjs scripts/test-audit-snapshot-timing.mjs scripts/test-build-prospective-race-record.mjs scripts/test-prepare-strict-prospective-snapshot.mjs scripts/test-assess-prospective-admission.mjs
       - name: Fetch isolated immutable historical archive (read-only)
         run: |
           git fetch --depth=1 origin historical-research-data
