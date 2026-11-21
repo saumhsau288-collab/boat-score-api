@@ -4,6 +4,9 @@ export function assessPreRaceEvidence({snapshot,deadlineAt,independentlyAuthenti
  const deadline=Date.parse(deadlineAt??'');
  if(!snapshot||snapshot.status!=='captured_research_inputs'||!Array.isArray(snapshot.racers)||snapshot.racers.length!==6)
   return {eligible:false,reason:'complete_six_racer_snapshot_required'};
+ const boats=snapshot.racers.map(r=>r?.boat);
+ if(new Set(boats).size!==6||boats.some(b=>!Number.isInteger(b)||b<1||b>6))
+  return {eligible:false,reason:'unique_boats_one_through_six_required'};
  if(!Number.isFinite(captured)||!Number.isFinite(deadline))
   return {eligible:false,reason:'capture_and_deadline_timestamps_required'};
  if(captured>=deadline)
