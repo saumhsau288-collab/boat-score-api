@@ -87,6 +87,7 @@ jobs:
           node --experimental-default-type=module --test scripts/audit-repeated-cutoff-candidates.test.mjs
           node --experimental-default-type=module --test scripts/extract-race-scoped-cutoff-candidate.test.mjs
           node --experimental-default-type=module --test scripts/capture-official-cutoff-source.test.mjs
+          node --experimental-default-type=module --test scripts/compare-cutoff-diagnostics.test.mjs
           node --experimental-default-type=module --test scripts/parse-bounded-race-schedule-text.test.mjs
           node --experimental-default-type=module --test scripts/extract-cutoff-from-html-schedule-table.test.mjs
           node --experimental-default-type=module --check boat-score-2-pre-race-evidence.js
