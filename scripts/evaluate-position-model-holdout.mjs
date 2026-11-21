@@ -27,7 +27,7 @@ export function evaluatePositionModelHoldout(reports){
   return best;
  };
  const byDate={};
- const outsideWinnerCandidate={races:0,otherWins:0,highestOtherWins:0,highestOtherBoatWins:0,byBoat:{}};
+ const outsideWinnerCandidate={races:0,otherWins:0,highestOtherWins:0,byBoat:{},actualOtherWinnerByBoat:Object.fromEntries(Array.from({length:5},(_,i)=>[String(i+2),0]))};
  const byBoatOneRank=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,boatOneWins:0,otherWins:0,modelExact:0}]));
  const byActualWinner=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,modelExact:0,fixed123Exact:0,rankExact:0}]));
  const byPredictedWinner=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,modelExact:0,fixed123Exact:0,rankExact:0}]));
@@ -43,6 +43,7 @@ export function evaluatePositionModelHoldout(reports){
    const bestOther=ranked.find(x=>x.boat!==1).boat;
    const otherWin=actual[0]!==1;
    outsideWinnerCandidate.otherWins+=otherWin?1:0;
+   if(otherWin)outsideWinnerCandidate.actualOtherWinnerByBoat[String(actual[0])]++;
    outsideWinnerCandidate.highestOtherWins+=actual[0]===bestOther?1:0;
    const cell=outsideWinnerCandidate.byBoat[String(bestOther)]??={selected:0,wins:0};cell.selected++;cell.wins+=actual[0]===bestOther?1:0;
   }
