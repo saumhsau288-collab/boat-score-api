@@ -5,10 +5,16 @@ import {auditCapturedRankedScores} from './audit-captured-ranked-scores.mjs';
 export function auditScoreResultJoin(capture,officialResults){
  const comparison=compareSavedCaptureWithVerifiedResults(capture,officialResults);
  const scores=auditCapturedRankedScores(capture);
+ const scoreByRecordIndex=new Map();
+ let readyIndex=0;
+ for(let i=0;i<(capture?.records?.length??0);i++){
+  if(capture.records[i]?.response?.ready===true)
+   scoreByRecordIndex.set(i,scores.cases[readyIndex++]?.sixBoatOutputScoresPresent===true);
+ }
  const rows=comparison.rows.map((row,i)=>({
   date:row.date,venue:row.venue,race:row.race,
   comparisonStatus:row.status,holdReasons:row.reasons,
-  sixBoatOutputScoresPresent:scores.cases[i]?.sixBoatOutputScoresPresent===true,
+  sixBoatOutputScoresPresent:scoreByRecordIndex.get(i)===true,
   eligibleForCalibration:false
  }));
  return {scope:'SAVED_OUTPUT_SCORE_RESULT_JOIN_READINESS',
