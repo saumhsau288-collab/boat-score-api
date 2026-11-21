@@ -1,0 +1,20 @@
+name: Research offline saved prediction readiness
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths:
+      - scripts/diagnose-saved-predictions.mjs
+      - scripts/test-diagnose-saved-predictions.mjs
+      - .github/workflows/boat-score-2-offline-saved-prediction-readiness.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/test-diagnose-saved-predictions.mjs
