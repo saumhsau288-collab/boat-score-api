@@ -62,6 +62,7 @@ jobs:
           node --check scripts/summarize-research-official85-batch.mjs
           node scripts/test-compare-research-official-baseline.mjs
           node scripts/test-review-official85-vs-parsed-podium.mjs
+          node scripts/test-summarize-research-official85-batch.mjs
       - name: Capture official features, Makulabo sample, and official results for each race
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
