@@ -21,10 +21,10 @@ try {
    return {isBoatNumber:/^[1-6]$/.test(value),hasDigits:/\d/.test(value),isEmpty:value.length===0};
   });
   const rowChecks=rows.slice(1).map(row=>{
-   const cells=[...row[0].matchAll(/<(?:th|td)\\b[^>]*>[\\s\\S]*?<\\/(?:th|td)>/gi)].map(m=>m[0].replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim());
+   const cells=[...row[0].matchAll(/<(?:th|td)\b[^>]*>[\s\S]*?<\/(?:th|td)>/gi)].map(m=>m[0].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim());
    const boat=Number(cells[0]);
-   const finishCounts=cells.slice(2,8).map(v=>/^\\d+$/.test(v)?Number(v):null);
-   const races=/^\\d+$/.test(cells[8]??'')?Number(cells[8]):null;
+   const finishCounts=cells.slice(2,8).map(v=>/^\d+$/.test(v)?Number(v):null);
+   const races=/^\d+$/.test(cells[8]??'')?Number(cells[8]):null;
    const sum=finishCounts.every(Number.isInteger)?finishCounts.reduce((a,b)=>a+b,0):null;
    return {boat,cellCount:cells.length,countsNumeric:sum!==null,racesNumeric:races!==null,
     finishCountSumMatchesRaces:sum!==null&&races!==null?sum===races:null,
