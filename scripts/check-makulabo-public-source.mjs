@@ -14,11 +14,11 @@ try {
  const tableSummaries=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].slice(0,3).map((m,index)=>{
   const table=m[0];
   const rows=[...table.matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)];
-  const headerLabels=(rows[0]?.[0].match(/<th\\b[^>]*>[\\s\\S]*?<\\/th>/gi)||[]).map(cell=>cell.replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim().slice(0,40));
+  const headerLabels=(rows[0]?.[0].match(/<th\b[^>]*>[\s\S]*?<\/th>/gi)||[]).map(cell=>cell.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,40));
   const firstColumnTypes=rows.slice(1).map(row=>{
-   const cell=row[0].match(/<td\\b[^>]*>[\\s\\S]*?<\\/td>/i)?.[0]??'';
-   const value=cell.replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim();
-   return {isBoatNumber:/^[1-6]$/.test(value),hasDigits:/\\d/.test(value),isEmpty:value.length===0};
+   const cell=row[0].match(/<td\b[^>]*>[\s\S]*?<\/td>/i)?.[0]??'';
+   const value=cell.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+   return {isBoatNumber:/^[1-6]$/.test(value),hasDigits:/\d/.test(value),isEmpty:value.length===0};
   });
   return {index,headerLabels,firstColumnTypes,rowCount:rows.length,headerCellCount:(table.match(/<th\b/gi)||[]).length,
    dataCellCount:(table.match(/<td\b/gi)||[]).length,
