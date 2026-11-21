@@ -56,3 +56,9 @@
 - `20261120-44639859914-score-inputs.json`: ready14件中、明示的な6艇入力証拠0件。5項目（全国・当地・モーター2連率・直近50走・展示）の有効フィールド数すべて0。
 - `20261120-44639859914-calibration-readiness.json`: ready14件すべて公式締切未確認・6艇元入力欠落。結果検証も未完了。
 - **実レースに基づく配点変更は不可。** 次は既存APIの応答構造とキャプチャ処理を確認し、6艇分の入力を根拠付きで保存する研究専用方法を設計・テストする。
+
+## 2026-11-21 実ZIPの最終評価点調査
+- ZIP内 `20261120-44639859914.json` のready14件を個別確認し、**14件すべてに、艇番1〜6が一意で数値スコアを持つ `response.rankedScores` が存在**。
+- これは**出力済み最終評価点**であって、勝率・モーター・直近50走などの元入力 `scoreInputsByBoat` の証拠ではない。実際に `startCoursesVerified:false` は14件すべて。
+- 研究用 `scripts/audit-captured-ranked-scores.mjs` をCLIからも利用できるようにした。例: `node scripts/audit-captured-ranked-scores.mjs prediction-captures/20261120-44639859914.json`。
+- この確認によっても、**公式結果・締切前取得の独立認証が無いため、精度計算や配点調整は許可しない**。
