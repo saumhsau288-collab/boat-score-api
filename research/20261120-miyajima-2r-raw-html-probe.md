@@ -11,3 +11,14 @@ https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261120&jcd=17&rno=2
 - この実行は前日レースの事後取得。保存済み予想の締切前認証ではなく、予想精度や重み調整には利用不可。
 
 原本は14日保持のGitHub Actions artifactに保存。元アプリ・本番コードは変更していない。
+
+## 2026-11-21 06:44Z: 実HTMLの2R列を直接照合
+
+GitHub Actions run **44876959545** のログより:
+- 公式URL HTTP 200、最終URL一致
+- HTML 69,199 bytes、SHA-256 `6d3bf8095130d16fcad2eb1694a3db3e6297fa6d9c4a7aa6052c87f37121d6ae`
+- `unverifiedParsedSchedule.candidateCutoffJst = "10:42"`
+- `unverifiedParsedSchedule.parsedTableMatched = true`
+- `scheduleDiagnostic = {verified:false,cutoffJst:null,reason:"source_not_verified"}`
+- 公式画面の宮島2R 10:42と一致。以前の1R由来10:16を誤用しない実HTMLの列選択が実証された。
+- **注意:** `sourceVerified:true` は研究用内部パーサの構造診断に限って与え、外部出力では `verified:false` と明示。事前予想認証・公式締切認証・評価点調整は未実施。
