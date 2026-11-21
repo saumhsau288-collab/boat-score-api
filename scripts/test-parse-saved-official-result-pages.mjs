@@ -9,6 +9,8 @@ const parse=report=>parseSaved({...report,pages:report.pages.map(p=>p.status==='
 const ok=parse({pages:[base]});assert.equal(ok.parsed,1);assert.deepEqual(ok.rows[0].podium,[6,2,3]);assert.equal(ok.rows[0].trifectaPayoutYen,8230);assert.equal(ok.verifiedResults,0);assert.equal(ok.eligibleForAccuracy,0);
 assert.equal(parse({pages:[{...base,html:base.html.replace('8,230','')}]}).rows[0].reason,'trifecta_payout_mismatch');
 assert.equal(parse({pages:[{...base,race:4}]}).rows[0].reason,'race_identity_unconfirmed');
+assert.equal(parse({pages:[{...base,finalUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=4&jcd=01&hd=20261118'}]}).rows[0].reason,'final_url_mismatch');
+assert.equal(parse({pages:[{...base,finalUrl:base.url}]}).parsed,1);
 assert.equal(parse({pages:[{...base,status:'fetch_failed',error:'timeout'}]}).rows[0].status,'not_saved');
 
 // Guard against falsely accepting a podium with duplicate finish ranks or boat identities.
