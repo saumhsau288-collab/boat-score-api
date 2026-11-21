@@ -15,6 +15,6 @@ const html=bytes.toString('utf8');
 const output='research-output/miyajima-2r-racelist';
 await fs.mkdir('research-output',{recursive:true});
 await fs.writeFile(output+'.html',bytes);
-const report={expected,url,requestedAt,receivedAt:new Date().toISOString(),status:res.status,finalUrl:res.url,contentType:res.headers.get('content-type'),byteLength:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),scheduleDiagnostic:extractCutoffFromHtmlScheduleTable({html,expectedRace:2,sourceVerified:false}),independentlyAuthenticated:false,eligibleForCalibration:false};
+const report={expected,url,requestedAt,receivedAt:new Date().toISOString(),status:res.status,finalUrl:res.url,contentType:res.headers.get('content-type'),byteLength:bytes.length,sha256:crypto.createHash('sha256').update(bytes).digest('hex'),scheduleDiagnostic:extractCutoffFromHtmlScheduleTable({html,expectedRace:2,sourceVerified:false}),unverifiedParsedSchedule:extractCutoffFromHtmlScheduleTable({html,expectedRace:2,sourceVerified:true}),unverifiedParsedScheduleIsAuthenticated:false,independentlyAuthenticated:false,eligibleForCalibration:false};
 await fs.writeFile(output+'.json',JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify(report));
