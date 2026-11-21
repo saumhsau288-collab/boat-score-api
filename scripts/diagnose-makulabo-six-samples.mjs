@@ -6,6 +6,10 @@ export function diagnoseMakulaboSixSamples(official,heatmap){
   const h=Array.isArray(heatmap)?heatmap.find(x=>x?.boat===boat):null;
   const reasons=[];
   if(!o||!/^\d{4}$/.test(String(o.racerId)))reasons.push('official_identity_missing');
+  if(h&&o&&typeof h.name==='string'&&typeof o.name==='string'){
+   const norm=s=>s.normalize('NFKC').replace(/[\\s\u3000・･]/g,'');
+   if(norm(h.name)!==norm(o.name))reasons.push('racer_name_mismatch');
+  }
   if(!h||!Number.isInteger(h.runs)||h.runs<1||h.runs>50||
    !Array.isArray(h.counts)||h.counts.length!==6||
    h.counts.some(n=>!Number.isInteger(n)||n<0)||
