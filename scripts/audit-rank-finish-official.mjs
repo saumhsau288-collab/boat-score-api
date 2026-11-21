@@ -56,6 +56,9 @@ export function auditRankFinishWithOfficial({savedRecords=[],officialRaces=[],re
    winnerBoat:x.winnerBoat,winnerScoreRank:x.winnerScoreRank,scoreGapToWinner:x.scoreGapToWinner,
    topScoreFeatures:x.boats.find(b=>b.boat===x.topScoreBoat)?.featureEvidence,
    winnerFeatures:x.boats.find(b=>b.boat===x.winnerBoat)?.featureEvidence}))};
- return {status:'research_diagnostic',joinedCount:joined.length,summary,
+ return {status:'research_diagnostic',joinedCount:joined.length,
+  featureAvailabilityScope:'retrospective_official_comparison_not_original_prediction_inputs',
+  originalPredictionInputsVerified:false,preRaceIndependentlyVerified:false,
+  summary,
   rows,eligibleForCalibration:false,scoreChangeApplied:false};
 }
