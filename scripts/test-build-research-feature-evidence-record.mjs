@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {buildResearchFeatureEvidenceRecord as build} from './build-research-feature-evidence-record.mjs';
+import {auditFutureFeatureProvenance as audit} from './audit-future-feature-provenance.mjs';
+const race={date:'20261122',venue:21,race:4},receivedAt='2026-11-22T00:10:00Z',sourceUrl='https://example.org/data',responseSha256='a'.repeat(64);
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),sourceVerified:true}));
+const common={race,receivedAt,sourceUrl,responseSha256};
+const st=build({...common,kind:'averageST',rows:racers.map(x=>({...x,value:0.16}))});
+const mk=build({...common,kind:'makulabo50',rows:racers.map(x=>({...x,runs:50,firstPlaceRate:20}))});
+assert.equal(st.status,'normalized_source_claims');
+assert.equal(mk.status,'normalized_source_claims');
+assert.equal(st.rows.length,6);
+assert.equal(st.eligibleForCalibration,false);
+const checked=audit({race,official:{...race,racers},averageST:st.rows,makulabo:mk.rows,
+ prediction:{...race,receivedAt:'2026-11-22T00:20:00Z'},cutoffAt:'2026-11-22T00:30:00Z'});
+assert.equal(checked.status,'source_evidence_ready_original_inputs_unverified');
+assert.equal(checked.originalInputsVerified,false);
+assert.equal(build({...common,kind:'averageST',rows:racers.map((x,i)=>i===1?{...x,racerId:'4001',value:0.16}:{...x,value:0.16})}).status,'held');
+assert.equal(build({...common,kind:'makulabo50',rows:racers.map(x=>({...x,runs:51,firstPlaceRate:20}))}).status,'held_unverified_values');
+assert.equal(build({...common,kind:'averageST',rows:racers.map(x=>({...x,value:0.16,sourceVerified:false}))}).status,'held_unverified_values');
+assert.equal(build({...common,responseSha256:'bad',kind:'averageST',rows:racers.map(x=>({...x,value:0.16}))}).status,'held');
+console.log('Research feature evidence normalization and downstream provenance gate tests passed');
