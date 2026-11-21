@@ -11,7 +11,7 @@ import {classifyOfficialCaptureHtml} from './classify-official-capture-html.mjs'
 import {selectResearchOfficialMetrics} from './select-research-official-metrics.mjs';
 import {describeOfficialTableStructure} from './describe-official-table-structure.mjs';
 const date=process.env.CAPTURE_DATE;
-const venue=Number(process.env.CAPTURE_VENUE);
+const venue=String(process.env.CAPTURE_VENUE??'').trim().padStart(2,'0');
 const race=Number(process.env.CAPTURE_RACE);
 const target=officialRacelistUrl({date,venue,race});
 if(target.status!=='ok')throw Error('invalid_selection');
