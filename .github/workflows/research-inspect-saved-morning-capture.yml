@@ -1,0 +1,43 @@
+name: Inspect saved Boat Score 2 morning capture fields (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: 'Existing morning capture GitHub Actions run ID'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download existing raw capture artifact (read only)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.source_run_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "Invalid run ID"; exit 1; }
+          gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[] | select(.expired == false and (.name | startswith("boat-score-2-morning-raw-"))) | .id' > /tmp/artifact-ids
+          [ "$(wc -l < /tmp/artifact-ids)" -eq 1 ] || { echo "Expected exactly one available raw artifact"; exit 1; }
+          ARTIFACT_ID="$(cat /tmp/artifact-ids)"
+          gh api "repos/$REPO/actions/artifacts/$ARTIFACT_ID/zip" > /tmp/morning.zip
+          mkdir -p /tmp/morning-capture
+          unzip -q /tmp/morning.zip -d /tmp/morning-capture
+      - name: Audit actual saved racer fields without scoring changes
+        run: |
+          found=0
+          while IFS= read -r -d '' file; do
+            filename="${file##*/}"
+            [[ "$filename" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            found=$((found+1))
+            node scripts/report-capture-racer-fields.mjs "$file"
+          done < <(find /tmp/morning-capture -type f -name '*.json' -print0)
+          [ "$found" -gt 0 ] || { echo "No raw dated capture JSON in artifact"; exit 1; }
