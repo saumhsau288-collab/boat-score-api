@@ -44,7 +44,7 @@ export function extractSixOfficialRacers(html) {
    if([st,nationalWinRate,localWinRate,motorTwoWinRate].some(v=>v===null)||
      st<0||st>1||nationalWinRate<0||nationalWinRate>10||
      localWinRate<0||localWinRate>10||motorTwoWinRate<0||motorTwoWinRate>100)
-    return {verified:false,reason:'invalid_metric_values',racers:[]};
+    return {verified:false,reason:'invalid_metric_values',racers:[],diagnostics:{boat,racerId,st,nationalWinRate,localWinRate,motorTwoWinRate,raw:{st:plain(row[3]?.html).slice(0,120),national:plain(row[4]?.html).slice(0,120),local:plain(row[5]?.html).slice(0,120),motor:plain(row[6]?.html).slice(0,120)}}};
    if(seenBoats.has(boat)||seenIds.has(racerId))
     return {verified:false,reason:'duplicate_boat_or_racer',racers:[]};
    seenBoats.add(boat);seenIds.add(racerId);
