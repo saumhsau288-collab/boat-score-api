@@ -19,6 +19,10 @@ export function auditPreRaceFeatureSnapshots(capture) {
    ready:r?.response?.ready===true,completeSixBoatFeatures:complete,
    cutoffTimestampPresent:Number.isFinite(Date.parse(r?.officialCutoffAt)),
    receivedBeforeClaimedCutoff:timing,
+   sourceGeneratedAt:r?.response?.generatedAt??null,
+   responseSourceIdentity:r?.response?.sourceIdentity??null,
+   featureSourceProvenancePresent:boats?.every?.(x=>x?.sourceProvenance&&typeof x.sourceProvenance==='object')===true,
+   sourceGenerationTimeIndependentlyAuthenticated:false,
    preRaceIndependentlyVerified:false,
    eligibleForHistoricalCalibration:false};
  });
