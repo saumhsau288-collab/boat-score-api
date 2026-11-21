@@ -32,14 +32,14 @@ export function auditFutureFeatureProvenance({race,official,averageST=[],makulab
  };
  const officialCapture=time(official.receivedAt);
  const staleLimitMs=24*60*60*1000;
- const sameCalendarDayUtc=(stamp,date)=>Number.isFinite(time(stamp))&&new Date(time(stamp)).toISOString().slice(0,10).replaceAll('-','')===date;
+ const sameCalendarDayJst=(stamp,date)=>Number.isFinite(time(stamp))&&new Date(time(stamp)+9*60*60*1000).toISOString().slice(0,10).replaceAll('-','')===date;
  const recentForPrediction=(stamp)=>Number.isFinite(time(stamp))&&time(prediction.receivedAt)-time(stamp)<=staleLimitMs;
- const evidenceFreshnessVerified=averageST.every(x=>sameCalendarDayUtc(x.receivedAt,race.date)&&recentForPrediction(x.receivedAt))&&
-  makulabo.every(x=>sameCalendarDayUtc(x.receivedAt,race.date)&&recentForPrediction(x.receivedAt));
+ const evidenceFreshnessVerified=averageST.every(x=>sameCalendarDayJst(x.receivedAt,race.date)&&recentForPrediction(x.receivedAt))&&
+  makulabo.every(x=>sameCalendarDayJst(x.receivedAt,race.date)&&recentForPrediction(x.receivedAt));
  const officialSnapshotBeforePrediction=official.status==='captured_research_inputs'&&
    official.racers.every(x=>x.sourceVerified===true)&&
    Number.isFinite(officialCapture)&&officialCapture<=time(prediction.receivedAt)&&officialCapture<=cutoff&&
-   sameCalendarDayUtc(official.receivedAt,race.date)&&recentForPrediction(official.receivedAt)&&
+   sameCalendarDayJst(official.receivedAt,race.date)&&recentForPrediction(official.receivedAt)&&
    typeof official.sourceUrl==='string'&&official.sourceUrl.startsWith('https://www.boatrace.jp/')&&
    /^[a-f0-9]{64}$/.test(String(official.responseSha256??''));
  const stVerified=evidence(averageST,'averageST'),makulaboVerified=evidence(makulabo,'makulabo');
