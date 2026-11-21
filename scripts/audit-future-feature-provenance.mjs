@@ -45,7 +45,7 @@ export function auditFutureFeatureProvenance({race,official,averageST=[],makulab
  const stVerified=evidence(averageST,'averageST'),makulaboVerified=evidence(makulabo,'makulabo');
  const originalInputsVerified=false; // Requires separate proof these exact records fed the predictor.
  return {status:officialSnapshotBeforePrediction&&evidenceFreshnessVerified&&stVerified&&makulaboVerified?'source_evidence_ready_original_inputs_unverified':'held',
-  reason:officialSnapshotBeforePrediction&&stVerified&&makulaboVerified?'original_prediction_inputs_not_authenticated':'feature_evidence_incomplete',
+  reason:officialSnapshotBeforePrediction&&evidenceFreshnessVerified&&stVerified&&makulaboVerified?'original_prediction_inputs_not_authenticated':'feature_evidence_incomplete',
   officialSnapshotBeforePrediction,evidenceFreshnessVerified,
   averageSTVerified:stVerified,makulabo50Verified:makulaboVerified,
   originalInputsVerified,eligibleForCalibration:false,scoreChangeApplied:false};
