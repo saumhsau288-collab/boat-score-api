@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {auditFutureFeatureProvenance as audit} from './audit-future-feature-provenance.mjs';
 const race={date:'20261122',venue:21,race:4};
 const receivedAt='2026-11-22T00:30:00Z',cutoffAt='2026-11-22T01:00:00Z';
-const official={...race,status:'captured_research_inputs',receivedAt,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',responseSha256:'a'.repeat(64),racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),sourceVerified:true}))};
+const official={...race,status:'captured_research_inputs',receivedAt,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist?rno=4&jcd=21&hd=20261122',responseSha256:'a'.repeat(64),racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),sourceVerified:true}))};
 const base=official.racers.map(r=>({...race,...r,verified:true,receivedAt,sourceUrl:'https://example.org/source',responseSha256:'a'.repeat(64)}));
 const averageST=base.map(x=>({...x,kind:'pre_race_average_st',value:0.15}));
 const makulabo=base.map(x=>({...x,scope:'same_labelled_frame_recent_up_to_50_all_venues',runs:50,firstPlaceRate:20}));
@@ -19,6 +19,8 @@ assert.equal(audit({...input,official:{...official,receivedAt:'2026-11-21T12:00:
 assert.equal(ready.officialSnapshotBeforePrediction,true);
 assert.equal(audit({...input,official:{...official,receivedAt:'2026-11-22T00:40:00Z'}}).officialSnapshotBeforePrediction,false);
 assert.equal(audit({...input,official:{...official,sourceUrl:'https://example.org/fake'}}).status,'held');
+assert.equal(audit({...input,official:{...official,sourceUrl:'https://www.boatrace.jp.evil.example/owpc/pc/race/racelist?rno=4&jcd=21&hd=20261122'}}).status,'held');
+assert.equal(audit({...input,official:{...official,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist?rno=5&jcd=21&hd=20261122'}}).status,'held');
 assert.equal(ready.makulabo50Verified,true);
 assert.equal(ready.eligibleForCalibration,false);
 assert.equal(ready.originalInputsVerified,false);
