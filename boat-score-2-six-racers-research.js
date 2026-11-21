@@ -41,14 +41,14 @@ export function extractSixOfficialRacers(html) {
    const nationalWinRate=firstNumber(row[4]?.html,0);
    const localWinRate=firstNumber(row[5]?.html,0);
    const motorTwoWinRate=firstNumber(row[6]?.html,1); // No, 2連率, 3連率
-   if([st,nationalWinRate,localWinRate,motorTwoWinRate].some(v=>v===null)||
-     st<0||st>1||nationalWinRate<0||nationalWinRate>10||
+   if([nationalWinRate,localWinRate,motorTwoWinRate].some(v=>v===null)||
+     (st!==null&&(st<0||st>1))||nationalWinRate<0||nationalWinRate>10||
      localWinRate<0||localWinRate>10||motorTwoWinRate<0||motorTwoWinRate>100)
     return {verified:false,reason:'invalid_metric_values',racers:[],diagnostics:{boat,racerId,st,nationalWinRate,localWinRate,motorTwoWinRate,raw:{st:plain(row[3]?.html).slice(0,120),national:plain(row[4]?.html).slice(0,120),local:plain(row[5]?.html).slice(0,120),motor:plain(row[6]?.html).slice(0,120)}}};
    if(seenBoats.has(boat)||seenIds.has(racerId))
     return {verified:false,reason:'duplicate_boat_or_racer',racers:[]};
    seenBoats.add(boat);seenIds.add(racerId);
-   racers.push({boat,racerId,averageSt:st,nationalWinRate,localWinRate,motorTwoWinRate});
+   racers.push({boat,racerId,averageSt:st,averageStAvailable:st!==null,nationalWinRate,localWinRate,motorTwoWinRate});
   }
   const verified=racers.length===6&&[1,2,3,4,5,6].every(b=>seenBoats.has(b));
   return {verified,racers:verified?racers.sort((a,b)=>a.boat-b.boat):[],
