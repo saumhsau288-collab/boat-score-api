@@ -7,7 +7,7 @@ export async function auditSavedOfficialRaceEvidence({htmlPath,metadataPath,outp
  if(!htmlPath||!metadataPath||!outputPath)throw Error('paths_required');
  const [body,metadataText]=await Promise.all([readFile(htmlPath),readFile(metadataPath,'utf8')]);
  const metadata=JSON.parse(metadataText);
- const result=auditOfficialRaceHtmlCapture({html:body.toString('utf8'),metadata});
+ const result=auditOfficialRaceHtmlCapture({html:body,metadata});
  const report={...result,sourceHtmlPath:htmlPath,sourceMetadataPath:metadataPath,sourceSha256:metadata.sha256??null,
   eligibleForCalibration:false};
  await writeFile(outputPath,JSON.stringify(report,null,2)+'\n',{flag:'wx'});
