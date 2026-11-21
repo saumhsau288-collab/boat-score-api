@@ -36,3 +36,16 @@ test('only fully bounded numeric scoring inputs count as complete',()=>{
  boats[0].motorTwoWinRate=Infinity;
  assert.equal(matchOfficialResultsToCaptures({results:[result]},{records:[{...result,response:{scoreInputsByBoat:boats}}]}).withCompleteFeatureCapture,0);
 });
+
+test('attempted capture does not count as ready prediction',()=>{
+ const out=matchOfficialResultsToCaptures({results:[result]},{records:[
+  {...result,httpStatus:200,response:{ready:false}},
+  {...result,httpStatus:503,response:{ready:true}},
+  {...result,httpStatus:200,response:{ready:true}}
+ ]});
+ assert.equal(out.withMatchingCapture,1);
+ assert.equal(out.rows[0].matchingCaptures,3);
+ assert.equal(out.rows[0].readyCaptures,1);
+ assert.equal(out.withReadyCapture,1);
+ assert.equal(out.eligibleForCalibration,0);
+});
