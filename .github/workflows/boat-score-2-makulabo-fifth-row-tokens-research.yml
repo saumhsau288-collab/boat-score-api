@@ -1,0 +1,57 @@
+name: Research Makulabo fifth-boat raw tokens
+
+on:
+  push:
+    branches:
+      - research/st-course-holdout-20261121
+    paths:
+      - .github/workflows/boat-score-2-makulabo-fifth-row-tokens-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect exact public table cells without replacing missing values
+        run: |
+          mkdir -p research-output
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const clean=s=>String(s).replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
+          const output=[];
+          for(const [venue,race] of [['02',1],['22',5]]){
+            try{
+              const url=`https://makulabo-jp.com/data/${venue}/${race}/heatmap?hd=20261120`;
+              const response=await fetch(url,{signal:AbortSignal.timeout(15000)});
+              const html=await response.text();
+              const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)];
+              let row=null;
+              for(const table of tables){
+                const rows=[...table[0].matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)].map(m=>[...m[0].matchAll(/<(?:th|td)\b[^>]*>([\s\S]*?)<\/(?:th|td)>/gi)].map(c=>clean(c[1])));
+                const header=rows.findIndex(r=>r.length===10&&r[0]==='枠'&&r[1]==='選手');
+                if(header<0)continue;
+                row=rows.slice(header+1).find(r=>r.length===10&&r[0]==='5')??null;
+                break;
+              }
+              output.push({venue,race,httpStatus:response.status,rawFifthBoatCells:row,
+                numericCountsVerified:row?.slice(2,9).every(x=>/^\d+$/.test(x))??false,
+                missingValuesMustNotBeZeroFilled:true,eligibleForCalibration:false});
+            }catch(e){output.push({venue,race,error:String(e.message),eligibleForCalibration:false});}
+          }
+          fs.writeFileSync('research-output/fifth-boat-raw-tokens.json',JSON.stringify(output,null,2)+'\n');
+          console.log(JSON.stringify(output));
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: makulabo-fifth-boat-tokens-${{ github.run_id }}
+          path: research-output/
+          retention-days: 30

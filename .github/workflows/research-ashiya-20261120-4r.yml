@@ -1,0 +1,58 @@
+name: Research Ashiya 20261120 4R official features
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/research-ashiya-20261120-4r.yml]
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate official capture parser
+        run: |
+          node scripts/test-classify-official-capture-html.mjs
+          node scripts/test-extract-grouped-official-six.mjs
+          node scripts/test-select-research-official-metrics.mjs
+      - name: Capture historical official six-racer features without pre-race claim
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: '20261120'
+          CAPTURE_VENUE: '21'
+          CAPTURE_RACE: '4'
+        run: node scripts/capture-research-official-features.mjs
+      - name: Inspect actual capture and report source readiness
+        if: always()
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const path='prediction-captures/research-official-20261120-21-4.json';
+          let x;
+          try{x=JSON.parse(fs.readFileSync(path,'utf8'))}catch{x={status:'capture_file_missing'}}
+          const boats=Array.isArray(x.racers)?x.racers:[];
+          const verified=x.status==='captured_research_inputs'&&boats.length===6&&
+            new Set(boats.map(b=>Number(b.boat))).size===6&&
+            boats.every(b=>/^\d{4}$/.test(String(b.racerId??'')));
+          const summary={date:'20261120',venue:21,race:4,status:x.status,
+            sixRacerIdentityVerified:verified,sourceUrl:x.sourceUrl??null,
+            responseSha256:x.responseSha256??null,receivedAt:x.receivedAt??null,
+            historicalCaptureOnly:true,originalPredictionInputsVerified:false,
+            preRaceIndependentlyVerified:false,eligibleForCalibration:false};
+          fs.mkdirSync('prediction-captures',{recursive:true});
+          fs.writeFileSync('prediction-captures/ashiya-4r-capture-readiness.json',JSON.stringify(summary,null,2)+'\n');
+          console.log('ASHIYA_CAPTURE_READINESS '+JSON.stringify(summary));
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-ashiya-4r-official-${{ github.run_id }}
+          path: |
+            prediction-captures/research-official-20261120-21-4.json
+            prediction-captures/ashiya-4r-capture-readiness.json
+          retention-days: 30

@@ -1,0 +1,63 @@
+name: Research held Makulabo finish-count row diagnostics
+
+on:
+  push:
+    branches:
+      - research/st-course-holdout-20261121
+    paths:
+      - .github/workflows/boat-score-2-held-makulabo-rows-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch public pages and report only bounded table row totals
+        run: |
+          mkdir -p research-output
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          import {extractMakulaboFinishTable} from './boat-score-2-makulabo-source-table.js';
+          const clean=s=>String(s).replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
+          const report=[];
+          for(const [venue,race] of [['02',1],['22',5]]){
+            const url=`https://makulabo-jp.com/data/${venue}/${race}/heatmap?hd=20261120`;
+            try{
+              const response=await fetch(url,{signal:AbortSignal.timeout(15000)});
+              const html=await response.text();
+              const parsed=extractMakulaboFinishTable(html);
+              const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)];
+              let diagnostics=[];
+              for(const table of tables){
+                const rows=[...table[0].matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)].map(m=>[...m[0].matchAll(/<(?:th|td)\b[^>]*>([\s\S]*?)<\/(?:th|td)>/gi)].map(c=>clean(c[1])));
+                const index=rows.findIndex(r=>r.length===10&&r[0]==='枠'&&r[1]==='選手');
+                if(index<0)continue;
+                diagnostics=rows.slice(index+1).filter(r=>r.length===10).map(r=>{
+                  const counts=r.slice(2,8).map(x=>x===''?0:Number(x));
+                  const runs=Number(r[8]);
+                  return {boat:r[0],name:r[1],finishCounts:counts,finishTotal:counts.reduce((a,b)=>a+b,0),
+                    listedRuns:runs,difference:runs-counts.reduce((a,b)=>a+b,0),valid:counts.every(Number.isInteger)&&Number.isInteger(runs)};
+                });
+                break;
+              }
+              report.push({venue,race,httpStatus:response.status,parserVerified:parsed.verified,
+                parserReason:parsed.reason??null,diagnostics,eligibleForCalibration:false});
+            }catch(e){report.push({venue,race,error:String(e.message),eligibleForCalibration:false});}
+          }
+          fs.writeFileSync('research-output/held-makulabo-rows.json',JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify(report));
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: held-makulabo-row-diagnostics-${{ github.run_id }}
+          path: research-output/
+          retention-days: 30

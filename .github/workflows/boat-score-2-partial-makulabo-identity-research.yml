@@ -1,0 +1,65 @@
+name: Research partial Makulabo official identity check
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/boat-score-2-partial-makulabo-identity-research.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture official racelists using existing CLI
+        run: |
+          for item in '02 1' '22 5'; do
+            set -- $item
+            CAPTURE_DATE=20261120 CAPTURE_VENUE=$1 CAPTURE_RACE=$2 node scripts/capture-research-official-features.mjs
+          done
+      - name: Compare each valid or unscorable row to official boat and full name
+        run: |
+          mkdir -p research-output
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          import {classifyMakulaboFinishRows} from './scripts/classify-makulabo-partial-research.mjs';
+          const clean=s=>String(s).replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
+          const normalize=s=>String(s??'').normalize('NFKC').replace(/[\s\u3000]/g,'');
+          const output=[];
+          for(const [venue,race] of [['02',1],['22',5]]){
+            const official=JSON.parse(fs.readFileSync(`prediction-captures/research-official-20261120-${Number(venue)}-${race}.json`,'utf8'));
+            const response=await fetch(`https://makulabo-jp.com/data/${venue}/${race}/heatmap?hd=20261120`,{signal:AbortSignal.timeout(15000)});
+            const html=await response.text();
+            let classified=null;
+            for(const table of html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)){
+              const rows=[...table[0].matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)].map(m=>[...m[0].matchAll(/<(?:th|td)\b[^>]*>([\s\S]*?)<\/(?:th|td)>/gi)].map(c=>clean(c[1])));
+              const h=rows.findIndex(r=>r.length===10&&r[0]==='枠'&&r[1]==='選手');
+              if(h<0)continue;
+              classified=classifyMakulaboFinishRows(rows[h],rows.slice(h+1).filter(r=>r.length===10));break;
+            }
+            if(!classified)throw Error('labelled table not found');
+            const racers=official?.racers??[];
+            const inspect=(row,category)=>{
+              const racer=racers.find(r=>r.boat===row.boat);
+              return {boat:row.boat,category,sourceName:row.name,officialName:racer?.name??null,
+                racerId:racer?.racerId??null,exactNameMatch:!!racer&&normalize(row.name)===normalize(racer.name),
+                runs:row.runs??null,firstPlaceRate:row.firstPlaceRate??null};
+            };
+            output.push({venue,race,officialStatus:official?.status??null,officialSix:racers.length===6,
+              classifiedStatus:classified.status,
+              rows:[...classified.valid.map(x=>inspect(x,'valid')),...classified.missing.map(x=>inspect(x,'missing')),...classified.zeroRuns.map(x=>inspect(x,'zero_runs')),...classified.invalid.map(x=>inspect(x,'invalid'))].sort((a,b)=>a.boat-b.boat),
+              eligibleForCalibration:false,scoreChangeApplied:false});
+          }
+          fs.writeFileSync('research-output/partial-makulabo-official-identity.json',JSON.stringify(output,null,2)+'\n');
+          console.log(JSON.stringify(output.map(x=>({venue:x.venue,race:x.race,officialStatus:x.officialStatus,officialSix:x.officialSix,rows:x.rows}))));
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: partial-makulabo-official-identity-${{ github.run_id }}
+          path: research-output/
+          retention-days: 30

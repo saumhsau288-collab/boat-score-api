@@ -1,0 +1,75 @@
+name: Research three high-score fifth-place official results
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/st-course-holdout-20261121
+    paths:
+      - .github/workflows/boat-score-2-three-fifth-place-results-research.yml
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-three-official-results:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Offline parser and request validation
+        run: |
+          node scripts/test-fetch-manual-official-historical-results.mjs
+          node scripts/test-extract-official-result-racers.mjs
+          node scripts/extract-official-actual-start.test.mjs
+      - name: Fetch three explicit official result pages
+        run: |
+          mkdir -p research-three
+          node scripts/fetch-manual-official-historical-results.mjs 20261120 2 1 research-three/toda-1.raw.json
+          node scripts/fetch-manual-official-historical-results.mjs 20261120 14 3 research-three/naruto-3.raw.json
+          node scripts/fetch-manual-official-historical-results.mjs 20261120 22 5 research-three/fukuoka-5.raw.json
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const p="research-three/fukuoka-5.raw.json";
+            const data=JSON.parse(fs.readFileSync(p,"utf8"));
+            if(data.pages[0]?.status==="raw_html_saved")process.exit(0);
+            console.log("Fukuoka initial fetch failed, retrying only this race");
+          '
+          if ! grep -q '"status": "raw_html_saved"' research-three/fukuoka-5.raw.json; then
+            sleep 3
+            node scripts/fetch-manual-official-historical-results.mjs 20261120 22 5 research-three/fukuoka-5.retry.raw.json
+            node --input-type=module -e '
+              import fs from "node:fs";
+              const p="research-three/fukuoka-5.retry.raw.json";
+              const data=JSON.parse(fs.readFileSync(p,"utf8"));
+              if(data.pages[0]?.status==="raw_html_saved")
+                fs.copyFileSync(p,"research-three/fukuoka-5.raw.json");
+            '
+          fi
+      - name: Extract finish and actual entry course candidates
+        run: |
+          for key in toda-1 naruto-3 fukuoka-5; do
+            node scripts/extract-official-result-racers.mjs "research-three/$key.raw.json" "research-three/$key.parsed.json"
+          done
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const keys=["toda-1","naruto-3","fukuoka-5"];
+            for(const key of keys){
+              const raw=JSON.parse(fs.readFileSync("research-three/"+key+".raw.json","utf8"));
+              const parsed=JSON.parse(fs.readFileSync("research-three/"+key+".parsed.json","utf8"));
+              const row=parsed.rows[0];
+              const {extractOfficialActualStart}=await import("./scripts/extract-official-actual-start.mjs");
+              const start=extractOfficialActualStart(raw.pages[0]?.html);
+              console.log(JSON.stringify({key,fetchStatus:raw.pages[0]?.status,parseStatus:row?.status,entryCoursesExtracted:row?.entryCoursesExtracted,officialStartOrder:row?.startOrderBoats,actualStartStatus:start.status,actualStarts:start.starts,eligibleForScoreChange:false}));
+            }
+          '
+      - name: Upload research-only raw and parsed evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: three-fifth-place-official-results-${{ github.run_id }}
+          path: research-three/
+          retention-days: 30
+          if-no-files-found: error

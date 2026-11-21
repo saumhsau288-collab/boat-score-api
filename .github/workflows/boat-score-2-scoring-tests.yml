@@ -74,6 +74,23 @@ jobs:
           node --experimental-default-type=module boat-score-2-course-evidence-comparison.test.mjs
           node --experimental-default-type=module --check boat-score-2-start-course-comparison.js
           node --experimental-default-type=module boat-score-2-start-course-comparison.test.mjs
+          node --experimental-default-type=module --check boat-score-2-start-course-historical-comparison.js
+          node --experimental-default-type=module boat-score-2-start-course-historical-comparison.test.mjs
+          node --experimental-default-type=module --test scripts/capture-official-html-evidence.test.mjs
+          node --experimental-default-type=module --test scripts/audit-official-race-html-capture.test.mjs
+          node --experimental-default-type=module --test scripts/audit-saved-official-race-evidence.test.mjs
+          node --experimental-default-type=module --test scripts/audit-saved-evidence-directory.test.mjs
+          node --experimental-default-type=module --test scripts/discover-nested-response-paths.test.mjs
+          node --experimental-default-type=module --test scripts/audit-captured-ranked-scores.test.mjs
+          node --experimental-default-type=module --test scripts/audit-score-result-join.test.mjs
+          node --experimental-default-type=module --test scripts/audit-official-result-evidence.test.mjs
+          node --experimental-default-type=module --test scripts/audit-repeated-cutoff-candidates.test.mjs
+          node --experimental-default-type=module --test scripts/extract-race-scoped-cutoff-candidate.test.mjs
+          node --experimental-default-type=module --test scripts/capture-official-cutoff-source.test.mjs
+          node --experimental-default-type=module --test scripts/compare-cutoff-diagnostics.test.mjs
+          node scripts/test-audit-pre-race-feature-snapshots.mjs
+          node --experimental-default-type=module --test scripts/parse-bounded-race-schedule-text.test.mjs
+          node --experimental-default-type=module --test scripts/extract-cutoff-from-html-schedule-table.test.mjs
           node --experimental-default-type=module --check boat-score-2-pre-race-evidence.js
           node --experimental-default-type=module boat-score-2-pre-race-evidence.test.mjs
           node --experimental-default-type=module --check boat-score-2-historical-evidence-check.js
@@ -114,3 +131,7 @@ jobs:
           node scripts/test-select-research-official-metrics.mjs
           node scripts/test-describe-official-table-structure.mjs
 
+          node --experimental-default-type=module --test scripts/test-match-official-results-to-pre-race-captures.mjs
+          node --experimental-default-type=module --test scripts/audit-ready-capture-cutoff-candidates.test.mjs
+          node --experimental-default-type=module --test scripts/compare-saved-ranked-scores.test.mjs
+          node --experimental-default-type=module --test scripts/join-prediction-official-features.test.mjs

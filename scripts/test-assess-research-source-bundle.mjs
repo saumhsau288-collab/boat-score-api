@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {assessResearchSourceBundle} from './assess-research-source-bundle.mjs';
+const deadlineAt='2026-11-21T09:00:00Z',capturedAt='2026-11-21T08:00:00Z';
+const official={snapshot:{status:'captured_research_inputs',racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i)})),receivedAt:capturedAt,preRaceIndependentlyVerified:true},independentlyAuthenticated:true};
+const item={capturedAt,independentlyAuthenticated:true,verified:true};
+const sources={official,averageST:{...item,kind:'pre_race_average_st'},exhibition:{...item},entry:{...item},weather:{...item},makulabo:{...item,identityVerified:true,sampleVerified:true}};
+assert.equal(assessResearchSourceBundle({sources,deadlineAt}).eligible,true);
+assert.equal(assessResearchSourceBundle({sources:{...sources,averageST:{...item,kind:'actual_st'}},deadlineAt}).checks.averageST.reason,'actual_st_not_acceptable');
+assert.equal(assessResearchSourceBundle({sources:{...sources,makulabo:{...item,identityVerified:false,sampleVerified:true}},deadlineAt}).checks.makulabo.reason,'makulabo_identity_or_sample_unverified');
+assert.equal(assessResearchSourceBundle({sources:{...sources,weather:{...item,capturedAt:'2026-11-21T09:00:00Z'}},deadlineAt}).checks.weather.reason,'source_not_before_deadline');
+assert.equal(assessResearchSourceBundle({sources:{...sources,entry:undefined},deadlineAt}).checks.entry.reason,'source_missing');
+assert.equal(assessResearchSourceBundle({sources:{...sources,exhibition:{...item,independentlyAuthenticated:false}},deadlineAt}).checks.exhibition.reason,'independent_authentication_missing');
+assert.equal(assessResearchSourceBundle({sources:{...sources,official:{...official,snapshot:{...official.snapshot,racers:[]}}},deadlineAt}).checks.official.reason,'complete_six_racer_snapshot_required');
+console.log('research source bundle: 7 tests passed');

@@ -1,0 +1,54 @@
+name: Research twelve-race official feature comparison
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/boat-score-2-twelve-race-feature-comparison.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download both prior official capture artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          for id in 14699852808 14701211274; do
+            gh api "/repos/${{ github.repository }}/actions/artifacts/$id/zip" > "prediction-captures/$id.zip"
+            unzip -o "prediction-captures/$id.zip" -d prediction-captures
+          done
+      - name: Produce 72-boat research-only comparison
+        run: |
+          node scripts/test-build-independent-feature-comparison.mjs
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          import {buildIndependentFeatureComparison} from './scripts/build-independent-feature-comparison.mjs';
+          const files=fs.readdirSync('prediction-captures').filter(x=>/^research-official-20261120-\d+-\d+\.json$/.test(x)).sort();
+          if(files.length!==12)throw Error('expected exactly twelve distinct saved official races, got '+files.length);
+          const races=files.map(file=>{
+           const capture=JSON.parse(fs.readFileSync('prediction-captures/'+file,'utf8'));
+           const comparison=buildIndependentFeatureComparison({official:capture.racers});
+           if(capture.status!=='captured_research_inputs'||comparison.rows.length!==6||
+             comparison.rows.some(x=>x.motor2Rate===null||x.preRaceAverageST!==null||x.makulaboSameFrameFirstPlaceRate!==null))
+             throw Error('invalid or imputed comparison '+file);
+           return {date:capture.date,venue:capture.venue,race:capture.race,
+             officialCaptureReceivedAt:capture.receivedAt,preRaceIndependentlyVerified:false,comparison};
+          });
+          const report={raceCount:races.length,boatCount:races.reduce((n,r)=>n+r.comparison.rows.length,0),
+            preRaceIndependentlyVerified:false,eligibleForCalibration:false,scoreChangeApplied:false,races};
+          fs.writeFileSync('prediction-captures/twelve-race-official-feature-comparison.json',JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify({raceCount:report.raceCount,boatCount:report.boatCount,eligibleForCalibration:false}));
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: twelve-race-official-feature-comparison-${{ github.run_id }}
+          path: prediction-captures/twelve-race-official-feature-comparison.json
+          retention-days: 30

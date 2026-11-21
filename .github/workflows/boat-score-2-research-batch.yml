@@ -91,6 +91,21 @@ jobs:
           FIRST_RACE: ${{ inputs.first_race }}
           LAST_RACE: ${{ inputs.last_race }}
         run: node scripts/summarize-research-official85-batch.mjs
+      - name: Analyze saved retrospective 2nd and 3rd finish ranks
+        if: always()
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          FIRST_RACE: ${{ inputs.first_race }}
+          LAST_RACE: ${{ inputs.last_race }}
+        run: |
+          node --test scripts/test-research-conditional-podium-audit.mjs scripts/test-research-stratified-podium.mjs scripts/test-research-retrospective-finish-ranks.mjs
+          file="prediction-captures/research-review-${CAPTURE_DATE}-$((10#$CAPTURE_VENUE))-$((10#$FIRST_RACE))-$((10#$LAST_RACE)).json"
+          if [ -f "$file" ]; then
+            node scripts/run-research-retrospective-finish-ranks.mjs "$file" > prediction-captures/research-finish-ranks.json
+          else
+            echo "Saved retrospective review missing; finish-rank analysis held" >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: Upload research snapshots
         if: always()
         uses: actions/upload-artifact@v4

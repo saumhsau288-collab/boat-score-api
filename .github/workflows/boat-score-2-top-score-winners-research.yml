@@ -1,0 +1,69 @@
+name: Research top-score winners official result comparison
+
+on:
+  push:
+    branches:
+      - research/st-course-holdout-20261121
+    paths:
+      - .github/workflows/boat-score-2-top-score-winners-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fetch-winners:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Offline parser regression
+        run: |
+          node scripts/test-fetch-manual-official-historical-results.mjs
+          node scripts/test-extract-official-result-racers.mjs
+          node scripts/extract-official-actual-start.test.mjs
+      - name: Fetch official results for five saved-score first-place cases
+        run: |
+          mkdir -p research-winners
+          for item in "17 1 17-1" "18 3 18-3" "15 4 15-4" "21 5 21-5" "13 6 13-6"; do
+            set -- $item
+            key="$3"
+            for attempt in 1 3; do
+              node scripts/fetch-manual-official-historical-results.mjs 20261120 "$1" "$2" "research-winners/$key.raw.json"
+              if grep -q '"status": "raw_html_saved"' "research-winners/$key.raw.json"; then break; fi
+              sleep 4
+            done
+            node scripts/extract-official-result-racers.mjs "research-winners/$key.raw.json" "research-winners/$key.parsed.json"
+          done
+      - name: Produce six-boat actual ST and finish audit
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          import {extractOfficialActualStart} from './scripts/extract-official-actual-start.mjs';
+          const expected={'17-1':1,'18-3':4,'15-4':1,'21-5':1,'13-6':1};
+          const summary=[];
+          for(const [key,topBoat] of Object.entries(expected)){
+            const raw=JSON.parse(fs.readFileSync('research-winners/'+key+'.raw.json','utf8'));
+            const parsed=JSON.parse(fs.readFileSync('research-winners/'+key+'.parsed.json','utf8'));
+            const start=extractOfficialActualStart(raw.pages[0]?.html);
+            const row=parsed.rows?.[0];
+            const racer=row?.racers?.find(x=>x.boat===topBoat);
+            summary.push({key,topBoat,fetchStatus:raw.pages[0]?.status,
+              startStatus:start.status,startOrder:start.starts.map(x=>x.boat),
+              topBoatActualStart:start.starts.find(x=>x.boat===topBoat)??null,
+              topBoatFinish:racer?.finish??null,
+              independentlyVerified:false,eligibleForCalibration:false});
+          }
+          fs.writeFileSync('research-winners/summary.json',JSON.stringify(summary,null,2)+'\n');
+          console.log(JSON.stringify(summary));
+          EOF
+      - name: Upload research-only evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: top-score-winners-official-${{ github.run_id }}
+          path: research-winners/
+          retention-days: 30
+          if-no-files-found: error

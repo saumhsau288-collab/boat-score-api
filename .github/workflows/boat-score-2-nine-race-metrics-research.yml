@@ -1,0 +1,63 @@
+name: Research nine-race official racer metrics
+
+on:
+  push:
+    branches:
+      - research/st-course-holdout-20261121
+    paths:
+      - .github/workflows/boat-score-2-nine-race-metrics-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate official feature parser
+        run: |
+          node --check scripts/capture-research-official-features.mjs
+          node scripts/test-extract-grouped-official-six.mjs
+          node scripts/test-select-research-official-metrics.mjs
+      - name: Capture 9 completed races with bounded retries
+        shell: bash
+        run: |
+          mkdir -p prediction-captures
+          for item in "17 1" "18 3" "15 4" "21 5" "13 6" "02 1" "14 3" "22 5" "21 6"; do
+            read -r venue race <<< "$item"
+            file="prediction-captures/research-official-20261120-$((10#$venue))-$race.json"
+            for attempt in 1 2; do
+              CAPTURE_DATE=20261120 CAPTURE_VENUE="$venue" CAPTURE_RACE="$race" node scripts/capture-research-official-features.mjs || true
+              if grep -q '"status": "captured_research_inputs"' "$file"; then break; fi
+              sleep 2
+            done
+          done
+      - name: Summarize evidence and missingness without certifying pre-race inputs
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const keys=[['17',1],['18',3],['15',4],['21',5],['13',6],['02',1],['14',3],['22',5],['21',6]];
+          const rows=keys.map(([venue,race])=>{
+            const file=`prediction-captures/research-official-20261120-${Number(venue)}-${race}.json`;
+            const v=JSON.parse(fs.readFileSync(file,'utf8'));
+            return {venue,race,status:v.status,racerCount:v.racers?.length??0,
+              racerIds:v.racers?.map(r=>r.racerId)??[],featureNames:v.racers?.length?Object.keys(v.racers[0]):[],
+              fetchedAt:v.receivedAt??null,preRaceIndependentlyVerified:false,eligibleForCalibration:false};
+          });
+          fs.writeFileSync('prediction-captures/nine-race-metrics-audit.json',JSON.stringify(rows,null,2)+'\n');
+          console.log(JSON.stringify(rows));
+          EOF
+      - name: Upload all evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nine-race-official-metrics-${{ github.run_id }}
+          path: prediction-captures/research-official-20261120-*.json
+          retention-days: 30
+          if-no-files-found: warn

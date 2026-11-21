@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {auditSavedOfficialCoverage} from './audit-saved-official-coverage.mjs';
+const savedRecords=Array.from({length:13},(_,i)=>({venue:17,race:i+1,response:{ready:true,rankedScores:Array(6).fill({})}}));
+const officialRaces=Array.from({length:12},(_,i)=>({venue:17,race:i+1,comparison:{rows:Array(6).fill({})},preRaceIndependentlyVerified:false}));
+const result=auditSavedOfficialCoverage({savedRecords,officialRaces});
+assert.equal(result.savedRaceCount,13);assert.equal(result.joinedRaceCount,12);
+assert.deepEqual(result.missingOfficialRaces,[{venue:17,race:13}]);
+assert.equal(result.eligibleForCalibration,false);assert.equal(result.scoreChangeApplied,false);
+assert.equal(auditSavedOfficialCoverage({savedRecords,officialRaces:[...officialRaces,officialRaces[0]]}).reason,'duplicate_official_race');
+console.log('saved-to-official coverage: 12 joined, one explicitly missing, no score changes');

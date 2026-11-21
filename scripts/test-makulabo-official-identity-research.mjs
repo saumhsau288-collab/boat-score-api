@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {joinMakulaboWithOfficial} from '../boat-score-2-makulabo-official-join.js';
+const official=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'選手'+(i+1)}));
+const row=(i)=>({boat:i+1,racerId:String(4001+i),name:'選手'+(i+1),runs:50,counts:[10,10,10,10,5,5]});
+const base={verified:true,parsedRows:Array.from({length:6},(_,i)=>row(i))};
+const check=(input,expected)=>{const x=joinMakulaboWithOfficial(official,input);assert.equal(x.verified,expected);assert.notEqual(x.scoreChangeApplied,true);return x;};
+const good=check(base,true);
+assert.equal(good.racers.length,6);
+assert.equal(good.racers.every((r,i)=>r.boat===i+1&&r.racerId===String(4001+i)),true);
+assert.equal(check({...base,parsedRows:base.parsedRows.map((r,i)=>i===0?{...r,boat:2}:r)},false).reason,'boat_mismatch');
+assert.equal(check({...base,parsedRows:base.parsedRows.map((r,i)=>i===0?{...r,racerId:'4999'}:r)},false).reason,'official_identity_mismatch');
+assert.equal(check({...base,parsedRows:base.parsedRows.map((r,i)=>i===0?{...r,runs:49}:r)},false).reason,'invalid_finish_counts');
+assert.equal(check({...base,parsedRows:base.parsedRows.slice(0,5)},false).reason,'source_table_not_verified');
+console.log('Makulabo official identity: exact IDs pass; mismatched boat, ID, sample and row count held');

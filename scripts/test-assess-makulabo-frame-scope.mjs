@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {assessMakulaboFrameScope} from './assess-makulabo-frame-scope.mjs';
+const joined={verified:true,racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),runs:i===0?1:50,firstPlaceRate:i===0?100:20}))};
+const scope={verified:true,scope:'same_labelled_frame_recent_up_to_50_all_venues'};
+const good=assessMakulaboFrameScope({joined,scope});
+assert.equal(good.verified,true);assert.equal(good.overallRecent50WinRate,false);
+assert.equal(good.independentPreRaceAuthentication,false);assert.equal(good.scoreChangeApplied,false);
+assert.equal(assessMakulaboFrameScope({joined,scope:{verified:true,scope:'overall_recent50'}}).reason,'same_frame_sample_scope_required');
+assert.equal(assessMakulaboFrameScope({joined:{...joined,racers:joined.racers.slice(0,5)},scope}).reason,'six_verified_joined_racers_required');
+assert.equal(assessMakulaboFrameScope({joined:{...joined,racers:joined.racers.map((r,i)=>i===0?{...r,runs:51}:r)},scope}).reason,'invalid_frame_sample_or_rate');
+assert.equal(assessMakulaboFrameScope({joined:{...joined,racers:joined.racers.map((r,i)=>i===0?{...r,racerId:'4002'}:r)},scope}).reason,'unique_boats_and_racer_ids_required');
+console.log('Makulabo same-frame sample scope: 5 tests passed');

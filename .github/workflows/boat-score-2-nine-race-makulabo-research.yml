@@ -1,0 +1,62 @@
+name: Research nine-race Makulabo public evidence check
+
+on:
+  push:
+    branches:
+      - research/st-course-holdout-20261121
+    paths:
+      - .github/workflows/boat-score-2-nine-race-makulabo-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test public-source and identity parsers
+        run: |
+          node --check scripts/check-makulabo-public-source.mjs
+          node scripts/test-run-saved-makulabo-research.mjs
+          node scripts/test-identify-makulabo-sample-scope.mjs
+      - name: Check public heatmap for nine completed races
+        shell: bash
+        run: |
+          mkdir -p research-makulabo-nine
+          for item in "17 1" "18 3" "15 4" "21 5" "13 6" "02 1" "14 3" "22 5" "21 6"; do
+            read -r venue race <<< "$item"
+            file="research-makulabo-nine/$venue-$race.txt"
+            node scripts/check-makulabo-public-source.mjs 20261120 "$venue" "$race" > "$file" 2>&1 || true
+            sleep 1
+          done
+      - name: Audit page markers without asserting recent-50 coverage
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const rows=[];
+          for(const key of ['17-1','18-3','15-4','21-5','13-6','02-1','14-3','22-5','21-6']){
+            const raw=fs.readFileSync('research-makulabo-nine/'+key+'.txt','utf8');
+            let data=null;
+            try{data=JSON.parse(raw)}catch{}
+            rows.push({key,httpStatus:data?.httpStatus??null,hasHeatmapHeading:data?.hasHeatmapHeading??false,
+              hasRecent50Label:data?.hasRecent50Label??false,hasLoginMarkers:data?.hasLoginMarkers??false,
+              error:data?null:raw.slice(0,250),sixRacersVerified:false,recent50WinRateVerified:false,
+              eligibleForCalibration:false});
+          }
+          fs.writeFileSync('research-makulabo-nine/summary.json',JSON.stringify(rows,null,2)+'\n');
+          console.log(JSON.stringify(rows));
+          EOF
+      - name: Upload all diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nine-race-makulabo-public-${{ github.run_id }}
+          path: research-makulabo-nine/
+          retention-days: 30
+          if-no-files-found: warn

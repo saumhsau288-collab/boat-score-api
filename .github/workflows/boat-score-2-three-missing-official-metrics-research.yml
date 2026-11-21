@@ -1,0 +1,53 @@
+name: Research three missing official six-racer metrics
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/boat-score-2-three-missing-official-metrics-research.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture official six-boat features for missing low-ranked winners
+        run: |
+          mkdir -p prediction-captures
+          for item in "17 2" "24 5" "17 6"; do
+            read -r venue race <<< "$item"
+            for attempt in 1 2; do
+              CAPTURE_DATE=20261120 CAPTURE_VENUE="$venue" CAPTURE_RACE="$race" node scripts/capture-research-official-features.mjs || true
+              file="prediction-captures/research-official-20261120-$((10#$venue))-$race.json"
+              if grep -q '"status": "captured_research_inputs"' "$file"; then break; fi
+              sleep 1
+            done
+          done
+      - name: Summarize six-racer capture and selected winners
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const rows=[];
+          for(const [venue,race,winner] of [[17,2,1],[24,5,3],[17,6,4]]){
+            const file=`prediction-captures/research-official-20261120-${venue}-${race}.json`;
+            const obj=JSON.parse(fs.readFileSync(file,'utf8'));
+            const racers=obj.racers??[];
+            const selected=racers.find(x=>x.boat===winner);
+            rows.push({venue,race,winner,status:obj.status,sixRacers:racers.length===6,
+              winnerOfficial:selected??null,preRaceIndependentlyVerified:false,eligibleForCalibration:false,
+              scoreChangeApplied:false});
+          }
+          fs.writeFileSync('prediction-captures/three-missing-official-metrics-summary.json',JSON.stringify(rows,null,2)+'\n');
+          console.log(JSON.stringify(rows));
+          if(rows.some(x=>!x.sixRacers||x.status!=='captured_research_inputs'))process.exitCode=2;
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: three-missing-official-metrics-${{ github.run_id }}
+          path: prediction-captures/
+          retention-days: 30

@@ -1,0 +1,224 @@
+{
+  "description": "Research-only transcription of BOAT RACE official result pages, inspected 2026-11-21. Not a pre-race capture or independent deadline authentication.",
+  "results": [
+    {
+      "date": "20261120",
+      "venue": 2,
+      "race": 1,
+      "finishOrder": [
+        2,
+        1,
+        5,
+        3,
+        4,
+        6
+      ],
+      "trifectaPayoutYen": 13870,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=02&rno=1"
+    },
+    {
+      "date": "20261120",
+      "venue": 17,
+      "race": 1,
+      "finishOrder": [
+        1,
+        3,
+        2,
+        5,
+        4,
+        6
+      ],
+      "trifectaPayoutYen": 510,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=17&rno=1"
+    },
+    {
+      "date": "20261120",
+      "venue": 17,
+      "race": 2,
+      "finishOrder": [
+        1,
+        4,
+        6,
+        3,
+        2,
+        5
+      ],
+      "trifectaPayoutYen": 26140,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=17&rno=2"
+    },
+    {
+      "date": "20261120",
+      "venue": 14,
+      "race": 3,
+      "finishOrder": [
+        4,
+        5,
+        3,
+        2,
+        1,
+        6
+      ],
+      "trifectaPayoutYen": 28420,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=14&rno=3"
+    },
+    {
+      "date": "20261120",
+      "venue": 18,
+      "race": 3,
+      "finishOrder": [
+        4,
+        1,
+        5,
+        6,
+        3,
+        2
+      ],
+      "trifectaPayoutYen": 4370,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=18&rno=3"
+    },
+    {
+      "date": "20261120",
+      "venue": 15,
+      "race": 4,
+      "finishOrder": [
+        1,
+        3,
+        5,
+        2,
+        6,
+        4
+      ],
+      "trifectaPayoutYen": 4490,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=15&rno=4"
+    },
+    {
+      "date": "20261120",
+      "venue": 21,
+      "race": 4,
+      "finishOrder": [
+        3,
+        1,
+        6,
+        2,
+        4,
+        5
+      ],
+      "trifectaPayoutYen": 2130,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=21&rno=4"
+    },
+    {
+      "date": "20261120",
+      "venue": 21,
+      "race": 5,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        6,
+        5,
+        3
+      ],
+      "trifectaPayoutYen": 1130,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=21&rno=5"
+    },
+    {
+      "date": "20261120",
+      "venue": 22,
+      "race": 5,
+      "finishOrder": [
+        1,
+        3,
+        6,
+        4,
+        2,
+        5
+      ],
+      "trifectaPayoutYen": 2820,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=22&rno=5"
+    },
+    {
+      "date": "20261120",
+      "venue": 24,
+      "race": 5,
+      "finishOrder": [
+        3,
+        4,
+        5,
+        6,
+        1,
+        2
+      ],
+      "trifectaPayoutYen": 4260,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=24&rno=5"
+    },
+    {
+      "date": "20261120",
+      "venue": 13,
+      "race": 6,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        5,
+        3,
+        6
+      ],
+      "trifectaPayoutYen": 960,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=13&rno=6"
+    },
+    {
+      "date": "20261120",
+      "venue": 17,
+      "race": 6,
+      "finishOrder": [
+        4,
+        3,
+        5,
+        6,
+        2,
+        1
+      ],
+      "trifectaPayoutYen": 30030,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=17&rno=6"
+    },
+    {
+      "date": "20261120",
+      "venue": 21,
+      "race": 6,
+      "finishOrder": [
+        2,
+        1,
+        5,
+        3,
+        6,
+        4
+      ],
+      "trifectaPayoutYen": 3880,
+      "verified": true,
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=21&rno=6"
+    }
+  ],
+  "cancelled": [
+    {
+      "date": "20261120",
+      "venue": 9,
+      "race": 6,
+      "status": "cancelled",
+      "sourceUrl": "https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=09&rno=6"
+    }
+  ],
+  "independentlyAuthenticatedBeforeRace": false,
+  "eligibleForCalibration": false
+}

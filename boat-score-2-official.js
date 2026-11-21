@@ -2,6 +2,7 @@
 // Extracts only source-proven racer identifiers; no guessed statistics.
 import {validateRaceSelection} from './boat-score-2-adapter.js';
 import {parseOfficialBoatRows} from './boat-score-2-boat-mapping.js';
+import {classifyOfficialResponseSource} from './scripts/classify-official-response-source.mjs';
 export function officialRacelistUrl(selection){
  const v=validateRaceSelection(selection);
  if(!v.valid)return {status:'invalid_selection',invalid:v.invalid};
@@ -32,6 +33,8 @@ export async function fetchOfficialRacelist(selection,fetcher=fetch){
    const response=await fetcher(target.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(9000)});
    if(!response.ok)return {status:'upstream_error',httpStatus:response.status,verified:false};
    const type=response.headers.get('content-type')||'';
+   const provenance=classifyOfficialResponseSource({requestedUrl:target.url,responseUrl:response.url||target.url,httpStatus:response.status,contentType:type});
+   if(provenance.status!=='official_html_source_consistent_not_authenticated')return {status:'source_identity_mismatch',reason:provenance.status,verified:false};
    if(!/text\/html/i.test(type))return {status:'invalid_content_type',verified:false};
    const html=await response.text();
    const parsed=parseOfficialRacerIds(html);
