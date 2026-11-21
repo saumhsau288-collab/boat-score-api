@@ -5,6 +5,7 @@ const snapshot={status:'captured_research_inputs',source:'verified_official_metr
 const tr=(r,i)=>'<tbody><tr><td class="is-fs14">'+(i+1)+'</td><td class="is-fs14 is-fBold is-boatColor'+r.boat+'">'+r.boat+'</td><td><span class="is-fs12">'+r.racerId+'</span><span class="is-fs18">'+r.racerId+'</span></td><td>1:50</td></tr></tbody>';
 const html='<table class="is-w495"><thead><tr><th>着</th><th>枠</th><th>ボートレーサー</th></tr></thead>'+racers.map(tr).join('')+'</table>';
 const fake=async()=>({ok:true,status:200,headers:{get:()=> 'text/html'},text:async()=>html});
+assert.match(html,/ボートレーサー/);
 const out=await capture(snapshot,{fetchImpl:fake});
 assert.equal(out.status,'official_racelist_result_identity_matched');
 assert.equal(out.independentResultVerification,false);
