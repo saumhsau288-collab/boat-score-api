@@ -8,9 +8,9 @@ try {
  const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(15000)});
  const html=await res.text();
  const normalized=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
- const scriptTags=[...html.matchAll(/<script\\b[^>]*>/gi)].map(m=>m[0]);
- const externalScripts=scriptTags.filter(tag=>/\\bsrc\\s*=/.test(tag));
- const dataAttributeNames=[...new Set([...html.matchAll(/\\b(data-[a-z][a-z0-9-]*)\\s*=/gi)].map(m=>m[1].toLowerCase()))].sort().slice(0,30);
+ const scriptTags=[...html.matchAll(/<script\b[^>]*>/gi)].map(m=>m[0]);
+ const externalScripts=scriptTags.filter(tag=>/\bsrc\s*=/.test(tag));
+ const dataAttributeNames=[...new Set([...html.matchAll(/\b(data-[a-z][a-z0-9-]*)\s*=/gi)].map(m=>m[1].toLowerCase()))].sort().slice(0,30);
  const result={httpStatus:res.status,contentType:res.headers.get('content-type'),htmlLength:html.length,
   hasHeatmapHeading:normalized.includes('枠番別ヒートマップ'),
   hasRecent50Label:/直近50走|過去50走|最近50走/.test(normalized),
@@ -25,11 +25,11 @@ try {
   hasAxiosCall:html.toLowerCase().includes('axios'),
   hasApiPath:html.includes('/api/'),
   hasDataAttributes:html.includes('data-'),
-  tableCount:(html.match(/<table\\b/gi)||[]).length,
-  tbodyCount:(html.match(/<tbody\\b/gi)||[]).length,
-  rowCount:(html.match(/<tr\\b/gi)||[]).length,
-  imageCount:(html.match(/<img\\b/gi)||[]).length,
-  canvasCount:(html.match(/<canvas\\b/gi)||[]).length,
+  tableCount:(html.match(/<table\b/gi)||[]).length,
+  tbodyCount:(html.match(/<tbody\b/gi)||[]).length,
+  rowCount:(html.match(/<tr\b/gi)||[]).length,
+  imageCount:(html.match(/<img\b/gi)||[]).length,
+  canvasCount:(html.match(/<canvas\b/gi)||[]).length,
   hasRegistrationNumberLabel:/登録番号|登録No\\.?|登番/.test(normalized),
   hasWinRateLabel:/勝率|1着率|１着率/.test(normalized),
   hasScriptDataMarkers:html.includes('__NEXT_DATA__')||html.includes('__NUXT__')||html.includes('application/json'),
