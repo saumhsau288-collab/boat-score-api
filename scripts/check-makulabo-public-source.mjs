@@ -37,7 +37,11 @@ try {
     isExactly50Races:races===50};
   });
   const sixDistinctBoats=rowChecks.length===6&&new Set(rowChecks.map(r=>r.boat)).size===6&&rowChecks.every(r=>r.boat>=1&&r.boat<=6);
-  return {index,sixDistinctBoats,rowChecks,headerLabels,firstColumnTypes,rowCount:rows.length,headerCellCount:(table.match(/<th\b/gi)||[]).length,
+  const allCountsReconciled=sixDistinctBoats&&rowChecks.every(r=>r.validatedCountsAvailable);
+  const allExactly50=sixDistinctBoats&&rowChecks.every(r=>r.isExactly50Races);
+  const recent50Ready=false; // The page does not independently prove recency or racer identity.
+
+  return {index,sixDistinctBoats,allCountsReconciled,allExactly50,recent50Ready,rowChecks,headerLabels,firstColumnTypes,rowCount:rows.length,headerCellCount:(table.match(/<th\b/gi)||[]).length,
    dataCellCount:(table.match(/<td\b/gi)||[]).length,
    firstRows:rows.slice(0,3).map(row=>({
     cells:(row[0].match(/<(?:th|td)\b/gi)||[]).length,
