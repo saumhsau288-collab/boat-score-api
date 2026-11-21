@@ -14,3 +14,20 @@ test('only uses independently supplied verified course and recent50 mapping',()=
  assert.equal(x.racers[1].entryCourse,null);assert.equal(x.eligibleForCalibration,false);
 });
 test('rejects unverified official source',()=>assert.equal(buildResearchFeatureSnapshot({...base,official:official.map(x=>({...x,sourceVerified:false}))}).status,'unverified_official'));
+
+test('rejects duplicate course mappings instead of silently overwriting a boat',()=>{
+ const x=buildResearchFeatureSnapshot({...base,courseByBoat:[
+  {boat:1,racerId:'4001',entryCourse:1,verified:true},
+  {boat:1,racerId:'4001',entryCourse:2,verified:true}
+ ]});
+ assert.equal(x.status,'invalid_course_mapping');
+ assert.equal(x.eligibleForCalibration,false);
+});
+test('does not transfer another racer recent50 data onto a boat',()=>{
+ const x=buildResearchFeatureSnapshot({...base,recent50:[
+  {racerId:'9999',firstPlaceRate:80,verified:true}
+ ]});
+ assert.equal(x.racers[0].recent50FirstPlaceRate,null);
+ assert.equal(x.racers[0].recent50Verified,false);
+ assert.equal(x.eligibleForCalibration,false);
+});
