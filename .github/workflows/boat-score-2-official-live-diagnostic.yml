@@ -50,6 +50,7 @@ jobs:
                 racerCount:body.racers?.length??0,
                 racerIds:(body.racers||[]).map(r=>({boat:r.boat,racerId:r.racerId})),
                 diagnostics:body.diagnostics??null,
+                racerCandidates:(body.racerCandidates||[]).map(r=>({racerId:r.racerId,name:r.name})).slice(0,12),
                 mapping:body.mapping?{verified:body.mapping.verified,
                   reason:body.mapping.reason,candidateRows:body.mapping.candidateRows}:null,
                 httpStatus:body.httpStatus??null
