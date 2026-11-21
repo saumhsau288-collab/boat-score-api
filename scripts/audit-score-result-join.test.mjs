@@ -14,3 +14,15 @@ test('saved final scores with no verified result stay held',()=>{
  assert.ok(out.rows[0].holdReasons.includes('no_independently_verified_result'));
  assert.equal(out.weightChangesPermitted,false);
 });
+
+test('non-ready records do not shift score evidence onto the wrong race',()=>{
+ const capture={authenticatedBeforeRace:false,records:[
+  {date:'20261120',venue:1,race:1,httpStatus:200,response:{ready:false}},
+  {date:'20261120',venue:2,race:1,httpStatus:200,response:{ready:true,
+   rankedScores:[1,2,3,4,5,6].map(boat=>({boat,score:boat*2}))}},
+  {date:'20261120',venue:3,race:1,httpStatus:200,response:{ready:false}}
+ ]};
+ const out=auditScoreResultJoin(capture,[]);
+ assert.deepEqual(out.rows.map(r=>r.sixBoatOutputScoresPresent),[false,true,false]);
+ assert.equal(out.resultComparisonsEligible,0);
+});
