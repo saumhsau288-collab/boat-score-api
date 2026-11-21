@@ -1,6 +1,6 @@
 // Research-only: retrospective rank-versus-finish audit, no model calibration.
 export function auditRankFinishWithOfficial({savedRecords=[],officialRaces=[],results=[]}={}){
- const dateOf=x=>{const d=String(x?.date??x?.raceDate??x?.hd??'').replaceAll('-','');return /^20\\d{6}$/.test(d)?d:null;};
+ const dateOf=x=>{const d=String(x?.date??x?.raceDate??x?.hd??'').replaceAll('-','');return /^20\d{6}$/.test(d)?d:null;};
  const key=x=>dateOf(x)?dateOf(x)+'-'+Number(x?.venue)+'-'+Number(x?.race):null;
  const uniqueMap=items=>{const map=new Map(),duplicates=new Set();for(const x of items){const k=key(x);if(!k)continue;if(map.has(k))duplicates.add(k);else map.set(k,x);}for(const k of duplicates)map.delete(k);return map;};
  const officialByKey=uniqueMap(officialRaces);
