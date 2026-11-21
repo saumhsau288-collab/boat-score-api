@@ -48,4 +48,5 @@ jobs:
           SMOKE_DATE: ${{ inputs.date }}
           SMOKE_VENUE: ${{ inputs.venue || matrix.venue }}
           SMOKE_RACE: ${{ inputs.race || matrix.race }}
+          SMOKE_REQUIRE_READY: 'true'
         run: node scripts/smoke-deployed-boat-score-2-preview.mjs
