@@ -1,4 +1,5 @@
 // Research-only: distinguish stored six-boat output scores from missing input features.
+import {readFileSync} from 'node:fs';
 export function auditCapturedRankedScores(capture){
  if(!capture||!Array.isArray(capture.records)||capture.authenticatedBeforeRace!==false)
   throw Error('invalid_capture_provenance');
@@ -22,4 +23,11 @@ export function auditCapturedRankedScores(capture){
   rawScoreInputsVerified:0,officialResultsVerified:0,officialCutoffsVerified:0,
   eligibleForCalibration:false,cases,
   warning:'Six output scores are not the source feature inputs. Their presence does not establish verified race identity, cutoff timing, actual results, or weight-calibration eligibility.'};
+}
+
+if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
+ const path=process.argv[2];
+ if(!path)throw Error('Usage: node scripts/audit-captured-ranked-scores.mjs capture.json');
+ const result=auditCapturedRankedScores(JSON.parse(readFileSync(path,'utf8')));
+ console.log(JSON.stringify(result,null,2));
 }
