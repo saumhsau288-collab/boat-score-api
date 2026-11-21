@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import {describeSavedBaseStatsReadiness} from './describe-saved-base-stats-readiness.mjs';
 export function diagnoseSavedPredictions(payload){
- const entries=Array.isArray(payload)?payload:Array.isArray(payload?.captures)?payload.captures:Array.isArray(payload?.results)?payload.results:null;
+ const entries=Array.isArray(payload)?payload:Array.isArray(payload?.captures)?payload.captures:Array.isArray(payload?.results)?payload.results:Array.isArray(payload?.records)?payload.records.filter(x=>x?.response?.ready===true&&!(Number(x.venue)===9&&Number(x.race)===6)):null;
  if(!entries)return {status:'held',reason:'saved_prediction_array_required',rows:[],eligibleForCalibration:false};
  const rows=entries.map((item,index)=>{
   const prediction=item?.prediction??item;
