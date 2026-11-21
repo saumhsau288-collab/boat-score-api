@@ -28,7 +28,7 @@ export function evaluatePositionModelHoldout(reports){
  };
  const byDate={};
  const outsideWinnerCandidate={races:0,otherWins:0,highestOtherWins:0,byBoat:{},actualOtherWinnerByBoat:Object.fromEntries(Array.from({length:5},(_,i)=>[String(i+2),0]))};
- const hybridTrifecta={races:0,hybridExact:0,originalExact:0,fixed123Exact:0,hybridOnlyVsOriginal:0,originalOnlyVsHybrid:0,switchedRaces:0,byDate:{}};
+ const hybridTrifecta={races:0,hybridExact:0,originalExact:0,fixed123Exact:0,hybridOnlyVsOriginal:0,originalOnlyVsHybrid:0,switchedRaces:0,originalWinnerCorrect:0,hybridWinnerCorrect:0,byPredictedWinner:Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,exact:0}])),byDate:{}};
  const challengerGapTwoPlusTrifecta={races:0,challengerWins:0,challengerTop3:0,oneTop3:0,challengerFirstModelExact:0,forcedWinnerExact:0,originalModelExact:0,fixed123Exact:0,forcedOnlyVsOriginal:0,originalOnlyVsForced:0};
  const challengerGapTwoPlusByDate={};
  const challengerGapTwoPlus={inner234:{races:0,challengerWins:0,oneWins:0},outer56:{races:0,challengerWins:0,oneWins:0}};
@@ -46,6 +46,9 @@ export function evaluatePositionModelHoldout(reports){
   const switchWinner=ranked.findIndex(x=>x.boat===1)>=3&&bestOther.boat<=4&&bestOther.score-one.score>=2;
   const hybrid=switchWinner?predict(ranked,bestOther.boat):model;
   const h=exact(hybrid);
+  hybridTrifecta.originalWinnerCorrect+=model[0]===actual[0]?1:0;
+  hybridTrifecta.hybridWinnerCorrect+=hybrid[0]===actual[0]?1:0;
+  const winnerGroup=hybridTrifecta.byPredictedWinner[String(hybrid[0])];winnerGroup.races++;winnerGroup.exact+=h?1:0;
   hybridTrifecta.races++;hybridTrifecta.hybridExact+=h?1:0;hybridTrifecta.originalExact+=m?1:0;hybridTrifecta.fixed123Exact+=f?1:0;hybridTrifecta.switchedRaces+=switchWinner?1:0;
   hybridTrifecta.hybridOnlyVsOriginal+=h&&!m?1:0;hybridTrifecta.originalOnlyVsHybrid+=m&&!h?1:0;
   const hybridDay=hybridTrifecta.byDate[date]??={races:0,switchedRaces:0,hybridExact:0,originalExact:0,fixed123Exact:0};
