@@ -4,7 +4,7 @@ import fs from 'node:fs';
 export function matchOfficialResultsToCaptures(results, captures) {
  if(!Array.isArray(results?.results)||!Array.isArray(captures?.records))throw Error('results_and_capture_records_required');
  const key=r=>[r?.date,r?.venue,r?.race].join(':');
- const validKey=r=>/^20\\d{6}$/.test(String(r?.date))&&Number.isInteger(r?.venue)&&r.venue>=1&&r.venue<=24&&Number.isInteger(r?.race)&&r.race>=1&&r.race<=12;
+ const validKey=r=>/^20\d{6}$/.test(String(r?.date))&&Number.isInteger(r?.venue)&&r.venue>=1&&r.venue<=24&&Number.isInteger(r?.race)&&r.race>=1&&r.race<=12;
  const limits={nationalWinRate:10,localWinRate:10,motorTwoWinRate:100,recent50WinRate:100,exhibitionScore:100};
  const fullFeatures=boats=>boats.every(b=>Object.entries(limits).every(([name,max])=>typeof b[name]==='number'&&Number.isFinite(b[name])&&b[name]>=0&&b[name]<=max));
  const byKey=new Map();
