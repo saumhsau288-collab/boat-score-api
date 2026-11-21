@@ -1,0 +1,32 @@
+name: Research Miyajima racelist HTML snapshot
+
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths:
+      - 'scripts/probe-miyajima-official-racelist-html.mjs'
+      - '.github/workflows/research-miyajima-racelist-html.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch bounded official racelist page and record provenance
+        run: node scripts/probe-miyajima-official-racelist-html.mjs
+      - name: Upload unverified raw HTML evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-miyajima-racelist-html-${{ github.run_id }}
+          path: research-output/
+          if-no-files-found: warn
+          retention-days: 14
