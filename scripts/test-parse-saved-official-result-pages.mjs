@@ -7,6 +7,11 @@ const pay='<td rowspan="2">3連単</td><td><div>'+[6,2,3].map(b=>'<span class="n
 const base={date:'20261118',venue:1,race:3,url:'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=3&jcd=01&hd=20261118',status:'raw_html_saved',html:'<a href="/owpc/pc/race/index?rno=3&jcd=01&hd=20261118">race</a>'+table+pay};
 const parse=report=>parseSaved({...report,pages:report.pages.map(p=>p.status==='raw_html_saved'&&typeof p.html==='string'&&!Object.hasOwn(p,'sha256')?{...p,sha256:crypto.createHash('sha256').update(p.html).digest('hex')}:p)});
 const ok=parse({pages:[base]});assert.equal(ok.parsed,1);assert.deepEqual(ok.rows[0].podium,[6,2,3]);assert.equal(ok.rows[0].trifectaPayoutYen,8230);assert.equal(ok.verifiedResults,0);assert.equal(ok.eligibleForAccuracy,0);
+const provenance=parse({pages:[{...base,finalUrl:base.url,requestedAt:'2026-11-18T00:01:00Z',receivedAt:'2026-11-18T00:01:02Z'}]});
+assert.equal(provenance.rows[0].requestedAt,'2026-11-18T00:01:00Z');
+assert.equal(provenance.rows[0].receivedAt,'2026-11-18T00:01:02Z');
+assert.equal(provenance.rows[0].finalUrl,base.url);
+assert.equal(provenance.rows[0].resultVerified,false);
 assert.equal(parse({pages:[{...base,html:base.html.replace('8,230','')}]}).rows[0].reason,'trifecta_payout_mismatch');
 assert.equal(parse({pages:[{...base,race:4}]}).rows[0].reason,'race_identity_unconfirmed');
 const wrongHtmlRace=base.html.replace('rno=3&jcd=01','rno=2&jcd=01');
