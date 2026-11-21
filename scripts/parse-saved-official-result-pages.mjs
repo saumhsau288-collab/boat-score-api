@@ -10,6 +10,10 @@ export function parseSavedOfficialResultPages(report){
   if(typeof p.sha256!=='string'||!/^([a-f0-9]{64})$/.test(p.sha256)||
      crypto.createHash('sha256').update(p.html).digest('hex')!==p.sha256)
    return {...base,status:'needs_review',reason:'raw_html_checksum_unconfirmed'};
+  // The fetch collector records the final URL; if present it must match the requested URL.
+  // Legacy captures without this field remain review-only, never independently verified.
+  if(p.finalUrl!==undefined && p.finalUrl!==null && p.finalUrl!==p.url)
+   return {...base,status:'needs_review',reason:'final_url_mismatch'};
   let u;
   try { u=new URL(p.url); } catch { return {...base,status:'needs_review',reason:'invalid_result_url'}; }
   const h=p.html;
