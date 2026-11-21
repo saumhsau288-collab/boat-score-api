@@ -3,7 +3,10 @@
 const base=process.env.BOAT_SCORE_PREVIEW_URL||'https://boat-score-2-preview.saumh-sau-288.workers.dev';
 if(new URL(base).protocol!=='https:')throw Error('HTTPS preview required');
 const date=process.env.SMOKE_DATE||new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','');
-const checks=[['version','/api/version'],['mobile_html','/'],['selected_race','/api/predict/selected-race?'+new URLSearchParams({date,venue:'21',race:'1',mode:'beforeinfo'})]];
+const venue=process.env.SMOKE_VENUE||'21';
+const race=process.env.SMOKE_RACE||'1';
+if(!/^(?:[1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^(?:[1-9]|1[0-2])$/.test(race))throw Error('Invalid smoke venue or race');
+const checks=[['version','/api/version'],['mobile_html','/'],['selected_race','/api/predict/selected-race?'+new URLSearchParams({date,venue,race,mode:'beforeinfo'})]];
 const results=[];
 for(const [name,path] of checks){
  const requestedAt=new Date().toISOString();
@@ -23,5 +26,5 @@ for(const [name,path] of checks){
  }catch(error){results.push({name,requestedAt,checkPassed:false,error:String(error?.message||error).slice(0,150)});}
 }
 const pass=results.every(x=>x.checkPassed&& (x.name!=='selected_race'||x.predictionReady!==true||x.ticketShapeValid===true));
-console.log(JSON.stringify({date,base,pass,results,note:'Endpoint availability is not proof of valid six-racer inputs, official schedule, or Android UI behavior.'},null,2));
+console.log(JSON.stringify({date,venue,race,base,pass,results,note:'Endpoint availability is not proof of valid six-racer inputs, official schedule, or Android UI behavior.'},null,2));
 if(!pass)process.exitCode=1;
