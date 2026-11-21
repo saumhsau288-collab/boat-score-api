@@ -130,3 +130,22 @@ test('one unverified ST keeps the entire six-boat ST evidence incomplete',()=>{
  assert.equal(x.racers[5].startTiming,null);
  assert.equal(x.eligibleForCalibration,false);
 });
+
+test('rejects two verified racers assigned the same entry course',()=>{
+ const x=buildResearchFeatureSnapshot({...base,courseByBoat:[
+  {boat:1,racerId:'4001',entryCourse:2,verified:true},
+  {boat:2,racerId:'4002',entryCourse:2,verified:true}
+ ]});
+ assert.equal(x.status,'duplicate_verified_entry_course');
+ assert.equal(x.eligibleForCalibration,false);
+});
+test('allows distinct verified entry courses even when boats swap positions',()=>{
+ const x=buildResearchFeatureSnapshot({...base,courseByBoat:[
+  {boat:1,racerId:'4001',entryCourse:2,verified:true},
+  {boat:2,racerId:'4002',entryCourse:1,verified:true}
+ ]});
+ assert.equal(x.status,'captured_research_inputs');
+ assert.equal(x.racers[0].entryCourse,2);
+ assert.equal(x.racers[1].entryCourse,1);
+ assert.equal(x.eligibleForCalibration,false);
+});
