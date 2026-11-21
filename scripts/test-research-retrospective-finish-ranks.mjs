@@ -34,3 +34,11 @@ test('invalid retrospective row does not suppress valid same-race row',()=>{
  assert.equal(x.held.duplicate_race??0,0);
  assert.equal(x.compared,1);
 });
+
+test('reports second and third finish top-three score coverage with denominators',()=>{
+ const x=summarizeRetrospectiveFinishRanks([record(1,[5,6,1]),record(2,[5,2,6])]);
+ assert.deepEqual(x.finishRankTop3Rates[1],{finish:2,top3Count:1,total:2,rate:0.5});
+ assert.deepEqual(x.finishRankTop3Rates[2],{finish:3,top3Count:1,total:2,rate:0.5});
+ const empty=summarizeRetrospectiveFinishRanks([]);
+ assert.equal(empty.finishRankTop3Rates[1].rate,null);
+});
