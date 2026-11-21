@@ -1,0 +1,45 @@
+name: Research diagnose actual saved thirteen races
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/boat-score-2-actual-saved-thirteen-readiness.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download existing saved prediction artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          gh run download 44639859914 --repo "${{ github.repository }}" --name "morning-predictions-20261120-44639859914" --dir prediction-captures || {
+            echo "Named artifact unavailable; download by artifact ID"
+            gh api "/repos/${{ github.repository }}/actions/artifacts/14586303082/zip" > prediction-captures/saved.zip
+            unzip -o prediction-captures/saved.zip -d prediction-captures
+          }
+          test -s prediction-captures/20261120-44639859914.json
+      - name: Diagnose actual completed thirteen races
+        run: |
+          node scripts/test-diagnose-saved-predictions.mjs
+          node scripts/diagnose-saved-predictions.mjs prediction-captures/20261120-44639859914.json prediction-captures/actual-thirteen-source-readiness.json
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const x=JSON.parse(fs.readFileSync('prediction-captures/actual-thirteen-source-readiness.json','utf8'));
+          if(x.status!=='diagnosed'||x.count!==13||x.rows.some(r=>r.verifiedCount!==0||r.missingSources.length!==6||r.eligibleForCalibration))throw Error('unexpected saved evidence shape');
+          console.log('13 completed saved races: all six independently verified pre-race sources absent');
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-thirteen-source-readiness-${{ github.run_id }}
+          path: prediction-captures/actual-thirteen-source-readiness.json
+          retention-days: 30
