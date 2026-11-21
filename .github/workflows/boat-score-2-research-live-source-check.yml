@@ -1,0 +1,61 @@
+name: Check live official Boat Score 2 research source
+on:
+  push:
+    branches: [research-cutoff-join-gate-20261120]
+    paths:
+      - '.github/workflows/boat-score-2-research-live-source-check.yml'
+      - 'boat-score-2-official-pipeline.js'
+      - 'boat-score-2-metric-extractor.js'
+      - 'scripts/extract-grouped-official-six.mjs'
+  workflow_dispatch:
+    inputs:
+      venue:
+        description: BOATRACE venue code
+        default: '01'
+      date:
+        description: Race date YYYYMMDD
+        default: '20261121'
+      race:
+        description: Race number
+        default: '1'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check actual official HTML without deploying or scoring
+        env:
+          VENUE: ${{ inputs.venue || '01' }}
+          RACE_DATE: ${{ inputs.date || '20261121' }}
+          RACE: ${{ inputs.race || '1' }}
+        run: |
+          node --experimental-default-type=module <<'NODE'
+          import {appendFileSync} from 'node:fs';
+          import {inspectOfficialMetricsPage} from './boat-score-2-official-pipeline.js';
+          import {fetchOfficialRacelist} from './boat-score-2-official.js';
+          const selection={venue:process.env.VENUE,date:process.env.RACE_DATE,race:process.env.RACE};
+          const [metrics,mapping]=await Promise.all([
+            inspectOfficialMetricsPage(selection),fetchOfficialRacelist(selection)
+          ]);
+          const summary={selection,
+            metrics:{status:metrics.status,reason:metrics.reason??null,count:metrics.racers?.length??0,
+              racers:(metrics.racers||[]).map(({boat,racerId,nationalWinRate,localWinRate,motorTwoWinRate})=>
+                ({boat,racerId,nationalWinRate,localWinRate,motorTwoWinRate}))},
+            mapping:{status:mapping.status,verified:mapping.verified??mapping.mapping?.verified??null,
+              count:mapping.racers?.length??0,reason:mapping.reason??mapping.mapping?.reason??null}};
+          console.log('LIVE_OFFICIAL_RESEARCH_CHECK',JSON.stringify(summary));
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+            '## Actual official source verification (research only)\n\n'+
+            'Selection: '+JSON.stringify(selection)+'\n\n'+
+            '```json\n'+JSON.stringify(summary,null,2)+'\n```\n\n'+
+            'Unverified or missing values are not used for scoring.\n');
+          if(metrics.status!=='official_verified'||metrics.racers?.length!==6)
+            throw Error('Official metrics not independently verified for six racers');
+          if(mapping.verified!==true||mapping.racers?.length!==6)
+            throw Error('Official racer identity mapping not verified for six racers');
+          NODE
