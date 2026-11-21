@@ -63,7 +63,7 @@ jobs:
             savedPredictionAvailable:true,preRaceAverageSTVerified:false,makulabo50Verified:false,
             originalPredictionInputsVerified:false,eligibleForCalibration:false,
             nextAction:'capture six racer official features with source URL, SHA256, timestamps and racer identity; historical capture cannot authenticate pre-race inputs'};
-          fs.writeFileSync('prediction-captures/ashiya-4r-source-gap.json',JSON.stringify(readiness,null,2)+'\\n');
+          fs.writeFileSync('prediction-captures/ashiya-4r-source-gap.json',JSON.stringify(readiness,null,2)+'\n');
           console.log('REAL_PROVENANCE '+JSON.stringify({attempted:provenance.attempted,matched:provenance.matched,
             held:provenance.held,originalInputsVerified:provenance.originalInputsVerified,
             independentlyAuthenticatedBeforeRace:provenance.independentlyAuthenticatedBeforeRace,statuses:provenance.statuses}));
