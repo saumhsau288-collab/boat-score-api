@@ -31,6 +31,24 @@ jobs:
           node scripts/fetch-manual-official-historical-results.mjs 20261120 2 1 research-three/toda-1.raw.json
           node scripts/fetch-manual-official-historical-results.mjs 20261120 14 3 research-three/naruto-3.raw.json
           node scripts/fetch-manual-official-historical-results.mjs 20261120 22 5 research-three/fukuoka-5.raw.json
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const p="research-three/fukuoka-5.raw.json";
+            const data=JSON.parse(fs.readFileSync(p,"utf8"));
+            if(data.pages[0]?.status==="raw_html_saved")process.exit(0);
+            console.log("Fukuoka initial fetch failed, retrying only this race");
+          '
+          if ! grep -q '"status": "raw_html_saved"' research-three/fukuoka-5.raw.json; then
+            sleep 3
+            node scripts/fetch-manual-official-historical-results.mjs 20261120 22 5 research-three/fukuoka-5.retry.raw.json
+            node --input-type=module -e '
+              import fs from "node:fs";
+              const p="research-three/fukuoka-5.retry.raw.json";
+              const data=JSON.parse(fs.readFileSync(p,"utf8"));
+              if(data.pages[0]?.status==="raw_html_saved")
+                fs.copyFileSync(p,"research-three/fukuoka-5.raw.json");
+            '
+          fi
       - name: Extract finish and actual entry course candidates
         run: |
           for key in toda-1 naruto-3 fukuoka-5; do
