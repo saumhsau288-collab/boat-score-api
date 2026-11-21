@@ -40,5 +40,5 @@ if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
  const report=await captureSelectedResearchResult(JSON.parse(fs.readFileSync(input,'utf8')));
  fs.writeFileSync(output,JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify({status:report.status,reason:report.reason??null,parsedStatus:report.parsedStatus??null,
-  parsedPodium:report.parsedPodium??null,independentResultVerification:false,eligibleForCalibration:false}));
+  parsedPodium:report.parsedPodium??null,parserDiagnostics:report.parserDiagnostics??null,independentResultVerification:false,eligibleForCalibration:false}));
 }
