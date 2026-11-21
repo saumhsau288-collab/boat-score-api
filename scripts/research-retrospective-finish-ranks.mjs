@@ -7,7 +7,8 @@ export function summarizeRetrospectiveFinishRanks(records) {
  for(const r of records??[]){
   if(r?.status!=='research_only_podium_compared'||r?.eligibleForCalibration!==false||
      r?.authenticatedHistoricalPrediction!==false){reasons('not_research_only_review');continue;}
-  const key=[r.date,r.venue,r.race].join(':');
+  if(!/^20\\d{6}$/.test(String(r.date??''))||!Number.isInteger(Number(r.venue))||Number(r.venue)<1||Number(r.venue)>24||!Number.isInteger(Number(r.race))||Number(r.race)<1||Number(r.race)>12){reasons('invalid_race_identity');continue;}
+  const key=[r.date,Number(r.venue),Number(r.race)].join(':');
   if(seen.has(key)){reasons('duplicate_race');continue;}seen.add(key);
   const ranking=r.scoreRanking,podium=r.parsedPodium,ranks=r.actualPodiumScoreRanks;
   const valid=x=>Array.isArray(x)&&x.length===6&&new Set(x).size===6&&x.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
