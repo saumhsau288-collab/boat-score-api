@@ -39,3 +39,17 @@ test('runner refuses non-research saved batch',()=>{
   assert.notEqual(result.status,0);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('empty comparable batch fails visibly instead of reporting success',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'boat-research-'));
+ try{
+  const path=join(dir,'empty.json');
+  writeFileSync(path,JSON.stringify({status:'research_only_batch_review',records:[]}));
+  const result=spawnSync(process.execPath,['scripts/run-research-retrospective-finish-ranks.mjs',path],{
+   encoding:'utf8',cwd:process.cwd()
+  });
+  assert.equal(result.status,3);
+  assert.match(result.stderr,/No comparable retrospective races/);
+  assert.equal(JSON.parse(result.stdout).compared,0);
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});
