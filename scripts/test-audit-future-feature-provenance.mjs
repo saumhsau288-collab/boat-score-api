@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {auditFutureFeatureProvenance as audit} from './audit-future-feature-provenance.mjs';
 const race={date:'20261122',venue:21,race:4};
 const receivedAt='2026-11-22T00:30:00Z',cutoffAt='2026-11-22T01:00:00Z';
-const official={...race,status:'captured_research_inputs',receivedAt,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',responseSha256:'a'.repeat(64),racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i)}))};
+const official={...race,status:'captured_research_inputs',receivedAt,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',responseSha256:'a'.repeat(64),racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),sourceVerified:true}))};
 const base=official.racers.map(r=>({...race,...r,verified:true,receivedAt,sourceUrl:'https://example.org/source',responseSha256:'a'.repeat(64)}));
 const averageST=base.map(x=>({...x,kind:'pre_race_average_st',value:0.15}));
 const makulabo=base.map(x=>({...x,scope:'same_labelled_frame_recent_up_to_50_all_venues',runs:50,firstPlaceRate:20}));
