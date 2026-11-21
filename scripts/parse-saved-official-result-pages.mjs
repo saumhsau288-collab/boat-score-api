@@ -22,7 +22,8 @@ export function parseSavedOfficialResultPages(report){
    ['hd','jcd','rno'].some(k=>u.searchParams.getAll(k).length!==1)||
    u.searchParams.get('hd')!==String(p.date)||Number(u.searchParams.get('jcd'))!==Number(p.venue)||
    Number(u.searchParams.get('rno'))!==Number(p.race)||
-   !h.includes('hd='+String(p.date))||!h.includes('jcd='+String(p.venue).padStart(2,'0')))
+   !h.includes('hd='+String(p.date))||!h.includes('jcd='+String(p.venue).padStart(2,'0'))||
+   !new RegExp('(?:[?&]|&amp;)rno=0?'+String(Number(p.race))+'(?:[&#"\\s]|$)').test(h))
    return {...base,status:'needs_review',reason:'race_identity_unconfirmed'};
   const table=h.match(/<table\b[^>]*class="is-w495"[^>]*>([\s\S]*?)<\/table>/i)?.[1];
   if(!table||!/<th>着<\/th>/.test(table))return {...base,status:'needs_review',reason:'finish_table_missing'};
