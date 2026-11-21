@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/boat-score-2-research-makulabo-live-check.yml'
       - 'scripts/inspect-makulabo-heatmap-structure.mjs'
+      - 'scripts/parse-makulabo-heatmap-six.mjs'
+      - 'scripts/test-parse-makulabo-heatmap-six.mjs'
   workflow_dispatch:
     inputs:
       date:
@@ -26,6 +28,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test strict six-row heatmap parser
+        run: node scripts/test-parse-makulabo-heatmap-six.mjs
       - name: Inspect source layout without scoring or deployment
         env:
           RACE_DATE: ${{ inputs.date || '20261121' }}
