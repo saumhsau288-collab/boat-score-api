@@ -13,7 +13,7 @@ export function buildIndependentFeatureComparison({official=[],averageST=[],maku
   const localForScoring=localRaw===0?national:localRaw;
   return {boat:o.boat,racerId:String(o.racerId??''),nationalWinRate:national,
    localWinRateRaw:localRaw,localWinRateForScoring:localForScoring,
-   motor2Rate:Number.isFinite(o.motor2Rate)?o.motor2Rate:null,
+   motor2Rate:Number.isFinite(o.motorTwoWinRate)?o.motorTwoWinRate:null,
    preRaceAverageST:st?.verified===true&&st?.kind==='pre_race_average_st'&&
       String(st.racerId)===String(o.racerId)&&Number.isFinite(st.value)?st.value:null,
    makulaboSameFrameFirstPlaceRate:mk?.verified===true&&mk?.scope==='same_labelled_frame_recent_up_to_50_all_venues'&&
