@@ -14,6 +14,7 @@ assert.equal(ready.averageSTVerified,true);
 assert.equal(ready.evidenceFreshnessVerified,true);
 assert.equal(audit({...input,averageST:averageST.map((x,i)=>i===0?{...x,receivedAt:'2026-11-21T23:50:00Z'}:x)}).evidenceFreshnessVerified,true);
 assert.equal(audit({...input,averageST:averageST.map((x,i)=>i===0?{...x,receivedAt:'2026-11-21T12:00:00Z'}:x)}).evidenceFreshnessVerified,false);
+assert.equal(audit({...input,averageST:averageST.map((x,i)=>i===0?{...x,receivedAt:'2026-11-21T12:00:00Z'}:x)}).reason,'feature_evidence_incomplete');
 assert.equal(audit({...input,official:{...official,receivedAt:'2026-11-21T12:00:00Z'}}).officialSnapshotBeforePrediction,false);
 assert.equal(ready.officialSnapshotBeforePrediction,true);
 assert.equal(audit({...input,official:{...official,receivedAt:'2026-11-22T00:40:00Z'}}).officialSnapshotBeforePrediction,false);
