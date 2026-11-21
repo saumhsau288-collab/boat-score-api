@@ -22,3 +22,17 @@ test('duplicate boat numbers cannot count as six-boat capture',()=>{
  assert.equal(out.withMatchingCapture,1);
  assert.equal(out.withSixBoatCapture,0);
 });
+
+test('six boat IDs without numeric scoring inputs are not complete features',()=>{
+ const out=matchOfficialResultsToCaptures({results:[result]},{records:[{...result,response:{scoreInputsByBoat:Array.from({length:6},(_,i)=>({boat:i+1}))}}]});
+ assert.equal(out.withSixBoatCapture,1);
+ assert.equal(out.withCompleteFeatureCapture,0);
+});
+test('only fully bounded numeric scoring inputs count as complete',()=>{
+ const boats=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:6,localWinRate:0,motorTwoWinRate:45,recent50WinRate:35,exhibitionScore:70}));
+ const out=matchOfficialResultsToCaptures({results:[result]},{records:[{...result,response:{scoreInputsByBoat:boats}}]});
+ assert.equal(out.withCompleteFeatureCapture,1);
+ assert.equal(out.eligibleForCalibration,0);
+ boats[0].motorTwoWinRate=Infinity;
+ assert.equal(matchOfficialResultsToCaptures({results:[result]},{records:[{...result,response:{scoreInputsByBoat:boats}}]}).withCompleteFeatureCapture,0);
+});
