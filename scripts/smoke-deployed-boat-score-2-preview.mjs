@@ -16,11 +16,12 @@ for(const [name,path] of checks){
     name==='version'?response.ok&&parsed?.app==='Boat Score 2 preview':
     response.ok&&parsed!==null&&typeof parsed==='object',
    predictionReady:name==='selected_race'?parsed?.ready===true:null,
+   ticketShapeValid:name==='selected_race'&&parsed?.ready===true?['main','upset'].every(key=>Array.isArray(parsed[key])&&parsed[key].length===6&&parsed[key].every(ticket=>Array.isArray(ticket)&&ticket.length===3&&new Set(ticket).size===3&&ticket.every(n=>Number.isInteger(n)&&n>=1&&n<=6))):null,
    predictionReason:name==='selected_race'?String(parsed?.reason??parsed?.error??'').slice(0,150):null,
    officialStatsRetry:name==='selected_race'?parsed?.officialStatsRetry??null:null,
    missingInputs:name==='selected_race'&&Array.isArray(parsed?.missingInputs)?parsed.missingInputs.slice(0,12):null});
  }catch(error){results.push({name,requestedAt,checkPassed:false,error:String(error?.message||error).slice(0,150)});}
 }
-const pass=results.every(x=>x.checkPassed);
+const pass=results.every(x=>x.checkPassed&& (x.name!=='selected_race'||x.predictionReady!==true||x.ticketShapeValid===true));
 console.log(JSON.stringify({date,base,pass,results,note:'Endpoint availability is not proof of valid six-racer inputs, official schedule, or Android UI behavior.'},null,2));
 if(!pass)process.exitCode=1;
