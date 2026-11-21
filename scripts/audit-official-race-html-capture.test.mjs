@@ -53,3 +53,11 @@ test('rejects malformed dates and venues before accepting official source metada
   assert.equal(out.eligibleForCalibration,false);
  }
 });
+
+test('hashes raw bytes and rejects undecodable HTML rather than misreporting a hash mismatch',()=>{
+ const raw=Buffer.concat([Buffer.from(html),Buffer.from([0xff])]);
+ const out=auditOfficialRaceHtmlCapture({html:raw,metadata:{...metadata,byteLength:raw.length,
+  sha256:createHash('sha256').update(raw).digest('hex')}});
+ assert.equal(out.status,'unsupported_html_encoding');
+ assert.equal(out.eligibleForCalibration,false);
+});
