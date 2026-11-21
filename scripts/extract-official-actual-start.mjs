@@ -13,11 +13,12 @@ export function extractOfficialActualStart(html){
   const inner=row.match(/class=["'][^"']*\btable1_boatImage1TimeInner\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)?.[1];
   if(!boat||inner===undefined)continue;
   const value=strip(inner);
-  const match=value.match(/^([FL])?\s*([+-]?\d?\.\d{1,2})\b/i);
+  const match=value.match(/^([FL])?\s*([+-]?\d?\.\d{1,2})(?=\s|$)/i);
   // A false start or late start is not silently treated as an ordinary numeric ST.
   starts.push({boat,entryCourse:starts.length+1,st:match&&!match[1]?Number(match[2]):null,rawST:value,startStatus:match?.[1]??null});
  }
  const valid=starts.length===6&&new Set(starts.map(x=>x.boat)).size===6&&
+  starts.every(x=>x.startStatus!==null||x.st!==null)&&
   starts.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&
    (x.st===null||(Number.isFinite(x.st)&&x.st>=-1&&x.st<=1)));
  return {status:valid?'parsed_needs_independent_review':'start_table_incomplete',
