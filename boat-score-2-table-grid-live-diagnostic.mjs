@@ -24,6 +24,6 @@ const clean=s=>s.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(
 for(let i=0;i<tables.length;i++){
  if(!/全国/.test(tables[i])||!/当地/.test(tables[i])||!/モーター/.test(tables[i]))continue;
  const grid=expandTableGrid(tables[i]);
- const samples=grid.slice(0,7).map((row,index)=>({row:index+1,cells:row.map((cell,col)=>({col,text:clean(cell.html),originRow:cell.originRow,originCol:cell.originCol})).filter(c=>c.text).slice(0,35)}));
+ const samples=grid.slice(0,7).map((row,index)=>({row:index+1,cells:row.map((cell,col)=>({col,text:index<3?clean(cell.html):null,numberTokens:index>=3&&[3,4,5,6].includes(col)?(clean(cell.html).match(/\\d+(?:\\.\\d+)?/g)||[]).length:null,originRow:cell.originRow,originCol:cell.originCol})).filter(c=>c.text||c.numberTokens!==null).slice(0,35)}));
  console.log('GROUPED_TABLE_GRID',JSON.stringify({tableIndex:i,rows:grid.length,columns:grid[0]?.length||0,samples}));
 }
