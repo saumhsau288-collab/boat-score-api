@@ -123,6 +123,31 @@ jobs:
           else
             echo 'Official snapshot missing; result identity check held.'
           fi
+      - name: Summarize research capture status
+        if: always()
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const d=process.env.CAPTURE_DATE||'',v=Number(process.env.CAPTURE_VENUE),r=Number(process.env.CAPTURE_RACE);
+          const base='prediction-captures/';
+          const official=base+`research-official-${d}-${v}-${r}.json`;
+          const result=base+`research-result-${d}-${v}-${r}.json`;
+          const load=p=>{try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch{return null}};
+          const a=load(official),b=load(result);
+          const lines=['## Research-only race capture',`Selection: ${d} / venue ${v} / race ${r}`,
+            `Official six-racer capture: ${a?.status??'missing'}`,
+            `Result retrieval: ${b?.status??'missing'}`,
+            `Result reason: ${b?.reason??'not available'}`,
+            `Result parser: ${b?.parsedStatus??'not available'}`,
+            `Parsed podium: ${Array.isArray(b?.parsedPodium)?b.parsedPodium.join('-'):'not verified'}`,
+            'Calibration: not authorized (research only)'];
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\\n')+'\\n');
+          console.log(lines.join('\\n'));
+          NODE
       - name: Save research snapshot, even when incomplete
         if: always()
         uses: actions/upload-artifact@v4
