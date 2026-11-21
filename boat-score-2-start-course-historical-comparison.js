@@ -4,11 +4,11 @@ import {evaluateRace} from './boat-score-2-scoring.js';
 import {compareStartAndCourse} from './boat-score-2-start-course-comparison.js';
 const order = (xs) => [...xs].sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat);
 const explicitInstant = value => typeof value==='string' &&
- /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)
+ /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)
  ? Date.parse(value) : NaN;
 const validCalendarDate = value => {
  const d=String(value??'');
- if(!/^20\\d{6}$/.test(d))return false;
+ if(!/^20\d{6}$/.test(d))return false;
  const parsed=new Date(`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}T00:00:00Z`);
  return Number.isFinite(parsed.getTime())&&parsed.toISOString().slice(0,10).replaceAll('-','')===d;
 };
