@@ -23,7 +23,6 @@ export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}
    excluded.push({key,reason:'unverified_pre_deadline_cutoff'});continue;
   }
   if(seen.has(key)){excluded.push({key,reason:'duplicate_race'});continue;}
-  seen.add(key);
   const base=evaluateRace(row.racers),evidence=compareStartAndCourse(row.racers);
   if(base.status!=='evaluated'||evidence.status!=='verified'){
    excluded.push({key,reason:'missing_pre_race_evidence'});continue;
@@ -36,6 +35,7 @@ export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}
    const courseBonus=coursePoints*(6-e.course)/5;
    return {boat:r.boat,score:r.score+stBonus+courseBonus};
   });
+  seen.add(key);
   comparisons.push({key,baseline:result(order(base.racers),row.finishOrder),
    candidate:result(order(adjusted),row.finishOrder)});
  }
