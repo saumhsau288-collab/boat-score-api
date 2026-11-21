@@ -27,6 +27,9 @@ export function buildResearchFeatureSnapshot({date,venue,race,capturedAt,officia
   if(!/^\d{4}$/.test(id)||recent.has(id))return {status:'invalid_recent50_mapping',eligibleForCalibration:false};
   recent.set(id,x);
  }
+ const verifiedEntryCourses=courseByBoat.filter(x=>x?.verified===true&&checked.racers.some(r=>r.boat===x.boat&&r.racerId===String(x.racerId))&&Number.isInteger(x.entryCourse)&&x.entryCourse>=1&&x.entryCourse<=6).map(x=>x.entryCourse);
+ if(new Set(verifiedEntryCourses).size!==verifiedEntryCourses.length)
+  return {status:'duplicate_verified_entry_course',eligibleForCalibration:false};
  const racers=checked.racers.map(r=>{
   const course=courses.get(r.boat),history=recent.get(r.racerId),exhibition=exhibitions.get(r.boat),start=starts.get(r.boat);
   const verifiedStart=start?.verified===true&&String(start.racerId)===r.racerId&&typeof start.startTiming==='number'&&Number.isFinite(start.startTiming)&&start.startTiming>=0&&start.startTiming<=1;
