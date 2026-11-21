@@ -4,7 +4,7 @@ import {rankNationalLocalAverage} from './audit-boat-one-national-local-average.
 export function auditTrifectaFriendlyProfiles(records){
  if(!Array.isArray(records))throw Error('records required');
  const make=()=>({races:0,exactRankOrder:0,topThreeAnyOrder:0,topOneWins:0});
- const groups={topGapLarge:make(),topGapSmall:make(),thirdFourthGapLarge:make(),thirdFourthGapSmall:make(),topThreeAllInside:make(),topThreeMixed:make(),topThreeAllOutside:make(),topOneBoatOne:make(),topOneOther:make()};
+ const groups={topGapLarge:make(),topGapSmall:make(),thirdFourthGapLarge:make(),thirdFourthGapSmall:make(),topThreeAllInside:make(),topThreeMixed:make(),topThreeAllOutside:make(),topOneBoatOne:make(),topOneOther:make(),boatOneTopInside:make(),boatOneTopMixed:make(),boatOneTopOutside:make(),otherTopInside:make(),otherTopMixed:make(),otherTopOutside:make()};
  let valid=0,excluded=0,ties=0;
  for(const r of records){
   let ranked;try{ranked=rankNationalLocalAverage(r?.racers);}catch{excluded++;continue;}
@@ -16,11 +16,13 @@ export function auditTrifectaFriendlyProfiles(records){
   const exact=top3.every((x,i)=>o[i]===x);
   const any=top3.every(x=>o.slice(0,3).includes(x));
   const win=o[0]===top3[0];
+  const placement=top3.every(x=>x<=3)?'Inside':top3.every(x=>x>=4)?'Outside':'Mixed';
   const keys=[
    ranked[0].score-ranked[1].score>=1?'topGapLarge':'topGapSmall',
    ranked[2].score-ranked[3].score>=1?'thirdFourthGapLarge':'thirdFourthGapSmall',
    top3.every(x=>x<=3)?'topThreeAllInside':top3.every(x=>x>=4)?'topThreeAllOutside':'topThreeMixed',
-   top3[0]===1?'topOneBoatOne':'topOneOther'
+   top3[0]===1?'topOneBoatOne':'topOneOther',
+   (top3[0]===1?'boatOneTop':'otherTop')+placement
   ];
   for(const key of keys){const g=groups[key];g.races++;if(exact)g.exactRankOrder++;if(any)g.topThreeAnyOrder++;if(win)g.topOneWins++;}
  }
