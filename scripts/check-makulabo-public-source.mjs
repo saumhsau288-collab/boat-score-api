@@ -24,7 +24,7 @@ try {
    const cells=[...row[0].matchAll(/<(?:th|td)\b[^>]*>[\s\S]*?<\/(?:th|td)>/gi)].map(m=>m[0].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim());
    const boat=Number(cells[0]);
    const finishCounts=cells.slice(2,8).map(v=>/^\d+$/.test(v)?Number(v):null);
-   const nonNumericFinishCells=cells.slice(2,8).map((v,index)=>({finish:index+1,value:v})).filter(x=>!/^\\d+$/.test(x.value)).map(x=>({finish:x.finish,empty:x.value.length===0,hasPercent:x.value.includes('%'),hasDash:/[-－—]/.test(x.value),length:x.value.length}));
+   const nonNumericFinishCells=cells.slice(2,8).map((v,index)=>({finish:index+1,value:v})).filter(x=>!/^\d+$/.test(x.value)).map(x=>({finish:x.finish,empty:x.value.length===0,hasPercent:x.value.includes('%'),hasDash:/[-－—]/.test(x.value),length:x.value.length}));
    const races=/^\d+$/.test(cells[8]??'')?Number(cells[8]):null;
    const sum=finishCounts.every(Number.isInteger)?finishCounts.reduce((a,b)=>a+b,0):null;
    return {boat,cellCount:cells.length,nonNumericFinishCells,countsNumeric:sum!==null,racesNumeric:races!==null,
