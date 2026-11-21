@@ -1,0 +1,35 @@
+name: Inspect live Makulabo heatmap source (research only)
+on:
+  push:
+    branches: [research-cutoff-join-gate-20261120]
+    paths:
+      - '.github/workflows/boat-score-2-research-makulabo-live-check.yml'
+      - 'scripts/inspect-makulabo-heatmap-structure.mjs'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: YYYYMMDD
+        default: '20261121'
+      venue:
+        description: Venue code
+        default: '01'
+      race:
+        description: Race number
+        default: '1'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect source layout without scoring or deployment
+        env:
+          RACE_DATE: ${{ inputs.date || '20261121' }}
+          VENUE: ${{ inputs.venue || '01' }}
+          RACE: ${{ inputs.race || '1' }}
+        run: |
+          node scripts/inspect-makulabo-heatmap-structure.mjs "$RACE_DATE" "$VENUE" "$RACE"
