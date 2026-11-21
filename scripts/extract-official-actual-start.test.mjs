@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {extractOfficialActualStart} from './extract-official-actual-start.mjs';
+const table=(items)=>'<table><thead><tr><th>スタート情報</th></tr></thead><tbody>'+items.map(([b,st])=>'<tr><td><span class="table1_boatImage1Number is-type'+b+'">'+b+'</span><span class="table1_boatImage1TimeInner">'+st+'</span></td></tr>').join('')+'</tbody></table>';
+const ok=extractOfficialActualStart(table([[1,'.20'],[2,'.16 差し'],[3,'.17'],[4,'.28'],[5,'.27'],[6,'.23']]));
+assert.equal(ok.status,'parsed_needs_independent_review');
+assert.deepEqual(ok.starts.map(x=>x.st),[.20,.16,.17,.28,.27,.23]);
+assert.equal(ok.starts[5].entryCourse,6);
+assert.equal(ok.eligibleForCalibration,false);
+assert.equal(extractOfficialActualStart(table([[1,'.20']])).status,'start_table_incomplete');
+assert.equal(extractOfficialActualStart('<p>no table</p>').status,'start_table_missing');
+assert.equal(extractOfficialActualStart(table([[1,'F.01'],[2,'.16'],[3,'.17'],[4,'.28'],[5,'.27'],[6,'.23']])).starts[0].st,null);
+console.log('official actual start parser tests passed');
