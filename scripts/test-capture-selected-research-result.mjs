@@ -10,6 +10,8 @@ const out=await capture(snapshot,{fetchImpl:fake});
 assert.equal(out.status,'official_racelist_result_identity_matched');
 assert.equal(out.independentResultVerification,false);
 assert.equal(out.eligibleForCalibration,false);
+assert.match(out.fetchedAt,/^20\\d{2}-\\d{2}-\\d{2}T/);
+assert.equal(typeof out.raceDateBeforeFetchUtc,'boolean');
 assert.deepEqual(out.parsedPodium,[1,2,3]);
 assert.equal(out.identityCheck.rows.length,6);
 assert.equal(out.parserDiagnostics.hasFinishHeader,true);
