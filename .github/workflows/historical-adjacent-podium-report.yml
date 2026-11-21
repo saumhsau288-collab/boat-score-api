@@ -70,6 +70,7 @@ on:
       - 'scripts/audit-finish-order-pairs.mjs'
       - 'scripts/test-audit-finish-order-pairs.mjs'
       - 'scripts/test-diagnose-holdout-order-errors.mjs'
+      - 'scripts/audit-fixed-winner-paired-days.mjs'
       - 'scripts/evaluate-fixed-winner-second-third.mjs'
       - 'scripts/diagnose-holdout-order-errors.mjs'
       - 'scripts/audit-archived-adjacency.mjs'
