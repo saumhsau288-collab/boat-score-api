@@ -2,7 +2,7 @@ import {classifyTopTwoAbilityPlacement} from './audit-ability-placement.mjs';
 // Exploratory archive analysis. Separate by number of intervening frames to avoid pooled bias.
 export function auditGapStrata(records){
  if(!Array.isArray(records))throw new TypeError('records must be array');
- const byGap=Object.fromEntries([0,1,2,3,4].map(n=>[n,{races:0,betweenSecond:0,betweenPodium:0,bothStrongPodium:0,uniformSecondRate:n/5,uniformPodiumRate:1-((5-n)*(4-n))/(5*4)}]));
+ const byGap=Object.fromEntries([0,1,2,3,4].map(n=>[n,{races:0,betweenSecond:0,betweenPodium:0,bothStrongPodium:0}]));
  let excluded=0;const seen=new Set();
  for(const r of records){
   const p=classifyTopTwoAbilityPlacement(r?.racers),o=r?.finishOrder;
@@ -15,5 +15,5 @@ export function auditGapStrata(records){
   if(p.boats.every(n=>o.slice(0,3).includes(n)))g.bothStrongPodium++;
  }
  for(const g of Object.values(byGap)){g.betweenSecondRate=g.races?g.betweenSecond/g.races:null;g.betweenPodiumRate=g.races?g.betweenPodium/g.races:null;g.bothStrongPodiumRate=g.races?g.bothStrongPodium/g.races:null;}
- return {eligible:Object.values(byGap).reduce((s,g)=>s+g.races,0),excluded,byGap,warning:'Archive win rates are not verified pre-race. Uniform benchmarks are combinatorial illustrations, not realistic race probabilities; winner may be between boats.'};
+ return {eligible:Object.values(byGap).reduce((s,g)=>s+g.races,0),excluded,byGap,warning:'Archive win rates are not verified pre-race. Rates are descriptive and not adjusted for ability, actual entry or winner selection.'};
 }
