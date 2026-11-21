@@ -6,6 +6,7 @@ const date=process.env.SMOKE_DATE||new Intl.DateTimeFormat('en-CA',{timeZone:'As
 const venue=process.env.SMOKE_VENUE||'21';
 const race=process.env.SMOKE_RACE||'1';
 if(!/^(?:[1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^(?:[1-9]|1[0-2])$/.test(race))throw Error('Invalid smoke venue or race');
+const requireReady=process.env.SMOKE_REQUIRE_READY==='true';
 const checks=[['version','/api/version'],['mobile_html','/'],['selected_race','/api/predict/selected-race?'+new URLSearchParams({date,venue,race,mode:'beforeinfo'})]];
 const results=[];
 for(const [name,path] of checks){
@@ -25,6 +26,6 @@ for(const [name,path] of checks){
    missingInputs:name==='selected_race'&&Array.isArray(parsed?.missingInputs)?parsed.missingInputs.slice(0,12):null});
  }catch(error){results.push({name,requestedAt,checkPassed:false,error:String(error?.message||error).slice(0,150)});}
 }
-const pass=results.every(x=>x.checkPassed&& (x.name!=='selected_race'||x.predictionReady!==true||x.ticketShapeValid===true));
-console.log(JSON.stringify({date,venue,race,base,pass,results,note:'Endpoint availability is not proof of valid six-racer inputs, official schedule, or Android UI behavior.'},null,2));
+const pass=results.every(x=>x.checkPassed&& (x.name!=='selected_race'||((!requireReady||x.predictionReady===true)&&(x.predictionReady!==true||x.ticketShapeValid===true))));
+console.log(JSON.stringify({date,venue,race,base,requireReady,pass,results,note:'Endpoint availability is not proof of valid six-racer inputs, official schedule, or Android UI behavior.'},null,2));
 if(!pass)process.exitCode=1;
