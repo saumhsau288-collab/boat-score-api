@@ -30,6 +30,25 @@ jobs:
           node-version: '22'
       - name: Test strict six-row heatmap parser
         run: node scripts/test-parse-makulabo-heatmap-six.mjs
+      - name: Validate live six-row Makulabo counts (no scoring)
+        env:
+          RACE_DATE: ${{ inputs.date || '20261121' }}
+          VENUE: ${{ inputs.venue || '01' }}
+          RACE: ${{ inputs.race || '1' }}
+        run: |
+          node --experimental-default-type=module <<'NODE'
+          import {parseMakulaboHeatmapSix} from './scripts/parse-makulabo-heatmap-six.mjs';
+          const {RACE_DATE,VENUE,RACE}=process.env;
+          const url='https://makulabo-jp.com/data/'+VENUE.padStart(2,'0')+'/'+Number(RACE)+'/heatmap?hd='+RACE_DATE;
+          const res=await fetch(url,{signal:AbortSignal.timeout(20000)});
+          if(!res.ok)throw Error('Makulabo HTTP '+res.status);
+          const parsed=parseMakulaboHeatmapSix(await res.text());
+          console.log('LIVE_MAKULABO_COUNTS',JSON.stringify(parsed));
+          if(!parsed.verified||parsed.racers.length!==6)
+            throw Error('Makulabo six-row finish-count structure not verified');
+          if(parsed.racers.some(r=>r.eligibleAsVerifiedRecent50!==false))
+            throw Error('Unverified source unexpectedly marked eligible for scoring');
+          NODE
       - name: Inspect source layout without scoring or deployment
         env:
           RACE_DATE: ${{ inputs.date || '20261121' }}
