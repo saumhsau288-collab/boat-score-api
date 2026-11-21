@@ -12,7 +12,6 @@ export function auditHighAbilityInnerFinish(reports){
   // Ties at the top make the ability rank ambiguous; exclude them rather than infer.
   if(sorted[0].nationalWinRate===sorted[1].nationalWinRate||sorted[1].nationalWinRate===sorted[2].nationalWinRate){excluded++;continue;}
   const first=sorted[0].boat,second=sorted[1].boat;
-  const key=first===1&&second===2?'top2_in_1_and_2':first===1?'top1_in_1_top2_outside':first!==1&&second===1?'top1_in_1':'other';
   // top1_in_1 is reserved for the highest-ranked boat 1, including only unambiguous cases.
   const actualKey=first===1?(second===2?'top2_in_1_and_2':'top1_in_1_top2_outside'):'other';
   const g=groups[actualKey];g.races++;
