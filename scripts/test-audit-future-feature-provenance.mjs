@@ -17,6 +17,8 @@ assert.equal(ready.originalInputsVerified,false);
 assert.equal(audit({...input,averageST:averageST.map((x,i)=>i===2?{...x,racerId:'9999'}:x)}).averageSTVerified,false);
 assert.equal(audit({...input,makulabo:makulabo.map((x,i)=>i===0?{...x,receivedAt:'2026-11-22T01:01:00Z'}:x)}).makulabo50Verified,false);
 assert.equal(audit({...input,averageST:averageST.map((x,i)=>i===0?{...x,responseSha256:'bad'}:x)}).averageSTVerified,false);
+assert.equal(audit({...input,prediction:{...prediction,receivedAt:'2026-11-22T00:20:00Z'}}).averageSTVerified,false);
+assert.equal(audit({...input,prediction:{...prediction,receivedAt:'2026-11-22T00:20:00Z'}}).makulabo50Verified,false);
 assert.equal(audit({...input,prediction:{...prediction,receivedAt:'2026-11-22T01:01:00Z'}}).status,'held');
 assert.equal(audit({...input,official:{...official,race:5}}).reason,'race_identity_mismatch');
 assert.equal(audit({...input,makulabo:makulabo.slice(1)}).makulabo50Verified,false);
