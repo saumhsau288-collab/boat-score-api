@@ -15,11 +15,13 @@ export function auditScoreResultJoin(capture,officialResults){
   date:row.date,venue:row.venue,race:row.race,
   comparisonStatus:row.status,holdReasons:row.reasons,
   sixBoatOutputScoresPresent:scoreByRecordIndex.get(i)===true,
+  sixBoatRawInputsAuthenticated:false,
   eligibleForCalibration:false
  }));
  return {scope:'SAVED_OUTPUT_SCORE_RESULT_JOIN_READINESS',
   readyResponses:scores.readyResponses,
   validSixBoatOutputScoreSets:scores.validSixBoatOutputScoreSets,
+  authenticatedSixBoatRawInputSets:0,
   resultComparisonsEligible:comparison.compared,
   resultComparisonsHeld:comparison.held,
   holdReasons:comparison.holdReasons,rows,
