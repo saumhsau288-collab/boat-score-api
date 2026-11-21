@@ -25,7 +25,7 @@ export function auditFutureFeatureProvenance({race,official,averageST=[],makulab
      Number.isFinite(x.firstPlaceRate)&&x.firstPlaceRate>=0&&x.firstPlaceRate<=100;
    return racer&&String(x.racerId)===String(racer.racerId)&&x.verified===true&&
     x.date===race.date&&Number(x.venue)===Number(race.venue)&&Number(x.race)===Number(race.race)&&
-    Number.isFinite(captured)&&captured<=cutoff&&typeof x.sourceUrl==='string'&&x.sourceUrl.startsWith('https://')&&
+    Number.isFinite(captured)&&captured<=cutoff&&captured<=time(prediction.receivedAt)&&typeof x.sourceUrl==='string'&&x.sourceUrl.startsWith('https://')&&
     /^[a-f0-9]{64}$/.test(String(x.responseSha256??''))&&validValue;
   });
  };
