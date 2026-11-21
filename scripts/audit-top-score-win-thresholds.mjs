@@ -14,7 +14,7 @@ export function auditTopScoreWinThresholds(records){
   const o=r?.finishOrder;if(r?.resultVerified!==true||!Array.isArray(o)||o.length!==6||new Set(o).size!==6||!o.every(n=>Number.isInteger(n)&&n>=1&&n<=6)){excluded++;continue;}
   if(ranked[0].score===ranked[1].score){tied++;continue;}
   valid++;const top=ranked[0],winner=top.boat===o[0],boatOne=top.boat===1,gap=top.score-ranked[1].score;
-  for(const b of bins)if(top.score>=b.low&&top.score<b.high)add(b,winner,boatOne);
+  for(const b of bands)if(top.score>=b.low&&top.score<b.high)add(b,winner,boatOne);
   for(const b of gaps)if(gap>=b.minimumGap)add(b,winner,boatOne);
  }
  const cumulative=thresholds.map(t=>{const a=make();for(const b of bands)if(b.low>=t){a.races+=b.races;a.wins+=b.wins;a.boatOneRaces+=b.boatOneRaces;a.boatOneWins+=b.boatOneWins;}return {minimumScore:t,...a};});
