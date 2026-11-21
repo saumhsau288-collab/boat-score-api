@@ -11,4 +11,10 @@ assert.equal(run([record('20261121')],[official('20261120')],[result('20261120')
 assert.equal(run([record(undefined)],[official('20261120')],[result('20261120')]).rows[0].status,'held_missing_date');
 assert.equal(run([record('20261120')],[official('20261120'),official('20261120')],[result('20261120')]).joinedCount,0);
 assert.equal(run([record('20261120')],[official('20261120')],[result('20261120'),result('20261120')]).joinedCount,0);
-console.log('Date-scoped retrospective join tests passed');
+const upset=run([record('20261120')],[official('20261120')],[{...result('20261120'),finishOrder:[6,1,2,3,4,5]}]);
+assert.equal(upset.summary.winnerByScoreRank[6],1);
+assert.equal(upset.summary.topScoreByActualFinish[2],1);
+assert.equal(upset.summary.topScoreMisses.length,1);
+assert.equal(upset.summary.topScoreMisses[0].scoreGapToWinner,5);
+assert.equal(upset.eligibleForCalibration,false);
+console.log('Date-scoped retrospective join and rank-distribution tests passed');
