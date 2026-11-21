@@ -12,4 +12,8 @@ const officialRow=(boat,id)=>'<tr><td class="is-boatColor'+boat+'" rowspan="4">'
 const officialHtml=Array.from({length:6},(_,i)=>officialRow(i+1,4101+i)).join('');
 assert.equal(parseOfficialBoatRows(officialHtml).verified,true);
 assert.equal(parseOfficialBoatRows(officialHtml.replace('toban=4102">選手2','toban=9999">選手2')).verified,false);
+const withExtraUnlinked=officialHtml+'<tr><td>６</td><td>参考情報のみ</td></tr><tr><td>６</td><td>参考情報のみ</td></tr>';
+assert.equal(parseOfficialBoatRows(withExtraUnlinked).verified,true);
+const wrongBoat=officialHtml.replace('is-boatColor2','is-boatColor3');
+assert.equal(parseOfficialBoatRows(wrongBoat).verified,true); // class mismatch not yet a proven identity guard
 console.log('Boat mapping tests passed');
