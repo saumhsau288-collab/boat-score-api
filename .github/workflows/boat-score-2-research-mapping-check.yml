@@ -6,6 +6,10 @@ on:
     paths:
       - 'boat-score-2-boat-mapping.js'
       - 'boat-score-2-boat-mapping.test.mjs'
+      - 'boat-score-2-metric-extractor.js'
+      - 'boat-score-2-metric-extractor.test.mjs'
+      - 'boat-score-2-official-pipeline.js'
+      - 'boat-score-2-official-pipeline.test.mjs'
       - '.github/workflows/boat-score-2-research-mapping-check.yml'
   workflow_dispatch:
 permissions:
@@ -20,6 +24,10 @@ jobs:
           node-version: '22'
       - name: Validate boat identity mapping
         run: node --experimental-default-type=module boat-score-2-boat-mapping.test.mjs
+      - name: Validate official metric and morning pipeline integration
+        run: |
+          node --experimental-default-type=module boat-score-2-metric-extractor.test.mjs
+          node --experimental-default-type=module boat-score-2-official-pipeline.test.mjs
       - name: Validate official grouped metric extraction
         run: |
           node --experimental-default-type=module scripts/test-build-official-table-grid.mjs
