@@ -7,6 +7,8 @@ test('saved final scores with no verified result stay held',()=>{
   response:{ready:true,rankedScores:[1,2,3,4,5,6].map(boat=>({boat,score:10+boat}))}}]};
  const out=auditScoreResultJoin(capture,[]);
  assert.equal(out.validSixBoatOutputScoreSets,1);
+ assert.equal(out.authenticatedSixBoatRawInputSets,0);
+ assert.equal(out.rows[0].sixBoatRawInputsAuthenticated,false);
  assert.equal(out.resultComparisonsEligible,0);
  assert.equal(out.resultComparisonsHeld,1);
  assert.equal(out.rows[0].sixBoatOutputScoresPresent,true);
