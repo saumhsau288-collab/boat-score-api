@@ -75,6 +75,7 @@ jobs:
           node --check scripts/capture-official-daily-venue-candidates.mjs
           node scripts/test-classify-daily-venue-evidence.mjs
       - name: Probe official race schedule without claiming verification
+        continue-on-error: true
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
         run: node scripts/capture-official-daily-venue-candidates.mjs
