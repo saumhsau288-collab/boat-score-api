@@ -14,6 +14,10 @@ export function prepareMakulaboMorningEvidence(official,heatmap,cutoffAudit){
    !Array.isArray(h.counts)||h.counts.length!==6||
    h.counts.some(n=>!Number.isInteger(n)||n<0)||
    h.counts.reduce((a,b)=>a+b,0)!==h.runs)return held('invalid_heatmap_counts');
+  if(typeof o.name==='string'&&typeof h.name==='string'){
+   const norm=s=>s.normalize('NFKC').replace(/[\s\u3000・･]/g,'');
+   if(norm(o.name)!==norm(h.name))return held('racer_name_mismatch');
+  }
   if(h.runs!==50)return held('not_exactly_50_races');
   if(h.blankAsZeroInferred)return held('inferred_blank_cells');
   rows.push({boat,racerId:String(o.racerId),winRate:Math.round(h.counts[0]/50*10000)/100,
