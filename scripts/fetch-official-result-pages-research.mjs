@@ -16,19 +16,23 @@ export async function fetchOfficialResultPages(capture,{fetchImpl=fetch,limit=12
  for(const target of targets){
   const url=target.officialResultPageUrl;
   if(!officialHost(url))throw Error('Unexpected result URL');
+  const requestedAt=new Date().toISOString();
   try {
    const res=await fetchImpl(url,{redirect:'error',signal:AbortSignal.timeout(timeoutMs),headers:{accept:'text/html'}});
+   // Never accept a different final URL as evidence for the requested race.
+   if(res.url && res.url!==url)throw Error('Final URL mismatch');
    const contentType=res.headers.get('content-type')||'';
    if(!res.ok||!/^text\/html(?:;|$)/i.test(contentType))throw Error('Unexpected status or content type');
    const html=await res.text();
    if(html.length<100||html.length>2000000)throw Error('Unexpected HTML size');
    pages.push({date:target.date,venue:target.venue,race:target.race,url,status:'raw_html_saved',
+    requestedAt,receivedAt:new Date().toISOString(),finalUrl:res.url||null,
     fetchedAt:new Date().toISOString(),sha256:crypto.createHash('sha256').update(html).digest('hex'),
     html,resultVerified:false,officialCutoffVerified:false});
   }catch(e){
    const error=String(e?.message||e).slice(0,160);
-   const reason=/timeout|timed out|abort/i.test(error)?'timeout':/redirect/i.test(error)?'redirect_rejected':/status or content type/i.test(error)?'http_status_or_content_type':/html size/i.test(error)?'html_size_invalid':'network_or_other';
-   pages.push({date:target.date,venue:target.venue,race:target.race,url,status:'fetch_failed',reason,error,resultVerified:false,officialCutoffVerified:false});
+   const reason=/timeout|timed out|abort/i.test(error)?'timeout':/Final URL mismatch/i.test(error)?'final_url_mismatch':/redirect/i.test(error)?'redirect_rejected':/status or content type/i.test(error)?'http_status_or_content_type':/html size/i.test(error)?'html_size_invalid':'network_or_other';
+   pages.push({date:target.date,venue:target.venue,race:target.race,url,requestedAt,status:'fetch_failed',reason,error,resultVerified:false,officialCutoffVerified:false});
   }
  }
  return {method:'raw_official_result_page_retrieval_unverified',targets:targets.length,pages,
