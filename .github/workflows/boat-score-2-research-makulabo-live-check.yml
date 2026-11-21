@@ -7,6 +7,7 @@ on:
       - 'scripts/inspect-makulabo-heatmap-structure.mjs'
       - 'scripts/parse-makulabo-heatmap-six.mjs'
       - 'scripts/test-parse-makulabo-heatmap-six.mjs'
+      - 'scripts/check-live-official-makulabo-identity.mjs'
   workflow_dispatch:
     inputs:
       date:
@@ -49,6 +50,12 @@ jobs:
           if(parsed.racers.some(r=>r.eligibleAsVerifiedRecent50!==false))
             throw Error('Unverified source unexpectedly marked eligible for scoring');
           NODE
+      - name: Verify six racer identities against official source
+        env:
+          RACE_DATE: ${{ inputs.date || '20261121' }}
+          VENUE: ${{ inputs.venue || '01' }}
+          RACE: ${{ inputs.race || '1' }}
+        run: node scripts/check-live-official-makulabo-identity.mjs "$RACE_DATE" "$VENUE" "$RACE"
       - name: Inspect source layout without scoring or deployment
         env:
           RACE_DATE: ${{ inputs.date || '20261121' }}
