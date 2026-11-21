@@ -5,6 +5,13 @@ import {expandTableGrid} from './boat-score-2-table-grid-research.js';
 const plain=s=>String(s||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
 const firstNumber=(html,index)=>{const matches=plain(html).match(/\d+(?:\.\d+)?/g)||[];return matches[index]===undefined?null:Number(matches[index]);};
 const boatNumber=s=>{const t=plain(s).normalize('NFKC');return /^[1-6]$/.test(t)?Number(t):null;};
+function racerName(html,id) {
+ const links=[...String(html||'').matchAll(/<a\\b[^>]*href=[\"']([^\"']*)[\"'][^>]*>([\\s\\S]*?)<\\/a>/gi)]
+   .filter(m=>m[1].includes('racersearch/profile')&&m[1].includes('toban='+id));
+ if(links.length!==1)return null;
+ const name=plain(links[0][2]);
+ return name&&name.length<=60&&!/^[0-9]+$/.test(name)?name:null;
+}
 function profileId(html) {
  const match=String(html||'').match(/(?:\?|&)toban=(\d{4})(?:[&#"']|$)/i);
  return match?match[1]:null;
@@ -37,6 +44,7 @@ export function extractSixOfficialRacers(html) {
    const racerId=profileId(identityHtml);
    const identityText=plain(identityHtml);
    if(!racerId||!identityText.includes(racerId))return {verified:false,reason:'racer_identity_unverified',racers:[]};
+   const name=racerName(identityHtml,racerId);
    const st=firstNumber(row[3]?.html,2); // F0 L0 0.14
    const nationalWinRate=firstNumber(row[4]?.html,0);
    const localWinRate=firstNumber(row[5]?.html,0);
@@ -48,7 +56,7 @@ export function extractSixOfficialRacers(html) {
    if(seenBoats.has(boat)||seenIds.has(racerId))
     return {verified:false,reason:'duplicate_boat_or_racer',racers:[]};
    seenBoats.add(boat);seenIds.add(racerId);
-   racers.push({boat,racerId,averageSt:st,averageStAvailable:st!==null,nationalWinRate,localWinRate,motorTwoWinRate});
+   racers.push({boat,racerId,name,averageSt:st,averageStAvailable:st!==null,nationalWinRate,localWinRate,motorTwoWinRate});
   }
   const verified=racers.length===6&&[1,2,3,4,5,6].every(b=>seenBoats.has(b));
   return {verified,racers:verified?racers.sort((a,b)=>a.boat-b.boat):[],
