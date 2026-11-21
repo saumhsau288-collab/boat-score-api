@@ -4,6 +4,7 @@ import {officialRacelistUrl} from '../boat-score-2-official.js';
 import {extractOfficialMetrics} from '../boat-score-2-metric-extractor.js';
 import {parseMakulaboHeatmapSix} from './parse-makulabo-heatmap-six.mjs';
 import {matchRecent50Racers} from '../boat-score-2-recent50-identity.js';
+import {evaluateMorningFromSources} from '../boat-score-2-morning-pipeline.js';
 const [date,venue,race]=process.argv.slice(2);
 const selection={date,venue,race};
 const officialTarget=officialRacelistUrl(selection);
@@ -32,4 +33,20 @@ for(const match of matched.matches){
  const recent=makulabo.racers[match.recentIndex];
  if(recent.boat!==match.boat)throw Error('Heatmap boat mismatch for boat '+match.boat);
 }
+const joined=matched.matches.map(match=>{
+ const officialRacer=official.racers.find(r=>r.boat===match.boat);
+ const recent=makulabo.racers[match.recentIndex];
+ return {boat:match.boat,racerId:officialRacer.racerId,name:officialRacer.name,
+  observedRuns:recent.runs,observedFirstPlaceRate:recent.firstPlaceRate,
+  blankAsZeroInferred:recent.blankAsZeroInferred,
+  verified:false,sourceVerified:false,
+  eligibleForMorningScoring:false};
+});
+console.log('OFFICIAL_MAKULABO_JOINED_RESEARCH',JSON.stringify(joined));
+const gated=evaluateMorningFromSources({official:official.racers,
+ recent50:joined.map(r=>({racerId:r.racerId,winRate:r.observedFirstPlaceRate,
+ verified:r.verified,sourceVerified:r.sourceVerified}))});
+if(gated.status!=='insufficient_data'||gated.source!=='recent50')
+ throw Error('Research-only Makulabo values incorrectly passed morning score gate');
+console.log('RECENT50_SCORE_GATE_BLOCKED',JSON.stringify({status:gated.status,source:gated.source,reason:gated.reason}));
 console.log('SIX_BOAT_IDENTITY_VERIFIED_NO_SCORING');
