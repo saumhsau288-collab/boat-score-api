@@ -28,6 +28,7 @@ export function evaluatePositionModelHoldout(reports){
  };
  const byDate={};
  const outsideWinnerCandidate={races:0,otherWins:0,highestOtherWins:0,byBoat:{},actualOtherWinnerByBoat:Object.fromEntries(Array.from({length:5},(_,i)=>[String(i+2),0]))};
+ const hybridTrifecta={races:0,hybridExact:0,originalExact:0,fixed123Exact:0,hybridOnlyVsOriginal:0,originalOnlyVsHybrid:0,switchedRaces:0,byDate:{}};
  const challengerGapTwoPlusTrifecta={races:0,challengerWins:0,challengerTop3:0,oneTop3:0,challengerFirstModelExact:0,forcedWinnerExact:0,originalModelExact:0,fixed123Exact:0,forcedOnlyVsOriginal:0,originalOnlyVsForced:0};
  const challengerGapTwoPlusByDate={};
  const challengerGapTwoPlus={inner234:{races:0,challengerWins:0,oneWins:0},outer56:{races:0,challengerWins:0,oneWins:0}};
@@ -41,6 +42,14 @@ export function evaluatePositionModelHoldout(reports){
   const model=predict(ranked),rank=ranked.slice(0,3).map(x=>x.boat),actual=o.slice(0,3);
   const exact=x=>x.every((n,i)=>n===actual[i]);
   const m=exact(model),f=exact([1,2,3]),r=exact(rank);
+  const one=ranked.find(x=>x.boat===1),bestOther=ranked.find(x=>x.boat!==1);
+  const switchWinner=ranked.findIndex(x=>x.boat===1)>=3&&bestOther.boat<=4&&bestOther.score-one.score>=2;
+  const hybrid=switchWinner?predict(ranked,bestOther.boat):model;
+  const h=exact(hybrid);
+  hybridTrifecta.races++;hybridTrifecta.hybridExact+=h?1:0;hybridTrifecta.originalExact+=m?1:0;hybridTrifecta.fixed123Exact+=f?1:0;hybridTrifecta.switchedRaces+=switchWinner?1:0;
+  hybridTrifecta.hybridOnlyVsOriginal+=h&&!m?1:0;hybridTrifecta.originalOnlyVsHybrid+=m&&!h?1:0;
+  const hybridDay=hybridTrifecta.byDate[date]??={races:0,switchedRaces:0,hybridExact:0,originalExact:0,fixed123Exact:0};
+  hybridDay.races++;hybridDay.switchedRaces+=switchWinner?1:0;hybridDay.hybridExact+=h?1:0;hybridDay.originalExact+=m?1:0;hybridDay.fixed123Exact+=f?1:0;
   counts.races++;counts.modelExact+=m?1:0;counts.fixed123Exact+=f?1:0;counts.rankExact+=r?1:0;
   const boatOneRank=ranked.findIndex(x=>x.boat===1)+1;
   if(boatOneRank>=4){
@@ -88,5 +97,5 @@ export function evaluatePositionModelHoldout(reports){
   counts.modelOnlyVsFixed+=m&&!f?1:0;counts.fixedOnlyVsModel+=f&&!m?1:0;
   counts.modelOnlyVsRank+=m&&!r?1:0;counts.rankOnlyVsModel+=r&&!m?1:0;
  }
- return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,otherLeadGap,challengerGapTwoPlus,challengerGapTwoPlusByDate,challengerGapTwoPlusTrifecta,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
+ return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,otherLeadGap,challengerGapTwoPlus,challengerGapTwoPlusByDate,challengerGapTwoPlusTrifecta,hybridTrifecta,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
 }
