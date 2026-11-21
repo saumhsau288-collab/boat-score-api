@@ -8,6 +8,7 @@ import {evaluateMorningFromSources} from '../boat-score-2-morning-pipeline.js';
 import {auditMakulaboHistoricalCutoff} from './audit-makulabo-historical-cutoff.mjs';
 import {prepareMakulaboMorningEvidence} from './prepare-makulabo-morning-evidence.mjs';
 import {diagnoseMakulaboSixSamples} from './diagnose-makulabo-six-samples.mjs';
+import {reportHistoricalEvidenceReadiness} from './report-historical-evidence-readiness.mjs';
 const [date,venue,race]=process.argv.slice(2);
 const sourceCaptureAt=new Date().toISOString();
 const selection={date,venue,race};
@@ -55,6 +56,16 @@ console.log('HISTORICAL_CUTOFF_GATE_BLOCKED',JSON.stringify(historicalGate));
 const perBoat=diagnoseMakulaboSixSamples(official.racers,makulabo.racers);
 if(perBoat.eligibleForScoring!==false||perBoat.boats.length!==6)throw Error('Invalid per-boat diagnostics');
 console.log('LIVE_MAKULABO_PER_BOAT_DIAGNOSTIC',JSON.stringify(perBoat));
+const archivedOfficial={date,venue,race:Number(race),preRaceIndependentlyVerified:false,
+ racers:official.racers.map(r=>({...r,sourceVerified:true,entryCourseVerified:false,recent50Verified:false}))};
+const archivedMakulabo={status:'held',identityReview:{verified:matched.verified},
+ finishSample:{racers:makulabo.racers.map(r=>({boat:r.boat,runs:r.runs,finishCounts:r.counts,
+ sourceName:r.name,sourceRacerId:null,sourceVerified:false}))}};
+const readiness=reportHistoricalEvidenceReadiness({records:[],archivedPairs:[{official:archivedOfficial,makulabo:archivedMakulabo}]});
+if(readiness.eligibleForHistoricalWeightComparison!==0||readiness.eligibleForDeployment!==false)
+ throw Error('Live research-only source was improperly admitted to historical tuning');
+console.log('LIVE_HISTORICAL_EVIDENCE_READINESS',JSON.stringify({eligibleForHistoricalWeightComparison:readiness.eligibleForHistoricalWeightComparison,
+ missing:readiness.archived[0].missing,eligibleForDeployment:readiness.eligibleForDeployment}));
 const sampleAudit=prepareMakulaboMorningEvidence(official.racers,makulabo.racers,historicalGate);
 const diagnosticOnly=prepareMakulaboMorningEvidence(official.racers,makulabo.racers,{eligible:true});
 console.log('LIVE_MAKULABO_SAMPLE_DIAGNOSTIC',JSON.stringify({status:diagnosticOnly.status,reason:diagnosticOnly.reason,warning:'Hypothetical cutoff approval for sample diagnosis only; never score'}));
