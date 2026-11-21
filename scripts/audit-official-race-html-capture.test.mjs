@@ -13,11 +13,18 @@ test('reports identity and cutoff candidates without granting verified status',(
  assert.equal(out.officialCutoffVerified,false);
 });
 test('does not accept ambiguous or missing race markers as verification',()=>{
- const out=auditOfficialRaceHtmlCapture({html:html+'<a href="?hd=20261120&jcd=18&rno=2">other</a>',metadata});
+ const altered=html+'<a href="?hd=20261120&jcd=18&rno=2">other</a>';
+ const out=auditOfficialRaceHtmlCapture({html:altered,metadata:{...metadata,sha256:createHash('sha256').update(altered).digest('hex')}});
  assert.equal(out.identity.verified,false);
  assert.equal(out.eligibleForCalibration,false);
 });
 test('rejects invalid metadata and non-race-specific index capture',()=>{
  assert.equal(auditOfficialRaceHtmlCapture({html,metadata:{...metadata,sha256:'invalid'}}).status,'invalid_capture');
  assert.equal(auditOfficialRaceHtmlCapture({html,metadata:{...metadata,expected:{...metadata.expected,race:null}}}).status,'race_specific_capture_required');
+});
+
+test('rejects altered official HTML when the stored SHA-256 no longer matches',()=>{
+ const out=auditOfficialRaceHtmlCapture({html:html+' tampered',metadata});
+ assert.equal(out.status,'capture_hash_mismatch');
+ assert.equal(out.eligibleForCalibration,false);
 });
