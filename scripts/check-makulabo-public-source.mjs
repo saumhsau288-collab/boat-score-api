@@ -11,14 +11,14 @@ try {
  const scriptTags=[...html.matchAll(/<script\b[^>]*>/gi)].map(m=>m[0]);
  const externalScripts=scriptTags.filter(tag=>/\bsrc\s*=/.test(tag));
  const dataAttributeNames=[...new Set([...html.matchAll(/\b(data-[a-z][a-z0-9-]*)\s*=/gi)].map(m=>m[1].toLowerCase()))].sort().slice(0,30);
- const tableSummaries=[...html.matchAll(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/gi)].slice(0,3).map((m,index)=>{
+ const tableSummaries=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].slice(0,3).map((m,index)=>{
   const table=m[0];
-  const rows=[...table.matchAll(/<tr\\b[^>]*>[\\s\\S]*?<\\/tr>/gi)];
-  return {index,rowCount:rows.length,headerCellCount:(table.match(/<th\\b/gi)||[]).length,
-   dataCellCount:(table.match(/<td\\b/gi)||[]).length,
+  const rows=[...table.matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)];
+  return {index,rowCount:rows.length,headerCellCount:(table.match(/<th\b/gi)||[]).length,
+   dataCellCount:(table.match(/<td\b/gi)||[]).length,
    firstRows:rows.slice(0,3).map(row=>({
-    cells:(row[0].match(/<(?:th|td)\\b/gi)||[]).length,
-    hasNumericToken:/\\d/.test(row[0]),
+    cells:(row[0].match(/<(?:th|td)\b/gi)||[]).length,
+    hasNumericToken:/\d/.test(row[0]),
     hasWinRateLabel:/勝率|1着率|１着率/.test(row[0]),
     hasRecent50Label:/直近50走|過去50走|最近50走/.test(row[0])
    }))};
