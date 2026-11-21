@@ -31,5 +31,6 @@ try{
  if(!result.verified)process.exit();
  console.log(JSON.stringify({status:'official_makulabo_join_verified',date,venue,race,
   racers:result.racers.map(r=>({boat:r.boat,racerId:r.racerId,runs:r.runs,firstPlaceRate:r.firstPlaceRate,top2Rate:r.top2Rate,top3Rate:r.top3Rate,matchMethod:r.matchMethod})),
-  scoreChangeApplied:false,warning:'Overall finish rates only; no course-specific rate or prediction score is asserted.'},null,2));
+  preRaceSnapshotAuthenticated:false,eligibleForHistoricalBacktest:false,
+  scoreChangeApplied:false,warning:'Identity and totals verified, but capture time and pre-race authenticity are not independently proven; no score or backtest use.'},null,2));
 }catch(e){console.error('Official/Makulabo join failed:',e.message);process.exitCode=1;}
