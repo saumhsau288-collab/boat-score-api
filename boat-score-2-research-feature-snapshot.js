@@ -39,9 +39,12 @@ export function buildResearchFeatureSnapshot({date,venue,race,capturedAt,officia
    exhibitionTime:verifiedExhibition?exhibition.exhibitionTime:null,
    exhibitionTimeVerified:verifiedExhibition,weather:null};
  });
+ const missing=['independently_verified_official_cutoff','independently_verified_official_result','pre_race_source_authentication'];
+ if(!racers.every(r=>r.startTimingVerified))missing.push('start_timing');
+ if(!racers.every(r=>r.exhibitionTimeVerified))missing.push('exhibition');
+ missing.push('weather');
  return {status:'captured_research_inputs',date,venue,race,capturedAt,
   source:'verified_official_metrics',racers,eligibleForCalibration:false,
-  missing:['independently_verified_official_cutoff','independently_verified_official_result','pre_race_source_authentication',
-   'start_timing','exhibition','weather'],
+  missing,
   warning:'CapturedAt is a recorder timestamp, not proof of pre-race availability; boat and entry course are distinct.'};
 }
