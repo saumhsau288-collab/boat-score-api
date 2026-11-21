@@ -9,7 +9,15 @@ if(!response.ok)throw Error('official_http_'+response.status);
 const html=await response.text();
 if(html.length>2_000_000)throw Error('html_too_large');
 const six=extractSixOfficialRacers(html);
-console.log('SIX_RACERS_VERIFICATION',JSON.stringify(six));
+// Do not print racer names, registration numbers or raw official cell contents.
+const safeDiagnostic={verified:six.verified,reason:six.reason??null,verifiedCount:six.racers?.length??0};
+if(!six.verified&&six.diagnostics){
+ const d=six.diagnostics;
+ safeDiagnostic.failedBoat=d.boat??null;
+ safeDiagnostic.metrics=Object.fromEntries(['st','nationalWinRate','localWinRate','motorTwoWinRate'].map(k=>[k,{present:typeof d[k]==='number'&&Number.isFinite(d[k]),valueType:typeof d[k]}]));
+ safeDiagnostic.rawShapes=Object.fromEntries(Object.entries(d.raw??{}).map(([k,v])=>[k,{numberTokens:(String(v).match(/\\d+(?:\\.\\d+)?/g)||[]).length,hasDash:/[-－―]/.test(String(v))}]));
+}
+console.log('SIX_RACERS_VERIFICATION',JSON.stringify(safeDiagnostic));
 if (!six.verified) process.exitCode = 1;
 const tables=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map(m=>m[0]);
 const clean=s=>s.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim().slice(0,40);
