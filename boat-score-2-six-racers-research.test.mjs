@@ -37,4 +37,12 @@ assert.equal(missingSt.racers[0].averageSt,null);
 assert.equal(missingSt.racers[0].averageStAvailable,false);
 assert.equal(missingSt.racers[0].nationalWinRate,4.42);
 assert.equal(missingSt.racers[0].motorTwoWinRate,39.48);
+// F/L may be omitted or rearranged by the official layout; ST is identified by shape.
+const noCounts=extractSixOfficialRacers(fixture().replace('F0 L0 0.14','0.14'));
+assert.equal(noCounts.verified,true,JSON.stringify(noCounts));
+assert.equal(noCounts.racers[0].averageSt,0.14);
+const ambiguousSt=extractSixOfficialRacers(fixture().replace('F0 L0 0.14','F0 L0 0.14 0.17'));
+assert.equal(ambiguousSt.verified,true,JSON.stringify(ambiguousSt));
+assert.equal(ambiguousSt.racers[0].averageSt,null);
+assert.equal(ambiguousSt.racers[0].averageStAvailable,false);
 console.log('Six-racer official extraction research tests passed');
