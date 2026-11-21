@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {auditRankFinishWithOfficial} from './audit-rank-finish-official.mjs';
+const scores=Array.from({length:6},(_,i)=>({boat:i+1,score:6-i}));
+const officialRows=Array.from({length:6},(_,i)=>({boat:i+1}));
+const record=date=>({date,venue:2,race:1,response:{ready:true,rankedScores:scores}});
+const official=date=>({date,venue:2,race:1,comparison:{rows:officialRows}});
+const result=date=>({date,venue:2,race:1,verified:true,finishOrder:[1,2,3,4,5,6]});
+const run=(savedRecords,officialRaces,results)=>auditRankFinishWithOfficial({savedRecords,officialRaces,results});
+assert.equal(run([record('20261120')],[official('20261120')],[result('20261120')]).joinedCount,1);
+assert.equal(run([record('20261121')],[official('20261120')],[result('20261120')]).joinedCount,0);
+assert.equal(run([record(undefined)],[official('20261120')],[result('20261120')]).rows[0].status,'held_missing_date');
+assert.equal(run([record('20261120')],[official('20261120'),official('20261120')],[result('20261120')]).joinedCount,0);
+assert.equal(run([record('20261120')],[official('20261120')],[result('20261120'),result('20261120')]).joinedCount,0);
+console.log('Date-scoped retrospective join tests passed');
