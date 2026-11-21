@@ -66,3 +66,38 @@ jobs:
           lines.push('These are live-source diagnostics, not validated predictions. Missing or unverified data must not be filled with guessed values.');
           appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
           NODE
+      - name: Inspect official grouped table shape without making boat assignments
+        run: |
+          node --input-type=module <<'NODE'
+          import {appendFileSync} from 'node:fs';
+          const u=new URL('https://www.boatrace.jp/owpc/pc/race/racelist');
+          u.search=new URLSearchParams({rno:String(Number(process.env.RACE)),jcd:process.env.VENUE,hd:process.env.RACE_DATE}).toString();
+          const clean=s=>s.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim().slice(0,55);
+          try{
+            const res=await fetch(u,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(25000)});
+            if(!res.ok)throw Error('Official site HTTP '+res.status);
+            const html=await res.text();
+            if(html.length>2_000_000)throw Error('Official HTML exceeded 2 MB inspection limit');
+            const tables=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map(m=>m[1]);
+            const table=tables.find(t=>/全国/.test(t)&&/当地/.test(t)&&/モーター/.test(t));
+            if(!table)throw Error('Grouped metric table absent');
+            const rows=[...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>m[1]);
+            const sample=rows.slice(0,10).map((row,i)=>{
+              const cells=[...row.matchAll(/<(th|td)\b([^>]*)>([\s\S]*?)<\/\1>/gi)].map(m=>({
+                tag:m[1].toLowerCase(),colspan:(m[2].match(/\bcolspan=["']?(\d+)/i)||[])[1]||'1',
+                rowspan:(m[2].match(/\browspan=["']?(\d+)/i)||[])[1]||'1',
+                class:(m[2].match(/\bclass=["']([^"']+)/i)||[])[1]?.slice(0,80)||'',
+                text:clean(m[3]),racerId:(m[3].match(/(?:\?|&)toban=(\d{4})/i)||[])[1]||null
+              }));
+              return {row:i+1,cellCount:cells.length,cells:cells.slice(0,i<3?30:26)};
+            });
+            console.log('OFFICIAL_GROUPED_TABLE_SHAPE',JSON.stringify({rowCount:rows.length,sample}));
+            const fence=String.fromCharCode(96).repeat(3);
+            appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+              '\n### Official grouped HTML shape (inspection only)\n'+fence+'json\n'+
+              JSON.stringify({rowCount:rows.length,sample},null,2)+'\n'+fence+'\n');
+          }catch(e){
+            console.log('OFFICIAL_GROUPED_TABLE_SHAPE_ERROR',String(e));
+            appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n### Official grouped HTML shape unavailable\n'+String(e)+'\n');
+          }
+          NODE
