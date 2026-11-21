@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {compareHistoricalStartCourse} from './boat-score-2-start-course-historical-comparison.js';
 
 const makeRace = () => ({
- date:'20261119',venue:1,race:1,preRaceSnapshot:true,resultVerified:true,
+ date:'20261119',venue:1,race:1,preRaceSnapshot:true,resultVerified:true,officialResultSourceVerified:true,raceIdentityVerified:true,
  capturedAt:'2026-11-19T00:00:00.000Z',officialCutoffAt:'2026-11-19T02:00:00.000Z',officialCutoffVerified:true,
  finishOrder:[1,2,3,4,5,6],
  racers:Array.from({length:6},(_,i)=>({
@@ -59,4 +59,11 @@ test('an ineligible record cannot block a later valid capture of the same race',
  assert.equal(out.eligible,1);
  assert.equal(out.excluded,1);
  assert.equal(out.excludedDetails[0].reason,'missing_pre_race_evidence');
+});
+
+test('rejects official result without independent source and race identity verification',()=>{
+ const race=makeRace();race.officialResultSourceVerified=false;
+ assert.equal(compareHistoricalStartCourse([race]).excludedDetails[0].reason,'unverified_official_result_identity');
+ race.officialResultSourceVerified=true;race.raceIdentityVerified=false;
+ assert.equal(compareHistoricalStartCourse([race]).eligible,0);
 });
