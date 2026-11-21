@@ -5,7 +5,9 @@ const ascii=s=>s.replace(/[０-９]/g,c=>String(c.charCodeAt(0)-65296));
 export function parseSavedOfficialResultPages(report){
  if(!Array.isArray(report?.pages))throw Error('Expected pages[]');
  const rows=report.pages.map(p=>{
-  const base={date:p.date,venue:p.venue,race:p.race,url:p.url,sha256:p.sha256??null,resultVerified:false,officialCutoffVerified:false};
+  const base={date:p.date,venue:p.venue,race:p.race,url:p.url,finalUrl:p.finalUrl??null,
+   requestedAt:p.requestedAt??null,receivedAt:p.receivedAt??null,
+   sha256:p.sha256??null,resultVerified:false,officialCutoffVerified:false};
   if(p.status!=='raw_html_saved'||typeof p.html!=='string')return {...base,status:'not_saved',reason:p.error??'No HTML'};
   if(typeof p.sha256!=='string'||!/^([a-f0-9]{64})$/.test(p.sha256)||
      crypto.createHash('sha256').update(p.html).digest('hex')!==p.sha256)
