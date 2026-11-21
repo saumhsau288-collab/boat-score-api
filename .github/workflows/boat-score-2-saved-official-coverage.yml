@@ -1,0 +1,46 @@
+name: Research saved-to-official twelve-race coverage
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/boat-score-2-saved-official-coverage.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download actual saved predictions and 72-boat official comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          for id in 14586303082 14701499660; do
+            gh api "/repos/${{ github.repository }}/actions/artifacts/$id/zip" > "prediction-captures/$id.zip"
+            unzip -o "prediction-captures/$id.zip" -d prediction-captures
+          done
+      - name: Audit race identity and evidence coverage
+        run: |
+          node scripts/test-audit-saved-official-coverage.mjs
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          import {auditSavedOfficialCoverage} from './scripts/audit-saved-official-coverage.mjs';
+          const saved=JSON.parse(fs.readFileSync('prediction-captures/20261120-44639859914.json','utf8'));
+          const official=JSON.parse(fs.readFileSync('prediction-captures/twelve-race-official-feature-comparison.json','utf8'));
+          const report=auditSavedOfficialCoverage({savedRecords:saved.records,officialRaces:official.races});
+          if(report.savedRaceCount!==13||report.officialRaceCount!==12||report.joinedRaceCount!==12||
+             report.missingOfficialRaces.length!==1||report.eligibleForCalibration!==false)throw Error('unexpected actual coverage');
+          fs.writeFileSync('prediction-captures/actual-saved-official-coverage.json',JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify({saved:report.savedRaceCount,official:report.officialRaceCount,joined:report.joinedRaceCount,missing:report.missingOfficialRaces}));
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-saved-official-coverage-${{ github.run_id }}
+          path: prediction-captures/actual-saved-official-coverage.json
+          retention-days: 30
