@@ -20,11 +20,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Capture Shimonoseki 5R historical official HTML
+      - name: Capture Shimonoseki 4R, 5R, 6R historical official HTML
         env:
           RESEARCH_VENUE: '21'
-          RESEARCH_RACE: '5'
-        run: node scripts/probe-official-racelist-by-venue.mjs
+        run: |
+          for race in 4 5 6; do
+            RESEARCH_RACE="$race" node scripts/probe-official-racelist-by-venue.mjs
+          done
       - name: Archive raw HTML and unverified cutoff diagnostic
         if: always()
         uses: actions/upload-artifact@v4
