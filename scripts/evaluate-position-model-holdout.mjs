@@ -27,6 +27,7 @@ export function evaluatePositionModelHoldout(reports){
   return best;
  };
  const byDate={};
+ const outsideWinnerCandidate={races:0,otherWins:0,highestOtherWins:0,highestOtherBoatWins:0,byBoat:{}};
  const byBoatOneRank=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,boatOneWins:0,otherWins:0,modelExact:0}]));
  const byActualWinner=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,modelExact:0,fixed123Exact:0,rankExact:0}]));
  const byPredictedWinner=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,modelExact:0,fixed123Exact:0,rankExact:0}]));
@@ -37,6 +38,14 @@ export function evaluatePositionModelHoldout(reports){
   const m=exact(model),f=exact([1,2,3]),r=exact(rank);
   counts.races++;counts.modelExact+=m?1:0;counts.fixed123Exact+=f?1:0;counts.rankExact+=r?1:0;
   const boatOneRank=ranked.findIndex(x=>x.boat===1)+1;
+  if(boatOneRank>=4){
+   outsideWinnerCandidate.races++;
+   const bestOther=ranked.find(x=>x.boat!==1).boat;
+   const otherWin=actual[0]!==1;
+   outsideWinnerCandidate.otherWins+=otherWin?1:0;
+   outsideWinnerCandidate.highestOtherWins+=actual[0]===bestOther?1:0;
+   const cell=outsideWinnerCandidate.byBoat[String(bestOther)]??={selected:0,wins:0};cell.selected++;cell.wins+=actual[0]===bestOther?1:0;
+  }
   const rankGroup=byBoatOneRank[String(boatOneRank)];rankGroup.races++;rankGroup.boatOneWins+=actual[0]===1?1:0;rankGroup.otherWins+=actual[0]!==1?1:0;rankGroup.modelExact+=m?1:0;
   const actualWinner=byActualWinner[String(actual[0])];actualWinner.races++;actualWinner.modelExact+=m?1:0;actualWinner.fixed123Exact+=f?1:0;actualWinner.rankExact+=r?1:0;
   const winner=byPredictedWinner[String(model[0])];winner.races++;winner.modelExact+=m?1:0;winner.fixed123Exact+=f?1:0;winner.rankExact+=r?1:0;
@@ -44,5 +53,5 @@ export function evaluatePositionModelHoldout(reports){
   counts.modelOnlyVsFixed+=m&&!f?1:0;counts.fixedOnlyVsModel+=f&&!m?1:0;
   counts.modelOnlyVsRank+=m&&!r?1:0;counts.rankOnlyVsModel+=r&&!m?1:0;
  }
- return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
+ return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
 }
