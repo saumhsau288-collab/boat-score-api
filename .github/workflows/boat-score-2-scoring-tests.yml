@@ -78,6 +78,7 @@ jobs:
           node --experimental-default-type=module boat-score-2-start-course-historical-comparison.test.mjs
           node --experimental-default-type=module --test scripts/capture-official-html-evidence.test.mjs
           node --experimental-default-type=module --test scripts/audit-official-race-html-capture.test.mjs
+          node --experimental-default-type=module --test scripts/audit-saved-official-race-evidence.test.mjs
           node --experimental-default-type=module --check boat-score-2-pre-race-evidence.js
           node --experimental-default-type=module boat-score-2-pre-race-evidence.test.mjs
           node --experimental-default-type=module --check boat-score-2-historical-evidence-check.js
