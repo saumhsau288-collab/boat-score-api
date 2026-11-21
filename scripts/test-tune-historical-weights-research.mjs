@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {tuneHistoricalWeights,FIELDS} from './tune-historical-weights-research.mjs';
 const w=(field)=>Object.fromEntries(FIELDS.map(f=>[f,f===field?1:0]));
 const boats=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:6-i,localWinRate:i+1,motorTwoWinRate:0,recent50WinRate:0,exhibitionScore:0}));
-const row=(date,actual)=>({date,venue:1,race:1,boats,actual,independentlyVerifiedResult:true,historicalInputProvenanceVerified:true,historicalInputSourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult',historicalInputCapturedAt:date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8)+'T08:00:00+09:00',officialCutoffAt:date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8)+'T12:00:00+09:00'});
+const row=(date,actual)=>({date,venue:1,race:1,boats,actual,independentlyVerifiedResult:true,historicalInputProvenanceVerified:true,historicalInputSourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?hd='+date+'&jcd=01&rno=1',historicalInputCapturedAt:date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8)+'T08:00:00+09:00',officialCutoffAt:date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8)+'T12:00:00+09:00'});
 const r=tuneHistoricalWeights([row('20261101',[6,5,4]),row('20261102',[6,5,4]),row('20261103',[1,2,3])],
  {trainEndDate:'20261102',baselineWeights:w('nationalWinRate'),candidates:[w('nationalWinRate'),w('localWinRate')]});
 assert.equal(r.candidate.train.exactTop3,2);
@@ -13,6 +13,11 @@ const badSource={...row('20261104',[1,2,3]),historicalInputSourceUrl:'https://bo
 const withBadSource=tuneHistoricalWeights([row('20261101',[6,5,4]),row('20261103',[1,2,3]),badSource],{trainEndDate:'20261102',baselineWeights:w('nationalWinRate'),candidates:[w('localWinRate')]});
 assert.equal(withBadSource.excluded.length,1);
 assert.equal(withBadSource.testRaces,1);
+const wrongRace={...row('20261104',[1,2,3]),officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261104&jcd=01&rno=2'};
+const ambiguousTime={...row('20261105',[1,2,3]),historicalInputCapturedAt:'2026-11-05T08:00:00'};
+const invalid=tuneHistoricalWeights([row('20261101',[6,5,4]),row('20261103',[1,2,3]),wrongRace,ambiguousTime],{trainEndDate:'20261102',baselineWeights:w('nationalWinRate'),candidates:[w('localWinRate')]});
+assert.equal(invalid.excluded.length,2);
+assert.equal(invalid.testRaces,1);
 assert.equal(r.evaluationChange.exactTop3,-1);
 const duplicated=row('20261101',[6,5,4]);
 const withDuplicate=tuneHistoricalWeights([duplicated,duplicated,row('20261102',[6,5,4]),row('20261103',[1,2,3])],{trainEndDate:'20261102',baselineWeights:w('nationalWinRate'),candidates:[w('localWinRate')]});
