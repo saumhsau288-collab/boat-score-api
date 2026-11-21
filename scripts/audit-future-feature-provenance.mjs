@@ -4,8 +4,9 @@ export function auditFutureFeatureProvenance({race,official,averageST=[],makulab
  const validKey=x=>/^20\d{6}\/(?:[1-9]|1\d|2[0-4])\/(?:[1-9]|1[0-2])$/.test(key(x));
  const time=x=>typeof x==='string'&&Number.isFinite(Date.parse(x))?Date.parse(x):NaN;
  const cutoff=time(cutoffAt);
+ const validDate=x=>{const d=String(x?.date??'').replaceAll('-','');const t=Date.parse(`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}T00:00:00Z`);return /^20\\d{6}$/.test(d)&&Number.isFinite(t)&&new Date(t).toISOString().slice(0,10).replaceAll('-','')===d;};
  const held=(reason)=>({status:'held',reason,eligibleForCalibration:false,originalInputsVerified:false,scoreChangeApplied:false});
- if(!validKey(race)||!validKey(official)||!validKey(prediction)||key(race)!==key(official)||key(race)!==key(prediction))
+ if(!validDate(race)||!validKey(race)||!validKey(official)||!validKey(prediction)||key(race)!==key(official)||key(race)!==key(prediction))
   return held('race_identity_mismatch');
  if(!Number.isFinite(cutoff)||!Number.isFinite(time(prediction.receivedAt))||time(prediction.receivedAt)>cutoff)
   return held('prediction_cutoff_unverified');
