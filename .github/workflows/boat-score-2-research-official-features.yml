@@ -73,7 +73,8 @@ jobs:
           CAPTURE_VENUE: ${{ inputs.venue }}
           CAPTURE_RACE: ${{ inputs.race }}
         run: |
-          path="prediction-captures/research-official-${CAPTURE_DATE}-${CAPTURE_VENUE}-${CAPTURE_RACE}.json"
+          venue_number=$((10#$CAPTURE_VENUE))
+          path="prediction-captures/research-official-${CAPTURE_DATE}-${venue_number}-${CAPTURE_RACE}.json"
           if [ -f "$path" ]; then
             node scripts/report-research-snapshot-readiness.mjs "$path"
           else
