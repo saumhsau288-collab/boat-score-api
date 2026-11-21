@@ -7,6 +7,9 @@ export function assessPreRaceEvidence({snapshot,deadlineAt,independentlyAuthenti
  const boats=snapshot.racers.map(r=>r?.boat);
  if(new Set(boats).size!==6||boats.some(b=>!Number.isInteger(b)||b<1||b>6))
   return {eligible:false,reason:'unique_boats_one_through_six_required'};
+ const ids=snapshot.racers.map(r=>String(r?.racerId??''));
+ if(new Set(ids).size!==6||ids.some(id=>!/^\\d{4}$/.test(id)))
+  return {eligible:false,reason:'unique_four_digit_racer_ids_required'};
  if(!Number.isFinite(captured)||!Number.isFinite(deadline))
   return {eligible:false,reason:'capture_and_deadline_timestamps_required'};
  if(captured>=deadline)
