@@ -51,3 +51,19 @@ test('a ready prediction with incomplete output scores is not treated as six-boa
  assert.equal(out.resultComparisonsEligible,0);
  assert.equal(out.weightChangesPermitted,false);
 });
+
+test('a result URL for a different race cannot make a saved prediction comparable',()=>{
+ const capture={authenticatedBeforeRace:false,records:[{
+  date:'20261120',venue:17,race:2,httpStatus:200,
+  receivedAt:'2026-11-19T23:40:00Z',
+  response:{ready:true,rankedScores:[1,2,3,4,5,6].map(boat=>({boat,score:boat})),
+   main:[[1,2,3]],upset:[[3,2,1]]}
+ }]};
+ const results=[{date:'20261120',venue:17,race:2,verified:true,
+  sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=17&rno=1',
+  officialCutoffAt:'2026-11-20T00:00:00Z',finishOrder:[1,2,3,4,5,6]}];
+ const out=auditScoreResultJoin(capture,results);
+ assert.equal(out.resultComparisonsEligible,0);
+ assert.ok(out.rows[0].holdReasons.includes('official_result_url_race_mismatch'));
+ assert.equal(out.weightChangesPermitted,false);
+});
