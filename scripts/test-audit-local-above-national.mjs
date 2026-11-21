@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditLocalAboveNational} from './audit-local-above-national.mjs';
+const racers=[{boat:1,nationalWinRate:6,localWinRate:8},{boat:2,nationalWinRate:7,localWinRate:6},{boat:3,nationalWinRate:5,localWinRate:5},{boat:4,nationalWinRate:5,localWinRate:0},{boat:5,nationalWinRate:5,localWinRate:4},{boat:6,nationalWinRate:5,localWinRate:6}];
+test('classifies local advantage without treating zero as observed',()=>{const x=auditLocalAboveNational([{racers,resultVerified:true,finishOrder:[1,3,2,4,5,6]}]);assert.equal(x.groups.localHigher.entries,2);assert.equal(x.groups.localHigher.wins,1);assert.equal(x.boatOne.localHigher.wins,1);assert.equal(x.missingLocalEntries,1);});
