@@ -14,6 +14,8 @@ on:
       - 'scripts/diagnose-makulabo-six-samples.mjs'
       - 'scripts/test-diagnose-makulabo-six-samples.mjs'
       - 'scripts/test-prepare-makulabo-morning-evidence.mjs'
+      - 'scripts/replay-verified-historical-pair.mjs'
+      - 'scripts/test-replay-verified-historical-pair.mjs'
   workflow_dispatch:
     inputs:
       date:
@@ -39,6 +41,8 @@ jobs:
         run: node scripts/test-diagnose-makulabo-six-samples.mjs
       - name: Test Makulabo morning evidence gate
         run: node scripts/test-prepare-makulabo-morning-evidence.mjs
+      - name: Test historical replay official-result and pre-cutoff gates
+        run: node scripts/test-replay-verified-historical-pair.mjs
       - name: Test historical cutoff and future leakage protection
         run: node scripts/test-audit-makulabo-historical-cutoff.mjs
       - name: Test strict six-row heatmap parser
