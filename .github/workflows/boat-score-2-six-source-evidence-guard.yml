@@ -1,0 +1,21 @@
+name: Research six-source evidence guard tests
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths:
+      - scripts/assess-research-source-bundle.mjs
+      - scripts/test-assess-research-source-bundle.mjs
+      - .github/workflows/boat-score-2-six-source-evidence-guard.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/test-assess-pre-race-evidence.mjs
+      - run: node scripts/test-assess-research-source-bundle.mjs
