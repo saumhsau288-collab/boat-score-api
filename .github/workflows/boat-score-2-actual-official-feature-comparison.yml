@@ -1,0 +1,50 @@
+name: Research actual official six-boat comparison
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/boat-score-2-actual-official-feature-comparison.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download existing official capture
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          gh api "/repos/${{ github.repository }}/actions/artifacts/14701211274/zip" > prediction-captures/official.zip
+          unzip -o prediction-captures/official.zip -d prediction-captures
+      - name: Compare three real races with no imputation
+        run: |
+          node scripts/test-build-independent-feature-comparison.mjs
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          import {buildIndependentFeatureComparison} from './scripts/build-independent-feature-comparison.mjs';
+          const names=['17-2','24-5','17-6'];
+          const output=[];
+          for(const name of names){
+           const file='prediction-captures/research-official-20261120-'+name+'.json';
+           const capture=JSON.parse(fs.readFileSync(file,'utf8'));
+           const comparison=buildIndependentFeatureComparison({official:capture.racers});
+           if(comparison.rows.length!==6||comparison.rows.some(x=>x.motor2Rate===null||x.preRaceAverageST!==null||x.makulaboSameFrameFirstPlaceRate!==null))throw Error('unexpected real official comparison');
+           output.push({date:capture.date,venue:capture.venue,race:capture.race,
+             officialCaptureReceivedAt:capture.receivedAt,
+             preRaceIndependentlyVerified:false,comparison});
+          }
+          fs.writeFileSync('prediction-captures/actual-three-official-feature-comparison.json',JSON.stringify({count:output.length,races:output,eligibleForCalibration:false},null,2)+'\n');
+          console.log('Compared 18 actual racers; average ST and Makulabo remain missing');
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-three-official-feature-comparison-${{ github.run_id }}
+          path: prediction-captures/actual-three-official-feature-comparison.json
+          retention-days: 30
