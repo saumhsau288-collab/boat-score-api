@@ -7,6 +7,13 @@ on:
       - 'scripts/probe-miyajima-official-racelist-html.mjs'
       - '.github/workflows/research-miyajima-racelist-html.yml'
   workflow_dispatch:
+    inputs:
+      race:
+        description: 'Miyajima race number 1-12'
+        required: true
+        default: '6'
+        type: choice
+        options: ['1', '2', '6', '12']
 
 permissions:
   contents: read
@@ -21,6 +28,8 @@ jobs:
         with:
           node-version: '22'
       - name: Fetch bounded official racelist page and record provenance
+        env:
+          RESEARCH_RACE: ${{ inputs.race || '6' }}
         run: node scripts/probe-miyajima-official-racelist-html.mjs
       - name: Upload unverified raw HTML evidence
         if: always()
