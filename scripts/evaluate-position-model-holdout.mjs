@@ -28,6 +28,7 @@ export function evaluatePositionModelHoldout(reports){
  };
  const byDate={};
  const outsideWinnerCandidate={races:0,otherWins:0,highestOtherWins:0,byBoat:{},actualOtherWinnerByBoat:Object.fromEntries(Array.from({length:5},(_,i)=>[String(i+2),0]))};
+ const candidateStrategies={weakOneRaces:0,alwaysOneWins:0,alwaysTwoWins:0,bestOtherWins:0,boatTwoOrBestOtherWins:0};
  const byBoatOneRank=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,boatOneWins:0,otherWins:0,modelExact:0}]));
  const byActualWinner=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,modelExact:0,fixed123Exact:0,rankExact:0}]));
  const byPredictedWinner=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,modelExact:0,fixed123Exact:0,rankExact:0}]));
@@ -40,11 +41,16 @@ export function evaluatePositionModelHoldout(reports){
   const boatOneRank=ranked.findIndex(x=>x.boat===1)+1;
   if(boatOneRank>=4){
    outsideWinnerCandidate.races++;
+   candidateStrategies.weakOneRaces++;
+   candidateStrategies.alwaysOneWins+=actual[0]===1?1:0;
+   candidateStrategies.alwaysTwoWins+=actual[0]===2?1:0;
    const bestOther=ranked.find(x=>x.boat!==1).boat;
    const otherWin=actual[0]!==1;
    outsideWinnerCandidate.otherWins+=otherWin?1:0;
    if(otherWin)outsideWinnerCandidate.actualOtherWinnerByBoat[String(actual[0])]++;
    outsideWinnerCandidate.highestOtherWins+=actual[0]===bestOther?1:0;
+   candidateStrategies.bestOtherWins+=actual[0]===bestOther?1:0;
+   candidateStrategies.boatTwoOrBestOtherWins+=actual[0]===(bestOther<=3?bestOther:2)?1:0;
    const cell=outsideWinnerCandidate.byBoat[String(bestOther)]??={selected:0,wins:0};cell.selected++;cell.wins+=actual[0]===bestOther?1:0;
   }
   const rankGroup=byBoatOneRank[String(boatOneRank)];rankGroup.races++;rankGroup.boatOneWins+=actual[0]===1?1:0;rankGroup.otherWins+=actual[0]!==1?1:0;rankGroup.modelExact+=m?1:0;
@@ -54,5 +60,5 @@ export function evaluatePositionModelHoldout(reports){
   counts.modelOnlyVsFixed+=m&&!f?1:0;counts.fixedOnlyVsModel+=f&&!m?1:0;
   counts.modelOnlyVsRank+=m&&!r?1:0;counts.rankOnlyVsModel+=r&&!m?1:0;
  }
- return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
+ return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
 }
