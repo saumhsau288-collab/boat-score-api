@@ -45,12 +45,15 @@ jobs:
             racers:r.comparison?.rows?.map(x=>({boat:x.boat,racerId:x.racerId}))??[],
             receivedAt:r.officialCaptureReceivedAt??null}));
           const provenance=auditSavedPredictionOfficialProvenance({savedRecords:saved.records.filter(x=>x?.response?.ready===true),officialRaces:archivedOfficial});
+          if(provenance.attempted!==14||provenance.matched!==12||provenance.held!==2||
+            provenance.originalInputsVerified!==0||provenance.independentlyAuthenticatedBeforeRace!==0)
+            throw Error('unexpected real archived provenance counts');
           if(provenance.rows.some(x=>x.originalInputsVerified===true||x.eligibleForCalibration===true))
             throw Error('retrospective provenance must not be calibrated');
           fs.writeFileSync('prediction-captures/actual-twelve-prediction-official-provenance.json',JSON.stringify(provenance,null,2)+'\n');
-          console.log('REAL_PROVENANCE '+JSON.stringify({matched:provenance.matched,
-            held:provenance.rows.length-provenance.matched,
-            statuses:provenance.rows.reduce((a,x)=>(a[x.status]=(a[x.status]||0)+1,a),{})}));
+          console.log('REAL_PROVENANCE '+JSON.stringify({attempted:provenance.attempted,matched:provenance.matched,
+            held:provenance.held,originalInputsVerified:provenance.originalInputsVerified,
+            independentlyAuthenticatedBeforeRace:provenance.independentlyAuthenticatedBeforeRace,statuses:provenance.statuses}));
           if(report.joinedCount!==12||report.rows.length!==13||
             report.rows.filter(r=>r.status==='held_missing_join_data').length!==1||
             report.rows.filter(r=>r.status==='retrospective_comparison_only').some(r=>r.boats.some(b=>!b.officialMetricsAvailable)))
