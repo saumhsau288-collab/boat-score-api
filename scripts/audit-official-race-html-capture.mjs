@@ -8,8 +8,15 @@ export function auditOfficialRaceHtmlCapture({html,metadata}={}){
  if(typeof html!=='string'||!expected||!Number.isFinite(Date.parse(metadata?.receivedAt))||
    !/^[a-f0-9]{64}$/.test(String(metadata?.sha256??'')))
   return {status:'invalid_capture',eligibleForCalibration:false};
- const actualSha256=createHash('sha256').update(Buffer.from(html,'utf8')).digest('hex');
+ const capturedBytes=Buffer.from(html,'utf8');
+ const actualSha256=createHash('sha256').update(capturedBytes).digest('hex');
  if(actualSha256!==metadata.sha256)return {status:'capture_hash_mismatch',eligibleForCalibration:false};
+ if(metadata.byteLength!==capturedBytes.length||metadata.httpStatus!==200||
+  !/^text\/html(?:;|$)/i.test(String(metadata.contentType??'')))
+  return {status:'invalid_capture_response_metadata',eligibleForCalibration:false};
+ const requestedAt=Date.parse(metadata.requestedAt),receivedAt=Date.parse(metadata.receivedAt);
+ if(!Number.isFinite(requestedAt)||!Number.isFinite(receivedAt)||receivedAt<requestedAt)
+  return {status:'invalid_capture_timestamps',eligibleForCalibration:false};
  const date=expected.date,venue=Number(expected.venue),race=expected.race;
  if(!Number.isInteger(race)||race<1||race>12)
   return {status:'race_specific_capture_required',eligibleForCalibration:false};
