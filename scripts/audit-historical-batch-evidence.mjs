@@ -2,13 +2,17 @@
 // Never infer pre-race availability from a retrospectively viewed race card.
 export function auditHistoricalBatch(records) {
   if (!Array.isArray(records)) return {status:'invalid_batch',eligible:[],held:[]};
-  const eligible=[],held=[],seen=new Set();
+  const eligible=[],held=[];
+  const counts=new Map();
+  for (const record of records) {
+    const key=record?.raceKey;
+    if (typeof key==='string') counts.set(key,(counts.get(key)??0)+1);
+  }
   for (const record of records) {
     const key=record?.raceKey;
     const reasons=[];
     if (typeof key!=='string'||!/^[0-9]{8}-(0[1-9]|1[0-9]|2[0-4])-(?:[1-9]|1[0-2])$/.test(key)) reasons.push('invalid_race_key');
-    if (seen.has(key)) reasons.push('duplicate_race_key');
-    seen.add(key);
+    if (typeof key==='string' && counts.get(key)>1) reasons.push('duplicate_race_key');
     if (record?.prediction?.capturedBeforeDeadline!==true || !Number.isFinite(record?.prediction?.capturedAtEpochMs) || !Number.isFinite(record?.deadlineEpochMs) || record.prediction.capturedAtEpochMs>=record.deadlineEpochMs) reasons.push('prediction_timing_unverified');
     if (record?.prediction?.sourceVerified!==true || !Array.isArray(record?.prediction?.tickets) || !record.prediction.tickets.length) reasons.push('original_prediction_missing');
     const racers=record?.racers;
