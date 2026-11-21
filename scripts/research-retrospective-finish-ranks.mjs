@@ -15,6 +15,7 @@ export function summarizeRetrospectiveFinishRanks(records) {
      new Set(podium).size!==3||podium.some(n=>!Number.isInteger(n)||n<1||n>6)||
      !Array.isArray(ranks)||ranks.length!==3||
      ranks.some((n,i)=>n!==ranking.indexOf(podium[i])+1)){reasons('invalid_ranking_or_podium');continue;}
+  seen.add(key);
   compared++;
   ranks.forEach((rank,i)=>{positions[i].rankCounts[rank-1]++;positions[i].total++;});
   // Conditional on ACTUAL winner: descriptive only, cannot be used directly as a pre-race predictor.
