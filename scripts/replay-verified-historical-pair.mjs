@@ -14,6 +14,9 @@ export function replayVerifiedHistoricalPair({date,venue,race,featuresByBoat,fin
   !Number.isFinite(Date.parse(featureEvidence.raceCutoffAt))||
   Date.parse(featureEvidence.capturedAt)>=Date.parse(featureEvidence.raceCutoffAt))
   return held('pre_cutoff_feature_capture_unverified');
+ if(!/^20\\d{6}$/.test(String(date??''))||!/^20\\d{2}-\\d{2}-\\d{2}T/.test(String(featureEvidence.capturedAt))||
+  !String(featureEvidence.raceCutoffAt).startsWith(String(date).slice(0,4)+'-'+String(date).slice(4,6)+'-'+String(date).slice(6,8)))
+  return held('race_date_or_cutoff_mismatch');
  if(Date.parse(resultEvidence.capturedAt)<=Date.parse(featureEvidence.raceCutoffAt))
   return held('result_capture_timing_invalid');
  const replay=replayHistoricalRace({date,venue,race,featuresByBoat,finishByBoat,featureEvidence});
