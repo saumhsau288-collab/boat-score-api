@@ -21,4 +21,12 @@ assert.deepEqual(upset.summary.featureAvailability.preRaceAverageSTAvailable,{av
 assert.deepEqual(upset.summary.featureAvailability.makulabo50Available,{available:0,total:6});
 assert.equal(upset.summary.topScoreMisses[0].topScoreFeatures.preRaceAverageSTAvailable,false);
 assert.equal(upset.summary.topScoreMisses[0].winnerFeatures.makulabo50Available,false);
-console.log('Date-scoped retrospective join and rank-distribution tests passed');
+const duplicate=run([record('20261120'),record('20261120')],[official('20261120')],[result('20261120')]);
+assert.equal(duplicate.joinedCount,0);
+assert.equal(duplicate.rows.filter(x=>x.status==='held_duplicate_saved_prediction').length,2);
+const cancelled=date=>({...record(date),venue:9,race:6});
+const cancelledOfficial=date=>({...official(date),venue:9,race:6});
+const cancelledResult=date=>({...result(date),venue:9,race:6});
+assert.equal(run([cancelled('20261120')],[cancelledOfficial('20261120')],[cancelledResult('20261120')]).rows.length,0);
+assert.equal(run([cancelled('20261121')],[cancelledOfficial('20261121')],[cancelledResult('20261121')]).joinedCount,1);
+console.log('Date-scoped retrospective join, duplicate safety and rank-distribution tests passed');
