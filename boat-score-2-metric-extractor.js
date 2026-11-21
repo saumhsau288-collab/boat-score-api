@@ -13,14 +13,14 @@ export function extractOfficialMetrics(html){
  for(const table of tables){
   if(/<t[dh]\b[^>]*\browspan\s*=/i.test(table))diagnostics.tablesWithRowspan++;
   if(/<t[dh]\b[^>]*\bcolspan\s*=/i.test(table))diagnostics.tablesWithColspan++;
-  diagnostics.tableRowCounts.push((table.match(/<tr\\b/gi)||[]).length);
-  const sampleRows=[...table.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)].slice(0,5);
+  diagnostics.tableRowCounts.push((table.match(/<tr\b/gi)||[]).length);
+  const sampleRows=[...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].slice(0,5);
   diagnostics.tableSamples.push(sampleRows.map(m=>({
-    thCount:(m[1].match(/<th\\b/gi)||[]).length,
-    tdCount:(m[1].match(/<td\\b/gi)||[]).length,
-    racerLinks:(m[1].match(/racersearch\\/profile\\?/gi)||[]).length,
-    rowspans:(m[1].match(/rowspan\\s*=/gi)||[]).length,
-    colspans:(m[1].match(/colspan\\s*=/gi)||[]).length
+    thCount:(m[1].match(/<th\b/gi)||[]).length,
+    tdCount:(m[1].match(/<td\b/gi)||[]).length,
+    racerLinks:(m[1].match(/racersearch\/profile\\?/gi)||[]).length,
+    rowspans:(m[1].match(/rowspan\s*=/gi)||[]).length,
+    colspans:(m[1].match(/colspan\s*=/gi)||[]).length
   })));
   const headers=[...table.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>clean(m[1]));
   const find=regex=>headers.findIndex(h=>regex.test(h));
