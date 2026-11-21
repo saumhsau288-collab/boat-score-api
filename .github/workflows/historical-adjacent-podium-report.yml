@@ -1,0 +1,45 @@
+name: Historical adjacent podium descriptive report
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-archived-adjacency.mjs'
+      - 'scripts/test-audit-archived-adjacency.mjs'
+      - '.github/workflows/historical-adjacent-podium-report.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  historical-adjacency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run archive parser tests
+        run: node --test scripts/test-audit-archived-adjacency.mjs
+      - name: Fetch isolated immutable historical archive (read-only)
+        run: |
+          git fetch --depth=1 origin historical-research-data
+          mkdir -p /tmp/boat-score-verified-daily
+          git archive FETCH_HEAD verified-daily | tar -xf - -C /tmp/boat-score-verified-daily
+      - name: Audit real official historical results
+        run: |
+          node scripts/audit-archived-adjacency.mjs /tmp/boat-score-verified-daily/verified-daily reports/historical-adjacent-podium.json
+      - name: Summarize historical descriptive evidence
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const r=JSON.parse(fs.readFileSync("reports/historical-adjacent-podium.json","utf8"));
+            const rows=["## Verified historical finish-order adjacency (descriptive only)","","Archive days: "+r.archiveDays+"; eligible races: "+r.eligible+"; excluded: "+r.excluded,"","| Winner | Races | Adjacent 2nd/3rd | Rate | Uniform baseline |","|---|---:|---:|---:|---:|"];
+            for(const [boat,x] of Object.entries(r.byWinningBoat))rows.push("| "+boat+" | "+x.races+" | "+x.neighborPodium+" | "+(x.neighborPodiumRate===null?"n/a":(100*x.neighborPodiumRate).toFixed(1)+"%")+" | "+(100*x.expectedPodiumRate).toFixed(1)+"% |");
+            rows.push("","No verified pre-race forecast or predictive accuracy claim. No score change.");
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
+          '
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: historical-adjacent-podium-research
+          path: reports/historical-adjacent-podium.json
+          retention-days: 30
