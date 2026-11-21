@@ -131,3 +131,4 @@ jobs:
           node scripts/test-select-research-official-metrics.mjs
           node scripts/test-describe-official-table-structure.mjs
 
+          node --experimental-default-type=module --test scripts/test-match-official-results-to-pre-race-captures.mjs
