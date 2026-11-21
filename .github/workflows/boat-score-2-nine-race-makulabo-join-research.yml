@@ -1,0 +1,74 @@
+name: Research nine-race official Makulabo identity join
+
+on:
+  push:
+    branches:
+      - research/st-course-holdout-20261121
+    paths:
+      - .github/workflows/boat-score-2-nine-race-makulabo-join-research.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  join:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test offline identity and sample logic
+        run: |
+          node scripts/test-run-saved-makulabo-research.mjs
+          node scripts/test-describe-makulabo-identity-review.mjs
+          node scripts/test-identify-makulabo-sample-scope.mjs
+          node scripts/test-extract-grouped-official-six.mjs
+      - name: Capture official and compare Makulabo by six boat identities
+        shell: bash
+        run: |
+          mkdir -p prediction-captures
+          for item in "17 1" "18 3" "15 4" "21 5" "13 6" "02 1" "14 3" "22 5" "21 6"; do
+            read -r venue race <<< "$item"
+            file="prediction-captures/research-official-20261120-$((10#$venue))-$race.json"
+            for attempt in 1 2; do
+              CAPTURE_DATE=20261120 CAPTURE_VENUE="$venue" CAPTURE_RACE="$race" node scripts/capture-research-official-features.mjs || true
+              if grep -q '"status": "captured_research_inputs"' "$file"; then break; fi
+              sleep 1
+            done
+            CAPTURE_DATE=20261120 CAPTURE_VENUE="$venue" CAPTURE_RACE="$race" node scripts/capture-research-makulabo-join.mjs || true
+          done
+      - name: Summarize exact-identity evidence and missingness
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          const rows=[];
+          for(const key of ['17-1','18-3','15-4','21-5','13-6','02-1','14-3','22-5','21-6']){
+            const [v,r]=key.split('-').map(Number);
+            const official=JSON.parse(fs.readFileSync(`prediction-captures/research-official-20261120-${v}-${r}.json`,'utf8'));
+            const file=`prediction-captures/research-makulabo-20261120-${v}-${r}.json`;
+            const mak=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):null;
+            rows.push({key,officialStatus:official.status,officialSix:official.racers?.length===6,
+              makulaboStatus:mak?.status??'missing',reason:mak?.reason??null,
+              identityReview:mak?.identityReview?.status??null,
+              sampleScope:mak?.sampleScope?.scope??null,sampleScopeVerified:mak?.sampleScope?.verified===true,
+              sourceRows:mak?.finishSample?.rows?.length??null,
+              recent50WinRateVerified:mak?.recent50WinRateVerified===true,
+              preRaceIndependentlyVerified:false,eligibleForCalibration:false});
+          }
+          fs.writeFileSync('prediction-captures/nine-race-makulabo-join-summary.json',JSON.stringify(rows,null,2)+'\n');
+          console.log(JSON.stringify(rows));
+          EOF
+      - name: Upload full research diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nine-race-makulabo-join-${{ github.run_id }}
+          path: |
+            prediction-captures/research-official-20261120-*.json
+            prediction-captures/research-makulabo-20261120-*.json
+            prediction-captures/nine-race-makulabo-join-summary.json
+          retention-days: 30
+          if-no-files-found: warn
