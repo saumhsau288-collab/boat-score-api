@@ -69,6 +69,7 @@ on:
       - 'scripts/test-audit-top-three-sandwich.mjs'
       - 'scripts/audit-finish-order-pairs.mjs'
       - 'scripts/test-audit-finish-order-pairs.mjs'
+      - 'scripts/diagnose-holdout-order-errors.mjs'
       - 'scripts/audit-archived-adjacency.mjs'
       - 'scripts/test-audit-archived-adjacency.mjs'
       - '.github/workflows/historical-adjacent-podium-report.yml'
