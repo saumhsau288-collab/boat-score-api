@@ -38,14 +38,14 @@ jobs:
           const boats=Array.isArray(x.racers)?x.racers:[];
           const verified=x.status==='captured_research_inputs'&&boats.length===6&&
             new Set(boats.map(b=>Number(b.boat))).size===6&&
-            boats.every(b=>/^\\d{4}$/.test(String(b.racerId??'')));
+            boats.every(b=>/^\d{4}$/.test(String(b.racerId??'')));
           const summary={date:'20261120',venue:21,race:4,status:x.status,
             sixRacerIdentityVerified:verified,sourceUrl:x.sourceUrl??null,
             responseSha256:x.responseSha256??null,receivedAt:x.receivedAt??null,
             historicalCaptureOnly:true,originalPredictionInputsVerified:false,
             preRaceIndependentlyVerified:false,eligibleForCalibration:false};
           fs.mkdirSync('prediction-captures',{recursive:true});
-          fs.writeFileSync('prediction-captures/ashiya-4r-capture-readiness.json',JSON.stringify(summary,null,2)+'\\n');
+          fs.writeFileSync('prediction-captures/ashiya-4r-capture-readiness.json',JSON.stringify(summary,null,2)+'\n');
           console.log('ASHIYA_CAPTURE_READINESS '+JSON.stringify(summary));
           EOF
       - uses: actions/upload-artifact@v4
