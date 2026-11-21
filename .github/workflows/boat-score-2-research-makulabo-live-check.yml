@@ -12,6 +12,7 @@ on:
       - 'scripts/test-audit-makulabo-historical-cutoff.mjs'
       - 'scripts/prepare-makulabo-morning-evidence.mjs'
       - 'scripts/diagnose-makulabo-six-samples.mjs'
+      - 'scripts/test-diagnose-makulabo-six-samples.mjs'
       - 'scripts/test-prepare-makulabo-morning-evidence.mjs'
   workflow_dispatch:
     inputs:
@@ -34,6 +35,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test six-boat Makulabo diagnostics
+        run: node scripts/test-diagnose-makulabo-six-samples.mjs
       - name: Test Makulabo morning evidence gate
         run: node scripts/test-prepare-makulabo-morning-evidence.mjs
       - name: Test historical cutoff and future leakage protection
