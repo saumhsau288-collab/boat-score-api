@@ -99,8 +99,8 @@ jobs:
           FIRST_RACE: ${{ inputs.first_race }}
           LAST_RACE: ${{ inputs.last_race }}
         run: |
-          node --test scripts/test-research-retrospective-finish-ranks.mjs
-          file="prediction-captures/research-review-${CAPTURE_DATE}-${CAPTURE_VENUE}-${FIRST_RACE}-${LAST_RACE}.json"
+          node --test scripts/test-research-conditional-podium-audit.mjs scripts/test-research-stratified-podium.mjs scripts/test-research-retrospective-finish-ranks.mjs
+          file="prediction-captures/research-review-${CAPTURE_DATE}-$((10#$CAPTURE_VENUE))-$((10#$FIRST_RACE))-$((10#$LAST_RACE)).json"
           if [ -f "$file" ]; then
             node scripts/run-research-retrospective-finish-ranks.mjs "$file" > prediction-captures/research-finish-ranks.json
           else
