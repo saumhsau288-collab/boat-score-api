@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditBetweenVsNotBetween} from './audit-between-vs-not-between.mjs';
+const racers=(a,b)=>Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:i+1===a?8:i+1===b?7:4}));
+test('compares mutually exclusive between and not-between within frame',()=>{const base={date:'20261120',venue:1,resultVerified:true,finishOrder:[1,3,5,2,4,6]};const r=auditBetweenVsNotBetween([{...base,race:1,racers:racers(1,5)},{...base,race:2,racers:racers(3,4)}]);assert.equal(r.byBoat[3].between.races,1);assert.equal(r.byBoat[3].notBetween.races,1);assert.equal(r.byBoat[3].secondDifference,0);});
