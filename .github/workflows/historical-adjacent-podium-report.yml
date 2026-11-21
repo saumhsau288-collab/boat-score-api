@@ -42,6 +42,8 @@ jobs:
             for(const [winner,x] of Object.entries(r.finishOrderPairs.byWinner))for(const [second,count] of Object.entries(x.second))if(Number(second)!==Number(winner))rows.push("| "+winner+" | "+second+" | "+count+" | "+(100*x.secondRate[second]).toFixed(1)+"% |");
             rows.push("","### Inner/outer top-three patterns","","| Pattern | Count | Rate |","|---|---:|---:|");
             for(const [name,p] of Object.entries(r.topThreePatterns.patterns))rows.push("| "+name+" | "+p.count+" | "+(100*p.rate).toFixed(1)+"% |");
+            rows.push("","### Pattern rates conditioned on winning frame group","","| Pattern | Count | Winner-group races | Conditional rate |","|---|---:|---:|---:|");
+            for(const [name,p] of Object.entries(r.topThreePatterns.patterns))rows.push("| "+name+" | "+p.count+" | "+p.conditionedOnWinnerRaces+" | "+(p.rateGivenWinnerGroup===null?"n/a":(100*p.rateGivenWinnerGroup).toFixed(1)+"%")+" |");
             rows.push("","No verified pre-race forecast or predictive accuracy claim. No score change.");
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
           '
