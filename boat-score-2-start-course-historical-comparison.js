@@ -12,7 +12,7 @@ export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}
  for(const row of rows){
   const key=[row?.date,row?.venue,row?.race].join(':');
   if(row?.preRaceSnapshot!==true||row?.resultVerified!==true||!validFinish(row.finishOrder)||
-     !/^20\\d{6}$/.test(String(row.date))||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||
+     !/^20\d{6}$/.test(String(row.date))||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||
      !Number.isInteger(row.race)||row.race<1||row.race>12){
    excluded.push({key,reason:'unverified_race'});continue;
   }
