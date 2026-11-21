@@ -2,6 +2,8 @@ name: Historical adjacent podium descriptive report
 on:
   pull_request:
     paths:
+      - 'scripts/audit-finish-order-pairs.mjs'
+      - 'scripts/test-audit-finish-order-pairs.mjs'
       - 'scripts/audit-archived-adjacency.mjs'
       - 'scripts/test-audit-archived-adjacency.mjs'
       - '.github/workflows/historical-adjacent-podium-report.yml'
@@ -18,7 +20,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run archive parser tests
-        run: node --test scripts/test-audit-archived-adjacency.mjs
+        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs
       - name: Fetch isolated immutable historical archive (read-only)
         run: |
           git fetch --depth=1 origin historical-research-data
@@ -34,6 +36,8 @@ jobs:
             const r=JSON.parse(fs.readFileSync("reports/historical-adjacent-podium.json","utf8"));
             const rows=["## Verified historical finish-order adjacency (descriptive only)","","Archive days: "+r.archiveDays+"; eligible races: "+r.eligible+"; excluded: "+r.excluded,"","| Winner | Races | Adjacent 2nd/3rd | Rate | Uniform baseline |","|---|---:|---:|---:|---:|"];
             for(const [boat,x] of Object.entries(r.byWinningBoat))rows.push("| "+boat+" | "+x.races+" | "+x.neighborPodium+" | "+(x.neighborPodiumRate===null?"n/a":(100*x.neighborPodiumRate).toFixed(1)+"%")+" | "+(100*x.expectedPodiumRate).toFixed(1)+"% |");
+            rows.push("","### Winner-conditioned second-place frequencies","","| Winner | Second boat | Count | Rate |","|---|---|---:|---:|");
+            for(const [winner,x] of Object.entries(r.finishOrderPairs.byWinner))for(const [second,count] of Object.entries(x.second))if(Number(second)!==Number(winner))rows.push("| "+winner+" | "+second+" | "+count+" | "+(100*x.secondRate[second]).toFixed(1)+"% |");
             rows.push("","No verified pre-race forecast or predictive accuracy claim. No score change.");
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
           '
