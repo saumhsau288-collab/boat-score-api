@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {compareThreeSecondPlaceRules} from './compare-three-follower-rules.mjs';
+const result=compareThreeSecondPlaceRules();
+assert.equal(result.rows.length,5);
+assert.deepEqual(result.methods.nationalWinRate,{evaluated:5,correct:1});
+assert.equal(result.methods.winnerConditionedPosition.evaluated,2);
+assert.equal(result.methods.hybrid.evaluated,2);
+assert(result.rows.filter(x=>x.otherSameWinnerTrainingRaces===0).every(x=>x.positionChoice===null&&x.hybridChoice===null));
+assert.equal(result.scoringChanged,false);
+console.log(JSON.stringify(result.methods));
