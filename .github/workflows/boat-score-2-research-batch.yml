@@ -1,0 +1,125 @@
+name: Research historical race batch (no deployment)
+on:
+  workflow_dispatch:
+    inputs:
+      capture_date:
+        description: 'Completed race date YYYYMMDD'
+        required: true
+        default: '20261120'
+        type: string
+      venue:
+        description: 'Venue number 1-24'
+        required: true
+        default: '1'
+        type: string
+      first_race:
+        description: 'First race 1-12'
+        required: true
+        default: '1'
+        type: string
+      last_race:
+        description: 'Last race 1-12 (maximum 3 races per run)'
+        required: true
+        default: '3'
+        type: string
+permissions:
+  contents: read
+jobs:
+  research-batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate completed historical race range
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          FIRST_RACE: ${{ inputs.first_race }}
+          LAST_RACE: ${{ inputs.last_race }}
+        run: |
+          node --input-type=module -e '
+            const {CAPTURE_DATE:d,CAPTURE_VENUE:v,FIRST_RACE:a,LAST_RACE:b}=process.env;
+            const iso=d?.replace(/^(\d{4})(\d{2})(\d{2})$/,"$1-$2-$3");
+            const parsed=new Date(iso+"T00:00:00Z");
+            if(!/^20\d{6}$/.test(d??"")||Number.isNaN(parsed.getTime())||
+               parsed.toISOString().slice(0,10)!==iso||
+               d>=new Date().toISOString().slice(0,10).replaceAll("-","")||
+               !/^\d{1,2}$/.test(v??"")||Number(v)<1||Number(v)>24||
+               !/^\d{1,2}$/.test(a??"")||!/^\d{1,2}$/.test(b??"")||
+               Number(a)<1||Number(b)>12||Number(b)<Number(a)||Number(b)-Number(a)>2){
+              console.error("Choose a completed prior date, venue 1-24, and a 1-3 race range within 1-12.");
+              process.exit(1);
+            }
+            console.log("Validated historical batch",d,Number(v),Number(a),Number(b));
+          '
+      - name: Capture official features, Makulabo sample, and official results for each race
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          FIRST_RACE: ${{ inputs.first_race }}
+          LAST_RACE: ${{ inputs.last_race }}
+        run: |
+          mkdir -p prediction-captures
+          for (( race=10#$FIRST_RACE; race<=10#$LAST_RACE; race++ )); do
+            export CAPTURE_RACE="$race"
+            echo "::group::Historical research race $race"
+            node --experimental-default-type=module scripts/capture-research-official-features.mjs || true
+            node scripts/capture-research-makulabo-join.mjs || true
+            node scripts/capture-selected-research-result.mjs || true
+            echo "::endgroup::"
+          done
+      - name: Summarize research-only comparison without calibration
+        if: always()
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          FIRST_RACE: ${{ inputs.first_race }}
+          LAST_RACE: ${{ inputs.last_race }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const d=process.env.CAPTURE_DATE,v=Number(process.env.CAPTURE_VENUE);
+          const load=(prefix,r)=>{try{return JSON.parse(fs.readFileSync('prediction-captures/research-'+prefix+'-'+d+'-'+v+'-'+r+'.json','utf8'))}catch{return null}};
+          const lines=['## Historical research batch (no scoring changes)',
+            '| Race | Official racers | Makulabo | Official result | 85-point ranking | Parsed podium | Overlap |',
+            '|---|---|---|---|---|---|---|'];
+          let compared=0;
+          for(let r=Number(process.env.FIRST_RACE);r<=Number(process.env.LAST_RACE);r++){
+            const a=load('official',r),m=load('makulabo',r),o=load('result',r);
+            const rows=m?.officialComponentComparison?.rows;
+            const podium=o?.parsedPodium;
+            const ready=a?.status==='captured_research_inputs'&&
+              m?.officialComponentComparison?.status==='research_official_component_comparison'&&
+              o?.status==='official_racelist_result_identity_matched'&&
+              Array.isArray(rows)&&rows.length===6&&new Set(rows.map(x=>x.boat)).size===6&&
+              rows.every(x=>Number.isFinite(x.officialComponentScore85))&&
+              Array.isArray(podium)&&podium.length===3&&new Set(podium).size===3&&
+              podium.every(b=>rows.some(x=>x.boat===b));
+            let rank='held',actual='held',overlap='held';
+            if(ready){
+              const sorted=[...rows].sort((x,y)=>y.officialComponentScore85-x.officialComponentScore85||x.boat-y.boat);
+              rank=sorted.map(x=>x.boat).join('-');
+              actual=podium.join('-');
+              overlap=sorted.slice(0,3).filter(x=>podium.includes(x.boat)).length+'/3';
+              compared++;
+            }
+            lines.push('| '+r+' | '+(a?.status??'missing')+' | '+(m?.status??'missing')+
+              ' | '+(o?.status??'missing')+' | '+rank+' | '+actual+' | '+overlap+' |');
+          }
+          lines.push('', 'Comparable retrospective races: '+compared,
+            'Post-race official-only 85-point component, not authenticated pre-race predictions.',
+            'No independent result verification, automatic calibration, or deployed app changes.');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
+          console.log(lines.join('\n'));
+          NODE
+      - name: Upload research snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-batch-${{ github.run_id }}
+          path: prediction-captures/research-*.json
+          retention-days: 90
+          if-no-files-found: warn
