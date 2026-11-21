@@ -12,4 +12,6 @@ assert.equal(prepare(official,heatmap.map((r,i)=>i===0?{...r,counts:[11,10,10,10
 const namedOfficial=official.map((r,i)=>({...r,name:'選手'+(i+1)}));
 const namedHeatmap=heatmap.map((r,i)=>({...r,name:i===0?'別の選手':'選手'+(i+1)}));
 assert.equal(prepare(namedOfficial,namedHeatmap,audit).reason,'racer_name_mismatch');
+const duplicated=official.map((r,i)=>i===1?{...r,racerId:official[0].racerId}:r);
+assert.equal(prepare(duplicated,heatmap,audit).reason,'duplicate_official_racer_id');
 console.log('Makulabo observed-run and scoring provenance gates passed');
