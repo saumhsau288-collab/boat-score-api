@@ -4,11 +4,13 @@ import {parseSavedOfficialResultPages as parseSaved} from './parse-saved-officia
 const table='<table class="is-w495"><thead><tr><th>着</th></tr></thead>'+
 [6,2,3].map((b,i)=>'<tbody><tr><td class="is-fs14">'+['１','２','３'][i]+'</td><td class="is-fs14 is-fBold is-boatColor'+b+'">'+b+'</td></tr></tbody>').join('')+'</table>';
 const pay='<td rowspan="2">3連単</td><td><div>'+[6,2,3].map(b=>'<span class="numberSet1_number is-type'+b+'">'+b+'</span>').join('')+'</div></td><td><span class="is-payout1">&yen;8,230</span></td></tr>';
-const base={date:'20261118',venue:1,race:3,url:'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=3&jcd=01&hd=20261118',status:'raw_html_saved',html:'<a href="/owpc/pc/race/index?jcd=01&hd=20261118">race</a>'+table+pay};
+const base={date:'20261118',venue:1,race:3,url:'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=3&jcd=01&hd=20261118',status:'raw_html_saved',html:'<a href="/owpc/pc/race/index?rno=3&jcd=01&hd=20261118">race</a>'+table+pay};
 const parse=report=>parseSaved({...report,pages:report.pages.map(p=>p.status==='raw_html_saved'&&typeof p.html==='string'&&!Object.hasOwn(p,'sha256')?{...p,sha256:crypto.createHash('sha256').update(p.html).digest('hex')}:p)});
 const ok=parse({pages:[base]});assert.equal(ok.parsed,1);assert.deepEqual(ok.rows[0].podium,[6,2,3]);assert.equal(ok.rows[0].trifectaPayoutYen,8230);assert.equal(ok.verifiedResults,0);assert.equal(ok.eligibleForAccuracy,0);
 assert.equal(parse({pages:[{...base,html:base.html.replace('8,230','')}]}).rows[0].reason,'trifecta_payout_mismatch');
 assert.equal(parse({pages:[{...base,race:4}]}).rows[0].reason,'race_identity_unconfirmed');
+const wrongHtmlRace=base.html.replace('rno=3&jcd=01','rno=2&jcd=01');
+assert.equal(parse({pages:[{...base,html:wrongHtmlRace}]}).rows[0].reason,'race_identity_unconfirmed');
 assert.equal(parse({pages:[{...base,finalUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?rno=4&jcd=01&hd=20261118'}]}).rows[0].reason,'final_url_mismatch');
 assert.equal(parse({pages:[{...base,finalUrl:base.url}]}).parsed,1);
 assert.equal(parse({pages:[{...base,status:'fetch_failed',error:'timeout'}]}).rows[0].status,'not_saved');
