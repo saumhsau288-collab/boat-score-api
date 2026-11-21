@@ -8,7 +8,7 @@ const sample='<a href="/owpc/pc/data/racersearch/profile?toban=1234">選手 一<
 assert.equal(parseOfficialRacerIds(sample).uniqueRacerCount,1);
 assert.equal(parseOfficialRacerIds(sample).verified,false);
 assert.equal(parseOfficialRacerIds('').verified,false);
-const mock=async()=>({ok:true,headers:new Headers({'content-type':'text/html'}),text:async()=>sample});
+const mock=async(url)=>({ok:true,status:200,url,headers:new Headers({'content-type':'text/html'}),text:async()=>sample});
 const result=await fetchOfficialRacelist(s,mock);
 assert.equal(result.status,'fetched');
 assert.equal(result.verified,false);
