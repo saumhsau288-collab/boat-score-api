@@ -43,6 +43,7 @@ jobs:
           console.log(JSON.stringify({joined:report.joinedCount,missing:report.rows.length-report.joinedCount,
             topScoreWinners:report.rows.filter(r=>r.topScoreActualFinish===1).length,
             lowRankWinners:report.rows.filter(r=>r.winnerScoreRank>=4).length}));
+          console.log('FEATURE_AVAILABILITY '+JSON.stringify(report.summary.featureAvailability));
           console.log('RANK_DISTRIBUTION '+JSON.stringify(report.summary.winnerByScoreRank));
           console.log('TOP_SCORE_FINISH_DISTRIBUTION '+JSON.stringify(report.summary.topScoreByActualFinish));
           for(const row of report.summary.topScoreMisses)console.log('TOP_SCORE_MISS '+JSON.stringify(row));
