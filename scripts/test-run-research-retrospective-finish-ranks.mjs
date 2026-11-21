@@ -53,3 +53,20 @@ test('empty comparable batch fails visibly instead of reporting success',()=>{
   assert.equal(JSON.parse(result.stdout).compared,0);
  }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('multiple saved batches deduplicate overlapping race identities',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'boat-research-'));
+ try{
+  const a=join(dir,'a.json'),b=join(dir,'b.json');
+  writeFileSync(a,JSON.stringify({status:'research_only_batch_review',records:[record(1,[5,6,1])]}));
+  writeFileSync(b,JSON.stringify({status:'research_only_batch_review',records:[record(1,[5,6,1]),record(2,[5,2,6])]}));
+  const result=spawnSync(process.execPath,['scripts/run-research-retrospective-finish-ranks.mjs',a,b],{
+   encoding:'utf8',cwd:process.cwd()
+  });
+  assert.equal(result.status,0,result.stderr);
+  const x=JSON.parse(result.stdout);
+  assert.equal(x.compared,2);
+  assert.equal(x.held.duplicate_race,1);
+  assert.equal(x.conditionalPairs.find(p=>p.winner===5&&p.candidate===6).starts,2);
+ }finally{rmSync(dir,{recursive:true,force:true});}
+});
