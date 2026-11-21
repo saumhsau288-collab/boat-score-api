@@ -50,3 +50,7 @@ jobs:
           RACE_DATE: ${{ inputs.date }}
           RACE: ${{ inputs.race }}
         run: node boat-score-2-table-grid-live-diagnostic.mjs
+
+      - name: Inspect historical Makulabo public page (read-only, nonblocking)
+        continue-on-error: true
+        run: node scripts/check-makulabo-public-source.mjs 20261113 02 9
