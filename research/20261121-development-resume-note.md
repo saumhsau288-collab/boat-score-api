@@ -91,3 +91,8 @@
 - **明らかな同一場・別レースの締切候補重複**: 宮島(17)1R/2R/6R がすべて `2026-11-20T01:16:00Z`、下関(21)4R/5R/6R がすべて `2026-11-19T23:51:00Z`。レース固有の締切として信用できない。抽出ロジックまたは公式ページIDの取り違えを疑い、検証完了まで使用禁止。
 - 津(09)6Rは公式中止なので候補前9件のうち1件は結果照合から除外。**9件を有効な事前予想と呼ばない**。
 - 公式結果13件の取得と事前予想の認証は別条件。的中率、重み調整、本番反映は引き続き保留。
+
+## 2026-11-21 締切候補の混入経路と保守的修正
+- `capture-official-cutoff-source.mjs` は公式 `racelist` の**ページ全文**から締切ラベルを抽出し、`inspect-official-page-identity.mjs` はHTML内の全リンクの `hd/rno/jcd` を走査する。ナビゲーションなどの別レースのリンクがあると `identity_markers_ambiguous` になる。候補時刻はページ上の対象レースに紐づいた行から抽出されたとは限らない。
+- 研究ブランチの取得処理を修正し、ページIDが `identity_markers_consistent_not_authenticated` でない場合、`cutoffCandidate.status=candidate_suppressed_page_identity_unverified` として候補を**利用不可**にした。従来の全文抽出値は `rawCutoffCandidateForDiagnostics` に診断用として残す（認証・校正には使わない）。
+- 既存の保存ZIPは変更せず、過去の9件候補前という数値も検証済みに昇格させない。次はレース行を厳密に特定できるHTML構造抽出と回帰テスト。
