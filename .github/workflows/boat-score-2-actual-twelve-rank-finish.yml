@@ -54,6 +54,8 @@ jobs:
           console.log('REAL_PROVENANCE '+JSON.stringify({attempted:provenance.attempted,matched:provenance.matched,
             held:provenance.held,originalInputsVerified:provenance.originalInputsVerified,
             independentlyAuthenticatedBeforeRace:provenance.independentlyAuthenticatedBeforeRace,statuses:provenance.statuses}));
+          for(const row of provenance.rows.filter(x=>x.status!=='retrospective_comparison_only'))
+            console.log('HELD_PROVENANCE '+JSON.stringify({date:row.date,venue:row.venue,race:row.race,status:row.status}));
           if(report.joinedCount!==12||report.rows.length!==13||
             report.rows.filter(r=>r.status==='held_missing_join_data').length!==1||
             report.rows.filter(r=>r.status==='retrospective_comparison_only').some(r=>r.boats.some(b=>!b.officialMetricsAvailable)))
