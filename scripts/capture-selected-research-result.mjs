@@ -26,7 +26,7 @@ export async function captureSelectedResearchResult(snapshot,{fetchImpl=fetch}={
   const parsed=extractOfficialResultRacers({pages:[page]}).rows[0];
   const crossCheck=crossCheckOfficialResultIdentity(snapshot,parsed);
   return {status:crossCheck.status,reason:crossCheck.reason??null,date,venue,race,sourceUrl:url,sha256,
-   parsedStatus:parsed.status,identityCheck:crossCheck,
+   parsedStatus:parsed.status,parserDiagnostics:{htmlLength:html.length,tableCount:(html.match(/<table\\b/gi)||[]).length,hasFinishHeader:/<th[^>]*>\\s*着\\s*<\\/th>/i.test(html),hasBoatHeader:/<th[^>]*>\\s*枠\\s*<\\/th>/i.test(html),hasRacerHeader:html.includes('ボートレーサー'),hasNoRaceNotice:/レース結果がありません|レースは中止|レース不成立/.test(html)},identityCheck:crossCheck,
    parsedPodium:crossCheck.status==='official_racelist_result_identity_matched'?parsed.podium:null,
    independentResultVerification:false,eligibleForCalibration:false,
    note:'Same-source identity agreement is not independent verification or proof of pre-race scoring.'};
