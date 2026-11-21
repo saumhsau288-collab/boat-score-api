@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {describeSavedBaseStatsReadiness} from './describe-saved-base-stats-readiness.mjs';
+const result=describeSavedBaseStatsReadiness({prediction:{response:{predictionMode:'base_stats_only'}},deadlineAt:'2026-11-20T12:00:00+09:00'});
+assert.equal(result.predictionMode,'base_stats_only');
+assert.equal(result.savedPredictionPresent,true);
+assert.equal(result.requiredCount,6);
+assert.equal(result.verifiedCount,0);
+assert.equal(result.rows.every(x=>x.reason==='source_missing'),true);
+assert.equal(result.eligibleForCalibration,false);
+assert.equal(result.scoreChangeApplied,false);
+console.log('saved base stats readiness: held without inferred pre-race evidence');
