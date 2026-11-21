@@ -157,6 +157,41 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
           console.log(lines.join('\n'));
           NODE
+      - name: Describe official component score against parsed podium (research only)
+        if: always()
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const base='prediction-captures/';
+          const id=[process.env.CAPTURE_DATE,Number(process.env.CAPTURE_VENUE),Number(process.env.CAPTURE_RACE)].join('-');
+          const load=p=>{try{return JSON.parse(fs.readFileSync(p,'utf8'))}catch{return null}};
+          const mak=load(base+'research-makulabo-'+id+'.json');
+          const result=load(base+'research-result-'+id+'.json');
+          const rows=mak?.officialComponentComparison?.rows;
+          const podium=result?.parsedPodium;
+          let note='Comparison held: six official component scores and identity-matched podium required.';
+          if(mak?.officialComponentComparison?.status==='research_official_component_comparison' &&
+             result?.status==='official_racelist_result_identity_matched' &&
+             Array.isArray(rows)&&rows.length===6&&Array.isArray(podium)&&podium.length===3 &&
+             rows.every(x=>Number.isFinite(x.officialComponentScore85)) &&
+             new Set(rows.map(x=>x.boat)).size===6 &&
+             podium.every(b=>rows.some(x=>x.boat===b))){
+            const rank=[...rows].sort((a,b)=>b.officialComponentScore85-a.officialComponentScore85||a.boat-b.boat);
+            const predicted=rank.map(x=>x.boat);
+            note='Official-only 85-point ranking: '+predicted.join('-')+
+              '; parsed result podium: '+podium.join('-')+
+              '; top-score boat won: '+(predicted[0]===podium[0])+
+              '; top-3 set overlap: '+rank.slice(0,3).filter(x=>podium.includes(x.boat)).length+'/3.';
+          }
+          const message='## Retrospective component comparison\\n'+note+
+            '\\nNot the full Boat Score 2 score. Not an authenticated pre-race forecast; no automatic calibration.\\n';
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,message);
+          console.log(note);
+          NODE
       - name: Save research snapshot, even when incomplete
         if: always()
         uses: actions/upload-artifact@v4
