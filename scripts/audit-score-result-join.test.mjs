@@ -117,3 +117,19 @@ test('duplicate official results cannot be accepted as a unique result',()=>{
  assert.ok(out.rows[0].holdReasons.includes('no_independently_verified_result'));
  assert.equal(out.weightChangesPermitted,false);
 });
+
+test('a timestamp without an explicit timezone cannot prove capture before cutoff',()=>{
+ const capture={authenticatedBeforeRace:false,records:[{
+  date:'20261120',venue:17,race:2,httpStatus:200,
+  receivedAt:'2026-11-20T08:00:00',
+  response:{ready:true,rankedScores:[1,2,3,4,5,6].map(boat=>({boat,score:boat})),
+   main:[[1,2,3]],upset:[[3,2,1]]}
+ }]};
+ const results=[{date:'20261120',venue:17,race:2,verified:true,
+  sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=17&rno=2',
+  officialCutoffAt:'2026-11-20T09:00:00+09:00',finishOrder:[1,2,3,4,5,6]}];
+ const out=auditScoreResultJoin(capture,results);
+ assert.equal(out.resultComparisonsEligible,0);
+ assert.ok(out.rows[0].holdReasons.includes('capture_before_official_cutoff_unverified'));
+ assert.equal(out.weightChangesPermitted,false);
+});
