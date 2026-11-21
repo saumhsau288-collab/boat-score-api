@@ -3,12 +3,13 @@
 import fs from 'node:fs';
 const path=process.argv[2];
 if(!path){console.error('Usage: node scripts/analyze-winner-followers.mjs verified-results.json');process.exit(2)}
-const records=JSON.parse(fs.readFileSync(path,'utf8'));
-if(!Array.isArray(records))throw Error('Expected array');
+const loaded=JSON.parse(fs.readFileSync(path,'utf8'));
+const records=Array.isArray(loaded)?loaded:Array.isArray(loaded?.results)?loaded.results:null;
+if(!records)throw Error('Expected array or object with results array');
 const totals=Object.fromEntries([1,2,3,4,5,6].map(n=>[n,{races:0,second:{},third:{},podium:{}}]));
 let excluded=0;
 for(const record of records){
- const order=record?.finishOrder;
+ const order=record?.verified===false?null:record?.finishOrder;
  if(!Array.isArray(order)||order.length!==6||new Set(order).size!==6||!order.every(n=>Number.isInteger(n)&&n>=1&&n<=6)){excluded++;continue}
  const [winner,second,third]=order, row=totals[winner];row.races++;
  row.second[second]=(row.second[second]||0)+1;
