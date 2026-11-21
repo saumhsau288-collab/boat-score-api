@@ -15,5 +15,5 @@ assert.equal(parseOfficialBoatRows(officialHtml.replace('toban=4102">選手2','t
 const withExtraUnlinked=officialHtml+'<tr><td>６</td><td>参考情報のみ</td></tr><tr><td>６</td><td>参考情報のみ</td></tr>';
 assert.equal(parseOfficialBoatRows(withExtraUnlinked).verified,true);
 const wrongBoat=officialHtml.replace('is-boatColor2','is-boatColor3');
-assert.equal(parseOfficialBoatRows(wrongBoat).verified,true); // class mismatch not yet a proven identity guard
+assert.equal(parseOfficialBoatRows(wrongBoat).verified,false);
 console.log('Boat mapping tests passed');
