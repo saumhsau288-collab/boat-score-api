@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {diagnoseMakulaboSixSamples as diagnose} from './diagnose-makulabo-six-samples.mjs';
+const official=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4200+i)}));
+const counts=(wins,runs)=>[wins,runs-wins,0,0,0,0];
+const runs=[49,50,20,49,50,39];
+const heatmap=runs.map((n,i)=>({boat:i+1,runs:n,counts:counts(i===5?0:2,n),blankAsZeroInferred:i===5}));
+const result=diagnose(official,heatmap);
+assert.equal(result.status,'diagnostic_only');
+assert.equal(result.eligibleForScoring,false);
+assert.equal(result.boats.length,6);
+for(const i of [0,2,3,5])assert.ok(result.boats[i].reasons.includes('not_exactly_50_races'));
+for(const i of [1,4])assert.ok(!result.boats[i].reasons.includes('not_exactly_50_races'));
+assert.ok(result.boats[5].reasons.includes('inferred_blank_cells'));
+assert.ok(result.boats.every(x=>x.reasons.includes('historical_provenance_unverified')&&!x.eligibleForScoring));
+assert.equal(result.boats[0].observedFirstPlaceRate,Math.round(2/49*10000)/100);
+const broken=heatmap.map((r,i)=>i===2?{...r,counts:[100,0,0,0,0,0]}:r);
+assert.ok(diagnose(official,broken).boats[2].reasons.includes('invalid_counts'));
+console.log('Six-boat Makulabo diagnostics passed');
