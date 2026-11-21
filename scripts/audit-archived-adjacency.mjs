@@ -30,7 +30,7 @@ export function aggregateArchivedDailyReports(reports) {
    }
   }
  }
- return {...auditOfficialJoinAdjacency({records:rows}),finishOrderPairs:auditFinishOrderPairs(rows),topThreePatterns:auditTopThreeSandwich(rows),archivedAbilityPlacement:auditArchivedAbilityPlacement(rows),separatedTopTwo:auditSeparatedTopTwo(rows),gapStrata:auditGapStrata(rows),interveningCandidates:auditInterveningCandidates(rows),interveningByBoat:auditInterveningByBoat(rows),interveningFrameBaseline:auditInterveningVsFrameBaseline(rows),betweenVsNotBetween:auditBetweenVsNotBetween(rows),betweenByRank:auditBetweenByCandidateRank(rows),dailyAbilityRank:auditDailyAbilityRank(rows),prospectiveReadiness:auditProspectiveReadiness(rows),chronologicalHeuristics:evaluateChronologicalHeuristics(reports),archiveDays:dates.size,archiveDates:[...dates].sort()};
+ return {...auditOfficialJoinAdjacency({records:rows}),finishOrderPairs:auditFinishOrderPairs(rows),topThreePatterns:auditTopThreeSandwich(rows),archivedAbilityPlacement:auditArchivedAbilityPlacement(rows),separatedTopTwo:auditSeparatedTopTwo(rows),gapStrata:auditGapStrata(rows),interveningCandidates:auditInterveningCandidates(rows),interveningByBoat:auditInterveningByBoat(rows),interveningFrameBaseline:auditInterveningVsFrameBaseline(rows),betweenVsNotBetween:auditBetweenVsNotBetween(rows),betweenByRank:auditBetweenByCandidateRank(rows),dailyAbilityRank:auditDailyAbilityRank(rows),prospectiveReadiness:auditProspectiveReadiness(rows),chronologicalHeuristics:reports.length>=2?evaluateChronologicalHeuristics(reports):null,archiveDays:dates.size,archiveDates:[...dates].sort()};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href) {
  try {
