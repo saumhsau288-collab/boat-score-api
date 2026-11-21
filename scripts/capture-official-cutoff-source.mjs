@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {extractOfficialCutoffCandidate} from './extract-official-cutoff-candidate.mjs';
+import {extractCutoffFromHtmlScheduleTable} from './extract-cutoff-from-html-schedule-table.mjs';
 import {inspectOfficialPageIdentity} from './inspect-official-page-identity.mjs';
 import {classifyOfficialResponseSource} from './classify-official-response-source.mjs';
 const files=fs.readdirSync('prediction-captures').filter(n=>/^20\d{6}-\d+\.json$/.test(n));
@@ -31,16 +32,19 @@ async function collect({date,venue,race}){
    const eligible=sourceCheck.status==='official_html_source_consistent_not_authenticated';
    const identity=eligible?inspectOfficialPageIdentity(body,{date,venue,race}):{status:'official_source_not_eligible',verified:false};
    const rawCandidate=eligible?extractOfficialCutoffCandidate(body,{date,venue,race}):{status:'official_source_not_eligible'};
+   // Select only the requested race's schedule column; this remains diagnostic-only.
+   const scopedSchedule=eligible?extractCutoffFromHtmlScheduleTable({html:body,expectedRace:race,sourceVerified:true}):{reason:'official_source_not_eligible',cutoffJst:null};
+   const raceScopedCutoffDiagnostic={candidateCutoffJst:scopedSchedule.cutoffJst,parseReason:scopedSchedule.reason,verified:false,eligibleForCalibration:false};
    // Navigation links may contain many race IDs. Never promote a global text match
    // to a race-specific candidate when the page identity is ambiguous.
    const candidate=identity.status==='identity_markers_consistent_not_authenticated'
     ?rawCandidate:{status:'candidate_suppressed_page_identity_unverified',verified:false};
    rows.push({date,venue,race,requestedAt,receivedAt:new Date().toISOString(),
-    cutoffCandidate:candidate,rawCutoffCandidateForDiagnostics:rawCandidate,pageIdentity:identity,sourceCheck,finalUrl:res.url,sourceUrl:url.toString(),httpStatus:res.status,contentType:res.headers.get('content-type'),
+    cutoffCandidate:candidate,rawCutoffCandidateForDiagnostics:rawCandidate,raceScopedCutoffDiagnostic,pageIdentity:identity,sourceCheck,finalUrl:res.url,sourceUrl:url.toString(),httpStatus:res.status,contentType:res.headers.get('content-type'),
     responseSha256:crypto.createHash('sha256').update(body).digest('hex'),
     htmlLength:body.length,htmlSample:body.slice(0,3000),
     verified:false,officialCutoffAt:null,
-    note:'Unverified text candidate only; official page identity and deadline provenance not authenticated.'});
+    note:'Race-scoped schedule value is diagnostic-only; official page identity, pre-race capture and deadline provenance not authenticated.'});
   }catch(e){rows.push({date,venue,race,requestedAt,receivedAt:new Date().toISOString(),
     cutoffCandidate:{status:'official_fetch_error'},pageIdentity:{status:'official_fetch_error',verified:false},sourceUrl:url.toString(),error:String(e.message||e),verified:false,officialCutoffAt:null});}
 }
