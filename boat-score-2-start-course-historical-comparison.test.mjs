@@ -67,3 +67,15 @@ test('rejects official result without independent source and race identity verif
  race.officialResultSourceVerified=true;race.raceIdentityVerified=false;
  assert.equal(compareHistoricalStartCourse([race]).eligible,0);
 });
+
+test('rejects impossible calendar dates and timezone-free timestamps',()=>{
+ const race=makeRace();
+ race.date='20260230';
+ assert.equal(compareHistoricalStartCourse([race]).eligible,0);
+ race.date='20261119';
+ race.capturedAt='2026-11-19T00:00:00';
+ assert.equal(compareHistoricalStartCourse([race]).eligible,0);
+ race.capturedAt='2026-11-19T00:00:00.000Z';
+ race.officialCutoffAt='2026-11-19T02:00:00';
+ assert.equal(compareHistoricalStartCourse([race]).eligible,0);
+});
