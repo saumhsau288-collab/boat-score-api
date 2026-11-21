@@ -1,0 +1,21 @@
+name: Research official table grid tests
+
+on:
+  push:
+    branches:
+      - research-official-table-grid-20261121
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run isolated table grid tests
+        run: node boat-score-2-table-grid-research.test.mjs
