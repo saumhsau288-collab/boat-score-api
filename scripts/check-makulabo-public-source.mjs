@@ -8,15 +8,19 @@ try {
  const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(15000)});
  const html=await res.text();
  const normalized=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+ const scriptTags=[...html.matchAll(/<script\\b[^>]*>/gi)].map(m=>m[0]);
+ const externalScripts=scriptTags.filter(tag=>/\\bsrc\\s*=/.test(tag));
+ const dataAttributeNames=[...new Set([...html.matchAll(/\\b(data-[a-z][a-z0-9-]*)\\s*=/gi)].map(m=>m[1].toLowerCase()))].sort().slice(0,30);
  const result={httpStatus:res.status,contentType:res.headers.get('content-type'),htmlLength:html.length,
   hasHeatmapHeading:normalized.includes('枠番別ヒートマップ'),
   hasRecent50Label:/直近50走|過去50走|最近50走/.test(normalized),
   hasLoginMarkers:/ログイン|会員登録|新規登録/.test(normalized),
   // Structural hints only. Do not log page HTML, names, or pretend the
   // presence of tables means recent-50 results are verified.
-  scriptTagCount:html.split('<script').length-1,
-  externalScriptCount:(html.match(/src=["'][^"']+\\.js/gi)||[]).length,
-  inlineScriptCount:Math.max(0,(html.split('<script').length-1)-(html.match(/src=["'][^"']+\\.js/gi)||[]).length),
+  scriptTagCount:scriptTags.length,
+  externalScriptCount:externalScripts.length,
+  inlineScriptCount:scriptTags.length-externalScripts.length,
+  dataAttributeNames,
   hasFetchCall:html.includes('fetch('),
   hasAxiosCall:html.toLowerCase().includes('axios'),
   hasApiPath:html.includes('/api/'),
