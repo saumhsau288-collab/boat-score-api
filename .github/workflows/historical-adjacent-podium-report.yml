@@ -2,6 +2,8 @@ name: Historical adjacent podium descriptive report
 on:
   pull_request:
     paths:
+      - 'scripts/audit-daily-ability-rank.mjs'
+      - 'scripts/test-audit-daily-ability-rank.mjs'
       - 'scripts/audit-between-by-rank.mjs'
       - 'scripts/test-audit-between-by-rank.mjs'
       - 'scripts/audit-between-vs-not-between.mjs'
@@ -38,7 +40,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run archive parser tests
-        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs scripts/test-audit-intervening-frame-baseline.mjs scripts/test-audit-between-vs-not-between.mjs scripts/test-audit-between-by-rank.mjs
+        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs scripts/test-audit-intervening-frame-baseline.mjs scripts/test-audit-between-vs-not-between.mjs scripts/test-audit-between-by-rank.mjs scripts/test-audit-daily-ability-rank.mjs
       - name: Fetch isolated immutable historical archive (read-only)
         run: |
           git fetch --depth=1 origin historical-research-data
@@ -76,6 +78,8 @@ jobs:
             for(const [boat,g] of Object.entries(r.betweenVsNotBetween.byBoat))rows.push("| "+boat+" | "+g.between.races+" | "+(100*g.between.secondRate).toFixed(1)+"% | "+g.notBetween.races+" | "+(100*g.notBetween.secondRate).toFixed(1)+"% | "+(100*g.secondDifference).toFixed(1)+" |");
             rows.push("","### Candidate ability rank stratification (exploratory)","","| Boat | Between? | Rank group | Races | 2nd rate | Top-three rate |","|---|---|---|---:|---:|---:|");
             for(const [boat,g] of Object.entries(r.betweenByRank.groups))for(const [side,buckets] of Object.entries(g))for(const [rank,s] of Object.entries(buckets))rows.push("| "+boat+" | "+side+" | "+rank+" | "+s.races+" | "+(s.secondRate===null?"n/a":(100*s.secondRate).toFixed(1)+"%")+" | "+(s.podiumRate===null?"n/a":(100*s.podiumRate).toFixed(1)+"%")+" |");
+            rows.push("","### Daily 2/3-boat ability-rank stability (exploratory)","","| Date | Races | Top-half 2nd | Bottom-half 2nd |","|---|---:|---:|---:|");
+            for(const [date,g] of Object.entries(r.dailyAbilityRank.byDay))rows.push("| "+date+" | "+g.eligible+" | "+(g.innerTopHalf.secondRate===null?"n/a":(100*g.innerTopHalf.secondRate).toFixed(1)+"%")+" | "+(g.innerBottomHalf.secondRate===null?"n/a":(100*g.innerBottomHalf.secondRate).toFixed(1)+"%")+" |");
             rows.push("","Archive win rates are NOT verified as pre-race snapshots. No predictive accuracy claim. No score change.");
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
           '
