@@ -9,6 +9,7 @@ export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}
  if(!Array.isArray(rows)||![stPoints,coursePoints].every(x=>Number.isFinite(x)&&x>=0&&x<=20))
   return {status:'invalid_input'};
  const comparisons=[],excluded=[];
+ const seen=new Set();
  for(const row of rows){
   const key=[row?.date,row?.venue,row?.race].join(':');
   if(row?.preRaceSnapshot!==true||row?.resultVerified!==true||!validFinish(row.finishOrder)||
@@ -16,6 +17,13 @@ export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}
      !Number.isInteger(row.race)||row.race<1||row.race>12){
    excluded.push({key,reason:'unverified_race'});continue;
   }
+  // Boolean flags alone cannot establish a pre-deadline, official race join.
+  const captured=Date.parse(row.capturedAt),cutoff=Date.parse(row.officialCutoffAt);
+  if(row.officialCutoffVerified!==true||!Number.isFinite(captured)||!Number.isFinite(cutoff)||captured>=cutoff){
+   excluded.push({key,reason:'unverified_pre_deadline_cutoff'});continue;
+  }
+  if(seen.has(key)){excluded.push({key,reason:'duplicate_race'});continue;}
+  seen.add(key);
   const base=evaluateRace(row.racers),evidence=compareStartAndCourse(row.racers);
   if(base.status!=='evaluated'||evidence.status!=='verified'){
    excluded.push({key,reason:'missing_pre_race_evidence'});continue;
