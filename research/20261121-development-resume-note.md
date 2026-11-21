@@ -62,3 +62,9 @@
 - これは**出力済み最終評価点**であって、勝率・モーター・直近50走などの元入力 `scoreInputsByBoat` の証拠ではない。実際に `startCoursesVerified:false` は14件すべて。
 - 研究用 `scripts/audit-captured-ranked-scores.mjs` をCLIからも利用できるようにした。例: `node scripts/audit-captured-ranked-scores.mjs prediction-captures/20261120-44639859914.json`。
 - この確認によっても、**公式結果・締切前取得の独立認証が無いため、精度計算や配点調整は許可しない**。
+
+## 2026-11-21 結果照合の研究用検査
+- GitHub Actions `44875061565` 成功（commit `286e806099708f6b707f3ffae91128d10af434a9`）。
+- `scripts/audit-score-result-join.mjs` を追加。保存された最終6艇評価点の有無と、既存の厳格な公式結果照合ゲートの保留理由を結合。**評価点があるだけでは照合可能としない。**
+- CLI: `node scripts/audit-score-result-join.mjs prediction-captures/20261120-44639859914.json`。公式結果を独立検証できた場合のみ第2引数に `verified-results.json` を渡す。結果なしの場合は保留判定。
+- 今回のCLI変更後のCIは別途確認すること。現時点では公式結果・公式締切・事前認証の独立証拠は不足。予想的中率と配点改善は主張しない。
