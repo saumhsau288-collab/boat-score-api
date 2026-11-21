@@ -25,6 +25,7 @@ jobs:
           node scripts/test-report-live-feature-readiness.mjs
           node scripts/test-report-saved-capture-readiness.mjs
           node scripts/test-report-capture-venue-bottlenecks.mjs
+          node scripts/test-report-capture-race-bottlenecks.mjs
       - name: Download actual saved scores and official comparison
         env:
           GH_TOKEN: ${{ github.token }}
