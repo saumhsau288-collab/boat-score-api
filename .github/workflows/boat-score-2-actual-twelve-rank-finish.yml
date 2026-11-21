@@ -58,6 +58,12 @@ jobs:
             throw Error('Ashiya 4R finish evidence and feature gap changed');
           console.log('ASHIYA_4R_EVIDENCE '+JSON.stringify({officialFinishAvailable:true,officialFeatureComparisonAvailable:false,
             finishOrder:ashFinish.finishOrder,eligibleForCalibration:false}));
+          const readiness={date:'20261120',venue:21,race:4,officialFinishAvailable:true,
+            officialFinishOrder:ashFinish.finishOrder,officialFeatureComparisonAvailable:false,
+            savedPredictionAvailable:true,preRaceAverageSTVerified:false,makulabo50Verified:false,
+            originalPredictionInputsVerified:false,eligibleForCalibration:false,
+            nextAction:'capture six racer official features with source URL, SHA256, timestamps and racer identity; historical capture cannot authenticate pre-race inputs'};
+          fs.writeFileSync('prediction-captures/ashiya-4r-source-gap.json',JSON.stringify(readiness,null,2)+'\\n');
           console.log('REAL_PROVENANCE '+JSON.stringify({attempted:provenance.attempted,matched:provenance.matched,
             held:provenance.held,originalInputsVerified:provenance.originalInputsVerified,
             independentlyAuthenticatedBeforeRace:provenance.independentlyAuthenticatedBeforeRace,statuses:provenance.statuses}));
@@ -83,4 +89,5 @@ jobs:
           path: |
             prediction-captures/actual-twelve-rank-finish-audit.json
             prediction-captures/actual-twelve-prediction-official-provenance.json
+            prediction-captures/ashiya-4r-source-gap.json
           retention-days: 30
