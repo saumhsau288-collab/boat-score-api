@@ -2,6 +2,8 @@ name: Historical adjacent podium descriptive report
 on:
   pull_request:
     paths:
+      - 'scripts/evaluate-two-stage-archive.mjs'
+      - 'scripts/test-evaluate-two-stage-archive.mjs'
       - 'scripts/evaluate-chronological-heuristics.mjs'
       - 'scripts/test-evaluate-chronological-heuristics.mjs'
       - 'scripts/validate-prospective-snapshot.mjs'
@@ -46,7 +48,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run archive parser tests
-        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs scripts/test-audit-intervening-frame-baseline.mjs scripts/test-audit-between-vs-not-between.mjs scripts/test-audit-between-by-rank.mjs scripts/test-audit-daily-ability-rank.mjs scripts/test-audit-prospective-readiness.mjs scripts/test-validate-prospective-snapshot.mjs scripts/test-evaluate-chronological-heuristics.mjs
+        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs scripts/test-audit-intervening-frame-baseline.mjs scripts/test-audit-between-vs-not-between.mjs scripts/test-audit-between-by-rank.mjs scripts/test-audit-daily-ability-rank.mjs scripts/test-audit-prospective-readiness.mjs scripts/test-validate-prospective-snapshot.mjs scripts/test-evaluate-chronological-heuristics.mjs scripts/test-evaluate-two-stage-archive.mjs
       - name: Fetch isolated immutable historical archive (read-only)
         run: |
           git fetch --depth=1 origin historical-research-data
@@ -90,6 +92,8 @@ jobs:
             for(const [field,count] of Object.entries(r.prospectiveReadiness))if(typeof count==="number")rows.push("| "+field+" | "+count+" |");
             rows.push("","### Chronological archive heuristic holdout (NOT current app)","","Training dates: "+r.chronologicalHeuristics.trainDates.join(", ")+"; holdout dates: "+r.chronologicalHeuristics.testDates.join(", "),"","Selected weight: "+r.chronologicalHeuristics.selectedWeight,"","| Heuristic | Holdout races | 1st rate | 2nd rate | Exact trifecta | Top-three membership |","|---|---:|---:|---:|---:|---:|");
             for(const [name,g] of [["Selected archive heuristic",r.chronologicalHeuristics.holdout],["Frame-only heuristic",r.chronologicalHeuristics.frameOnlyHoldout]])rows.push("| "+name+" | "+g.races+" | "+(100*g.firstRate).toFixed(1)+"% | "+(100*g.secondRate).toFixed(1)+"% | "+(100*g.exactRate).toFixed(1)+"% | "+(100*g.podiumRate).toFixed(1)+"% |");
+            rows.push("","### Two-stage podium selection / finish ordering (archive only)","","Selected podium weight: "+r.twoStageArchive.selected.podiumWeight+"; order weight: "+r.twoStageArchive.selected.orderWeight,"","| Variant | First | Second | Exact trifecta | Podium membership |","|---|---:|---:|---:|---:|");
+            for(const [name,g] of [["Two-stage selected",r.twoStageArchive.holdout],["Frame-only",r.twoStageArchive.frameOnlyHoldout]])rows.push("| "+name+" | "+(100*g.firstRate).toFixed(1)+"% | "+(100*g.secondRate).toFixed(1)+"% | "+(100*g.exactRate).toFixed(1)+"% | "+(100*g.membershipRate).toFixed(1)+"% |");
             rows.push("","Archive win rates are NOT verified as pre-race snapshots. No predictive accuracy claim. No score change.");
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
           '
