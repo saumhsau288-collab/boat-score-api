@@ -22,8 +22,11 @@ export function compareThreeSecondPlaceRules(records=retrospectiveFiveRaces){
    otherSameWinnerTrainingRaces:training.length,winRateCorrect:winRateChoice===actualSecond,
    positionCorrect:positionChoice===actualSecond,hybridCorrect:hybridChoice===actualSecond};
  });
+ const commonRows=rows.filter(x=>x.winRateChoice!==null&&x.positionChoice!==null&&x.hybridChoice!==null);
+ const commonSubset={evaluated:commonRows.length,correct:{nationalWinRate:commonRows.filter(x=>x.winRateCorrect).length,winnerConditionedPosition:commonRows.filter(x=>x.positionCorrect).length,hybrid:commonRows.filter(x=>x.hybridCorrect).length}};
  const summarize=(choice,correct)=>({evaluated:rows.filter(x=>x[choice]!==null).length,correct:rows.filter(x=>x[choice]!==null&&x[correct]).length});
  return {status:'retrospective_leave_one_out_actual_winner_conditioned',rows,
+  commonSubset,
   methods:{nationalWinRate:summarize('winRateChoice','winRateCorrect'),winnerConditionedPosition:summarize('positionChoice','positionCorrect'),hybrid:summarize('hybridChoice','hybridCorrect')},
   warning:'Post-race official win rates; actual winner supplied; not prospective accuracy, model calibration or causal evidence.',
   scoringChanged:false};
