@@ -2,6 +2,8 @@ name: Historical adjacent podium descriptive report
 on:
   pull_request:
     paths:
+      - 'scripts/audit-intervening-frame-baseline.mjs'
+      - 'scripts/test-audit-intervening-frame-baseline.mjs'
       - 'scripts/audit-intervening-by-boat.mjs'
       - 'scripts/test-audit-intervening-by-boat.mjs'
       - 'scripts/audit-intervening-candidates.mjs'
@@ -32,7 +34,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run archive parser tests
-        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs
+        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs scripts/test-audit-intervening-frame-baseline.mjs
       - name: Fetch isolated immutable historical archive (read-only)
         run: |
           git fetch --depth=1 origin historical-research-data
@@ -64,6 +66,8 @@ jobs:
             for(const [gap,g] of Object.entries(r.interveningCandidates.byGap))rows.push("| "+gap+" | "+g.candidateSlots+" | "+(g.perCandidateSecondRate===null?"n/a":(100*g.perCandidateSecondRate).toFixed(1)+"%")+" | "+(g.perCandidatePodiumRate===null?"n/a":(100*g.perCandidatePodiumRate).toFixed(1)+"%")+" |");
             rows.push("","### Intervening candidate by boat number","","| Boat | Candidate races | 2nd rate | Top-three rate |","|---|---:|---:|---:|");
             for(const [boat,g] of Object.entries(r.interveningByBoat.byBoat))rows.push("| "+boat+" | "+g.candidateRaces+" | "+(g.secondRate===null?"n/a":(100*g.secondRate).toFixed(1)+"%")+" | "+(g.podiumRate===null?"n/a":(100*g.podiumRate).toFixed(1)+"%")+" |");
+            rows.push("","### Same-boat-number baseline comparison (exploratory)","","| Boat | All 2nd | Between 2nd | Difference (pp) | All podium | Between podium |","|---|---:|---:|---:|---:|---:|");
+            for(const [boat,g] of Object.entries(r.interveningFrameBaseline.byBoat))rows.push("| "+boat+" | "+(100*g.allSecondRate).toFixed(1)+"% | "+(100*g.betweenSecondRate).toFixed(1)+"% | "+(100*g.secondLift).toFixed(1)+" | "+(100*g.allPodiumRate).toFixed(1)+"% | "+(100*g.betweenPodiumRate).toFixed(1)+"% |");
             rows.push("","Archive win rates are NOT verified as pre-race snapshots. No predictive accuracy claim. No score change.");
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
           '
