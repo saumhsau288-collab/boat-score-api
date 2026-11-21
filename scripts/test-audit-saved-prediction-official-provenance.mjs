@@ -18,4 +18,7 @@ assert.equal(audit({savedRecords:[prediction,prediction],officialRaces:[official
 assert.equal(audit({savedRecords:[prediction,prediction],officialRaces:[official]}).statuses.held_duplicate_prediction,2);
 assert.equal(audit({savedRecords:[prediction],officialRaces:[official,official]}).rows[0].status,'held_duplicate_official');
 assert.equal(audit({savedRecords:[prediction],officialRaces:[{...official,date:'20261121'}]}).matched,0);
-console.log('Saved prediction to official provenance join tests passed');
+const cancelled={...prediction,venue:9,race:6};
+assert.equal(audit({savedRecords:[cancelled],officialRaces:[]}).rows[0].status,'held_cancelled_race');
+assert.equal(audit({savedRecords:[{...cancelled,date:'20261121'}],officialRaces:[]}).rows[0].status,'held_missing_official');
+console.log('Saved prediction to official provenance join and cancellation tests passed');
