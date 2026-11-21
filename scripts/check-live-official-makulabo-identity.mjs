@@ -6,6 +6,7 @@ import {parseMakulaboHeatmapSix} from './parse-makulabo-heatmap-six.mjs';
 import {matchRecent50Racers} from '../boat-score-2-recent50-identity.js';
 import {evaluateMorningFromSources} from '../boat-score-2-morning-pipeline.js';
 const [date,venue,race]=process.argv.slice(2);
+const sourceCaptureAt=new Date().toISOString();
 const selection={date,venue,race};
 const officialTarget=officialRacelistUrl(selection);
 if(officialTarget.status!=='ok')throw Error('Invalid selection');
@@ -21,7 +22,7 @@ const official=extractOfficialMetrics(await html(officialTarget.url));
 const makulabo=parseMakulaboHeatmapSix(await html(makulaboUrl));
 if(!official.verified||!makulabo.verified)throw Error('Both sources must parse six racers');
 const matched=matchRecent50Racers(official.racers,makulabo.racers);
-const summary={selection,officialVerified:official.verified,makulaboStructureVerified:makulabo.verified,
+const summary={selection,sourceCaptureAt,officialVerified:official.verified,makulaboStructureVerified:makulabo.verified,
  identityVerified:matched.verified,reason:matched.reason??null,
  matches:matched.matches.map(m=>({boat:m.boat,status:m.status,method:m.method??null,reason:m.reason??null})),
  official:official.racers.map(r=>({boat:r.boat,racerId:r.racerId,name:r.name})),
@@ -39,10 +40,14 @@ const joined=matched.matches.map(match=>{
  return {boat:match.boat,racerId:officialRacer.racerId,name:officialRacer.name,
   observedRuns:recent.runs,observedFirstPlaceRate:recent.firstPlaceRate,
   blankAsZeroInferred:recent.blankAsZeroInferred,
+  sourceCaptureAt,sourceRaceDate:date,
+  historicalCutoffVerified:false,
   verified:false,sourceVerified:false,
   eligibleForMorningScoring:false};
 });
 console.log('OFFICIAL_MAKULABO_JOINED_RESEARCH',JSON.stringify(joined));
+if(joined.some(r=>r.historicalCutoffVerified!==false))
+ throw Error('No historical publication cutoff has been established');
 const gated=evaluateMorningFromSources({official:official.racers,
  recent50:joined.map(r=>({racerId:r.racerId,winRate:r.observedFirstPlaceRate,
  verified:r.verified,sourceVerified:r.sourceVerified}))});
