@@ -14,7 +14,7 @@ test('reports identity and cutoff candidates without granting verified status',(
 });
 test('does not accept ambiguous or missing race markers as verification',()=>{
  const altered=html+'<a href="?hd=20261120&jcd=18&rno=2">other</a>';
- const out=auditOfficialRaceHtmlCapture({html:altered,metadata:{...metadata,sha256:createHash('sha256').update(altered).digest('hex')}});
+ const out=auditOfficialRaceHtmlCapture({html:altered,metadata:{...metadata,byteLength:Buffer.byteLength(altered),sha256:createHash('sha256').update(altered).digest('hex')}});
  assert.equal(out.identity.verified,false);
  assert.equal(out.eligibleForCalibration,false);
 });
