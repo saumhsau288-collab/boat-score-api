@@ -51,7 +51,7 @@ jobs:
           const {buildIndependentFeatureComparison}=await import('./scripts/build-independent-feature-comparison.mjs');
           const ashComparison=buildIndependentFeatureComparison({official:ashCapture.racers});
           if(ashComparison.status!=='comparison_only'||ashComparison.rows.length!==6||
-             ashComparison.rows.some(x=>!/^\\d{4}$/.test(x.racerId)||!Number.isFinite(x.nationalWinRate)||
+             ashComparison.rows.some(x=>!/^\d{4}$/.test(x.racerId)||!Number.isFinite(x.nationalWinRate)||
                 !Number.isFinite(x.localWinRateRaw)||!Number.isFinite(x.motor2Rate)))
             throw Error('Ashiya six official racer metrics not complete');
           const thirteenOfficial=[...official.races,{date:ashCapture.date,venue:ashCapture.venue,race:ashCapture.race,
