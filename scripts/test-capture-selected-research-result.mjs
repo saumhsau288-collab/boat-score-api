@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {captureSelectedResearchResult as capture} from './capture-selected-research-result.mjs';
 const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),sourceVerified:true}));
-const snapshot={status:'captured_research_inputs',date:'20261121',venue:1,race:1,racers};
+const snapshot={status:'captured_research_inputs',source:'verified_official_metrics',date:'20261121',venue:1,race:1,racers};
 const tr=(r,i)=>'<tbody><tr><td class="is-fs14">'+(i+1)+'</td><td class="is-fs14 is-fBold is-boatColor'+r.boat+'">'+r.boat+'</td><td><span class="is-fs12">'+r.racerId+'</span><span class="is-fs18">'+r.racerId+'</span></td><td>1:50</td></tr></tbody>';
 const html='<table class="is-w495"><thead><tr><th>着</th><th>枠</th><th>ボートレーサー</th></tr></thead>'+racers.map(tr).join('')+'</table>';
 const fake=async()=>({ok:true,status:200,headers:{get:()=> 'text/html'},text:async()=>html});
