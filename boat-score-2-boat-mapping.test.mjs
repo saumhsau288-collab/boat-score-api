@@ -8,4 +8,8 @@ assert.deepEqual(result.racers.map(r=>r.boat),[1,2,3,4,5,6]);
 assert.equal(parseOfficialBoatRows(html+row(1,5000)).verified,false);
 assert.equal(parseOfficialBoatRows(html.replace('4002','4001')).verified,false);
 assert.equal(parseOfficialBoatRows('<a href="/owpc/pc/data/racersearch/profile?toban=4001">選手</a>').verified,false);
+const officialRow=(boat,id)=>'<tr><td class="is-boatColor'+boat+'" rowspan="4">'+String(boat).replace(/[1-6]/g,c=>'１２３４５６'[Number(c)-1])+'</td><td><a href="/owpc/pc/data/racersearch/profile?toban='+id+'"><img src="/racerphoto/'+id+'.jpg"></a></td><td><a href="/owpc/pc/data/racersearch/profile?toban='+id+'">選手'+boat+'</a></td></tr>';
+const officialHtml=Array.from({length:6},(_,i)=>officialRow(i+1,4101+i)).join('');
+assert.equal(parseOfficialBoatRows(officialHtml).verified,true);
+assert.equal(parseOfficialBoatRows(officialHtml.replace('toban=4102">選手2','toban=9999">選手2')).verified,false);
 console.log('Boat mapping tests passed');
