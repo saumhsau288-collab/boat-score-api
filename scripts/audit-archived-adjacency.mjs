@@ -30,6 +30,6 @@ if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href) {
   const result=aggregateArchivedDailyReports(reports);
   fs.mkdirSync(path.dirname(output),{recursive:true});
   fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n');
-  console.log(JSON.stringify({archiveDays:result.archiveDays,eligible:result.eligible,excluded:result.excluded,byWinningBoat:result.byWinningBoat}));
+  console.log(JSON.stringify({archiveDays:result.archiveDays,eligible:result.eligible,excluded:result.excluded,byWinningBoat:result.byWinningBoat,finishOrderPairs:result.finishOrderPairs}));
  }catch(e){console.error(e.message);process.exitCode=1;}
 }
