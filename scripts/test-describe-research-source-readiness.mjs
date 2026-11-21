@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {describeResearchSourceReadiness} from './describe-research-source-readiness.mjs';
+const empty=describeResearchSourceReadiness({sources:{},deadlineAt:'2026-11-21T09:00:00Z'});
+assert.equal(empty.status,'held');assert.equal(empty.requiredCount,6);assert.equal(empty.verifiedCount,0);
+assert.equal(empty.rows.every(x=>x.reason==='source_missing'),true);
+assert.equal(empty.eligibleForCalibration,false);
+const source={capturedAt:'2026-11-21T08:00:00Z',independentlyAuthenticated:true,verified:true};
+const partial=describeResearchSourceReadiness({sources:{weather:source},deadlineAt:'2026-11-21T09:00:00Z'});
+assert.equal(partial.verifiedCount,1);assert.equal(partial.rows.find(x=>x.source==='weather').status,'verified');
+assert.equal(partial.rows.find(x=>x.source==='averageST').reason,'source_missing');
+console.log('source readiness: missing and partial evidence tests passed');
