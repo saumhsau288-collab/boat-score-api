@@ -58,6 +58,9 @@ jobs:
           RACE: ${{ inputs.race }}
         run: node boat-score-2-table-grid-live-diagnostic.mjs
 
+      - name: Verify historical official and Makulabo racer join (read-only, nonblocking)
+        continue-on-error: true
+        run: node scripts/verify-makulabo-official-join.mjs 20261113 02 9
       - name: Check Makulabo diagnostic syntax
         run: node --check scripts/check-makulabo-public-source.mjs
       - name: Inspect historical Makulabo public page (read-only, nonblocking)
