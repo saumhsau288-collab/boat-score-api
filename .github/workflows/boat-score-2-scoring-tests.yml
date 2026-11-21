@@ -133,3 +133,4 @@ jobs:
 
           node --experimental-default-type=module --test scripts/test-match-official-results-to-pre-race-captures.mjs
           node --experimental-default-type=module --test scripts/audit-ready-capture-cutoff-candidates.test.mjs
+          node --experimental-default-type=module --test scripts/compare-saved-ranked-scores.test.mjs
