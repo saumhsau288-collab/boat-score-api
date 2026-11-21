@@ -26,10 +26,15 @@ jobs:
           const sample=Array.from({length:6},(_,i)=>[String(i+1),'選手'+(i+1),'1','0','0','0','0','0','1','1.00']);
           sample[4]=['5','欠測','—','—','—','—','—','—','—','—'];
           const unit=classifyMakulaboFinishRows(headers,sample);
-          assert.equal(unit.status,'partial_with_missing');
+          assert.equal(unit.status,'partial_with_unscorable');
           assert.equal(unit.valid.length,5);
           assert.equal(unit.missing[0].runs,null);
           assert.equal(unit.eligibleForCalibration,false);
+          const zero=sample.map(row=>[...row]);
+          zero[5]=['6','ゼロ走','0','0','0','0','0','0','0','—'];
+          const zeroCheck=classifyMakulaboFinishRows(headers,zero);
+          assert.equal(zeroCheck.zeroRuns.length,1);
+          assert.equal(zeroCheck.zeroRuns[0].firstPlaceRate,null);
           const clean=s=>String(s).replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
           const output=[];
           for(const [venue,race] of [['02',1],['22',5]]){
@@ -47,7 +52,7 @@ jobs:
             output.push({venue,race,...result});
           }
           fs.writeFileSync('research-output/partial-makulabo-rows.json',JSON.stringify(output,null,2)+'\n');
-          console.log(JSON.stringify(output.map(x=>({venue:x.venue,race:x.race,status:x.status,valid:x.valid.length,missing:x.missing,invalid:x.invalid}))));
+          console.log(JSON.stringify(output.map(x=>({venue:x.venue,race:x.race,status:x.status,valid:x.valid.length,missing:x.missing,zeroRuns:x.zeroRuns,invalid:x.invalid}))));
           EOF
       - uses: actions/upload-artifact@v4
         if: always()
