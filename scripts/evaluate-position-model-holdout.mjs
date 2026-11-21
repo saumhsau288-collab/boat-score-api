@@ -13,7 +13,7 @@ export function evaluatePositionModelHoldout(reports){
   if(ranked.some((x,i)=>i>0&&x.score===ranked[i-1].score))return [];
   return [{ranked,o}];
  });
- const train=prepare(flatten(days.slice(0,split))),holdout=prepare(flatten(days.slice(split)));
+ const train=prepare(flatten(days.slice(0,split))),holdout=days.slice(split).flatMap(day=>prepare(flatten([day])).map(row=>({...row,date:String(day.date)})));
  const cells=Array.from({length:6},()=>Array.from({length:6},()=>[1,1,1,1,1,1]));
  for(const {ranked,o} of train)for(let i=0;i<6;i++)cells[ranked[i].boat-1][i][o.indexOf(ranked[i].boat)]++;
  const predict=ranked=>{
@@ -26,14 +26,16 @@ export function evaluatePositionModelHoldout(reports){
   }
   return best;
  };
+ const byDate={};
  const counts={races:0,modelExact:0,fixed123Exact:0,rankExact:0,modelOnlyVsFixed:0,fixedOnlyVsModel:0,modelOnlyVsRank:0,rankOnlyVsModel:0};
- for(const {ranked,o} of holdout){
+ for(const {ranked,o,date} of holdout){
   const model=predict(ranked),rank=ranked.slice(0,3).map(x=>x.boat),actual=o.slice(0,3);
   const exact=x=>x.every((n,i)=>n===actual[i]);
   const m=exact(model),f=exact([1,2,3]),r=exact(rank);
   counts.races++;counts.modelExact+=m?1:0;counts.fixed123Exact+=f?1:0;counts.rankExact+=r?1:0;
+  const day=byDate[date]??={races:0,modelExact:0,fixed123Exact:0,rankExact:0};day.races++;day.modelExact+=m?1:0;day.fixed123Exact+=f?1:0;day.rankExact+=r?1:0;
   counts.modelOnlyVsFixed+=m&&!f?1:0;counts.fixedOnlyVsModel+=f&&!m?1:0;
   counts.modelOnlyVsRank+=m&&!r?1:0;counts.rankOnlyVsModel+=r&&!m?1:0;
  }
- return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
+ return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
 }
