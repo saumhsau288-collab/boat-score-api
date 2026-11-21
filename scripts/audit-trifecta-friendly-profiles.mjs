@@ -1,6 +1,12 @@
 import {rankNationalLocalAverage} from './audit-boat-one-national-local-average.mjs';
 // Fixed pre-result race profiles and exact ordered-triple rates.
 // Do not optimize buckets against the same outcomes or claim prospective accuracy.
+function pairedExactP(a,b){
+ const n=a+b;if(n===0)return 1;
+ let term=Math.pow(0.5,n),tail=term;
+ for(let k=1;k<=Math.min(a,b);k++){term*= (n-k+1)/k;tail+=term;}
+ return Math.min(1,2*tail);
+}
 export function auditTrifectaFriendlyProfiles(records){
  if(!Array.isArray(records))throw Error('records required');
  const make=()=>({races:0,exactRankOrder:0,topThreeAnyOrder:0,topOneWins:0,boat123Exact:0,boat123AnyOrder:0,rankOnlyCorrect:0,fixedOnlyCorrect:0,bothCorrect:0,neitherCorrect:0});
@@ -28,5 +34,6 @@ export function auditTrifectaFriendlyProfiles(records){
   ];
   for(const key of keys){const g=groups[key];g.races++;if(exact)g.exactRankOrder++;if(any)g.topThreeAnyOrder++;if(win)g.topOneWins++;if(boat123Exact)g.boat123Exact++;if(boat123AnyOrder)g.boat123AnyOrder++;if(exact&&boat123Exact)g.bothCorrect++;else if(exact)g.rankOnlyCorrect++;else if(boat123Exact)g.fixedOnlyCorrect++;else g.neitherCorrect++;}
  }
- return {valid,excluded,ties,groups,warning:'Archived national/local rates may not be pre-race snapshots. Fixed descriptive profiles only, not validated prospective trifecta predictions; sample sizes and field/inside effects matter.'};
+ const pairedEvidence=Object.fromEntries(Object.entries(groups).map(([key,g])=>[key,{discordant:g.rankOnlyCorrect+g.fixedOnlyCorrect,netGain:g.rankOnlyCorrect-g.fixedOnlyCorrect,twoSidedExactP:pairedExactP(g.rankOnlyCorrect,g.fixedOnlyCorrect)}]));
+ return {valid,excluded,ties,groups,pairedEvidence,warning:'Archived national/local rates may not be pre-race snapshots. Fixed descriptive profiles only, not validated prospective trifecta predictions; sample sizes and field/inside effects matter.'};
 }
