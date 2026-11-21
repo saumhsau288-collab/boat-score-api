@@ -1,6 +1,21 @@
 name: Research live Boat Score 2 preview smoke (read only)
 on:
   workflow_dispatch:
+    inputs:
+      date:
+        description: 'YYYYMMDD; blank uses current Japan date'
+        required: false
+        type: string
+      venue:
+        description: 'Venue number 1-24'
+        required: false
+        default: '21'
+        type: string
+      race:
+        description: 'Race number 1-12'
+        required: false
+        default: '1'
+        type: string
   push:
     branches:
       - research/st-course-holdout-20261121
@@ -19,4 +34,8 @@ jobs:
         with:
           node-version: '22'
       - name: Probe deployed preview read-only (no release)
+        env:
+          SMOKE_DATE: ${{ inputs.date }}
+          SMOKE_VENUE: ${{ inputs.venue }}
+          SMOKE_RACE: ${{ inputs.race }}
         run: node scripts/smoke-deployed-boat-score-2-preview.mjs
