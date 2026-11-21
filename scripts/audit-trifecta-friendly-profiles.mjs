@@ -3,7 +3,7 @@ import {rankNationalLocalAverage} from './audit-boat-one-national-local-average.
 // Do not optimize buckets against the same outcomes or claim prospective accuracy.
 export function auditTrifectaFriendlyProfiles(records){
  if(!Array.isArray(records))throw Error('records required');
- const make=()=>({races:0,exactRankOrder:0,topThreeAnyOrder:0,topOneWins:0,boat123Exact:0,boat123AnyOrder:0});
+ const make=()=>({races:0,exactRankOrder:0,topThreeAnyOrder:0,topOneWins:0,boat123Exact:0,boat123AnyOrder:0,rankOnlyCorrect:0,fixedOnlyCorrect:0,bothCorrect:0,neitherCorrect:0});
  const groups={topGapLarge:make(),topGapSmall:make(),thirdFourthGapLarge:make(),thirdFourthGapSmall:make(),topThreeAllInside:make(),topThreeMixed:make(),topThreeAllOutside:make(),topOneBoatOne:make(),topOneOther:make(),boatOneTopInside:make(),boatOneTopMixed:make(),boatOneTopOutside:make(),otherTopInside:make(),otherTopMixed:make(),otherTopOutside:make()};
  let valid=0,excluded=0,ties=0;
  for(const r of records){
@@ -26,7 +26,7 @@ export function auditTrifectaFriendlyProfiles(records){
    top3[0]===1?'topOneBoatOne':'topOneOther',
    (top3[0]===1?'boatOneTop':'otherTop')+placement
   ];
-  for(const key of keys){const g=groups[key];g.races++;if(exact)g.exactRankOrder++;if(any)g.topThreeAnyOrder++;if(win)g.topOneWins++;if(boat123Exact)g.boat123Exact++;if(boat123AnyOrder)g.boat123AnyOrder++;}
+  for(const key of keys){const g=groups[key];g.races++;if(exact)g.exactRankOrder++;if(any)g.topThreeAnyOrder++;if(win)g.topOneWins++;if(boat123Exact)g.boat123Exact++;if(boat123AnyOrder)g.boat123AnyOrder++;if(exact&&boat123Exact)g.bothCorrect++;else if(exact)g.rankOnlyCorrect++;else if(boat123Exact)g.fixedOnlyCorrect++;else g.neitherCorrect++;}
  }
  return {valid,excluded,ties,groups,warning:'Archived national/local rates may not be pre-race snapshots. Fixed descriptive profiles only, not validated prospective trifecta predictions; sample sizes and field/inside effects matter.'};
 }
