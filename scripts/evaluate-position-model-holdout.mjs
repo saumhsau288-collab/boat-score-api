@@ -51,7 +51,10 @@ export function evaluatePositionModelHoldout(reports){
   const winnerGroup=hybridTrifecta.byPredictedWinner[String(hybrid[0])];winnerGroup.races++;winnerGroup.exact+=h?1:0;
   hybridTrifecta.races++;hybridTrifecta.hybridExact+=h?1:0;hybridTrifecta.originalExact+=m?1:0;hybridTrifecta.fixed123Exact+=f?1:0;hybridTrifecta.switchedRaces+=switchWinner?1:0;
   hybridTrifecta.hybridOnlyVsOriginal+=h&&!m?1:0;hybridTrifecta.originalOnlyVsHybrid+=m&&!h?1:0;
-  const hybridDay=hybridTrifecta.byDate[date]??={races:0,switchedRaces:0,hybridExact:0,originalExact:0,fixed123Exact:0};
+  const hybridDay=hybridTrifecta.byDate[date]??={races:0,switchedRaces:0,hybridExact:0,originalExact:0,fixed123Exact:0,originalWinnerCorrect:0,hybridWinnerCorrect:0,switchedWinnerCorrect:0};
+  hybridDay.originalWinnerCorrect+=model[0]===actual[0]?1:0;
+  hybridDay.hybridWinnerCorrect+=hybrid[0]===actual[0]?1:0;
+  hybridDay.switchedWinnerCorrect+=switchWinner&&hybrid[0]===actual[0]?1:0;
   hybridDay.races++;hybridDay.switchedRaces+=switchWinner?1:0;hybridDay.hybridExact+=h?1:0;hybridDay.originalExact+=m?1:0;hybridDay.fixed123Exact+=f?1:0;
   counts.races++;counts.modelExact+=m?1:0;counts.fixed123Exact+=f?1:0;counts.rankExact+=r?1:0;
   const boatOneRank=ranked.findIndex(x=>x.boat===1)+1;
