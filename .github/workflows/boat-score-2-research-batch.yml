@@ -55,6 +55,13 @@ jobs:
             }
             console.log("Validated historical batch",d,Number(v),Number(a),Number(b));
           '
+      - name: Validate offline research comparison logic
+        run: |
+          node --check scripts/compare-research-official-baseline.mjs
+          node --check scripts/review-official85-vs-parsed-podium.mjs
+          node --check scripts/summarize-research-official85-batch.mjs
+          node scripts/test-compare-research-official-baseline.mjs
+          node scripts/test-review-official85-vs-parsed-podium.mjs
       - name: Capture official features, Makulabo sample, and official results for each race
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
@@ -75,59 +82,14 @@ jobs:
             fi
             echo "::endgroup::"
           done
-      - name: Summarize research-only comparison without calibration
+      - name: Summarize official-only 85-point component and finish ranks
         if: always()
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
           CAPTURE_VENUE: ${{ inputs.venue }}
           FIRST_RACE: ${{ inputs.first_race }}
           LAST_RACE: ${{ inputs.last_race }}
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          const d=process.env.CAPTURE_DATE,v=Number(process.env.CAPTURE_VENUE);
-          const load=(prefix,r)=>{try{return JSON.parse(fs.readFileSync('prediction-captures/research-'+prefix+'-'+d+'-'+v+'-'+r+'.json','utf8'))}catch{return null}};
-          const lines=['## Historical research batch (no scoring changes)',
-            '| Race | Official racers | Makulabo | Official result | 85-point ranking | Parsed podium | Overlap | Winner score rank | Exact podium order |',
-            '|---|---|---|---|---|---|---|---|'];
-          let compared=0,winnerTop=0,exactPodium=0,overlapTotal=0;
-          for(let r=Number(process.env.FIRST_RACE);r<=Number(process.env.LAST_RACE);r++){
-            const a=load('official',r),m=load('makulabo',r),o=load('result',r);
-            const rows=m?.officialComponentComparison?.rows;
-            const podium=o?.parsedPodium;
-            const ready=a?.status==='captured_research_inputs'&&
-              m?.officialComponentComparison?.status==='research_official_component_comparison'&&
-              o?.status==='official_racelist_result_identity_matched'&&
-              Array.isArray(rows)&&rows.length===6&&new Set(rows.map(x=>x.boat)).size===6&&
-              rows.every(x=>Number.isFinite(x.officialComponentScore85))&&
-              Array.isArray(podium)&&podium.length===3&&new Set(podium).size===3&&
-              podium.every(b=>rows.some(x=>x.boat===b));
-            let rank='held',actual='held',overlap='held',winnerRank='held',exact='held';
-            if(ready){
-              const sorted=[...rows].sort((x,y)=>y.officialComponentScore85-x.officialComponentScore85||x.boat-y.boat);
-              rank=sorted.map(x=>x.boat).join('-');
-              actual=podium.join('-');
-              const matched=sorted.slice(0,3).filter(x=>podium.includes(x.boat)).length;
-              overlap=matched+'/3';
-              overlapTotal+=matched;
-              winnerRank=String(sorted.findIndex(x=>x.boat===podium[0])+1);
-              exact=String(sorted.slice(0,3).every((x,i)=>x.boat===podium[i]));
-              if(winnerRank==='1')winnerTop++;
-              if(exact==='true')exactPodium++;
-              compared++;
-            }
-            lines.push('| '+r+' | '+(a?.status??'missing')+' | '+(m?.status??'missing')+
-              ' | '+(o?.status??'missing')+' | '+rank+' | '+actual+' | '+overlap+' | '+winnerRank+' | '+exact+' |');
-          }
-          lines.push('', 'Comparable retrospective races: '+compared,
-            'Top-score boat finished first: '+winnerTop+'/'+compared,
-            'Exact podium order: '+exactPodium+'/'+compared,
-            'Top-three membership overlap: '+overlapTotal+'/'+(compared*3),
-            'Post-race official-only 85-point component, not authenticated pre-race predictions.',
-            'No independent result verification, automatic calibration, or deployed app changes.');
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
-          console.log(lines.join('\n'));
-          NODE
+        run: node scripts/summarize-research-official85-batch.mjs
       - name: Upload research snapshots
         if: always()
         uses: actions/upload-artifact@v4
