@@ -42,3 +42,11 @@ test('reports second and third finish top-three score coverage with denominators
  const empty=summarizeRetrospectiveFinishRanks([]);
  assert.equal(empty.finishRankTop3Rates[1].rate,null);
 });
+
+test('rejects missing race identity instead of merging unrelated records',()=>{
+ const a={...record(1,[5,6,1]),race:undefined};
+ const b={...record(2,[5,2,6]),venue:0};
+ const x=summarizeRetrospectiveFinishRanks([a,b,record(3,[1,2,3])]);
+ assert.equal(x.held.invalid_race_identity,2);
+ assert.equal(x.compared,1);
+});
