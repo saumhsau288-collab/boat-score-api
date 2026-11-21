@@ -31,3 +31,23 @@ test('does not transfer another racer recent50 data onto a boat',()=>{
  assert.equal(x.racers[0].recent50Verified,false);
  assert.equal(x.eligibleForCalibration,false);
 });
+
+test('retains official metrics per racer even when source rows are unordered',()=>{
+ const x=buildResearchFeatureSnapshot({...base,official:official.map((r,i)=>({
+  ...r,nationalWinRate:5+i/10,motorTwoWinRate:30+i
+ })).reverse()});
+ assert.equal(x.status,'captured_research_inputs');
+ assert.deepEqual(x.racers.map(r=>r.boat),[1,2,3,4,5,6]);
+ assert.equal(x.racers[0].racerId,'4001');
+ assert.equal(x.racers[0].nationalWinRate,5);
+ assert.equal(x.racers[5].motorTwoWinRate,35);
+ assert.equal(x.eligibleForCalibration,false);
+});
+test('rejects duplicate official racer identities',()=>{
+ const duplicated=official.map(x=>({...x}));
+ duplicated[1].racerId=duplicated[0].racerId;
+ const x=buildResearchFeatureSnapshot({...base,official:duplicated});
+ assert.equal(x.status,'unverified_official');
+ assert.equal(x.reason,'duplicate_boat_or_racer');
+ assert.equal(x.eligibleForCalibration,false);
+});
