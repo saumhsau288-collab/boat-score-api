@@ -2,6 +2,8 @@ name: Historical adjacent podium descriptive report
 on:
   pull_request:
     paths:
+      - 'scripts/audit-archived-ability-placement.mjs'
+      - 'scripts/test-audit-archived-ability-placement.mjs'
       - 'scripts/audit-top-three-sandwich.mjs'
       - 'scripts/test-audit-top-three-sandwich.mjs'
       - 'scripts/audit-finish-order-pairs.mjs'
@@ -22,7 +24,7 @@ jobs:
         with:
           node-version: '22'
       - name: Run archive parser tests
-        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs
+        run: node --test scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs
       - name: Fetch isolated immutable historical archive (read-only)
         run: |
           git fetch --depth=1 origin historical-research-data
@@ -44,7 +46,9 @@ jobs:
             for(const [name,p] of Object.entries(r.topThreePatterns.patterns))rows.push("| "+name+" | "+p.count+" | "+(100*p.rate).toFixed(1)+"% |");
             rows.push("","### Pattern rates conditioned on winning frame group","","| Pattern | Count | Winner-group races | Conditional rate |","|---|---:|---:|---:|");
             for(const [name,p] of Object.entries(r.topThreePatterns.patterns))rows.push("| "+name+" | "+p.count+" | "+p.conditionedOnWinnerRaces+" | "+(p.rateGivenWinnerGroup===null?"n/a":(100*p.rateGivenWinnerGroup).toFixed(1)+"%")+" |");
-            rows.push("","No verified pre-race forecast or predictive accuracy claim. No score change.");
+            rows.push("","### Exploratory archive win-rate placement (NOT pre-race verified)","","| Placement | Races | Both top-three | Rate |","|---|---:|---:|---:|");
+            for(const [name,g] of Object.entries(r.archivedAbilityPlacement.groups))rows.push("| "+name+" | "+g.races+" | "+g.bothPodium+" | "+(g.bothPodiumRate===null?"n/a":(100*g.bothPodiumRate).toFixed(1)+"%")+" |");
+            rows.push("","Archive win rates are NOT verified as pre-race snapshots. No predictive accuracy claim. No score change.");
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
           '
       - uses: actions/upload-artifact@v4
