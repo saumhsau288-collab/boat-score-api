@@ -1,6 +1,7 @@
 // Analyze immutable historical-research-data daily reports, descriptively only.
 import fs from 'node:fs';
 import path from 'node:path';
+import {auditFinishOrderPairs} from './audit-finish-order-pairs.mjs';
 import {auditOfficialJoinAdjacency} from './audit-official-join-adjacency.mjs';
 export function aggregateArchivedDailyReports(reports) {
  if(!Array.isArray(reports))throw new TypeError('reports must be an array');
@@ -17,7 +18,7 @@ export function aggregateArchivedDailyReports(reports) {
    }
   }
  }
- return {...auditOfficialJoinAdjacency({records:rows}),archiveDays:dates.size,archiveDates:[...dates].sort()};
+ return {...auditOfficialJoinAdjacency({records:rows}),finishOrderPairs:auditFinishOrderPairs(rows),archiveDays:dates.size,archiveDates:[...dates].sort()};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href) {
  try {
