@@ -8,6 +8,8 @@ on:
       - 'scripts/parse-makulabo-heatmap-six.mjs'
       - 'scripts/test-parse-makulabo-heatmap-six.mjs'
       - 'scripts/check-live-official-makulabo-identity.mjs'
+      - 'scripts/audit-makulabo-historical-cutoff.mjs'
+      - 'scripts/test-audit-makulabo-historical-cutoff.mjs'
   workflow_dispatch:
     inputs:
       date:
@@ -29,6 +31,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test historical cutoff and future leakage protection
+        run: node scripts/test-audit-makulabo-historical-cutoff.mjs
       - name: Test strict six-row heatmap parser
         run: node scripts/test-parse-makulabo-heatmap-six.mjs
       - name: Validate live six-row Makulabo counts (no scoring)
