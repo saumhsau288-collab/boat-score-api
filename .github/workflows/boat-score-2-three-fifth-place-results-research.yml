@@ -19,6 +19,7 @@ jobs:
         run: |
           node scripts/test-fetch-manual-official-historical-results.mjs
           node scripts/test-extract-official-result-racers.mjs
+          node scripts/extract-official-actual-start.test.mjs
       - name: Fetch three explicit official result pages
         run: |
           mkdir -p research-three
@@ -37,7 +38,9 @@ jobs:
               const raw=JSON.parse(fs.readFileSync("research-three/"+key+".raw.json","utf8"));
               const parsed=JSON.parse(fs.readFileSync("research-three/"+key+".parsed.json","utf8"));
               const row=parsed.rows[0];
-              console.log(JSON.stringify({key,fetchStatus:raw.pages[0]?.status,parseStatus:row?.status,entryCoursesExtracted:row?.entryCoursesExtracted,officialStartOrder:row?.startOrderBoats,eligibleForScoreChange:false}));
+              const {extractOfficialActualStart}=await import("./scripts/extract-official-actual-start.mjs");
+              const start=extractOfficialActualStart(raw.pages[0]?.html);
+              console.log(JSON.stringify({key,fetchStatus:raw.pages[0]?.status,parseStatus:row?.status,entryCoursesExtracted:row?.entryCoursesExtracted,officialStartOrder:row?.startOrderBoats,actualStartStatus:start.status,actualStarts:start.starts,eligibleForScoreChange:false}));
             }
           '
       - name: Upload research-only raw and parsed evidence
