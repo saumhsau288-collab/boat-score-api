@@ -26,3 +26,15 @@ test('non-ready records do not shift score evidence onto the wrong race',()=>{
  assert.deepEqual(out.rows.map(r=>r.sixBoatOutputScoresPresent),[false,true,false]);
  assert.equal(out.resultComparisonsEligible,0);
 });
+
+test('duplicate race keys remain held even when both records contain six scores',()=>{
+ const rankedScores=[1,2,3,4,5,6].map(boat=>({boat,score:boat*3}));
+ const record={date:'20261120',venue:17,race:2,httpStatus:200,
+  receivedAt:'2026-11-20T00:00:00Z',response:{ready:true,rankedScores}};
+ const out=auditScoreResultJoin({authenticatedBeforeRace:false,records:[record,{...record}]},[]);
+ assert.equal(out.validSixBoatOutputScoreSets,2);
+ assert.equal(out.resultComparisonsEligible,0);
+ assert.deepEqual(out.rows.map(row=>row.sixBoatOutputScoresPresent),[true,true]);
+ assert.ok(out.rows.every(row=>row.holdReasons.includes('duplicate_saved_capture_race')));
+ assert.equal(out.weightChangesPermitted,false);
+});
