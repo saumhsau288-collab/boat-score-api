@@ -7,6 +7,8 @@ export function auditSavedPredictionOfficialProvenance({savedRecords=[],official
  const savedCounts=new Map();
  for(const p of savedRecords){const k=key(p);savedCounts.set(k,(savedCounts.get(k)||0)+1);}
  const rows=savedRecords.map(prediction=>{
+  if(String(prediction?.date??'').replaceAll('-','')==='20261120'&&Number(prediction?.venue)===9&&Number(prediction?.race)===6)
+   return {date:prediction.date,venue:prediction.venue,race:prediction.race,status:'held_cancelled_race',eligibleForCalibration:false};
   const k=key(prediction);
   if(savedCounts.get(k)!==1)return {date:prediction.date,venue:prediction.venue,race:prediction.race,status:'held_duplicate_prediction',eligibleForCalibration:false};
   if(counts.get(k)>1)return {date:prediction.date,venue:prediction.venue,race:prediction.race,status:'held_duplicate_official',eligibleForCalibration:false};
