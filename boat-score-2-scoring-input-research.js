@@ -5,7 +5,7 @@ export function buildVerifiedScoringInputs(extraction) {
   return {ready:false,reason:'official_six_racers_unverified',racers:[]};
  const seen=new Set(),ids=new Set(),out=[];
  for(const racer of extraction.racers){
-  const {boat,racerId,nationalWinRate,localWinRate,motorTwoWinRate,averageSt}=racer;
+  const {boat,racerId,name,nationalWinRate,localWinRate,motorTwoWinRate,averageSt}=racer;
   if(!Number.isInteger(boat)||boat<1||boat>6||!/^\d{4}$/.test(String(racerId))||
     seen.has(boat)||ids.has(racerId)||![nationalWinRate,localWinRate,motorTwoWinRate].every(Number.isFinite)||
     nationalWinRate<0||nationalWinRate>10||localWinRate<0||localWinRate>10||
