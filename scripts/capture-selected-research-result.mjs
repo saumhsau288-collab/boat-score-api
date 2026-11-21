@@ -24,7 +24,7 @@ export async function captureSelectedResearchResult(snapshot,{fetchImpl=fetch}={
   const page={date,venue,race,url,status:'raw_html_saved',html,sha256};
   const parsed=extractOfficialResultRacers({pages:[page]}).rows[0];
   const crossCheck=crossCheckOfficialResultIdentity(snapshot,parsed);
-  return {status:crossCheck.status,date,venue,race,sourceUrl:url,sha256,
+  return {status:crossCheck.status,reason:crossCheck.reason??null,date,venue,race,sourceUrl:url,sha256,
    parsedStatus:parsed.status,identityCheck:crossCheck,
    parsedPodium:crossCheck.status==='official_racelist_result_identity_matched'?parsed.podium:null,
    independentResultVerification:false,eligibleForCalibration:false,
