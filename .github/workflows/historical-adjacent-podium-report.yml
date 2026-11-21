@@ -71,6 +71,7 @@ on:
       - 'scripts/test-audit-finish-order-pairs.mjs'
       - 'scripts/test-diagnose-holdout-order-errors.mjs'
       - 'scripts/audit-top-rated-boat-one.mjs'
+      - 'scripts/audit-high-ability-inner-finish.mjs'
       - 'scripts/audit-order-benefit-by-ability-gap.mjs'
       - 'scripts/assess-paired-day-stability.mjs'
       - 'scripts/audit-fixed-winner-paired-days.mjs'
