@@ -1,12 +1,17 @@
 // Research-only immutable-shape input record; never asserts pre-race authenticity.
 import {validateOfficialMetrics} from './boat-score-2-official-metrics.js';
-export function buildResearchFeatureSnapshot({date,venue,race,capturedAt,official,courseByBoat=[],recent50=[],exhibitionByBoat=[]}={}){
+export function buildResearchFeatureSnapshot({date,venue,race,capturedAt,official,courseByBoat=[],recent50=[],exhibitionByBoat=[],startTimingByBoat=[]}={}){
  if(!/^20\d{6}$/.test(String(date??''))||!Number.isInteger(venue)||venue<1||venue>24||
  !Number.isInteger(race)||race<1||race>12||!Number.isFinite(Date.parse(capturedAt)))
  return {status:'invalid_capture_identity',eligibleForCalibration:false};
  const checked=validateOfficialMetrics(official);
  if(!checked.verified)return {status:'unverified_official',reason:checked.reason,eligibleForCalibration:false};
- const courses=new Map(),recent=new Map(),exhibitions=new Map();
+ const courses=new Map(),recent=new Map(),exhibitions=new Map(),starts=new Map();
+ for(const x of startTimingByBoat){
+  if(!Number.isInteger(x?.boat)||x.boat<1||x.boat>6||starts.has(x.boat))
+   return {status:'invalid_start_timing_mapping',eligibleForCalibration:false};
+  starts.set(x.boat,x);
+ }
  for(const x of exhibitionByBoat){
   if(!Number.isInteger(x?.boat)||x.boat<1||x.boat>6||exhibitions.has(x.boat))
    return {status:'invalid_exhibition_mapping',eligibleForCalibration:false};
@@ -23,13 +28,15 @@ export function buildResearchFeatureSnapshot({date,venue,race,capturedAt,officia
   recent.set(id,x);
  }
  const racers=checked.racers.map(r=>{
-  const course=courses.get(r.boat),history=recent.get(r.racerId),exhibition=exhibitions.get(r.boat);
+  const course=courses.get(r.boat),history=recent.get(r.racerId),exhibition=exhibitions.get(r.boat),start=starts.get(r.boat);
+  const verifiedStart=start?.verified===true&&String(start.racerId)===r.racerId&&typeof start.startTiming==='number'&&Number.isFinite(start.startTiming)&&start.startTiming>=0&&start.startTiming<=1;
   const verifiedExhibition=exhibition?.verified===true&&String(exhibition.racerId)===r.racerId&&typeof exhibition.exhibitionTime==='number'&&Number.isFinite(exhibition.exhibitionTime)&&exhibition.exhibitionTime>0;
   const verifiedCourse=course?.verified===true&&String(course.racerId)===r.racerId&&Number.isInteger(course.entryCourse)&&course.entryCourse>=1&&course.entryCourse<=6;
   const verifiedRecent=history?.verified===true&&typeof history.firstPlaceRate==='number'&&Number.isFinite(history.firstPlaceRate)&&history.firstPlaceRate>=0&&history.firstPlaceRate<=100;
   return {...r,sourceVerified:true,entryCourse:verifiedCourse?course.entryCourse:null,entryCourseVerified:verifiedCourse,
    recent50FirstPlaceRate:verifiedRecent?history.firstPlaceRate:null,recent50Verified:verifiedRecent,
-   startTiming:null,exhibitionTime:verifiedExhibition?exhibition.exhibitionTime:null,
+   startTiming:verifiedStart?start.startTiming:null,startTimingVerified:verifiedStart,
+   exhibitionTime:verifiedExhibition?exhibition.exhibitionTime:null,
    exhibitionTimeVerified:verifiedExhibition,weather:null};
  });
  return {status:'captured_research_inputs',date,venue,race,capturedAt,
