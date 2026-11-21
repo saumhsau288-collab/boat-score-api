@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 // Offline research-only inspection of independent official result evidence.
 export function auditOfficialResultEvidence(results){
  if(!Array.isArray(results))throw Error('results_array_required');
@@ -36,4 +37,12 @@ export function auditOfficialResultEvidence(results){
   held:rows.filter(r=>r.reasons.length>0).length,rows,
   independentlyAuthenticated:false,eligibleForCalibration:false,
   warning:'Structural validation cannot establish that verified=true is truthful; source content and official deadline require independent authentication.'};
+}
+
+if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
+ const path=process.argv[2];
+ if(!path)throw Error('Usage: node scripts/audit-official-result-evidence.mjs verified-official-results.json');
+ const input=JSON.parse(readFileSync(path,'utf8'));
+ if(!Array.isArray(input.results))throw Error('results_array_required');
+ console.log(JSON.stringify(auditOfficialResultEvidence(input.results),null,2));
 }
