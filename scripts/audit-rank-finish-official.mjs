@@ -39,7 +39,11 @@ export function auditRankFinishWithOfficial({savedRecords=[],officialRaces=[],re
  }
  const joined=rows.filter(x=>x.status==='retrospective_comparison_only');
  const countRanks=field=>Object.fromEntries([1,2,3,4,5,6].map(rank=>[rank,joined.filter(x=>x[field]===rank).length]));
- const summary={winnerByScoreRank:countRanks('winnerScoreRank'),topScoreByActualFinish:countRanks('topScoreActualFinish'),
+ const featureNames=['nationalWinRateAvailable','localWinRateAvailable','motor2RateAvailable','preRaceAverageSTAvailable','makulabo50Available'];
+ const featureAvailability=Object.fromEntries(featureNames.map(name=>[name,{
+  available:joined.flatMap(x=>x.boats).filter(b=>b.featureEvidence[name]===true).length,
+  total:joined.length*6}]));
+ const summary={featureAvailability,winnerByScoreRank:countRanks('winnerScoreRank'),topScoreByActualFinish:countRanks('topScoreActualFinish'),
   topScoreWinners:joined.filter(x=>x.topScoreActualFinish===1).length,
   lowerScoreWinners:joined.filter(x=>x.winnerScoreRank>=4).length,
   topScoreMisses:joined.filter(x=>x.topScoreActualFinish!==1).map(x=>({date:x.date,venue:x.venue,race:x.race,
