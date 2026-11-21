@@ -23,6 +23,7 @@ jobs:
           node scripts/test-audit-future-feature-provenance.mjs
           node scripts/test-build-research-feature-evidence-record.mjs
           node scripts/test-report-live-feature-readiness.mjs
+          node scripts/test-report-saved-capture-readiness.mjs
       - name: Download actual saved scores and official comparison
         env:
           GH_TOKEN: ${{ github.token }}
