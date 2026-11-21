@@ -7,7 +7,7 @@ export function classifyMakulaboFinishRows(rawHeaders,rawRows){
   return {status:'held',reason:'unverified_headers',valid:[],missing:[],invalid:[]};
  if(!Array.isArray(rawRows)||rawRows.length!==6)
   return {status:'held',reason:'six_rows_required',valid:[],missing:[],invalid:[]};
- const valid=[],missing=[],invalid=[],seen=new Set();
+ const valid=[],missing=[],invalid=[],zeroRuns=[],seen=new Set();
  for(const row of rawRows){
   if(!Array.isArray(row)||row.length!==10)return {status:'held',reason:'invalid_row_width',valid:[],missing:[],invalid:[]};
   const boat=Number(normalize(row[0])),name=String(row[1]??'').trim();
@@ -23,11 +23,12 @@ export function classifyMakulaboFinishRows(rawHeaders,rawRows){
    invalid.push({boat,name,reason:'mixed_or_non_numeric_cells'});continue;
   }
   const counts=tokens.slice(0,6).map(Number),runs=Number(tokens[6]);
-  if(counts.reduce((a,b)=>a+b,0)!==runs||runs===0){
-   invalid.push({boat,name,reason:runs===0?'zero_runs_not_rate':'invalid_finish_totals'});continue;
+  if(counts.reduce((a,b)=>a+b,0)!==runs){
+   invalid.push({boat,name,reason:'invalid_finish_totals'});continue;
   }
+  if(runs===0){zeroRuns.push({boat,name,runs:0,firstPlaceRate:null,reason:'zero_sample_rate_undefined'});continue;}
   valid.push({boat,name,counts,runs,firstPlaceRate:+(100*counts[0]/runs).toFixed(2)});
  }
- return {status:invalid.length?'partial_with_invalid':missing.length?'partial_with_missing':'all_rows_valid',
-  valid,missing,invalid,eligibleForCalibration:false,scoreChangeApplied:false};
+ return {status:invalid.length?'partial_with_invalid':(missing.length||zeroRuns.length)?'partial_with_unscorable':'all_rows_valid',
+  valid,missing,invalid,zeroRuns,eligibleForCalibration:false,scoreChangeApplied:false};
 }
