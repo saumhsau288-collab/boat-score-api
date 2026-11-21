@@ -51,6 +51,13 @@ jobs:
           if(provenance.rows.some(x=>x.originalInputsVerified===true||x.eligibleForCalibration===true))
             throw Error('retrospective provenance must not be calibrated');
           fs.writeFileSync('prediction-captures/actual-twelve-prediction-official-provenance.json',JSON.stringify(provenance,null,2)+'\n');
+          // A missing official feature comparison does not imply missing official finish data.
+          const ash=provenance.rows.find(x=>String(x.date)==='20261120'&&Number(x.venue)===21&&Number(x.race)===4);
+          const ashFinish=results.results.find(x=>String(x.date)==='20261120'&&Number(x.venue)===21&&Number(x.race)===4&&x.verified===true);
+          if(ash?.status!=='held_missing_official'||!Array.isArray(ashFinish?.finishOrder)||ashFinish.finishOrder.length!==6)
+            throw Error('Ashiya 4R finish evidence and feature gap changed');
+          console.log('ASHIYA_4R_EVIDENCE '+JSON.stringify({officialFinishAvailable:true,officialFeatureComparisonAvailable:false,
+            finishOrder:ashFinish.finishOrder,eligibleForCalibration:false}));
           console.log('REAL_PROVENANCE '+JSON.stringify({attempted:provenance.attempted,matched:provenance.matched,
             held:provenance.held,originalInputsVerified:provenance.originalInputsVerified,
             independentlyAuthenticatedBeforeRace:provenance.independentlyAuthenticatedBeforeRace,statuses:provenance.statuses}));
