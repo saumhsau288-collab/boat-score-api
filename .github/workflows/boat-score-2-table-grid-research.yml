@@ -48,6 +48,7 @@ jobs:
           node scripts/test-audit-historical-batch-evidence.mjs
           node scripts/test-fetch-official-result-pages-research.mjs
           node scripts/test-parse-saved-official-result-pages.mjs
+          node scripts/test-run-saved-capture-result-comparison.mjs
           node boat-score-2-historical-snapshot-gate-research.test.mjs
           node scripts/test-identify-makulabo-sample-scope.mjs
           node scripts/test-apply-reviewed-makulabo-identities.mjs
