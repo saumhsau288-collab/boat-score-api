@@ -15,4 +15,8 @@ assert.ok(result.boats.every(x=>x.reasons.includes('historical_provenance_unveri
 assert.equal(result.boats[0].observedFirstPlaceRate,Math.round(2/49*10000)/100);
 const broken=heatmap.map((r,i)=>i===2?{...r,counts:[100,0,0,0,0,0]}:r);
 assert.ok(diagnose(official,broken).boats[2].reasons.includes('invalid_counts'));
+const namedOfficial=official.map((r,i)=>({...r,name:'選手'+(i+1)}));
+const namedHeatmap=heatmap.map((r,i)=>({...r,name:i===0?'別の選手':'選手'+(i+1)}));
+assert.ok(diagnose(namedOfficial,namedHeatmap).boats[0].reasons.includes('racer_name_mismatch'));
+assert.ok(!diagnose(namedOfficial,namedHeatmap).boats[1].reasons.includes('racer_name_mismatch'));
 console.log('Six-boat Makulabo diagnostics passed');
