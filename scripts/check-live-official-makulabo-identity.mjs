@@ -52,6 +52,10 @@ const historicalGate=auditMakulaboHistoricalCutoff({sourceCaptureAt});
 if(historicalGate.eligible)throw Error('Unverified live source passed historical cutoff gate');
 console.log('HISTORICAL_CUTOFF_GATE_BLOCKED',JSON.stringify(historicalGate));
 const sampleAudit=prepareMakulaboMorningEvidence(official.racers,makulabo.racers,historicalGate);
+const diagnosticOnly=prepareMakulaboMorningEvidence(official.racers,makulabo.racers,{eligible:true});
+console.log('LIVE_MAKULABO_SAMPLE_DIAGNOSTIC',JSON.stringify({status:diagnosticOnly.status,reason:diagnosticOnly.reason,warning:'Hypothetical cutoff approval for sample diagnosis only; never score'}));
+if(diagnosticOnly.eligibleForScoring!==false||diagnosticOnly.reason!=='not_exactly_50_races')
+ throw Error('Partial Makulabo samples were not rejected independently of cutoff');
 if(sampleAudit.eligibleForScoring!==false)throw Error('Unverified Makulabo sample became score eligible');
 console.log('LIVE_MAKULABO_MORNING_ELIGIBILITY',JSON.stringify({status:sampleAudit.status,reason:sampleAudit.reason,eligibleForScoring:sampleAudit.eligibleForScoring,
  observedRuns:makulabo.racers.map(r=>({boat:r.boat,runs:r.runs,blankAsZeroInferred:r.blankAsZeroInferred}))}));
