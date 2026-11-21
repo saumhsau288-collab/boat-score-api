@@ -10,6 +10,7 @@ import {describeMakulaboFinishSample} from './describe-makulabo-finish-sample.mj
 import {identifyMakulaboSampleScope} from './identify-makulabo-sample-scope.mjs';
 import {summarizeMakulaboFinishComparison} from './summarize-makulabo-finish-comparison.mjs';
 import {compareOfficialAbilityAndFrameSample} from './compare-official-ability-and-frame-sample.mjs';
+import {compareResearchOfficialBaseline} from './compare-research-official-baseline.mjs';
 const date=process.env.CAPTURE_DATE;
 const venue=Number(process.env.CAPTURE_VENUE);
 const race=Number(process.env.CAPTURE_RACE);
@@ -36,6 +37,7 @@ if(!fs.existsSync(officialPath)){
     sourceUrl:url,observedAt:new Date().toISOString(),
     finishSample:sample,finishComparison:comparison,
     officialFrameComparison:compareOfficialAbilityAndFrameSample(snapshot,comparison),
+    officialComponentComparison:compareResearchOfficialBaseline(snapshot,comparison),
     sampleScope:identifyMakulaboSampleScope(html),
     recent50WinRateVerified:false,preRaceIndependentlyVerified:false};
    if(result.reason==='abbreviated_name_requires_review'||result.reason==='official_identity_mismatch'){
