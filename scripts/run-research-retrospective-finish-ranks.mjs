@@ -23,5 +23,6 @@ if(process.env.GITHUB_STEP_SUMMARY){
  fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,
   '\n## Retrospective finish-rank diagnostics (not a pre-race backtest)\n'+
   'Compared: '+result.compared+'\n\n'+
-  result.positions.map(p=>'- Finish '+p.finish+': '+fmt(p)).join('\n')+'\n');
+  result.positions.map(p=>'- Finish '+p.finish+': '+fmt(p)).join('\n')+'\n'+
+  result.finishRankTop3Rates.map(p=>'- Finish '+p.finish+' in score top 3: '+p.top3Count+'/'+p.total+' ('+(p.rate===null?'n/a':(p.rate*100).toFixed(1)+'%')+')').join('\n')+'\n');
 }
