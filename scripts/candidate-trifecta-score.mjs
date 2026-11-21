@@ -5,7 +5,6 @@ export function rankTrifectaCandidates(racers,{innerAdvantage=0.6,abilityWeight=
  if(!Number.isInteger(limit)||limit<1||limit>120)throw Error('invalid limit');
  for(const x of [secondInside,thirdInside])if(!Number.isFinite(x)||x<0)throw Error('invalid positional weight');
  const winners=scoreWinnerCandidates(racers,{innerAdvantage,abilityWeight});
- const byBoat=new Map(winners.map(x=>[x.boat,x]));
  const candidates=[];
  for(const first of winners)for(const second of winners)for(const third of winners){
   if(new Set([first.boat,second.boat,third.boat]).size!==3)continue;
