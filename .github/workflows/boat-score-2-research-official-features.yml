@@ -25,6 +25,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Show selected race in job summary
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: |
+          printf '## Requested research race\\nDate: %s\\nVenue: %s\\nRace: %s\\n' "$CAPTURE_DATE" "$CAPTURE_VENUE" "$CAPTURE_RACE" >> "$GITHUB_STEP_SUMMARY"
       - name: Validate selected date, venue and race
         env:
           CAPTURE_DATE: ${{ inputs.capture_date }}
