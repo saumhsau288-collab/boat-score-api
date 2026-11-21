@@ -10,6 +10,8 @@ on:
       - 'scripts/check-live-official-makulabo-identity.mjs'
       - 'scripts/audit-makulabo-historical-cutoff.mjs'
       - 'scripts/test-audit-makulabo-historical-cutoff.mjs'
+      - 'scripts/prepare-makulabo-morning-evidence.mjs'
+      - 'scripts/test-prepare-makulabo-morning-evidence.mjs'
   workflow_dispatch:
     inputs:
       date:
@@ -31,6 +33,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test Makulabo morning evidence gate
+        run: node scripts/test-prepare-makulabo-morning-evidence.mjs
       - name: Test historical cutoff and future leakage protection
         run: node scripts/test-audit-makulabo-historical-cutoff.mjs
       - name: Test strict six-row heatmap parser
