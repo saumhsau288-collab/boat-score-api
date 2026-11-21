@@ -30,6 +30,8 @@ export function auditFutureFeatureProvenance({race,official,averageST=[],makulab
     /^[a-f0-9]{64}$/.test(String(x.responseSha256??''))&&validValue;
   });
  };
+ const trustedOfficialUrl=value=>{try{const u=new URL(value);return u.protocol==='https:'&&u.hostname==='www.boatrace.jp'&&u.pathname==='/owpc/pc/race/racelist'&&
+   u.searchParams.get('hd')===race.date&&Number(u.searchParams.get('jcd'))===Number(race.venue)&&Number(u.searchParams.get('rno'))===Number(race.race);}catch{return false;}};
  const officialCapture=time(official.receivedAt);
  const staleLimitMs=24*60*60*1000;
  const sameCalendarDayJst=(stamp,date)=>Number.isFinite(time(stamp))&&new Date(time(stamp)+9*60*60*1000).toISOString().slice(0,10).replaceAll('-','')===date;
@@ -40,7 +42,7 @@ export function auditFutureFeatureProvenance({race,official,averageST=[],makulab
    official.racers.every(x=>x.sourceVerified===true)&&
    Number.isFinite(officialCapture)&&officialCapture<=time(prediction.receivedAt)&&officialCapture<=cutoff&&
    sameCalendarDayJst(official.receivedAt,race.date)&&recentForPrediction(official.receivedAt)&&
-   typeof official.sourceUrl==='string'&&official.sourceUrl.startsWith('https://www.boatrace.jp/')&&
+   trustedOfficialUrl(official.sourceUrl)&&
    /^[a-f0-9]{64}$/.test(String(official.responseSha256??''));
  const stVerified=evidence(averageST,'averageST'),makulaboVerified=evidence(makulabo,'makulabo');
  const originalInputsVerified=false; // Requires separate proof these exact records fed the predictor.
