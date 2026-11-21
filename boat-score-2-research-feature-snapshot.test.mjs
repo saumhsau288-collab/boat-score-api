@@ -90,3 +90,24 @@ test('duplicate exhibition boat records are rejected',()=>{
  assert.equal(x.status,'invalid_exhibition_mapping');
  assert.equal(x.eligibleForCalibration,false);
 });
+
+test('start timing is accepted only for verified matching racer and boat',()=>{
+ const x=buildResearchFeatureSnapshot({...base,startTimingByBoat:[
+  {boat:1,racerId:'4001',startTiming:0.12,verified:true},
+  {boat:2,racerId:'4001',startTiming:0.09,verified:true},
+  {boat:3,racerId:'4003',startTiming:0,verified:false}
+ ]});
+ assert.equal(x.racers[0].startTiming,0.12);
+ assert.equal(x.racers[0].startTimingVerified,true);
+ assert.equal(x.racers[1].startTiming,null);
+ assert.equal(x.racers[2].startTiming,null);
+ assert.equal(x.eligibleForCalibration,false);
+});
+test('duplicate start timing boat records are rejected',()=>{
+ const x=buildResearchFeatureSnapshot({...base,startTimingByBoat:[
+  {boat:1,racerId:'4001',startTiming:0.12,verified:true},
+  {boat:1,racerId:'4001',startTiming:0.13,verified:true}
+ ]});
+ assert.equal(x.status,'invalid_start_timing_mapping');
+ assert.equal(x.eligibleForCalibration,false);
+});
