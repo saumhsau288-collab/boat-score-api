@@ -149,3 +149,30 @@ test('allows distinct verified entry courses even when boats swap positions',()=
  assert.equal(x.racers[1].entryCourse,1);
  assert.equal(x.eligibleForCalibration,false);
 });
+
+test('course swap does not swap ST, exhibition, or racer-specific recent50 data',()=>{
+ const x=buildResearchFeatureSnapshot({...base,
+  courseByBoat:[
+   {boat:1,racerId:'4001',entryCourse:2,verified:true},
+   {boat:2,racerId:'4002',entryCourse:1,verified:true}
+  ],
+  startTimingByBoat:[
+   {boat:1,racerId:'4001',startTiming:0.08,verified:true},
+   {boat:2,racerId:'4002',startTiming:0.19,verified:true}
+  ],
+  exhibitionByBoat:[
+   {boat:1,racerId:'4001',exhibitionTime:6.71,verified:true},
+   {boat:2,racerId:'4002',exhibitionTime:6.89,verified:true}
+  ],
+  recent50:[
+   {racerId:'4001',firstPlaceRate:42,verified:true},
+   {racerId:'4002',firstPlaceRate:12,verified:true}
+  ]
+ });
+ assert.equal(x.status,'captured_research_inputs');
+ assert.deepEqual(
+  x.racers.slice(0,2).map(r=>[r.racerId,r.entryCourse,r.startTiming,r.exhibitionTime,r.recent50FirstPlaceRate]),
+  [['4001',2,0.08,6.71,42],['4002',1,0.19,6.89,12]]
+ );
+ assert.equal(x.eligibleForCalibration,false);
+});
