@@ -23,7 +23,13 @@ export function auditRankFinishWithOfficial({savedRecords=[],officialRaces=[],re
   }
   ranked.sort((a,b)=>b.score-a.score||a.boat-b.boat);
   const boats=ranked.map((x,i)=>({boat:x.boat,scoreRank:i+1,actualFinish:result.finishOrder.indexOf(x.boat)+1,
-    officialMetricsAvailable:official.comparison.rows.some(o=>o.boat===x.boat)}));
+    officialMetricsAvailable:official.comparison.rows.some(o=>o.boat===x.boat),
+    featureEvidence:(()=>{const o=official.comparison.rows.find(o=>o.boat===x.boat)||{};
+      return {nationalWinRateAvailable:Number.isFinite(o.nationalWinRate),
+       localWinRateAvailable:Number.isFinite(o.localWinRateRaw),
+       motor2RateAvailable:Number.isFinite(o.motor2Rate),
+       preRaceAverageSTAvailable:Number.isFinite(o.preRaceAverageST),
+       makulabo50Available:Number.isFinite(o.makulaboSameFrameFirstPlaceRate)};})()}));
   rows.push({date:dateOf(record),venue:Number(record.venue),race:Number(record.race),status:'retrospective_comparison_only',
     topScoreBoat:ranked[0].boat,topScoreActualFinish:boats[0].actualFinish,
     winnerScoreRank:boats.find(x=>x.actualFinish===1)?.scoreRank,
@@ -38,7 +44,9 @@ export function auditRankFinishWithOfficial({savedRecords=[],officialRaces=[],re
   lowerScoreWinners:joined.filter(x=>x.winnerScoreRank>=4).length,
   topScoreMisses:joined.filter(x=>x.topScoreActualFinish!==1).map(x=>({date:x.date,venue:x.venue,race:x.race,
    topScoreBoat:x.topScoreBoat,topScoreActualFinish:x.topScoreActualFinish,
-   winnerBoat:x.winnerBoat,winnerScoreRank:x.winnerScoreRank,scoreGapToWinner:x.scoreGapToWinner}))};
+   winnerBoat:x.winnerBoat,winnerScoreRank:x.winnerScoreRank,scoreGapToWinner:x.scoreGapToWinner,
+   topScoreFeatures:x.boats.find(b=>b.boat===x.topScoreBoat)?.featureEvidence,
+   winnerFeatures:x.boats.find(b=>b.boat===x.winnerBoat)?.featureEvidence}))};
  return {status:'research_diagnostic',joinedCount:joined.length,summary,
   rows,eligibleForCalibration:false,scoreChangeApplied:false};
 }
