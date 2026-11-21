@@ -203,6 +203,7 @@ jobs:
             console.log("TRIFECTA_PROFILE_TIME_SPLIT="+JSON.stringify(r.trifectaProfileTimeSplit));
             console.log("TOP_SCORE_WIN_THRESHOLDS="+JSON.stringify(r.topScoreWinThresholds));
             console.log("RATE_BY_BOAT_PLACEMENT="+JSON.stringify(r.rateByBoatPlacement));
+            console.log("RELATIVE_ABILITY_PLACEMENT="+JSON.stringify(r.relativeAbilityPlacement));
             console.log("SECOND_CHOICE_BY_BOAT_ONE_LOCAL_ADVANTAGE="+JSON.stringify(r.secondChoiceByBoatOneLocalAdvantage));
           '
       - uses: actions/upload-artifact@v4
