@@ -25,6 +25,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Validate selected date, venue and race
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: |
+          node --input-type=module -e '
+            const d=process.env.CAPTURE_DATE||"",v=process.env.CAPTURE_VENUE||"",r=process.env.CAPTURE_RACE||"";
+            if(!/^20\\d{6}$/.test(d)||!Number.isFinite(Date.parse(d.slice(0,4)+"-"+d.slice(4,6)+"-"+d.slice(6,8)))||
+               !/^\\d{1,2}$/.test(v)||Number(v)<1||Number(v)>24||
+               !/^\\d{1,2}$/.test(r)||Number(r)<1||Number(r)>12){
+              console.error("Invalid inputs: capture_date must be 8 digits YYYYMMDD (e.g. 20261120); venue 1-24; race 1-12.");
+              process.exit(1);
+            }
+            console.log("Research selection validated:",d,"venue",Number(v),"race",Number(r));
+          '
       - name: Validate standalone script
         run: |
           node --check scripts/capture-research-official-features.mjs
