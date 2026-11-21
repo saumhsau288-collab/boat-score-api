@@ -13,5 +13,13 @@ assert.equal(good.racers[0].eligibleAsVerifiedRecent50,false);
 assert.equal(parse(html.replace('1 着','不明')).verified,false);
 assert.equal(parse(html.replace('>49<','>50<')).verified,false);
 assert.equal(parse(html+html).verified,false);
+const blankRow=row(6,[0,0,0,5,10,24],39).replace(/<td>0<\/td>/g,'<td></td>');
+const withBlanks='<table>'+header+rows.slice(0,5).join('')+blankRow+'</table>';
+const inferred=parse(withBlanks);
+assert.equal(inferred.verified,true,JSON.stringify(inferred));
+assert.equal(inferred.racers[5].blankCount,3);
+assert.equal(inferred.racers[5].firstPlaceRate,0);
+assert.equal(inferred.racers[5].rawCounts[0],null);
+assert.equal(parse(withBlanks.replace('<td>39</td>','<td>40</td>')).verified,false);
 assert.equal(parse(html.replace('選手2','選手1')).verified,true); // names are not identity evidence
 console.log('Makulabo finish count structural parser tests passed');
