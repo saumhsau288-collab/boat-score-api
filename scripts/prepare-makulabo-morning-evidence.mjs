@@ -6,6 +6,7 @@ export function prepareMakulaboMorningEvidence(official,heatmap,cutoffAudit){
   return held('six_racers_required');
  if(!cutoffAudit||cutoffAudit.eligible!==true)return held('historical_cutoff_unverified');
  const rows=[];
+ const seenIds=new Set();
  for(let boat=1;boat<=6;boat++){
   const o=official.find(r=>r.boat===boat);
   const h=heatmap.find(r=>r.boat===boat);
@@ -14,6 +15,8 @@ export function prepareMakulaboMorningEvidence(official,heatmap,cutoffAudit){
    !Array.isArray(h.counts)||h.counts.length!==6||
    h.counts.some(n=>!Number.isInteger(n)||n<0)||
    h.counts.reduce((a,b)=>a+b,0)!==h.runs)return held('invalid_heatmap_counts');
+  if(seenIds.has(String(o.racerId)))return held('duplicate_official_racer_id');
+  seenIds.add(String(o.racerId));
   if(typeof o.name==='string'&&typeof h.name==='string'){
    const norm=s=>s.normalize('NFKC').replace(/[\s\u3000・･]/g,'');
    if(norm(o.name)!==norm(h.name))return held('racer_name_mismatch');
