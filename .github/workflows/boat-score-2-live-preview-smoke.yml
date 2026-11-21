@@ -1,0 +1,22 @@
+name: Research live Boat Score 2 preview smoke (read only)
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - research/st-course-holdout-20261121
+    paths:
+      - scripts/smoke-deployed-boat-score-2-preview.mjs
+      - .github/workflows/boat-score-2-live-preview-smoke.yml
+permissions:
+  contents: read
+jobs:
+  live-preview-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe deployed preview read-only (no release)
+        run: node scripts/smoke-deployed-boat-score-2-preview.mjs
