@@ -21,13 +21,19 @@ export function parseMakulaboHeatmapSix(html){
    const [boatText,name,...rest]=values;
    const boat=Number(boatText.normalize('NFKC'));
    if(!/^[1-6]$/.test(boatText.normalize('NFKC'))||!name){diagnostics.push({reason:'boat_or_name',row:index+1});break;}
-   const nums=rest.slice(0,7).map(x=>/^\d+$/.test(x)?Number(x):null);
+   const rawCounts=rest.slice(0,6);
+   const runText=rest[6];
+   const runs=/^\d+$/.test(runText)?Number(runText):null;
+   const counts=rawCounts.map(x=>/^\d+$/.test(x)?Number(x):x===''?null:NaN);
+   const missingCount=counts.filter(x=>x===null).length;
    const average=rest[7];
-   if(nums.some(x=>x===null)||!/^(?:\d+)(?:\.\d+)?$/.test(average)){diagnostics.push({reason:'non_numeric_cell',row:index+1,values:rest});break;}
-   const counts=nums.slice(0,6),runs=nums[6];
-   if(runs<1||runs>50||counts.reduce((a,b)=>a+b,0)!==runs){diagnostics.push({reason:'count_sum_or_run_range',row:index+1,counts,runs});break;}
-   racers.push({boat,name,counts,runs,averageFinish:Number(average),
-    firstPlaceRate:Math.round(counts[0]/runs*10000)/100,
+   if(runs===null||counts.some(Number.isNaN)||!/^(?:\d+)(?:\.\d+)?$/.test(average)){diagnostics.push({reason:'non_numeric_cell',row:index+1,values:rest});break;}
+   const observedTotal=counts.reduce((a,b)=>a+(b??0),0);
+   if(runs<1||runs>50||observedTotal!==runs){diagnostics.push({reason:'count_sum_or_run_range',row:index+1,counts,runs});break;}
+   const normalizedCounts=counts.map(n=>n??0);
+   racers.push({boat,name,counts:normalizedCounts,rawCounts:counts,runs,blankCount:missingCount,
+    blankAsZeroInferred:missingCount>0,averageFinish:Number(average),
+    firstPlaceRate:Math.round(normalizedCounts[0]/runs*10000)/100,
     finishHeadersVerified:true,sourceVerified:false,eligibleAsVerifiedRecent50:false});
   }
   if(racers.length===6&&new Set(racers.map(r=>r.boat)).size===6)
