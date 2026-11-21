@@ -3,6 +3,15 @@
 import {evaluateRace} from './boat-score-2-scoring.js';
 import {compareStartAndCourse} from './boat-score-2-start-course-comparison.js';
 const order = (xs) => [...xs].sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat);
+const explicitInstant = value => typeof value==='string' &&
+ /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)
+ ? Date.parse(value) : NaN;
+const validCalendarDate = value => {
+ const d=String(value??'');
+ if(!/^20\\d{6}$/.test(d))return false;
+ const parsed=new Date(`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}T00:00:00Z`);
+ return Number.isFinite(parsed.getTime())&&parsed.toISOString().slice(0,10).replaceAll('-','')===d;
+};
 const validFinish = a => Array.isArray(a)&&a.length===6&&new Set(a).size===6&&a.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
 const result = (rank,finish) => ({winnerHit:rank[0]===finish[0],topThreeSetHit:rank.slice(0,3).every(x=>finish.slice(0,3).includes(x)),rank});
 export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}){
@@ -13,7 +22,7 @@ export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}
  for(const row of rows){
   const key=[row?.date,row?.venue,row?.race].join(':');
   if(row?.preRaceSnapshot!==true||row?.resultVerified!==true||!validFinish(row.finishOrder)||
-     !/^20\d{6}$/.test(String(row.date))||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||
+     !validCalendarDate(row.date)||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||
      !Number.isInteger(row.race)||row.race<1||row.race>12){
    excluded.push({key,reason:'unverified_race'});continue;
   }
@@ -21,7 +30,7 @@ export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}
    excluded.push({key,reason:'unverified_official_result_identity'});continue;
   }
   // Boolean flags alone cannot establish a pre-deadline, official race join.
-  const captured=Date.parse(row.capturedAt),cutoff=Date.parse(row.officialCutoffAt);
+  const captured=explicitInstant(row.capturedAt),cutoff=explicitInstant(row.officialCutoffAt);
   if(row.officialCutoffVerified!==true||!Number.isFinite(captured)||!Number.isFinite(cutoff)||captured>=cutoff){
    excluded.push({key,reason:'unverified_pre_deadline_cutoff'});continue;
   }
