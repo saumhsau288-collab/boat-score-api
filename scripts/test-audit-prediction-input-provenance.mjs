@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {auditPredictionInputProvenance as audit} from './audit-prediction-input-provenance.mjs';
+const scores=Array.from({length:6},(_,i)=>({boat:i+1,score:6-i}));
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(1000+i)}));
+const prediction={date:'20261120',venue:2,race:1,receivedAt:'2026-11-20T01:00:00Z',response:{rankedScores:scores}};
+const official={date:'20261120',venue:2,race:1,receivedAt:'2026-11-20T00:59:00Z',racers};
+assert.equal(audit({prediction,official}).status,'retrospective_comparison_only');
+assert.equal(audit({prediction,official}).officialCapturedBeforePrediction,true);
+assert.equal(audit({prediction,official}).originalInputsVerified,false);
+assert.equal(audit({prediction:{...prediction,response:{...prediction.response,scoreInputsByBoat:scores}},official}).originalInputsVerified,false);
+assert.equal(audit({prediction,official:{...official,date:'20261121'}}).status,'held_race_identity_mismatch');
+assert.equal(audit({prediction,official:{...official,racers:racers.slice(1)}}).status,'held_six_boats_required');
+assert.equal(audit({prediction,official:{...official,receivedAt:'2026-11-20T01:01:00Z'}}).officialCapturedBeforePrediction,false);
+assert.equal(audit({prediction,official}).eligibleForCalibration,false);
+console.log('Prediction-input provenance gate tests passed');
