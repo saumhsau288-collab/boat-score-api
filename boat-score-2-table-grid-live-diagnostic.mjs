@@ -1,5 +1,7 @@
 import {expandTableGrid} from './boat-score-2-table-grid-research.js';
 import {extractSixOfficialRacers} from './boat-score-2-six-racers-research.js';
+import {validateResearchRacersForExistingPipeline} from './boat-score-2-verified-official-bridge-research.js';
+import {evaluateMorningFromSources} from './boat-score-2-morning-pipeline.js';
 const venue=process.env.VENUE||'01', date=process.env.RACE_DATE||'20261121', race=process.env.RACE||'1';
 if(!/^(0[1-9]|1[0-9]|2[0-4])$/.test(venue)||!/^20\d{6}$/.test(date)||!/^(?:[1-9]|1[0-2])$/.test(race)) throw Error('invalid_selection');
 const url=new URL('https://www.boatrace.jp/owpc/pc/race/racelist');
@@ -19,6 +21,19 @@ if(!six.verified&&six.diagnostics){
 }
 console.log('SIX_RACERS_VERIFICATION',JSON.stringify(safeDiagnostic));
 if (!six.verified) process.exitCode = 1;
+const officialBridge=validateResearchRacersForExistingPipeline(six);
+console.log('OFFICIAL_BRIDGE_VERIFICATION',JSON.stringify({
+ verified:officialBridge.verified===true,
+ reason:officialBridge.reason??null,
+ verifiedCount:officialBridge.racers?.length??0
+}));
+if(six.verified&&!officialBridge.verified)process.exitCode=1;
+// Recent-50 is deliberately NOT invented: this stage must remain held until
+// independently verified Makulabo data matches all six racer IDs.
+const morning=evaluateMorningFromSources({official:officialBridge.racers,recent50:[]});
+console.log('MORNING_INPUT_READINESS',JSON.stringify({
+ status:morning.status,source:morning.source??null,reason:morning.reason??null
+}));
 const tables=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map(m=>m[0]);
 const clean=s=>s.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim().slice(0,40);
 for(let i=0;i<tables.length;i++){
