@@ -1,5 +1,5 @@
 // Conservative extraction of boat-to-racer assignments from official racelist rows.
-// Accept only rows with an explicit first-cell boat number and exactly one racer link.
+// Accept only rows with an explicit first-cell boat number and one unique racer identity.
 // This intentionally rejects unknown HTML layouts rather than guessing assignments.
 export function parseOfficialBoatRows(html) {
  if(typeof html!=='string'||html.length>2_000_000)
@@ -11,6 +11,9 @@ export function parseOfficialBoatRows(html) {
    if(cells.length<2)continue;
    const first=cells[0].replace(/<[^>]*>/g,'').replace(/&nbsp;/gi,' ').trim().normalize('NFKC');
    if(!/^[1-6]$/.test(first))continue;
+   const firstCellTag=row.match(/<td\b([^>]*)>/i);
+   const color=firstCellTag?.[1]?.match(/\bis-boatColor([1-6])\b/i);
+   if(color&&Number(color[1])!==Number(first))continue;
    const links=[...row.matchAll(/<a\b[^>]*href=["']([^"']*racersearch\/profile\?[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi)];
    const profiles=links.map(link=>{
      try{return {id:new URL(link[1],'https://www.boatrace.jp').searchParams.get('toban'),name:link[2].replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim()};}catch{return null;}
