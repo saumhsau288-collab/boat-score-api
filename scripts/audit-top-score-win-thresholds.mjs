@@ -5,7 +5,6 @@ export function auditTopScoreWinThresholds(records){
  if(!Array.isArray(records))throw Error('records required');
  const thresholds=[5,5.5,6,6.5,7,7.5,8,8.5,9];
  const make=()=>({races:0,wins:0,boatOneRaces:0,boatOneWins:0});
- const bins=thresholds.map(t=>({minimumScore:t,...make()}));
  const gaps=[0,0.5,1,1.5,2,3].map(t=>({minimumGap:t,...make()}));
  const bands=[{label:'below 5',low:-Infinity,high:5,...make()},...thresholds.map((t,i)=>({label:i===thresholds.length-1?'9+':t+'-'+thresholds[i+1],low:t,high:thresholds[i+1]??Infinity,...make()}))];
  let valid=0,excluded=0,tied=0;
@@ -18,6 +17,6 @@ export function auditTopScoreWinThresholds(records){
   for(const b of bins)if(top.score>=b.low&&top.score<b.high)add(b,winner,boatOne);
   for(const b of gaps)if(gap>=b.minimumGap)add(b,winner,boatOne);
  }
- const cumulative=thresholds.map(t=>{const a=make();for(const b of bins)if(b.low>=t){a.races+=b.races;a.wins+=b.wins;a.boatOneRaces+=b.boatOneRaces;a.boatOneWins+=b.boatOneWins;}return {minimumScore:t,...a};});
+ const cumulative=thresholds.map(t=>{const a=make();for(const b of bands)if(b.low>=t){a.races+=b.races;a.wins+=b.wins;a.boatOneRaces+=b.boatOneRaces;a.boatOneWins+=b.boatOneWins;}return {minimumScore:t,...a};});
  return {valid,excluded,tied,bands,cumulative,gaps,warning:'Descriptive archived scores only, not authenticated pre-race. Thresholds are exploratory, not validated or guaranteed cutoffs. Higher win rates may reflect inside advantage and field strength.'};
 }
