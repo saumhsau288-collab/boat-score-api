@@ -38,6 +38,12 @@ jobs:
             race: '4'
           - venue: '17'
             race: '2'
+          - venue: '21'
+            race: '1'
+            date: '20261122'
+          - venue: '17'
+            race: '2'
+            date: '20261122'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,7 +51,7 @@ jobs:
           node-version: '22'
       - name: Probe deployed preview read-only (no release)
         env:
-          SMOKE_DATE: ${{ inputs.date }}
+          SMOKE_DATE: ${{ inputs.date || matrix.date }}
           SMOKE_VENUE: ${{ inputs.venue || matrix.venue }}
           SMOKE_RACE: ${{ inputs.race || matrix.race }}
           SMOKE_REQUIRE_READY: 'true'
