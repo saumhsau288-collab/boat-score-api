@@ -5,10 +5,10 @@ import {inspectOfficialPageIdentity} from './inspect-official-page-identity.mjs'
 import {extractOfficialCutoffCandidate} from './extract-official-cutoff-candidate.mjs';
 export function auditOfficialRaceHtmlCapture({html,metadata}={}){
  const expected=metadata?.expected;
- if(typeof html!=='string'||!expected||!Number.isFinite(Date.parse(metadata?.receivedAt))||
+ if(!(typeof html==='string'||Buffer.isBuffer(html))||!expected||!Number.isFinite(Date.parse(metadata?.receivedAt))||
    !/^[a-f0-9]{64}$/.test(String(metadata?.sha256??'')))
   return {status:'invalid_capture',eligibleForCalibration:false};
- const capturedBytes=Buffer.from(html,'utf8');
+ const capturedBytes=Buffer.isBuffer(html)?html:Buffer.from(html,'utf8');
  const actualSha256=createHash('sha256').update(capturedBytes).digest('hex');
  if(actualSha256!==metadata.sha256)return {status:'capture_hash_mismatch',eligibleForCalibration:false};
  if(metadata.byteLength!==capturedBytes.length||metadata.httpStatus!==200||
@@ -30,8 +30,11 @@ export function auditOfficialRaceHtmlCapture({html,metadata}={}){
  }catch{
   return {status:'invalid_official_source_url',eligibleForCalibration:false};
  }
- const identity=inspectOfficialPageIdentity(html,{date,venue,race});
- const cutoff=extractOfficialCutoffCandidate(html,{date,venue,race});
+ const decoded=capturedBytes.toString('utf8');
+ if(!Buffer.from(decoded,'utf8').equals(capturedBytes))
+  return {status:'unsupported_html_encoding',eligibleForCalibration:false};
+ const identity=inspectOfficialPageIdentity(decoded,{date,venue,race});
+ const cutoff=extractOfficialCutoffCandidate(decoded,{date,venue,race});
  return {status:'needs_independent_verification',identity,cutoff,
   raceIdentityVerified:false,officialCutoffVerified:false,eligibleForCalibration:false,
   note:'Consistent page markers and a labeled cutoff candidate do not independently authenticate official race identity or deadline.'};
