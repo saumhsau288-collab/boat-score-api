@@ -1,7 +1,10 @@
 // Research-only immutable-shape input record; never asserts pre-race authenticity.
 import {validateOfficialMetrics} from './boat-score-2-official-metrics.js';
 export function buildResearchFeatureSnapshot({date,venue,race,capturedAt,official,courseByBoat=[],recent50=[],exhibitionByBoat=[],startTimingByBoat=[]}={}){
- if(!/^20\d{6}$/.test(String(date??''))||!Number.isInteger(venue)||venue<1||venue>24||
+ const dateText=String(date??'');
+ const calendarDate=/^20\d{6}$/.test(dateText)?new Date(`${dateText.slice(0,4)}-${dateText.slice(4,6)}-${dateText.slice(6,8)}T00:00:00Z`):null;
+ const validDate=calendarDate&&Number.isFinite(calendarDate.getTime())&&calendarDate.toISOString().slice(0,10).replaceAll('-','')===dateText;
+ if(!validDate||!Number.isInteger(venue)||venue<1||venue>24||
  !Number.isInteger(race)||race<1||race>12||!Number.isFinite(Date.parse(capturedAt)))
  return {status:'invalid_capture_identity',eligibleForCalibration:false};
  const checked=validateOfficialMetrics(official);
