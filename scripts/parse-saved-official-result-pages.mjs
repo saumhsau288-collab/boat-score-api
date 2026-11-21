@@ -43,7 +43,15 @@ export function parseSavedOfficialResultPages(report){
    return {...base,status:'needs_review',reason:'trifecta_payout_mismatch'};
   return {...base,status:'parsed_needs_independent_review',podium:podium.map(x=>x.boat),trifectaPayoutYen:Number(payout.replaceAll(',',''))};
  });
- return {method:'official_html_parsed_not_independently_authenticated',rows,parsed:rows.filter(x=>x.status==='parsed_needs_independent_review').length,verifiedResults:0,eligibleForAccuracy:0};
+ const reviewReasons={};
+ for(const row of rows){
+  if(row.status==='parsed_needs_independent_review')continue;
+  const reason=row.reason??'unknown';
+  reviewReasons[reason]=(reviewReasons[reason]??0)+1;
+ }
+ return {method:'official_html_parsed_not_independently_authenticated',rows,
+  total:rows.length,parsed:rows.filter(x=>x.status==='parsed_needs_independent_review').length,
+  reviewReasons,verifiedResults:0,eligibleForAccuracy:0};
 }
 if(process.argv[1]&&new URL(import.meta.url).pathname===process.argv[1]){
  const file=process.argv[2];if(!file)throw Error('Usage: node scripts/parse-saved-official-result-pages.mjs <raw-pages.json>');
