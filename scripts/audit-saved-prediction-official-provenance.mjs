@@ -14,6 +14,10 @@ export function auditSavedPredictionOfficialProvenance({savedRecords=[],official
   if(!official)return {date:prediction.date,venue:prediction.venue,race:prediction.race,status:'held_missing_official',eligibleForCalibration:false};
   return auditPredictionInputProvenance({prediction,official});
  });
- return {status:'research_only',rows,matched:rows.filter(x=>x.status==='retrospective_comparison_only').length,
-  originalInputsVerified:0,eligibleForCalibration:false,scoreChangeApplied:false};
+ const matched=rows.filter(x=>x.status==='retrospective_comparison_only').length;
+ const statuses=rows.reduce((counts,row)=>(counts[row.status]=(counts[row.status]||0)+1,counts),{});
+ return {status:'research_only',rows,attempted:rows.length,matched,held:rows.length-matched,statuses,
+  originalInputsVerified:rows.filter(x=>x.originalInputsVerified===true).length,
+  independentlyAuthenticatedBeforeRace:rows.filter(x=>x.independentPreRaceAuthentication===true).length,
+  eligibleForCalibration:false,scoreChangeApplied:false};
 }
