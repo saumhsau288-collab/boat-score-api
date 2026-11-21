@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {chronologicalFollowerAudit} from './chronological-follower-audit.mjs';
+const data=JSON.parse(fs.readFileSync('research/evidence/20261120-official-result-pages-transcription.json','utf8')).results;
+const actual=chronologicalFollowerAudit(data);
+assert.equal(actual.validUniqueCount,13);
+assert.equal(actual.evaluated,0);
+assert(actual.rows.every(r=>r.priorSameWinnerRaces===0));
+const prior=Array.from({length:30},(_,i)=>({date:'20261001',venue:1,race:i+1,finishOrder:[1,2,3,4,5,6]}));
+const later={date:'20261002',venue:2,race:1,finishOrder:[1,2,3,4,5,6]};
+const res=chronologicalFollowerAudit([...prior,later]);
+assert.equal(res.rows.at(-1).priorSameWinnerRaces,30);
+assert.equal(res.rows.at(-1).choice,2);
+assert.equal(res.evaluated,1);
+assert.equal(chronologicalFollowerAudit([...prior,later,later]).duplicateKeys.length,1);
+console.log('Chronological guard: 13 same-day races abstain; 30 older races enable one conditional test');
