@@ -5,6 +5,7 @@ export function auditTopScoreWinThresholds(records){
  if(!Array.isArray(records))throw Error('records required');
  const thresholds=[5,5.5,6,6.5,7,7.5,8,8.5,9];
  const make=()=>({races:0,wins:0,boatOneRaces:0,boatOneWins:0});
+ const bins=thresholds.map(t=>({minimumScore:t,...make()}));
  const gaps=[0,0.5,1,1.5,2,3].map(t=>({minimumGap:t,...make()}));
  const bands=[{label:'below 5',low:-Infinity,high:5,...make()},...thresholds.map((t,i)=>({label:i===thresholds.length-1?'9+':t+'-'+thresholds[i+1],low:t,high:thresholds[i+1]??Infinity,...make()}))];
  let valid=0,excluded=0,tied=0;
