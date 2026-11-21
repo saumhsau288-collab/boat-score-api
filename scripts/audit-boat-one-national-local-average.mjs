@@ -14,6 +14,7 @@ export function rankNationalLocalAverage(racers){
 export function auditBoatOneNationalLocalAverage(records){
  if(!Array.isArray(records))throw Error('records required');
  const counts={examined:records.length,eligible:0,boatOneTop:0,boatOneWins:0,boatOnePodium:0,missingLocalAny:0,allLocalObserved:0,tiedTop:0,invalid:0};
+ const groups={allLocalObserved:{races:0,boatOneWins:0,boatOnePodium:0,secondWhenOneWins:{},thirdWhenOneWins:{}},localFallback:{races:0,boatOneWins:0,boatOnePodium:0,secondWhenOneWins:{},thirdWhenOneWins:{}}};
  for(const r of records){
   let ranked;try{ranked=rankNationalLocalAverage(r?.racers);}catch{counts.invalid++;continue;}
   if(ranked.some(x=>x.localFallback))counts.missingLocalAny++;else counts.allLocalObserved++;
@@ -21,7 +22,10 @@ export function auditBoatOneNationalLocalAverage(records){
   counts.eligible++;
   if(ranked[0].score===ranked[1].score){counts.tiedTop++;continue;}
   if(ranked[0].boat!==1)continue;
-  counts.boatOneTop++;if(o[0]===1)counts.boatOneWins++;if(o.slice(0,3).includes(1))counts.boatOnePodium++;
+  counts.boatOneTop++;
+  const g=groups[ranked.some(x=>x.localFallback)?'localFallback':'allLocalObserved'];g.races++;
+  if(o[0]===1){counts.boatOneWins++;g.boatOneWins++;g.secondWhenOneWins[o[1]]=(g.secondWhenOneWins[o[1]]||0)+1;g.thirdWhenOneWins[o[2]]=(g.thirdWhenOneWins[o[2]]||0)+1;}
+  if(o.slice(0,3).includes(1)){counts.boatOnePodium++;g.boatOnePodium++;}
  }
- return {counts,warning:'Archived rates may be post-race. Local 0.00/missing replaced by national rate and counted as fallback, not genuine local evidence. Boat 1 is not verified actual course 1.'};
+ return {counts,groups,warning:'Archived rates may be post-race. Local 0.00/missing replaced by national rate and counted as fallback, not genuine local evidence. Boat 1 is not verified actual course 1.'};
 }
