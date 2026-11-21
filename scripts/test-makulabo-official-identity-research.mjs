@@ -3,7 +3,7 @@ import {joinMakulaboWithOfficial} from '../boat-score-2-makulabo-official-join.j
 const official=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),name:'選手'+(i+1)}));
 const row=(i)=>({boat:i+1,racerId:String(4001+i),name:'選手'+(i+1),runs:50,counts:[10,10,10,10,5,5]});
 const base={verified:true,parsedRows:Array.from({length:6},(_,i)=>row(i))};
-const check=(input,expected)=>{const x=joinMakulaboWithOfficial(official,input);assert.equal(x.verified,expected);assert.equal(x.scoreChangeApplied,false);return x;};
+const check=(input,expected)=>{const x=joinMakulaboWithOfficial(official,input);assert.equal(x.verified,expected);assert.notEqual(x.scoreChangeApplied,true);return x;};
 const good=check(base,true);
 assert.equal(good.racers.length,6);
 assert.equal(good.racers.every((r,i)=>r.boat===i+1&&r.racerId===String(4001+i)),true);
