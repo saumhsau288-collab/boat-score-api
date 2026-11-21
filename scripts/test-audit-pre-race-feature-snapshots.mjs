@@ -17,4 +17,16 @@ assert.equal(withClaims.eligibleForHistoricalCalibration,0);
 assert.equal(auditPreRaceFeatureSnapshots({records:[{response:{ready:true}}]}).completeSixBoatFeatures,0);
 const bad={records:[{response:{ready:true,scoreInputsByBoat:Array.from({length:6},(_,i)=>({boat:i+1,...fields,motorTwoWinRate:i===0?120:40}))}}]};
 assert.equal(auditPreRaceFeatureSnapshots(bad).completeSixBoatFeatures,0);
+
+const timezoneFree=auditPreRaceFeatureSnapshots({records:[{
+ ...records[0],receivedAt:'2026-11-19T23:00:00'
+}]});
+assert.equal(timezoneFree.rows[0].receivedBeforeClaimedCutoff,false);
+assert.equal(timezoneFree.eligibleForHistoricalCalibration,0);
+const timezoneFreeCutoff=auditPreRaceFeatureSnapshots({records:[{
+ ...records[0],officialCutoffAt:'2026-11-20T00:00:00'
+}]});
+assert.equal(timezoneFreeCutoff.rows[0].cutoffTimestampPresent,false);
+assert.equal(timezoneFreeCutoff.rows[0].receivedBeforeClaimedCutoff,false);
+assert.equal(timezoneFreeCutoff.eligibleForHistoricalCalibration,0);
 console.log('pre-race feature snapshot audit tests passed');
