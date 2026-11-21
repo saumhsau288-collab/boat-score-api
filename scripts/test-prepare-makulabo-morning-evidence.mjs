@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {prepareMakulaboMorningEvidence as prepare} from './prepare-makulabo-morning-evidence.mjs';
+const official=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i)}));
+const heatmap=Array.from({length:6},(_,i)=>({boat:i+1,runs:50,counts:[10,10,10,10,5,5],blankAsZeroInferred:false}));
+const audit={eligible:true};
+assert.deepEqual([prepare(official,heatmap,audit).status,prepare(official,heatmap,audit).eligibleForScoring],['held',false]);
+assert.equal(prepare(official,heatmap,audit).reason,'independent_source_provenance_not_authenticated');
+assert.equal(prepare(official,heatmap,{eligible:false}).reason,'historical_cutoff_unverified');
+assert.equal(prepare(official,heatmap.map((r,i)=>i===0?{...r,runs:49,counts:[9,10,10,10,5,5]}:r),audit).reason,'not_exactly_50_races');
+assert.equal(prepare(official,heatmap.map((r,i)=>i===0?{...r,blankAsZeroInferred:true}:r),audit).reason,'inferred_blank_cells');
+assert.equal(prepare(official,heatmap.map((r,i)=>i===0?{...r,counts:[11,10,10,10,5,5]}:r),audit).reason,'invalid_heatmap_counts');
+console.log('Makulabo observed-run and scoring provenance gates passed');
