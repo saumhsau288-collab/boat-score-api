@@ -6,7 +6,7 @@ const plain=s=>String(s||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,'
 const firstNumber=(html,index)=>{const matches=plain(html).match(/\d+(?:\.\d+)?/g)||[];return matches[index]===undefined?null:Number(matches[index]);};
 const boatNumber=s=>{const t=plain(s).normalize('NFKC');return /^[1-6]$/.test(t)?Number(t):null;};
 function racerName(html,id) {
- const links=[...String(html||'').matchAll(/<a\\b[^>]*href=[\"']([^\"']*)[\"'][^>]*>([\\s\\S]*?)<\\/a>/gi)]
+ const links=[...String(html||'').matchAll(/<a\b[^>]*href=[\"']([^\"']*)[\"'][^>]*>([\s\S]*?)<\/a>/gi)]
    .filter(m=>m[1].includes('racersearch/profile')&&m[1].includes('toban='+id));
  if(links.length!==1)return null;
  const name=plain(links[0][2]);
