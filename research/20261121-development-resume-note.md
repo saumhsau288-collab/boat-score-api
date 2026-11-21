@@ -73,3 +73,9 @@
 - 実ZIPの `20261120-44639859914.json` を再確認: ready14件（戸田1R、宮島1R・2R、鳴門3R、徳山3Rなど）、各 `rankedScores` 6艇、`authenticatedBeforeRace:false`。ZIP内に公式着順の独立証拠ファイルなし。
 - `audit-score-result-join.mjs` の**重要な行ずれ不具合**を修正。従来は288件の比較結果に14件のready評価点を配列インデックスで結合していたため、非readyレースが先にあると誤対応の可能性があった。元の `capture.records` インデックスに対応付けて修正し、非ready/ready/非readyの回帰テスト追加。
 - 修正後のCIを確認すること。引き続き実際の的中率・配点調整は保留。
+
+## 2026-11-21 公式結果の構造監査
+- `scripts/audit-official-result-evidence.mjs` を追加し、独立保存した `verified-official-results.json` の `results[]` について日付・場・レース、6艇着順、公式 `raceresult` URL、同一レースの重複を検査。
+- CLI: `node scripts/audit-official-result-evidence.mjs verified-official-results.json`。**実ファイルの公式証拠がまだない場合は架空の結果を作成しない。**
+- `verified:true` という自己申告や形式整合は、公式サイトの内容を独立に確認した証拠にならないため、監査結果は常に `independentlyAuthenticated:false`、`eligibleForCalibration:false`。
+- 新しい公式結果監査テストのCI結果を確認し、失敗時は研究ブランチだけ修正する。
