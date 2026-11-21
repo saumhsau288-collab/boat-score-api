@@ -19,6 +19,6 @@ for(const record of records){
 const output={valid:records.length-excluded,excluded,byWinner:{}};
 for(let winner=1;winner<=6;winner++){
  const row=totals[winner],denom=row.races;
- output.byWinner[winner]={races:denom,followers:Object.fromEntries([1,2,3,4,5,6].filter(n=>n!==winner).map(n=>[n,{second:row.second[n]||0,third:row.third[n]||0,secondOrThird:(row.podium[n]||0),secondRate:denom?(row.second[n]||0)/denom:null,podiumRate:denom?(row.podium[n]||0)/denom:null}]))};
+ output.byWinner[winner]={races:denom,sampleStatus:denom>=30?'descriptive_sample_30_plus':'insufficient_sample_do_not_adjust_weights',followers:Object.fromEntries([1,2,3,4,5,6].filter(n=>n!==winner).map(n=>[n,{second:row.second[n]||0,third:row.third[n]||0,secondOrThird:(row.podium[n]||0),secondRate:denom?(row.second[n]||0)/denom:null,podiumRate:denom?(row.podium[n]||0)/denom:null}]))};
 }
 console.log(JSON.stringify(output,null,2));
