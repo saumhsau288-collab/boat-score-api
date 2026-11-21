@@ -55,5 +55,11 @@ console.log(JSON.stringify({file,status:result.status,reason:result.reason??null
  racers:result.racers?.length??0,morningScoreApplied:result.morningScoreApplied===true,
  eligibleForCalibration:false,identityReview:result.identityReview??null,
  finishSample:result.finishSample??null,sampleScope:result.sampleScope??null,
- finishComparison:result.finishComparison??null}));
+ finishComparison:result.finishComparison??null,
+ officialComponentStatus:result.officialComponentComparison?.status??null,
+ officialComponentRows:result.officialComponentComparison?.rows?.map(r=>({boat:r.boat,racerId:r.racerId,
+  officialComponentScore85:r.officialComponentScore85,officialComponentMax:r.officialComponentMax,
+  localRateFallbackApplied:r.localRateFallbackApplied,
+  labelledFrameSample:r.labelledFrameSample}))??[],
+ scoreChangeApplied:false}));
 // Research source availability does not change the official capture success gate.
