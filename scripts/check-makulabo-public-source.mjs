@@ -27,7 +27,12 @@ try {
    const nonNumericFinishCells=cells.slice(2,8).map((v,index)=>({finish:index+1,value:v})).filter(x=>!/^\d+$/.test(x.value)).map(x=>({finish:x.finish,empty:x.value.length===0,hasPercent:x.value.includes('%'),hasDash:/[-－—]/.test(x.value),length:x.value.length}));
    const races=/^\d+$/.test(cells[8]??'')?Number(cells[8]):null;
    const sum=finishCounts.every(Number.isInteger)?finishCounts.reduce((a,b)=>a+b,0):null;
-   return {boat,cellCount:cells.length,nonNumericFinishCells,countsNumeric:sum!==null,racesNumeric:races!==null,
+   const onlyEmptyMissing=nonNumericFinishCells.every(x=>x.empty);
+   const emptyAsZeroSum=onlyEmptyMissing?finishCounts.reduce((total,v)=>total+(v??0),0):null;
+   const emptyAsZeroConsistent=emptyAsZeroSum!==null&&races!==null&&emptyAsZeroSum===races;
+   const validatedFinishCounts=emptyAsZeroConsistent?finishCounts.map(v=>v??0):(sum!==null&&sum===races?finishCounts:null);
+
+   return {boat,cellCount:cells.length,nonNumericFinishCells,emptyAsZeroConsistent,validatedCountsAvailable:validatedFinishCounts!==null,countsNumeric:sum!==null,racesNumeric:races!==null,
     finishCountSumMatchesRaces:sum!==null&&races!==null?sum===races:null,
     isExactly50Races:races===50};
   });
