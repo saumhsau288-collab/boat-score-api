@@ -11,12 +11,12 @@ export function stratifyConditionalPodium(records, cutoffDate) {
   if(!Number.isInteger(r.venue)||r.venue<1||r.venue>24||!Number.isInteger(r.race)||r.race<1||r.race>12){reject('invalid_race_key');continue;}
   const key=[date,r.venue,r.race].join(':');
   if(seen.has(key)){reject('duplicate_race');continue;}
-  seen.add(key);
   const p=r.podium;
   if(!Array.isArray(p)||p.length!==3||new Set(p).size!==3||p.some(n=>!Number.isInteger(n)||n<1||n>6)){reject('invalid_podium');continue;}
   if(r.preRaceAuthenticated!==true||!Array.isArray(r.preRace)||r.preRace.length!==6){reject('unverified_pre_race');continue;}
   const b=new Map(r.preRace.map(x=>[x.boat,x]));
   if(b.size!==6||[1,2,3,4,5,6].some(n=>!b.has(n))||[...b.values()].some(x=>!Number.isFinite(x.winRate)||x.winRate<0||x.winRate>10||!Number.isFinite(x.avgST)||x.avgST<0||x.avgST>1)){reject('invalid_pre_race_features');continue;}
+  seen.add(key);
   for(let candidate=1;candidate<=6;candidate++){
    if(candidate===p[0])continue;
    const abilityGap=b.get(candidate).winRate-b.get(p[0]).winRate;
