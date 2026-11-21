@@ -10,7 +10,7 @@ assert.equal(st.status,'normalized_source_claims');
 assert.equal(mk.status,'normalized_source_claims');
 assert.equal(st.rows.length,6);
 assert.equal(st.eligibleForCalibration,false);
-const checked=audit({race,official:{...race,status:'captured_research_inputs',receivedAt,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist',responseSha256:'a'.repeat(64),racers},averageST:st.rows,makulabo:mk.rows,
+const checked=audit({race,official:{...race,status:'captured_research_inputs',receivedAt,sourceUrl:'https://www.boatrace.jp/owpc/pc/race/racelist?rno=4&jcd=21&hd=20261122',responseSha256:'a'.repeat(64),racers},averageST:st.rows,makulabo:mk.rows,
  prediction:{...race,receivedAt:'2026-11-22T00:20:00Z'},cutoffAt:'2026-11-22T00:30:00Z'});
 assert.equal(checked.status,'source_evidence_ready_original_inputs_unverified');
 assert.equal(checked.originalInputsVerified,false);
