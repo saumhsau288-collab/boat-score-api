@@ -51,3 +51,21 @@ test('rejects duplicate official racer identities',()=>{
  assert.equal(x.reason,'duplicate_boat_or_racer');
  assert.equal(x.eligibleForCalibration,false);
 });
+
+test('does not fabricate start timing or exhibition values when no source is supplied',()=>{
+ const x=buildResearchFeatureSnapshot(base);
+ assert.equal(x.status,'captured_research_inputs');
+ assert.ok(x.racers.every(r=>r.startTiming===null&&r.exhibitionTime===null&&r.weather===null));
+ assert.ok(x.missing.includes('start_timing'));
+ assert.ok(x.missing.includes('exhibition'));
+ assert.ok(x.missing.includes('weather'));
+ assert.equal(x.eligibleForCalibration,false);
+});
+test('unverified recent50 figures do not become zero-valued evidence',()=>{
+ const x=buildResearchFeatureSnapshot({...base,recent50:[
+  {racerId:'4001',firstPlaceRate:0,verified:false}
+ ]});
+ assert.equal(x.racers[0].recent50FirstPlaceRate,null);
+ assert.equal(x.racers[0].recent50Verified,false);
+ assert.equal(x.eligibleForCalibration,false);
+});
