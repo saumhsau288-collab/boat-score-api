@@ -38,7 +38,7 @@ jobs:
       - name: Run isolated table grid tests
         run: node boat-score-2-table-grid-research.test.mjs
       - name: Inspect official HTML grid (manual only)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.live_diagnostic }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.live_diagnostic) }}
         env:
           VENUE: ${{ inputs.venue }}
           RACE_DATE: ${{ inputs.date }}
