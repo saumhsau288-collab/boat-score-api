@@ -3,6 +3,11 @@
 function isOfficialSource(value){
  try{const u=new URL(value);return u.protocol==='https:'&&(u.hostname==='boatrace.jp'||u.hostname.endsWith('.boatrace.jp'))&&!u.username&&!u.password;}catch{return false;}
 }
+function officialResultMatchesRace(row){
+ try{const u=new URL(row.officialResultSourceUrl);return u.protocol==='https:'&&u.hostname==='www.boatrace.jp'&&u.pathname==='/owpc/pc/race/raceresult'&&!u.username&&!u.password&&['hd','jcd','rno'].every(k=>u.searchParams.getAll(k).length===1)&&u.searchParams.get('hd')===String(row.date)&&Number(u.searchParams.get('jcd'))===row.venue&&Number(u.searchParams.get('rno'))===row.race;}
+ catch{return false;}
+}
+function offsetTime(s){return typeof s==='string'&&/T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));}
 function jstDate(iso){
  const d=new Date(iso);
  if(!Number.isFinite(d.getTime()))return null;
@@ -25,9 +30,8 @@ export function tuneHistoricalWeights(rows,{trainEndDate,baselineWeights,candida
    Array.isArray(actual)&&actual.length===3&&actual.every(n=>Number.isInteger(n)&&n>=1&&n<=6)&&new Set(actual).size===3&&
    row?.independentlyVerifiedResult===true&&row?.historicalInputProvenanceVerified===true&&
    typeof row?.historicalInputSourceUrl==='string'&&isOfficialSource(row.historicalInputSourceUrl)&&
-   typeof row?.officialResultSourceUrl==='string'&&isOfficialSource(row.officialResultSourceUrl)&&
-   typeof row?.historicalInputCapturedAt==='string'&&Number.isFinite(Date.parse(row.historicalInputCapturedAt))&&
-   typeof row?.officialCutoffAt==='string'&&Number.isFinite(Date.parse(row.officialCutoffAt))&&
+   officialResultMatchesRace(row)&&
+   offsetTime(row?.historicalInputCapturedAt)&&offsetTime(row?.officialCutoffAt)&&
    Date.parse(row.historicalInputCapturedAt)<Date.parse(row.officialCutoffAt)&&
    jstDate(row.historicalInputCapturedAt)===row.date&&jstDate(row.officialCutoffAt)===row.date;
   if(!valid){excluded.push({date:row?.date??null,reason:'missing_verified_historical_inputs_or_result'});continue;}
