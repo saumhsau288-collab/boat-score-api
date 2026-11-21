@@ -5,6 +5,7 @@ on:
       - fix-boat-score-2-syntax-20261115
     paths:
       - worker.js
+      - six-boat-ranking-display.test.mjs
       - .github/workflows/boat-score-2-preview-syntax-check.yml
   workflow_dispatch:
 permissions:
@@ -21,3 +22,4 @@ jobs:
         run: |
           test "$(git branch --show-current)" = "fix-boat-score-2-syntax-20261115"
           node --input-type=module --check < worker.js
+          node six-boat-ranking-display.test.mjs
