@@ -1,7 +1,7 @@
 // Research-only audit: verified:true is a caller claim, not proof of Makulabo origin.
 export function auditRecent50SourceReadiness({official,recent50}={}){
  const report={readyForVerifiedSourceReview:false,officialSix:false,recentSix:false,matchedById:0,
-  verifiedFlagCount:0,sourceEvidenceCount:0,missingSourceEvidence:[],issues:[],
+  verifiedFlagCount:0,sourceVerifiedFlagCount:0,sourceEvidenceCount:0,missingSourceEvidence:[],issues:[],
   warning:'The independent morning evaluator trusts verified:true. This audit requires per-racer source evidence but does not authenticate URLs, publication time, or underlying last50 race results. No live scoring changes.'};
  if(!Array.isArray(official)||official.length!==6||new Set(official.map(r=>r?.boat)).size!==6||
   official.some(r=>!Number.isInteger(r?.boat)||r.boat<1||r.boat>6||!/^\d{4}$/.test(String(r.racerId??'')))){
@@ -19,6 +19,7 @@ export function auditRecent50SourceReadiness({official,recent50}={}){
   if(!officialIds.has(id)){report.issues.push('recent_id_not_in_official');continue;}
   report.matchedById++;
   if(row.verified===true)report.verifiedFlagCount++;else report.issues.push('not_verified_'+id);
+  if(row.sourceVerified===true)report.sourceVerifiedFlagCount++;else report.issues.push('source_not_verified_'+id);
   if(typeof row.winRate!=='number'||!Number.isFinite(row.winRate)||row.winRate<0||row.winRate>100)
    report.issues.push('invalid_win_rate_'+id);
   // URL or captured source identifier must be explicit; still not independently authenticated.
@@ -28,6 +29,6 @@ export function auditRecent50SourceReadiness({official,recent50}={}){
   }else report.missingSourceEvidence.push(id);
  }
  report.readyForVerifiedSourceReview=report.issues.length===0&&report.matchedById===6&&
-  report.verifiedFlagCount===6&&report.sourceEvidenceCount===6;
+  report.verifiedFlagCount===6&&report.sourceVerifiedFlagCount===6&&report.sourceEvidenceCount===6;
  return report;
 }
