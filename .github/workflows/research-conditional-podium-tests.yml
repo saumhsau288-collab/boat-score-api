@@ -8,6 +8,8 @@ on:
       - 'scripts/test-research-conditional-podium-audit.mjs'
       - 'scripts/research-stratified-podium.mjs'
       - 'scripts/test-research-stratified-podium.mjs'
+      - 'scripts/research-retrospective-finish-ranks.mjs'
+      - 'scripts/test-research-retrospective-finish-ranks.mjs'
       - '.github/workflows/research-conditional-podium-tests.yml'
   workflow_dispatch:
 jobs:
@@ -20,4 +22,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test scripts/test-research-conditional-podium-audit.mjs scripts/test-research-stratified-podium.mjs
+      - run: node --test scripts/test-research-conditional-podium-audit.mjs scripts/test-research-stratified-podium.mjs scripts/test-research-retrospective-finish-ranks.mjs
