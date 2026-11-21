@@ -18,3 +18,12 @@ test('holds duplicate races, future dates, and unauthenticated snapshots',()=>{
  assert.equal(x.held.unverified_pre_race,1);
  assert.equal(x.rows.find(v=>v.winner===5&&v.candidate===6).starts,1);
 });
+
+test('invalid first copy does not block a later authenticated race',()=>{
+ const valid=row('20261118',4,[5,6,1]);
+ const invalid={...valid,preRaceAuthenticated:false};
+ const x=stratifyConditionalPodium([invalid,valid],'20261120');
+ assert.equal(x.held.unverified_pre_race,1);
+ assert.equal(x.held.duplicate_race??0,0);
+ assert.equal(x.rows.find(v=>v.winner===5&&v.candidate===6).starts,1);
+});
