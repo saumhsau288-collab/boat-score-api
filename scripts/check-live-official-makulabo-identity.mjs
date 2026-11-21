@@ -6,6 +6,7 @@ import {parseMakulaboHeatmapSix} from './parse-makulabo-heatmap-six.mjs';
 import {matchRecent50Racers} from '../boat-score-2-recent50-identity.js';
 import {evaluateMorningFromSources} from '../boat-score-2-morning-pipeline.js';
 import {auditMakulaboHistoricalCutoff} from './audit-makulabo-historical-cutoff.mjs';
+import {prepareMakulaboMorningEvidence} from './prepare-makulabo-morning-evidence.mjs';
 const [date,venue,race]=process.argv.slice(2);
 const sourceCaptureAt=new Date().toISOString();
 const selection={date,venue,race};
@@ -50,6 +51,10 @@ console.log('OFFICIAL_MAKULABO_JOINED_RESEARCH',JSON.stringify(joined));
 const historicalGate=auditMakulaboHistoricalCutoff({sourceCaptureAt});
 if(historicalGate.eligible)throw Error('Unverified live source passed historical cutoff gate');
 console.log('HISTORICAL_CUTOFF_GATE_BLOCKED',JSON.stringify(historicalGate));
+const sampleAudit=prepareMakulaboMorningEvidence(official.racers,makulabo.racers,historicalGate);
+if(sampleAudit.eligibleForScoring!==false)throw Error('Unverified Makulabo sample became score eligible');
+console.log('LIVE_MAKULABO_MORNING_ELIGIBILITY',JSON.stringify({status:sampleAudit.status,reason:sampleAudit.reason,eligibleForScoring:sampleAudit.eligibleForScoring,
+ observedRuns:makulabo.racers.map(r=>({boat:r.boat,runs:r.runs,blankAsZeroInferred:r.blankAsZeroInferred}))}));
 if(joined.some(r=>r.historicalCutoffVerified!==false))
  throw Error('No historical publication cutoff has been established');
 const gated=evaluateMorningFromSources({official:official.racers,
