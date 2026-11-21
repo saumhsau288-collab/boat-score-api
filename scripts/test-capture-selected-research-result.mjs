@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {captureSelectedResearchResult as capture} from './capture-selected-research-result.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i),sourceVerified:true}));
+const snapshot={status:'captured_research_inputs',date:'20261121',venue:1,race:1,racers};
+const tr=(r,i)=>'<tbody><tr><td class="is-fs14">'+(i+1)+'</td><td class="is-fs14 is-fBold is-boatColor'+r.boat+'">'+r.boat+'</td><td><span class="is-fs12">'+r.racerId+'</span><span class="is-fs18">'+r.racerId+'</span></td><td>1:50</td></tr></tbody>';
+const html='<table class="is-w495"><thead><tr><th>着</th><th>枠</th><th>ボートレーサー</th></tr></thead>'+racers.map(tr).join('')+'</table>';
+const fake=async()=>({ok:true,status:200,headers:{get:()=> 'text/html'},text:async()=>html});
+const out=await capture(snapshot,{fetchImpl:fake});
+assert.equal(out.status,'official_racelist_result_identity_matched');
+assert.equal(out.independentResultVerification,false);
+assert.equal(out.eligibleForCalibration,false);
+assert.equal((await capture({...snapshot,racers:racers.slice(1)},{fetchImpl:fake})).status,'held');
+const bad=await capture(snapshot,{fetchImpl:async()=>({...await fake(),text:async()=>html.replace('4001','9999')})});
+assert.equal(bad.status,'held');
+console.log('Selected research result identity capture tests passed');
