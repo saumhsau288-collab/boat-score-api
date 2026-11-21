@@ -90,6 +90,14 @@ jobs:
           console.log(JSON.stringify({joined:report.joinedCount,missing:report.rows.length-report.joinedCount,
             topScoreWinners:report.rows.filter(r=>r.topScoreActualFinish===1).length,
             lowRankWinners:report.rows.filter(r=>r.winnerScoreRank>=4).length}));
+          const totalBoats=report.rows.filter(x=>x.status==='retrospective_comparison_only').reduce((n,x)=>n+x.boats.length,0);
+          if(totalBoats!==78||report.summary.topScoreWinners!==5||report.summary.lowerScoreWinners!==6||
+             report.summary.featureAvailability.nationalWinRateAvailable.available!==78||
+             report.summary.featureAvailability.localWinRateAvailable.available!==78||
+             report.summary.featureAvailability.motor2RateAvailable.available!==78||
+             report.summary.featureAvailability.preRaceAverageSTAvailable.available!==0||
+             report.summary.featureAvailability.makulabo50Available.available!==0)
+            throw Error('unexpected real 13-race / 78-racer evidence counts');
           console.log('FEATURE_AVAILABILITY '+JSON.stringify(report.summary.featureAvailability));
           console.log('RANK_DISTRIBUTION '+JSON.stringify(report.summary.winnerByScoreRank));
           console.log('TOP_SCORE_FINISH_DISTRIBUTION '+JSON.stringify(report.summary.topScoreByActualFinish));
