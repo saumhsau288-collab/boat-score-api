@@ -1,11 +1,15 @@
 // Conservative extraction of racer metrics from official HTML tables.
 // Only accept a table when header labels and boat/racer mapping are explicit.
 import {parseOfficialBoatRows} from './boat-score-2-boat-mapping.js';
+import {extractGroupedOfficialSix} from './scripts/extract-grouped-official-six.mjs';
 const clean=s=>String(s).replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
 const num=s=>{const v=clean(s).replace(/％|%/g,'');return /^\d+(?:\.\d+)?$/.test(v)?Number(v):null;};
 export function extractOfficialMetrics(html){
  if(typeof html!=='string'||html.length>2_000_000)
   return {verified:false,reason:'invalid_html',racers:[]};
+ // Prefer verified merged-cell layout when the live page uses grouped headers.
+ const grouped=extractGroupedOfficialSix(html);
+ if(grouped.verified)return {verified:true,racers:grouped.racers,source:grouped.source};
  const tables=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map(m=>m[1]);
  const diagnostics={tableCount:tables.length,matchingHeaderTables:0,matchingMappedTables:0,candidateMetricRows:0,
   groupedHeaderTables:0,groupedHeaderLabels:[],
