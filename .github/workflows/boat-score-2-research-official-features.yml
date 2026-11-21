@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       capture_date:
-        description: 'Race date YYYYMMDD'
+        description: 'Race date YYYYMMDD (use a completed race, preferably a prior date)'
         required: true
         type: string
       venue:
@@ -39,6 +39,8 @@ jobs:
               console.error("Invalid inputs: capture_date must be 8 digits YYYYMMDD (e.g. 20261120); venue 1-24; race 1-12.");
               process.exit(1);
             }
+            const today=new Date().toISOString().slice(0,10).replaceAll("-","");
+            if(d>=today)console.warn("WARNING: Same-day/future race selection. Official result may not be published yet; use a completed historical race for result verification.");
             console.log("Research selection validated:",d,"venue",Number(v),"race",Number(r));
           '
       - name: Validate standalone script
