@@ -13,4 +13,7 @@ check(base,null,true,'capture_and_deadline_timestamps_required');
 check({...base,racers:base.racers.slice(0,5)},'2026-11-21T09:00:00Z',true,'complete_six_racer_snapshot_required');
 check(base,'2026-11-21T09:00:00Z',false,'independent_pre_race_authentication_required');
 check({...base,preRaceIndependentlyVerified:false},'2026-11-21T09:00:00Z',true,'snapshot_pre_race_verification_required');
-console.log('pre-race evidence gate: 7 cases passed');
+check({...base,racers:[...base.racers.slice(0,5),{boat:5}]},'2026-11-21T09:00:00Z',true,'unique_boats_one_through_six_required');
+check({...base,racers:[...base.racers.slice(0,5),{boat:7}]},'2026-11-21T09:00:00Z',true,'unique_boats_one_through_six_required');
+check({...base,racers:[...base.racers.slice(0,5),{}]},'2026-11-21T09:00:00Z',true,'unique_boats_one_through_six_required');
+console.log('pre-race evidence gate: 10 cases passed');
