@@ -6,6 +6,8 @@ on:
       - 'scripts/audit-adjacent-baseline.mjs'
       - 'scripts/test-audit-adjacent-podium.mjs'
       - 'scripts/test-audit-adjacent-baseline.mjs'
+      - 'scripts/audit-official-join-adjacency.mjs'
+      - 'scripts/test-audit-official-join-adjacency.mjs'
       - 'scripts/audit-official-join-adjacent-ability.mjs'
       - 'scripts/test-audit-official-join-adjacent-ability.mjs'
       - 'scripts/audit-adjacent-ability.mjs'
@@ -31,8 +33,10 @@ jobs:
           node --check scripts/audit-adjacent-baseline.mjs
           node --check scripts/test-audit-adjacent-podium.mjs
           node --check scripts/test-audit-adjacent-baseline.mjs
+          node --check scripts/audit-official-join-adjacency.mjs
+          node --check scripts/test-audit-official-join-adjacency.mjs
           node --check scripts/audit-official-join-adjacent-ability.mjs
-          node --check scripts/test-audit-official-join-adjacent-ability.mjs
+          node --check scripts/test-audit-official-join-adjacent-ability.mjs scripts/test-audit-official-join-adjacency.mjs
           node --check scripts/audit-adjacent-ability.mjs
           node --check scripts/test-audit-adjacent-ability.mjs scripts/test-audit-official-join-adjacent-ability.mjs
           node --check scripts/run-adjacent-podium-audit.mjs
