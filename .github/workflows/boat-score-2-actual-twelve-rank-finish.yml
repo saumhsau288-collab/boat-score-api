@@ -47,7 +47,7 @@ jobs:
           const provenance=auditSavedPredictionOfficialProvenance({savedRecords:saved.records.filter(x=>x?.response?.ready===true),officialRaces:archivedOfficial});
           if(provenance.rows.some(x=>x.originalInputsVerified===true||x.eligibleForCalibration===true))
             throw Error('retrospective provenance must not be calibrated');
-          fs.writeFileSync('prediction-captures/actual-twelve-prediction-official-provenance.json',JSON.stringify(provenance,null,2)+'\\n');
+          fs.writeFileSync('prediction-captures/actual-twelve-prediction-official-provenance.json',JSON.stringify(provenance,null,2)+'\n');
           console.log('REAL_PROVENANCE '+JSON.stringify({matched:provenance.matched,
             held:provenance.rows.length-provenance.matched,
             statuses:provenance.rows.reduce((a,x)=>(a[x.status]=(a[x.status]||0)+1,a),{})}));
