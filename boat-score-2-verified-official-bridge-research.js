@@ -12,5 +12,7 @@ export function validateResearchRacersForExistingPipeline(extraction) {
   nationalWinRate:r.nationalWinRate,localWinRate:r.localWinRate,
   motorTwoWinRate:r.motorTwoWinRate,sourceVerified:true
  }));
- return validateOfficialMetrics(official);
+ const checked=validateOfficialMetrics(official);
+ if(!checked.verified)return checked;
+ return {...checked,racers:checked.racers.map(r=>({...r,sourceVerified:true}))};
 }
