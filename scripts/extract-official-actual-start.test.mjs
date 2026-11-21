@@ -22,4 +22,6 @@ assert.equal(nested.status,'parsed_needs_independent_review');
 assert.deepEqual(nested.starts.map(x=>x.st),[.20,.16,.17,.28,.27,.23]);
 assert.deepEqual(nested.starts.map(x=>x.entryCourse),[1,2,3,4,5,6]);
 
+assert.equal(extractOfficialActualStart(table([[1,'unknown'],[2,'.16'],[3,'.17'],[4,'.28'],[5,'.27'],[6,'.23']])).status,'start_table_incomplete');
+assert.equal(extractOfficialActualStart(table([[1,'.20garbage'],[2,'.16'],[3,'.17'],[4,'.28'],[5,'.27'],[6,'.23']])).status,'start_table_incomplete');
 console.log('official actual start parser tests passed');
