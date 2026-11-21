@@ -39,6 +39,7 @@ jobs:
           import {officialRacelistUrl} from './boat-score-2-official.js';
           import {parseOfficialBoatRows} from './boat-score-2-boat-mapping.js';
           import {extractOfficialMetrics} from './boat-score-2-metric-extractor.js';
+          import {evaluateMorningFromSources} from './boat-score-2-morning-pipeline.js';
           const selection={venue:process.env.VENUE,date:process.env.RACE_DATE,race:process.env.RACE};
           const target=officialRacelistUrl(selection);
           if(target.status!=='ok')throw Error('Invalid race selection');
@@ -67,4 +68,13 @@ jobs:
             throw Error('Official metrics not independently verified for six racers');
           if(mapping.verified!==true||mapping.racers?.length!==6)
             throw Error('Official racer identity mapping not verified for six racers');
+          for(const racer of metrics.racers){
+            const identity=mapping.racers.find(r=>r.boat===racer.boat);
+            if(!identity||String(identity.racerId)!==String(racer.racerId))
+              throw Error('Official metric racer identity mismatch for boat '+racer.boat);
+          }
+          const gated=evaluateMorningFromSources({official:metrics.racers,recent50:[]});
+          if(gated.status!=='insufficient_data'||gated.source!=='recent50')
+            throw Error('Missing recent50 unexpectedly produced a score');
+          console.log('SCORE_GATE_VERIFIED',JSON.stringify({status:gated.status,source:gated.source,reason:gated.reason}));
           NODE
