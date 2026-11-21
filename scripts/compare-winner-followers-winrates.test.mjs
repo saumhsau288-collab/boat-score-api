@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {compareWinnerFollowersWithWinRates} from './compare-winner-followers-winrates.mjs';
+const sample={resultVerified:true,preRaceWinRatesAuthenticated:true,finishOrder:[1,3,2,4,5,6],preRaceWinRates:[1,2,3,4,5,6].map((boat)=>({boat,nationalWinRate:boat===3?8:boat===2?7:6-boat/10}))};
+const good=compareWinnerFollowersWithWinRates([sample]);
+assert.equal(good.eligible,1);
+assert.equal(good.byWinner[1].topRemainingSecond,1);
+assert.deepEqual(good.byWinner[1].secondWinRateRankCounts,[1,0,0,0,0]);
+assert.equal(good.byWinner[1].topTwoRemainingPodium,1);
+assert.equal(good.scoringChanged,false);
+const bad=compareWinnerFollowersWithWinRates([{...sample,preRaceWinRatesAuthenticated:false}]);
+assert.equal(bad.eligible,0);
+assert.equal(bad.held,1);
+const missing=compareWinnerFollowersWithWinRates([{...sample,preRaceWinRates:[]}]);
+assert.equal(missing.eligible,0);
+console.log('Winner-conditioned win-rate comparison guards passed');
