@@ -531,7 +531,8 @@ function formatVenueRanking(data){
    const n=Number(x.race);
    const score=Number(x.score);
    lines.push((i+1)+'位  '+(Number.isInteger(n)&&n>=1&&n<=12?n+'R':'レース未確認')+
-    ' / 暫定スコア '+(Number.isFinite(score)?score.toFixed(2):'未確認'));
+    ' / 暫定スコア '+(Number.isFinite(score)?score.toFixed(2):'未確認')+
+    ' / 予想順位 '+(Array.isArray(x.predictedOrder)&&x.predictedOrder.length===6&&new Set(x.predictedOrder).size===6&&x.predictedOrder.every(b=>Number.isInteger(b)&&b>=1&&b<=6)?x.predictedOrder.join('-'):'未確認'));
   });
  }
  return lines.join('\n');
@@ -2469,7 +2470,7 @@ function classifyDailyRaceCandidates(races) {
     const outer=Math.max(...ordered.filter(x=>x.boat>=4).map(x=>x.score));
     const inner=Math.max(...ordered.filter(x=>x.boat<=3).map(x=>x.score));
     const item={date:race.date,venue:race.venue,race:race.race,lead,spread,outerGap:outer-inner,
-      status:'provisional_not_calibrated'};
+      status:'provisional_not_calibrated',predictedOrder:ordered.map(x=>x.boat)};
     const category=lead>=3&&ordered[0].boat<=3?'main':outer>=inner?'upset':'chaos';
     categories[category].push({...item,category,score:category==='main'?lead:category==='upset'?outer-inner:-spread});
   }
