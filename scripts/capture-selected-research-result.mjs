@@ -7,7 +7,8 @@ import {crossCheckOfficialResultIdentity} from './cross-check-official-result-id
 export async function captureSelectedResearchResult(snapshot,{fetchImpl=fetch}={}){
  const date=String(snapshot?.date??''),venue=Number(snapshot?.venue),race=Number(snapshot?.race);
  if(snapshot?.status!=='captured_research_inputs'||!Array.isArray(snapshot.racers)||
-  snapshot.racers.length!==6||!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||
+  snapshot.racers.length!==6||snapshot.source!=='verified_official_metrics'||
+  snapshot.racers.some(r=>r?.sourceVerified!==true)||!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||
   venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)
   return {status:'held',reason:'valid_official_snapshot_required',eligibleForCalibration:false};
  const url='https://www.boatrace.jp/owpc/pc/race/raceresult?'+
