@@ -25,7 +25,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p prediction-captures
-          for id in 14586303082 14701499660; do
+          for id in 14586303082 14701499660 14704048147; do
             gh api "/repos/${{ github.repository }}/actions/artifacts/$id/zip" > "prediction-captures/$id.zip"
             unzip -o "prediction-captures/$id.zip" -d prediction-captures
           done
@@ -44,8 +44,12 @@ jobs:
           const archivedOfficial=official.races.map(r=>({date:r.date,venue:r.venue,race:r.race,
             racers:r.comparison?.rows?.map(x=>({boat:x.boat,racerId:x.racerId}))??[],
             receivedAt:r.officialCaptureReceivedAt??null}));
-          const provenance=auditSavedPredictionOfficialProvenance({savedRecords:saved.records.filter(x=>x?.response?.ready===true),officialRaces:archivedOfficial});
-          if(provenance.attempted!==14||provenance.matched!==12||provenance.held!==2||
+          const ashCapture=JSON.parse(fs.readFileSync('prediction-captures/research-official-20261120-21-4.json','utf8'));
+          if(ashCapture.status!=='captured_research_inputs'||ashCapture.racers?.length!==6||
+             ashCapture.date!=='20261120'||Number(ashCapture.venue)!==21||Number(ashCapture.race)!==4)
+            throw Error('Ashiya capture artifact identity or racer count invalid');
+          const provenance=auditSavedPredictionOfficialProvenance({savedRecords:saved.records.filter(x=>x?.response?.ready===true),officialRaces:[...archivedOfficial,ashCapture]});
+          if(provenance.attempted!==14||provenance.matched!==13||provenance.held!==1||
             provenance.originalInputsVerified!==0||provenance.independentlyAuthenticatedBeforeRace!==0)
             throw Error('unexpected real archived provenance counts');
           if(provenance.rows.some(x=>x.originalInputsVerified===true||x.eligibleForCalibration===true))
@@ -54,12 +58,12 @@ jobs:
           // A missing official feature comparison does not imply missing official finish data.
           const ash=provenance.rows.find(x=>String(x.date)==='20261120'&&Number(x.venue)===21&&Number(x.race)===4);
           const ashFinish=results.results.find(x=>String(x.date)==='20261120'&&Number(x.venue)===21&&Number(x.race)===4&&x.verified===true);
-          if(ash?.status!=='held_missing_official'||!Array.isArray(ashFinish?.finishOrder)||ashFinish.finishOrder.length!==6)
+          if(ash?.status!=='retrospective_comparison_only'||!Array.isArray(ashFinish?.finishOrder)||ashFinish.finishOrder.length!==6)
             throw Error('Ashiya 4R finish evidence and feature gap changed');
-          console.log('ASHIYA_4R_EVIDENCE '+JSON.stringify({officialFinishAvailable:true,officialFeatureComparisonAvailable:false,
+          console.log('ASHIYA_4R_EVIDENCE '+JSON.stringify({officialFinishAvailable:true,officialFeatureComparisonAvailable:true,
             finishOrder:ashFinish.finishOrder,eligibleForCalibration:false}));
           const readiness={date:'20261120',venue:21,race:4,officialFinishAvailable:true,
-            officialFinishOrder:ashFinish.finishOrder,officialFeatureComparisonAvailable:false,
+            officialFinishOrder:ashFinish.finishOrder,officialFeatureComparisonAvailable:true,
             savedPredictionAvailable:true,preRaceAverageSTVerified:false,makulabo50Verified:false,
             originalPredictionInputsVerified:false,eligibleForCalibration:false,
             nextAction:'capture six racer official features with source URL, SHA256, timestamps and racer identity; historical capture cannot authenticate pre-race inputs'};
