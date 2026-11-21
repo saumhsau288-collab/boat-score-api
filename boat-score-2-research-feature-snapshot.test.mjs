@@ -176,3 +176,12 @@ test('course swap does not swap ST, exhibition, or racer-specific recent50 data'
  );
  assert.equal(x.eligibleForCalibration,false);
 });
+
+test('rejects impossible calendar dates and accepts leap day',()=>{
+ const impossible=buildResearchFeatureSnapshot({...base,date:'20260230'});
+ assert.equal(impossible.status,'invalid_capture_identity');
+ assert.equal(impossible.eligibleForCalibration,false);
+ const leap=buildResearchFeatureSnapshot({...base,date:'20240229'});
+ assert.equal(leap.status,'captured_research_inputs');
+ assert.equal(leap.eligibleForCalibration,false);
+});
