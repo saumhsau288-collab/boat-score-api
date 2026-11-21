@@ -4,7 +4,7 @@ import {expandTableGrid} from './boat-score-2-table-grid-research.js';
 // rowspan block and match an explicit profile ID. No partial output is accepted.
 const plain=s=>String(s||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
 const firstNumber=(html,index)=>{const matches=plain(html).match(/\d+(?:\.\d+)?/g)||[];return matches[index]===undefined?null:Number(matches[index]);};
-const boatNumber=s=>{const t=plain(s).normalize('NFKC');return /^[1-6]$/.test(t)?Number(t):null;};
+// ST is a fractional time, not the third arbitrary number in the cell.\n// Accept only a unique 0.xx token; missing or ambiguous ST stays unavailable.\nconst averageSt=html=>{const tokens=plain(html).match(/(?<![\\d.])0\\.\\d{1,3}(?![\\d.])/g)||[];return tokens.length===1?Number(tokens[0]):null;};\nconst boatNumber=s=>{const t=plain(s).normalize('NFKC');return /^[1-6]$/.test(t)?Number(t):null;};
 function racerName(html,id) {
  const links=[...String(html||'').matchAll(/<a\b[^>]*href=[\"']([^\"']*)[\"'][^>]*>([\s\S]*?)<\/a>/gi)]
    .filter(m=>m[1].includes('racersearch/profile')&&m[1].includes('toban='+id));
@@ -45,7 +45,7 @@ export function extractSixOfficialRacers(html) {
    const identityText=plain(identityHtml);
    if(!racerId||!identityText.includes(racerId))return {verified:false,reason:'racer_identity_unverified',racers:[]};
    const name=racerName(identityHtml,racerId);
-   const st=firstNumber(row[3]?.html,2); // F0 L0 0.14
+   const st=averageSt(row[3]?.html); // F/L counts are not ST
    const nationalWinRate=firstNumber(row[4]?.html,0);
    const localWinRate=firstNumber(row[5]?.html,0);
    const motorTwoWinRate=firstNumber(row[6]?.html,1); // No, 2連率, 3連率
