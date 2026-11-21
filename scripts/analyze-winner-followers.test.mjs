@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+const out=JSON.parse(execFileSync(process.execPath,['scripts/analyze-winner-followers.mjs','research/evidence/20261120-official-result-pages-transcription.json'],{encoding:'utf8'}));
+assert.equal(out.valid,13);
+assert.equal(out.excluded,0);
+assert.equal(out.byWinner[1].races,6);
+assert.equal(out.byWinner[1].followers[2].second,2);
+assert.equal(out.byWinner[1].followers[2].secondRate,2/6);
+assert.equal(out.byWinner[5].races,0);
+assert.equal(out.byWinner[5].followers[6].podiumRate,null);
+console.log('Verified 13 result records; winner=1, second=2 is 2/6; winner=5 has no evidence.');
