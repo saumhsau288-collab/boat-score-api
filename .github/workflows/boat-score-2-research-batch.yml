@@ -88,9 +88,9 @@ jobs:
           const d=process.env.CAPTURE_DATE,v=Number(process.env.CAPTURE_VENUE);
           const load=(prefix,r)=>{try{return JSON.parse(fs.readFileSync('prediction-captures/research-'+prefix+'-'+d+'-'+v+'-'+r+'.json','utf8'))}catch{return null}};
           const lines=['## Historical research batch (no scoring changes)',
-            '| Race | Official racers | Makulabo | Official result | 85-point ranking | Parsed podium | Overlap |',
-            '|---|---|---|---|---|---|---|'];
-          let compared=0;
+            '| Race | Official racers | Makulabo | Official result | 85-point ranking | Parsed podium | Overlap | Winner score rank | Exact podium order |',
+            '|---|---|---|---|---|---|---|---|'];
+          let compared=0,winnerTop=0,exactPodium=0,overlapTotal=0;
           for(let r=Number(process.env.FIRST_RACE);r<=Number(process.env.LAST_RACE);r++){
             const a=load('official',r),m=load('makulabo',r),o=load('result',r);
             const rows=m?.officialComponentComparison?.rows;
@@ -102,18 +102,27 @@ jobs:
               rows.every(x=>Number.isFinite(x.officialComponentScore85))&&
               Array.isArray(podium)&&podium.length===3&&new Set(podium).size===3&&
               podium.every(b=>rows.some(x=>x.boat===b));
-            let rank='held',actual='held',overlap='held';
+            let rank='held',actual='held',overlap='held',winnerRank='held',exact='held';
             if(ready){
               const sorted=[...rows].sort((x,y)=>y.officialComponentScore85-x.officialComponentScore85||x.boat-y.boat);
               rank=sorted.map(x=>x.boat).join('-');
               actual=podium.join('-');
-              overlap=sorted.slice(0,3).filter(x=>podium.includes(x.boat)).length+'/3';
+              const matched=sorted.slice(0,3).filter(x=>podium.includes(x.boat)).length;
+              overlap=matched+'/3';
+              overlapTotal+=matched;
+              winnerRank=String(sorted.findIndex(x=>x.boat===podium[0])+1);
+              exact=String(sorted.slice(0,3).every((x,i)=>x.boat===podium[i]));
+              if(winnerRank==='1')winnerTop++;
+              if(exact==='true')exactPodium++;
               compared++;
             }
             lines.push('| '+r+' | '+(a?.status??'missing')+' | '+(m?.status??'missing')+
-              ' | '+(o?.status??'missing')+' | '+rank+' | '+actual+' | '+overlap+' |');
+              ' | '+(o?.status??'missing')+' | '+rank+' | '+actual+' | '+overlap+' | '+winnerRank+' | '+exact+' |');
           }
           lines.push('', 'Comparable retrospective races: '+compared,
+            'Top-score boat finished first: '+winnerTop+'/'+compared,
+            'Exact podium order: '+exactPodium+'/'+compared,
+            'Top-three membership overlap: '+overlapTotal+'/'+(compared*3),
             'Post-race official-only 85-point component, not authenticated pre-race predictions.',
             'No independent result verification, automatic calibration, or deployed app changes.');
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
