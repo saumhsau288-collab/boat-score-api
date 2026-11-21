@@ -69,3 +69,24 @@ test('unverified recent50 figures do not become zero-valued evidence',()=>{
  assert.equal(x.racers[0].recent50Verified,false);
  assert.equal(x.eligibleForCalibration,false);
 });
+
+test('only records a verified exhibition time for the matching racer and boat',()=>{
+ const x=buildResearchFeatureSnapshot({...base,exhibitionByBoat:[
+  {boat:1,racerId:'4001',exhibitionTime:6.81,verified:true},
+  {boat:2,racerId:'4001',exhibitionTime:6.70,verified:true},
+  {boat:3,racerId:'4003',exhibitionTime:6.75,verified:false}
+ ]});
+ assert.equal(x.racers[0].exhibitionTime,6.81);
+ assert.equal(x.racers[0].exhibitionTimeVerified,true);
+ assert.equal(x.racers[1].exhibitionTime,null);
+ assert.equal(x.racers[2].exhibitionTime,null);
+ assert.equal(x.eligibleForCalibration,false);
+});
+test('duplicate exhibition boat records are rejected',()=>{
+ const x=buildResearchFeatureSnapshot({...base,exhibitionByBoat:[
+  {boat:1,racerId:'4001',exhibitionTime:6.8,verified:true},
+  {boat:1,racerId:'4001',exhibitionTime:6.9,verified:true}
+ ]});
+ assert.equal(x.status,'invalid_exhibition_mapping');
+ assert.equal(x.eligibleForCalibration,false);
+});
