@@ -38,6 +38,19 @@ jobs:
           const official=JSON.parse(fs.readFileSync('prediction-captures/twelve-race-official-feature-comparison.json','utf8'));
           const results=JSON.parse(fs.readFileSync('research/evidence/20261120-official-result-pages-transcription.json','utf8'));
           const report=auditRankFinishWithOfficial({savedRecords:saved.records,officialRaces:official.races,results:results.results});
+          // Compare actual archived predictor responses against the separate official feature captures.
+          // These are retrospective comparisons, never evidence of inputs used by the deployed predictor.
+          const {auditSavedPredictionOfficialProvenance}=await import('./scripts/audit-saved-prediction-official-provenance.mjs');
+          const archivedOfficial=official.races.map(r=>({date:r.date,venue:r.venue,race:r.race,
+            racers:r.comparison?.rows?.map(x=>({boat:x.boat,racerId:x.racerId}))??[],
+            receivedAt:r.officialCaptureReceivedAt??null}));
+          const provenance=auditSavedPredictionOfficialProvenance({savedRecords:saved.records.filter(x=>x?.response?.ready===true),officialRaces:archivedOfficial});
+          if(provenance.rows.some(x=>x.originalInputsVerified===true||x.eligibleForCalibration===true))
+            throw Error('retrospective provenance must not be calibrated');
+          fs.writeFileSync('prediction-captures/actual-twelve-prediction-official-provenance.json',JSON.stringify(provenance,null,2)+'\\n');
+          console.log('REAL_PROVENANCE '+JSON.stringify({matched:provenance.matched,
+            held:provenance.rows.length-provenance.matched,
+            statuses:provenance.rows.reduce((a,x)=>(a[x.status]=(a[x.status]||0)+1,a),{})}));
           if(report.joinedCount!==12||report.rows.length!==13||
             report.rows.filter(r=>r.status==='held_missing_join_data').length!==1||
             report.rows.filter(r=>r.status==='retrospective_comparison_only').some(r=>r.boats.some(b=>!b.officialMetricsAvailable)))
@@ -55,5 +68,7 @@ jobs:
         if: always()
         with:
           name: actual-twelve-rank-finish-audit-${{ github.run_id }}
-          path: prediction-captures/actual-twelve-rank-finish-audit.json
+          path: |
+            prediction-captures/actual-twelve-rank-finish-audit.json
+            prediction-captures/actual-twelve-prediction-official-provenance.json
           retention-days: 30
