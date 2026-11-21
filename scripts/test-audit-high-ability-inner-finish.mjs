@@ -15,6 +15,7 @@ test('highest rate in boat 1 and boat 2 are disjoint and union is exact',()=>{
  assert.equal(g.top2_in_1_and_2.races,1);
  assert.equal(g.other.races,1);
  assert.equal(g.top1_in_2.first2,1);
+ assert.equal(g.top2_in_2_and_1.races,1);
  assert.equal(g.top1_in_1.exact123,1);
 });
 test('ambiguous tied top two are excluded',()=>{
