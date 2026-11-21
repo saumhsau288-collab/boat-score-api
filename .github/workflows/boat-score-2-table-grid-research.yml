@@ -44,6 +44,7 @@ jobs:
           node boat-score-2-verified-official-bridge-research.test.mjs
           node boat-score-2-recent50-morning-bridge-research.test.mjs
           node boat-score-2-six-racer-morning-regression.test.mjs
+          node boat-score-2-research-to-backtest-gate.test.mjs
           node boat-score-2-historical-snapshot-gate-research.test.mjs
           node scripts/test-identify-makulabo-sample-scope.mjs
           node scripts/test-apply-reviewed-makulabo-identities.mjs
