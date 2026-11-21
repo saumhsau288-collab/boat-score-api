@@ -22,3 +22,19 @@ test('ambiguous tied top two are excluded',()=>{
  const data=[{reports:[{records:[race([9,9,7,6,5,4],[1,2,3])]}]}];
  assert.equal(auditHighAbilityInnerFinish(data).excluded,1);
 });
+
+test('ability-gap buckets keep both directions distinct',()=>{
+ const data=[{reports:[{records:[
+  race([9,8.5,7,6,5,4],[1,2,3]),
+  race([8,9.5,7,6,5,4],[2,1,3]),
+  race([9,7.5,7,6,5,4],[1,3,2]),
+  race([7,9.5,6,5,4,3],[2,1,3])
+ ]}]}];
+ const b=auditHighAbilityInnerFinish(data).abilityGap;
+ assert.equal(b.boat1_stronger.lt1.races,1);
+ assert.equal(b.boat1_stronger['1to2'].races,1);
+ assert.equal(b.boat2_stronger['1to2'].races,1);
+ assert.equal(b.boat2_stronger.gte2.races,1);
+ assert.equal(b.boat1_stronger.lt1.first1,1);
+ assert.equal(b.boat2_stronger.gte2.first2,1);
+});
