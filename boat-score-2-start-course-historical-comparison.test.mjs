@@ -51,3 +51,12 @@ test('counts duplicate race identity only once',()=>{
  assert.equal(out.eligible,1);
  assert.equal(out.excludedDetails[0].reason,'duplicate_race');
 });
+
+test('an ineligible record cannot block a later valid capture of the same race',()=>{
+ const good=makeRace(),bad=makeRace();
+ bad.racers[0].startTimingPreRace=false;
+ const out=compareHistoricalStartCourse([bad,good]);
+ assert.equal(out.eligible,1);
+ assert.equal(out.excluded,1);
+ assert.equal(out.excludedDetails[0].reason,'missing_pre_race_evidence');
+});
