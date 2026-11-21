@@ -1,0 +1,29 @@
+name: Validate adjacent podium research
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-adjacent-podium.mjs'
+      - 'scripts/audit-adjacent-baseline.mjs'
+      - 'scripts/test-audit-adjacent-podium.mjs'
+      - 'scripts/test-audit-adjacent-baseline.mjs'
+      - '.github/workflows/validate-adjacent-podium-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  research-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax
+        run: |
+          node --check scripts/audit-adjacent-podium.mjs
+          node --check scripts/audit-adjacent-baseline.mjs
+          node --check scripts/test-audit-adjacent-podium.mjs
+          node --check scripts/test-audit-adjacent-baseline.mjs
+      - name: Run regression tests
+        run: node --test scripts/test-audit-adjacent-podium.mjs scripts/test-audit-adjacent-baseline.mjs
