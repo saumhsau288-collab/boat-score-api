@@ -6,6 +6,8 @@ on:
       - 'scripts/audit-adjacent-baseline.mjs'
       - 'scripts/test-audit-adjacent-podium.mjs'
       - 'scripts/test-audit-adjacent-baseline.mjs'
+      - 'scripts/run-adjacent-podium-audit.mjs'
+      - 'scripts/test-run-adjacent-podium-audit.mjs'
       - '.github/workflows/validate-adjacent-podium-research.yml'
   workflow_dispatch:
 permissions:
@@ -25,5 +27,7 @@ jobs:
           node --check scripts/audit-adjacent-baseline.mjs
           node --check scripts/test-audit-adjacent-podium.mjs
           node --check scripts/test-audit-adjacent-baseline.mjs
+          node --check scripts/run-adjacent-podium-audit.mjs
+          node --check scripts/test-run-adjacent-podium-audit.mjs
       - name: Run regression tests
-        run: node --test scripts/test-audit-adjacent-podium.mjs scripts/test-audit-adjacent-baseline.mjs
+        run: node --test scripts/test-audit-adjacent-podium.mjs scripts/test-audit-adjacent-baseline.mjs scripts/test-run-adjacent-podium-audit.mjs
