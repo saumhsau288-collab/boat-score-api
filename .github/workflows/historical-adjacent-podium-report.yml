@@ -75,6 +75,8 @@ on:
       - 'scripts/test-evaluate-boat-one-app-score-snapshots.mjs'
       - 'scripts/audit-second-choice-by-boat-one-local-advantage.mjs'
       - 'scripts/test-audit-second-choice-by-boat-one-local-advantage.mjs'
+      - 'scripts/audit-trifecta-friendly-profiles.mjs'
+      - 'scripts/test-audit-trifecta-friendly-profiles.mjs'
       - 'scripts/audit-boat-one-top-local-advantage.mjs'
       - 'scripts/test-audit-boat-one-top-local-advantage.mjs'
       - 'scripts/audit-local-above-national.mjs'
@@ -197,6 +199,7 @@ jobs:
             console.log("SECOND_PLACE_WHEN_BOAT_ONE_TOP="+JSON.stringify(r.secondPlaceWhenBoatOneTop));
             console.log("LOCAL_ABOVE_NATIONAL="+JSON.stringify(r.localAboveNational));
             console.log("BOAT_ONE_TOP_LOCAL_ADVANTAGE="+JSON.stringify(r.boatOneTopLocalAdvantage));
+            console.log("TRIFECTA_FRIENDLY_PROFILES="+JSON.stringify(r.trifectaFriendlyProfiles));
             console.log("SECOND_CHOICE_BY_BOAT_ONE_LOCAL_ADVANTAGE="+JSON.stringify(r.secondChoiceByBoatOneLocalAdvantage));
           '
       - uses: actions/upload-artifact@v4
