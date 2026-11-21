@@ -22,11 +22,13 @@ export function matchOfficialResultsToCaptures(results, captures) {
     boats.every(b=>Number.isInteger(b?.boat)&&b.boat>=1&&b.boat<=6);
   });
   const featureComplete=complete.filter(c=>fullFeatures(c.response.scoreInputsByBoat));
-  return {date:r.date,venue:r.venue,race:r.race,matchingCaptures:candidates.length,
+  const ready=candidates.filter(c=>c?.httpStatus===200&&c?.response?.ready===true);
+  return {date:r.date,venue:r.venue,race:r.race,matchingCaptures:candidates.length,readyCaptures:ready.length,
    sixBoatCaptures:complete.length,completeFeatureCaptures:featureComplete.length,independentlyVerifiedPreRace:false,
    eligibleForCalibration:false};
  });
  return {totalOfficialResults:rows.length,withMatchingCapture:rows.filter(r=>r.matchingCaptures>0).length,
+  withReadyCapture:rows.filter(r=>r.readyCaptures>0).length,
   withSixBoatCapture:rows.filter(r=>r.sixBoatCaptures>0).length,
   withCompleteFeatureCapture:rows.filter(r=>r.completeFeatureCaptures>0).length,
   eligibleForCalibration:0,rows,
