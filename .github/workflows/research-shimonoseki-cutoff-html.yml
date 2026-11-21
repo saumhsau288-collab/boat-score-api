@@ -1,0 +1,35 @@
+name: Research Shimonoseki official cutoff HTML
+
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths:
+      - 'scripts/probe-official-racelist-by-venue.mjs'
+      - '.github/workflows/research-shimonoseki-cutoff-html.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture Shimonoseki 5R historical official HTML
+        env:
+          RESEARCH_VENUE: '21'
+          RESEARCH_RACE: '5'
+        run: node scripts/probe-official-racelist-by-venue.mjs
+      - name: Archive raw HTML and unverified cutoff diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-shimonoseki-cutoff-${{ github.run_id }}
+          path: research-output/
+          if-no-files-found: warn
+          retention-days: 14
