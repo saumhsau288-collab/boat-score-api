@@ -36,18 +36,27 @@ jobs:
         run: |
           node --experimental-default-type=module <<'NODE'
           import {appendFileSync} from 'node:fs';
-          import {inspectOfficialMetricsPage} from './boat-score-2-official-pipeline.js';
-          import {fetchOfficialRacelist} from './boat-score-2-official.js';
+          import {officialRacelistUrl} from './boat-score-2-official.js';
+          import {parseOfficialBoatRows} from './boat-score-2-boat-mapping.js';
+          import {extractOfficialMetrics} from './boat-score-2-metric-extractor.js';
           const selection={venue:process.env.VENUE,date:process.env.RACE_DATE,race:process.env.RACE};
-          const [metrics,mapping]=await Promise.all([
-            inspectOfficialMetricsPage(selection),fetchOfficialRacelist(selection)
-          ]);
+          const target=officialRacelistUrl(selection);
+          if(target.status!=='ok')throw Error('Invalid race selection');
+          const response=await fetch(target.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(25000)});
+          if(!response.ok)throw Error('Official source HTTP '+response.status);
+          const html=await response.text();
+          if(html.length>2_000_000)throw Error('Official HTML too large');
+          const mapping=parseOfficialBoatRows(html);
+          const parsed=extractOfficialMetrics(html);
+          const metrics={status:parsed.verified?'official_verified':'insufficient_data',...parsed};
+          console.log('OFFICIAL_HTML_BYTES',html.length);
+          console.log('METRIC_DIAGNOSTICS',JSON.stringify({reason:parsed.reason??null,diagnostics:parsed.diagnostics??null,tableAttempts:parsed.tableAttempts??null}).slice(0,5000));
           const summary={selection,
             metrics:{status:metrics.status,reason:metrics.reason??null,count:metrics.racers?.length??0,
               racers:(metrics.racers||[]).map(({boat,racerId,nationalWinRate,localWinRate,motorTwoWinRate})=>
                 ({boat,racerId,nationalWinRate,localWinRate,motorTwoWinRate}))},
-            mapping:{status:mapping.status,verified:mapping.verified??mapping.mapping?.verified??null,
-              count:mapping.racers?.length??0,reason:mapping.reason??mapping.mapping?.reason??null}};
+            mapping:{status:'parsed',verified:mapping.verified,
+              count:mapping.racers?.length??0,reason:mapping.reason??null}};
           console.log('LIVE_OFFICIAL_RESEARCH_CHECK',JSON.stringify(summary));
           appendFileSync(process.env.GITHUB_STEP_SUMMARY,
             '## Actual official source verification (research only)\n\n'+
