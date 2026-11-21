@@ -68,7 +68,11 @@ jobs:
             echo "::group::Historical research race $race"
             node --experimental-default-type=module scripts/capture-research-official-features.mjs || true
             node scripts/capture-research-makulabo-join.mjs || true
-            node scripts/capture-selected-research-result.mjs || true
+            official_path="prediction-captures/research-official-${CAPTURE_DATE}-$((10#$CAPTURE_VENUE))-${race}.json"
+            result_path="prediction-captures/research-result-${CAPTURE_DATE}-$((10#$CAPTURE_VENUE))-${race}.json"
+            if [ -f "$official_path" ]; then
+              node scripts/capture-selected-research-result.mjs "$official_path" "$result_path" || true
+            fi
             echo "::endgroup::"
           done
       - name: Summarize research-only comparison without calibration
