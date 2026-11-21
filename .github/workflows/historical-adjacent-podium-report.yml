@@ -165,6 +165,7 @@ jobs:
             const r=JSON.parse(fs.readFileSync("reports/historical-adjacent-podium.json","utf8"));
             console.log("CANDIDATE_TRIFECTA_HOLDOUT="+JSON.stringify(r.candidateTrifectaHoldout));
             console.log("CANDIDATE_PROMOTION_GATE="+JSON.stringify(r.candidatePromotionGate));
+            console.log("ARCHIVED_FEATURE_COVERAGE="+JSON.stringify(r.prospectiveFeatureCoverage));
           '
       - uses: actions/upload-artifact@v4
         if: always()
