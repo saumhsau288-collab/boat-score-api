@@ -3,7 +3,7 @@ import {rankNationalLocalAverage} from './audit-boat-one-national-local-average.
 // Do not optimize buckets against the same outcomes or claim prospective accuracy.
 export function auditTrifectaFriendlyProfiles(records){
  if(!Array.isArray(records))throw Error('records required');
- const make=()=>({races:0,exactRankOrder:0,topThreeAnyOrder:0,topOneWins:0});
+ const make=()=>({races:0,exactRankOrder:0,topThreeAnyOrder:0,topOneWins:0,boat123Exact:0,boat123AnyOrder:0});
  const groups={topGapLarge:make(),topGapSmall:make(),thirdFourthGapLarge:make(),thirdFourthGapSmall:make(),topThreeAllInside:make(),topThreeMixed:make(),topThreeAllOutside:make(),topOneBoatOne:make(),topOneOther:make(),boatOneTopInside:make(),boatOneTopMixed:make(),boatOneTopOutside:make(),otherTopInside:make(),otherTopMixed:make(),otherTopOutside:make()};
  let valid=0,excluded=0,ties=0;
  for(const r of records){
@@ -16,6 +16,8 @@ export function auditTrifectaFriendlyProfiles(records){
   const exact=top3.every((x,i)=>o[i]===x);
   const any=top3.every(x=>o.slice(0,3).includes(x));
   const win=o[0]===top3[0];
+  const boat123Exact=o[0]===1&&o[1]===2&&o[2]===3;
+  const boat123AnyOrder=[1,2,3].every(x=>o.slice(0,3).includes(x));
   const placement=top3.every(x=>x<=3)?'Inside':top3.every(x=>x>=4)?'Outside':'Mixed';
   const keys=[
    ranked[0].score-ranked[1].score>=1?'topGapLarge':'topGapSmall',
@@ -24,7 +26,7 @@ export function auditTrifectaFriendlyProfiles(records){
    top3[0]===1?'topOneBoatOne':'topOneOther',
    (top3[0]===1?'boatOneTop':'otherTop')+placement
   ];
-  for(const key of keys){const g=groups[key];g.races++;if(exact)g.exactRankOrder++;if(any)g.topThreeAnyOrder++;if(win)g.topOneWins++;}
+  for(const key of keys){const g=groups[key];g.races++;if(exact)g.exactRankOrder++;if(any)g.topThreeAnyOrder++;if(win)g.topOneWins++;if(boat123Exact)g.boat123Exact++;if(boat123AnyOrder)g.boat123AnyOrder++;}
  }
  return {valid,excluded,ties,groups,warning:'Archived national/local rates may not be pre-race snapshots. Fixed descriptive profiles only, not validated prospective trifecta predictions; sample sizes and field/inside effects matter.'};
 }
