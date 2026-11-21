@@ -42,6 +42,7 @@ jobs:
           node scripts/test-compare-official-ability-and-frame-sample.mjs
           node scripts/test-compare-research-official-baseline.mjs
           node scripts/test-compare-research-baseline-with-result.mjs
+          node scripts/test-cross-check-official-result-identity.mjs
           node scripts/test-audit-ability-start-course-evidence.mjs
           node scripts/test-classify-historical-prediction-review.mjs
           node scripts/test-summarize-historical-prediction-reviews.mjs
