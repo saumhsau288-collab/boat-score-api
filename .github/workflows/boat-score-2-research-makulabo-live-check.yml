@@ -11,6 +11,7 @@ on:
       - 'scripts/audit-makulabo-historical-cutoff.mjs'
       - 'scripts/test-audit-makulabo-historical-cutoff.mjs'
       - 'scripts/prepare-makulabo-morning-evidence.mjs'
+      - 'scripts/diagnose-makulabo-six-samples.mjs'
       - 'scripts/test-prepare-makulabo-morning-evidence.mjs'
   workflow_dispatch:
     inputs:
