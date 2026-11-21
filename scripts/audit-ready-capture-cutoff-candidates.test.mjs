@@ -22,3 +22,14 @@ test('candidate earlier than receipt is flagged',()=>{
 test('duplicate candidates are rejected',()=>{
  assert.throws(()=>auditCutoffCandidates({records:[record]},[candidate,candidate]),/duplicate_cutoff_candidate/);
 });
+
+test('malformed capture identity does not match cutoff',()=>{
+ const out=auditCutoffCandidates({records:[{...record,date:'unknown'}]},[candidate]);
+ assert.equal(out.withCandidate,0);
+ assert.equal(out.eligibleForCalibration,0);
+});
+test('invalid received timestamp cannot produce lead minutes',()=>{
+ const out=auditCutoffCandidates({records:[{...record,receivedAt:'invalid'}]},[candidate]);
+ assert.equal(out.withCandidate,0);
+ assert.equal(out.rows[0].leadMinutes,null);
+});
