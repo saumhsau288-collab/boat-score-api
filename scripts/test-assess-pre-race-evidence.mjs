@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {assessPreRaceEvidence} from './assess-pre-race-evidence.mjs';
+const base={status:'captured_research_inputs',racers:Array.from({length:6},(_,i)=>({boat:i+1})),receivedAt:'2026-11-21T08:00:00Z',preRaceIndependentlyVerified:true};
+const check=(snapshot,deadlineAt,independentlyAuthenticated,reason,eligible=false)=>{
+ const got=assessPreRaceEvidence({snapshot,deadlineAt,independentlyAuthenticated});
+ assert.equal(got.eligible,eligible);
+ assert.equal(got.reason,reason);
+};
+check(base,'2026-11-21T09:00:00Z',true,'timing_gate_passed_only',true);
+check({...base,receivedAt:'2026-11-21T09:00:00Z'},'2026-11-21T09:00:00Z',true,'capture_not_before_deadline');
+check({...base,receivedAt:'2026-11-21T10:00:00Z'},'2026-11-21T09:00:00Z',true,'capture_not_before_deadline');
+check(base,null,true,'capture_and_deadline_timestamps_required');
+check({...base,racers:base.racers.slice(0,5)},'2026-11-21T09:00:00Z',true,'complete_six_racer_snapshot_required');
+check(base,'2026-11-21T09:00:00Z',false,'independent_pre_race_authentication_required');
+check({...base,preRaceIndependentlyVerified:false},'2026-11-21T09:00:00Z',true,'snapshot_pre_race_verification_required');
+console.log('pre-race evidence gate: 7 cases passed');
