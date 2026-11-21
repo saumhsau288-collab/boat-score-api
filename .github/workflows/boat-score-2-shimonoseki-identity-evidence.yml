@@ -1,0 +1,55 @@
+name: Research Shimonoseki 6R identity evidence audit
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/boat-score-2-shimonoseki-identity-evidence.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture official six racers via existing CLI
+        run: CAPTURE_DATE=20261120 CAPTURE_VENUE=21 CAPTURE_RACE=6 node scripts/capture-research-official-features.mjs
+      - name: Audit all six names without auto approving abbreviation
+        run: |
+          mkdir -p research-output
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          import {extractMakulaboFinishTable} from './boat-score-2-makulabo-source-table.js';
+          import {describeMakulaboIdentityReview} from './scripts/describe-makulabo-identity-review.mjs';
+          import {normalizeRacerName} from './boat-score-2-recent50-identity.js';
+          const official=JSON.parse(fs.readFileSync('prediction-captures/research-official-20261120-21-6.json','utf8'));
+          assert.equal(official.status,'captured_research_inputs');
+          assert.equal(official.racers.length,6);
+          const response=await fetch('https://makulabo-jp.com/data/21/6/heatmap?hd=20261120',{signal:AbortSignal.timeout(15000)});
+          assert.equal(response.status,200);
+          const extracted=extractMakulaboFinishTable(await response.text());
+          assert.equal(extracted.verified,true);
+          const review=describeMakulaboIdentityReview(official.racers,extracted);
+          const candidates=review.candidates.map(r=>({
+            boat:r.boat,officialRacerId:r.officialRacerId,officialName:r.officialName,
+            sourceName:r.sourceName,sameLabelledBoat:r.sameLabelledBoat,
+            identityEvidence:r.identityEvidence,manualReviewRequired:r.manualReviewRequired,
+            exactName:normalizeRacerName(r.officialName)===normalizeRacerName(r.sourceName)
+          }));
+          const result={date:'20261120',venue:21,race:6,officialStatus:official.status,
+            sourceTableVerified:extracted.verified,exactNames:candidates.filter(r=>r.exactName).length,
+            reviewRequired:candidates.filter(r=>r.manualReviewRequired).length,candidates,
+            abbreviationApproved:false,eligibleForCalibration:false,scoreChangeApplied:false};
+          fs.writeFileSync('research-output/shimonoseki-6r-identity-evidence.json',JSON.stringify(result,null,2)+'\n');
+          console.log(JSON.stringify(result));
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shimonoseki-6r-identity-evidence-${{ github.run_id }}
+          path: research-output/
+          retention-days: 30
