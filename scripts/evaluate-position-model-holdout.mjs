@@ -27,15 +27,17 @@ export function evaluatePositionModelHoldout(reports){
   return best;
  };
  const byDate={};
+ const byPredictedWinner=Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,modelExact:0,fixed123Exact:0,rankExact:0}]));
  const counts={races:0,modelExact:0,fixed123Exact:0,rankExact:0,modelOnlyVsFixed:0,fixedOnlyVsModel:0,modelOnlyVsRank:0,rankOnlyVsModel:0};
  for(const {ranked,o,date} of holdout){
   const model=predict(ranked),rank=ranked.slice(0,3).map(x=>x.boat),actual=o.slice(0,3);
   const exact=x=>x.every((n,i)=>n===actual[i]);
   const m=exact(model),f=exact([1,2,3]),r=exact(rank);
   counts.races++;counts.modelExact+=m?1:0;counts.fixed123Exact+=f?1:0;counts.rankExact+=r?1:0;
+  const winner=byPredictedWinner[String(model[0])];winner.races++;winner.modelExact+=m?1:0;winner.fixed123Exact+=f?1:0;winner.rankExact+=r?1:0;
   const day=byDate[date]??={races:0,modelExact:0,fixed123Exact:0,rankExact:0};day.races++;day.modelExact+=m?1:0;day.fixed123Exact+=f?1:0;day.rankExact+=r?1:0;
   counts.modelOnlyVsFixed+=m&&!f?1:0;counts.fixedOnlyVsModel+=f&&!m?1:0;
   counts.modelOnlyVsRank+=m&&!r?1:0;counts.rankOnlyVsModel+=r&&!m?1:0;
  }
- return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
+ return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
 }
