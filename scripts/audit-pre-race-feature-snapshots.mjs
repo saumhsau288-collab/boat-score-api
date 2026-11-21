@@ -2,6 +2,10 @@
 // Research-only: identify captured original six-boat feature vectors.
 // Timestamps alone never establish that a response preceded the official cutoff.
 import fs from 'node:fs';
+function explicitTimestamp(value){
+ if(typeof value!=='string'||!/T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value))return NaN;
+ return Date.parse(value);
+}
 export function auditPreRaceFeatureSnapshots(capture) {
  const fields=['nationalWinRate','localWinRate','motorTwoWinRate','recent50WinRate','exhibitionScore'];
  if(!Array.isArray(capture?.records))throw Error('records_required');
@@ -12,12 +16,11 @@ export function auditPreRaceFeatureSnapshots(capture) {
     boats.every(x=>Number.isInteger(x?.boat)&&x.boat>=1&&x.boat<=6);
   const limits={nationalWinRate:10,localWinRate:10,motorTwoWinRate:100,recent50WinRate:100,exhibitionScore:100};
   const complete=six&&boats.every(x=>fields.every(f=>typeof x[f]==='number'&&Number.isFinite(x[f])&&x[f]>=0&&x[f]<=limits[f]));
-  const timing=Number.isFinite(Date.parse(r?.receivedAt))&&
-    Number.isFinite(Date.parse(r?.officialCutoffAt))&&
-    Date.parse(r.receivedAt)<Date.parse(r.officialCutoffAt);
+  const received=explicitTimestamp(r?.receivedAt),cutoff=explicitTimestamp(r?.officialCutoffAt);
+  const timing=Number.isFinite(received)&&Number.isFinite(cutoff)&&received<cutoff;
   return {date:r?.date??null,venue:r?.venue??null,race:r?.race??null,
    ready:r?.response?.ready===true,completeSixBoatFeatures:complete,
-   cutoffTimestampPresent:Number.isFinite(Date.parse(r?.officialCutoffAt)),
+   cutoffTimestampPresent:Number.isFinite(cutoff),
    receivedBeforeClaimedCutoff:timing,
    sourceGeneratedAt:r?.response?.generatedAt??null,
    responseSourceIdentity:r?.response?.sourceIdentity??null,
