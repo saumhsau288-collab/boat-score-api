@@ -79,3 +79,9 @@
 - CLI: `node scripts/audit-official-result-evidence.mjs verified-official-results.json`。**実ファイルの公式証拠がまだない場合は架空の結果を作成しない。**
 - `verified:true` という自己申告や形式整合は、公式サイトの内容を独立に確認した証拠にならないため、監査結果は常に `independentlyAuthenticated:false`、`eligibleForCalibration:false`。
 - 新しい公式結果監査テストのCI結果を確認し、失敗時は研究ブランチだけ修正する。
+
+## 2026-11-21 公式結果の直接確認
+- BOAT RACE公式 `/owpc/pc/race/raceresult` を14レース分直接閲覧。**13レースは公式6艇着順と3連単配当を確認、津6R（場09）は公式「レース中止」**。中止は着順なしとして別枠に保存。
+- 転記データ: `research/evidence/20261120-official-result-pages-transcription.json`。各結果に公式URLと6艇の着順、払戻金を保存。手動転記なので将来は公式HTMLスナップショット・ハッシュとの照合が必要。
+- 13件の公式着順確認は予想取得時刻の事前認証とは**別**。保存予想の `authenticatedBeforeRace:false` は変えず、的中率・配点最適化・本番反映を引き続き禁止。
+- 津6Rは予想readyだったが当日開催中止で、バックテスト分母から除外すること。
