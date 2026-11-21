@@ -29,10 +29,14 @@ async function collect({date,venue,race}){
    const body=await res.text();
    const sourceCheck=classifyOfficialResponseSource({requestedUrl:url.toString(),responseUrl:res.url,httpStatus:res.status,contentType:res.headers.get('content-type')});
    const eligible=sourceCheck.status==='official_html_source_consistent_not_authenticated';
-   const candidate=eligible?extractOfficialCutoffCandidate(body,{date,venue,race}):{status:'official_source_not_eligible'};
    const identity=eligible?inspectOfficialPageIdentity(body,{date,venue,race}):{status:'official_source_not_eligible',verified:false};
+   const rawCandidate=eligible?extractOfficialCutoffCandidate(body,{date,venue,race}):{status:'official_source_not_eligible'};
+   // Navigation links may contain many race IDs. Never promote a global text match
+   // to a race-specific candidate when the page identity is ambiguous.
+   const candidate=identity.status==='identity_markers_consistent_not_authenticated'
+    ?rawCandidate:{status:'candidate_suppressed_page_identity_unverified',verified:false};
    rows.push({date,venue,race,requestedAt,receivedAt:new Date().toISOString(),
-    cutoffCandidate:candidate,pageIdentity:identity,sourceCheck,finalUrl:res.url,sourceUrl:url.toString(),httpStatus:res.status,contentType:res.headers.get('content-type'),
+    cutoffCandidate:candidate,rawCutoffCandidateForDiagnostics:rawCandidate,pageIdentity:identity,sourceCheck,finalUrl:res.url,sourceUrl:url.toString(),httpStatus:res.status,contentType:res.headers.get('content-type'),
     responseSha256:crypto.createHash('sha256').update(body).digest('hex'),
     htmlLength:body.length,htmlSample:body.slice(0,3000),
     verified:false,officialCutoffAt:null,
