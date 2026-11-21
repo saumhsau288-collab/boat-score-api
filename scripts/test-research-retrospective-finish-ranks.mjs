@@ -25,3 +25,12 @@ test('rejects duplicate, inconsistent rank, and claimed authenticated prediction
  assert.equal(x.held.invalid_ranking_or_podium,1);
  assert.equal(x.held.not_research_only_review,1);
 });
+
+test('invalid retrospective row does not suppress valid same-race row',()=>{
+ const good=record(4,[5,6,1]);
+ const bad={...good,actualPodiumScoreRanks:[1,1,1]};
+ const x=summarizeRetrospectiveFinishRanks([bad,good]);
+ assert.equal(x.held.invalid_ranking_or_podium,1);
+ assert.equal(x.held.duplicate_race??0,0);
+ assert.equal(x.compared,1);
+});
