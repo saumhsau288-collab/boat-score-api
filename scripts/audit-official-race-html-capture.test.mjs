@@ -44,3 +44,12 @@ test('rejects incorrect response size, HTTP metadata and reversed capture timest
   assert.ok(out.status.startsWith('invalid_capture_'));
  }
 });
+
+test('rejects malformed dates and venues before accepting official source metadata',()=>{
+ for(const expected of [{date:'2026112x',venue:'18',race:1},
+  {date:'20261120',venue:'99',race:1},{date:'20261120',venue:'18',race:0}]){
+  const out=auditOfficialRaceHtmlCapture({html,metadata:{...metadata,expected}});
+  assert.equal(out.status,'race_specific_capture_required');
+  assert.equal(out.eligibleForCalibration,false);
+ }
+});
