@@ -38,3 +38,16 @@ test('duplicate race keys remain held even when both records contain six scores'
  assert.ok(out.rows.every(row=>row.holdReasons.includes('duplicate_saved_capture_race')));
  assert.equal(out.weightChangesPermitted,false);
 });
+
+test('a ready prediction with incomplete output scores is not treated as six-boat evidence',()=>{
+ const capture={authenticatedBeforeRace:false,records:[
+  {date:'20261120',venue:18,race:3,httpStatus:200,
+   response:{ready:true,rankedScores:[1,2,3,4,5].map(boat=>({boat,score:boat}))}}
+ ]};
+ const out=auditScoreResultJoin(capture,[]);
+ assert.equal(out.readyResponses,1);
+ assert.equal(out.validSixBoatOutputScoreSets,0);
+ assert.equal(out.rows[0].sixBoatOutputScoresPresent,false);
+ assert.equal(out.resultComparisonsEligible,0);
+ assert.equal(out.weightChangesPermitted,false);
+});
