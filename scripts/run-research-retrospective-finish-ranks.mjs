@@ -13,6 +13,10 @@ for(const path of paths){
  records.push(...payload.records);
 }
 const result=summarizeRetrospectiveFinishRanks(records);
+if(result.compared===0){
+ console.error('No comparable retrospective races. Report is held; do not claim accuracy.');
+ process.exitCode=3;
+}
 console.log(JSON.stringify(result,null,2));
 if(process.env.GITHUB_STEP_SUMMARY){
  const fmt=p=>p.rankCounts.map((count,i)=>(i+1)+':'+count).join(', ');
