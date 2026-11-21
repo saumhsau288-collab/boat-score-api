@@ -28,6 +28,16 @@ jobs:
   live-preview-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - venue: '21'
+            race: '1'
+          - venue: '21'
+            race: '4'
+          - venue: '17'
+            race: '2'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,6 +46,6 @@ jobs:
       - name: Probe deployed preview read-only (no release)
         env:
           SMOKE_DATE: ${{ inputs.date }}
-          SMOKE_VENUE: ${{ inputs.venue }}
-          SMOKE_RACE: ${{ inputs.race }}
+          SMOKE_VENUE: ${{ inputs.venue || matrix.venue }}
+          SMOKE_RACE: ${{ inputs.race || matrix.race }}
         run: node scripts/smoke-deployed-boat-score-2-preview.mjs
