@@ -17,6 +17,9 @@ export function compareHistoricalStartCourse(rows,{stPoints=5,coursePoints=5}={}
      !Number.isInteger(row.race)||row.race<1||row.race>12){
    excluded.push({key,reason:'unverified_race'});continue;
   }
+  if(row?.officialResultSourceVerified!==true||row?.raceIdentityVerified!==true){
+   excluded.push({key,reason:'unverified_official_result_identity'});continue;
+  }
   // Boolean flags alone cannot establish a pre-deadline, official race join.
   const captured=Date.parse(row.capturedAt),cutoff=Date.parse(row.officialCutoffAt);
   if(row.officialCutoffVerified!==true||!Number.isFinite(captured)||!Number.isFinite(cutoff)||captured>=cutoff){
