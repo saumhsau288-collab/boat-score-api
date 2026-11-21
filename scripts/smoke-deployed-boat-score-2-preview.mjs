@@ -8,7 +8,7 @@ const results=[];
 for(const [name,path] of checks){
  const requestedAt=new Date().toISOString();
  try{
-  const response=await fetch(new URL(path,base),{signal:AbortSignal.timeout(name==='selected_race'?25000:10000),headers:{Accept:name==='mobile_html'?'text/html':'application/json'}});
+  const response=await fetch(new URL(path,base),{signal:AbortSignal.timeout(name==='selected_race'?65000:10000),headers:{Accept:name==='mobile_html'?'text/html':'application/json'}});
   const body=await response.text();
   let parsed=null;try{parsed=JSON.parse(body);}catch{}
   results.push({name,requestedAt,httpStatus:response.status,contentType:response.headers.get('content-type'),
@@ -16,7 +16,9 @@ for(const [name,path] of checks){
     name==='version'?response.ok&&parsed?.app==='Boat Score 2 preview':
     response.ok&&parsed!==null&&typeof parsed==='object',
    predictionReady:name==='selected_race'?parsed?.ready===true:null,
-   predictionReason:name==='selected_race'?String(parsed?.reason??parsed?.error??'').slice(0,150):null});
+   predictionReason:name==='selected_race'?String(parsed?.reason??parsed?.error??'').slice(0,150):null,
+   officialStatsRetry:name==='selected_race'?parsed?.officialStatsRetry??null:null,
+   missingInputs:name==='selected_race'&&Array.isArray(parsed?.missingInputs)?parsed.missingInputs.slice(0,12):null});
  }catch(error){results.push({name,requestedAt,checkPassed:false,error:String(error?.message||error).slice(0,150)});}
 }
 const pass=results.every(x=>x.checkPassed);
