@@ -2,7 +2,7 @@ name: Research actual twelve-race rank-finish audit
 on:
   push:
     branches: [research/st-course-holdout-20261121]
-    paths: [.github/workflows/boat-score-2-actual-twelve-rank-finish.yml, scripts/audit-rank-finish-official.mjs, scripts/test-audit-rank-finish-official.mjs, scripts/audit-prediction-input-provenance.mjs, scripts/test-audit-prediction-input-provenance.mjs]
+    paths: [.github/workflows/boat-score-2-actual-twelve-rank-finish.yml, scripts/audit-rank-finish-official.mjs, scripts/test-audit-rank-finish-official.mjs, scripts/audit-prediction-input-provenance.mjs, scripts/test-audit-prediction-input-provenance.mjs, scripts/audit-saved-prediction-official-provenance.mjs, scripts/test-audit-saved-prediction-official-provenance.mjs]
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,6 +19,7 @@ jobs:
         run: |
           node scripts/test-audit-rank-finish-official.mjs
           node scripts/test-audit-prediction-input-provenance.mjs
+          node scripts/test-audit-saved-prediction-official-provenance.mjs
       - name: Download actual saved scores and official comparison
         env:
           GH_TOKEN: ${{ github.token }}
