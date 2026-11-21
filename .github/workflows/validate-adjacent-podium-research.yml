@@ -1,0 +1,53 @@
+name: Validate adjacent podium research
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-ability-start.mjs'
+      - 'scripts/test-audit-ability-start.mjs'
+      - 'scripts/audit-ability-placement.mjs'
+      - 'scripts/test-audit-ability-placement.mjs'
+      - 'scripts/audit-adjacent-podium.mjs'
+      - 'scripts/audit-adjacent-baseline.mjs'
+      - 'scripts/test-audit-adjacent-podium.mjs'
+      - 'scripts/test-audit-adjacent-baseline.mjs'
+      - 'scripts/audit-official-join-adjacency.mjs'
+      - 'scripts/test-audit-official-join-adjacency.mjs'
+      - 'scripts/audit-official-join-adjacent-ability.mjs'
+      - 'scripts/test-audit-official-join-adjacent-ability.mjs'
+      - 'scripts/audit-adjacent-ability.mjs'
+      - 'scripts/test-audit-adjacent-ability.mjs'
+      - 'scripts/run-adjacent-podium-audit.mjs'
+      - 'scripts/test-run-adjacent-podium-audit.mjs'
+      - '.github/workflows/validate-adjacent-podium-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  research-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax
+        run: |
+          node --check scripts/audit-ability-start.mjs
+          node --check scripts/test-audit-ability-start.mjs
+          node --check scripts/audit-ability-placement.mjs
+          node --check scripts/test-audit-ability-placement.mjs scripts/test-audit-ability-start.mjs
+          node --check scripts/audit-adjacent-podium.mjs
+          node --check scripts/audit-adjacent-baseline.mjs
+          node --check scripts/test-audit-adjacent-podium.mjs
+          node --check scripts/test-audit-adjacent-baseline.mjs
+          node --check scripts/audit-official-join-adjacency.mjs
+          node --check scripts/test-audit-official-join-adjacency.mjs
+          node --check scripts/audit-official-join-adjacent-ability.mjs
+          node --check scripts/test-audit-official-join-adjacent-ability.mjs scripts/test-audit-official-join-adjacency.mjs
+          node --check scripts/audit-adjacent-ability.mjs
+          node --check scripts/test-audit-adjacent-ability.mjs scripts/test-audit-official-join-adjacent-ability.mjs
+          node --check scripts/run-adjacent-podium-audit.mjs
+          node --check scripts/test-run-adjacent-podium-audit.mjs
+      - name: Run regression tests
+        run: node --test scripts/test-audit-adjacent-podium.mjs scripts/test-audit-adjacent-baseline.mjs scripts/test-run-adjacent-podium-audit.mjs scripts/test-audit-adjacent-ability.mjs scripts/test-audit-ability-placement.mjs

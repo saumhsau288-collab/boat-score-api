@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditSeparatedTopTwo} from './audit-separated-top-two.mjs';
+const racers=(a,b)=>Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:i+1===a?8:i+1===b?7:4}));
+test('counts between-frame second when top two ability racers are separated',()=>{const r=auditSeparatedTopTwo([{date:'20261120',venue:1,race:1,resultVerified:true,finishOrder:[1,3,5,2,4,6],racers:racers(1,5)}]);assert.equal(r.groups.separated.betweenSecond,1);assert.equal(r.groups.separated.betweenPodium,1);assert.equal(r.groups.separated.bothPodium,1);});
+test('adjacent top two have no between frames',()=>{const r=auditSeparatedTopTwo([{date:'20261120',venue:1,race:1,resultVerified:true,finishOrder:[1,3,2,4,5,6],racers:racers(1,2)}]);assert.equal(r.groups.adjacent.betweenPodium,0);});
