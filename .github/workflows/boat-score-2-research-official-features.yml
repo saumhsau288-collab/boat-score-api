@@ -145,8 +145,8 @@ jobs:
             `Result parser: ${b?.parsedStatus??'not available'}`,
             `Parsed podium: ${Array.isArray(b?.parsedPodium)?b.parsedPodium.join('-'):'not verified'}`,
             'Calibration: not authorized (research only)'];
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\\n')+'\\n');
-          console.log(lines.join('\\n'));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,lines.join('\n')+'\n');
+          console.log(lines.join('\n'));
           NODE
       - name: Save research snapshot, even when incomplete
         if: always()
