@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {compareOfficialSixParsers} from './compare-official-six-parsers.mjs';
+const row=(n)=>'<tr><td>'+n+'</td><td><a href="/owpc/pc/data/racersearch/profile?toban='+(4000+n)+'">選手'+n+'</a></td></tr>';
+const html=Array.from({length:6},(_,i)=>row(i+1)).join('');
+const r=compareOfficialSixParsers(html);
+assert.equal(r.strict.verified,true);
+assert.equal(r.grouped.verified,false);
+assert.equal(r.identityAgreement,false);
+assert.equal(r.needsManualReview,true);
+assert.equal(r.nextAction,'inspect_grouped_metric_columns');
+assert.equal(r.eligibleForCalibration,false);
+const invalid=compareOfficialSixParsers('<div>no table</div>');
+assert.equal(invalid.needsManualReview,true);
+console.log('Official six parser comparison passed');
