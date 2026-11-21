@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditInterveningCandidates} from './audit-intervening-candidates.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:i===0?8:i===4?7:4}));
+test('normalizes by candidate count, not race count',()=>{const r=auditInterveningCandidates([{date:'20261120',venue:1,race:1,resultVerified:true,finishOrder:[1,3,5,2,4,6],racers}]);assert.equal(r.byGap[3].candidateSlots,3);assert.equal(r.byGap[3].candidateSecondHits,1);assert.equal(r.byGap[3].perCandidateSecondRate,1/3);assert.equal(r.byGap[3].candidatePodiumHits,1);});
