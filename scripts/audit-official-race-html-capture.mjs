@@ -18,7 +18,8 @@ export function auditOfficialRaceHtmlCapture({html,metadata}={}){
  if(!Number.isFinite(requestedAt)||!Number.isFinite(receivedAt)||receivedAt<requestedAt)
   return {status:'invalid_capture_timestamps',eligibleForCalibration:false};
  const date=expected.date,venue=Number(expected.venue),race=expected.race;
- if(!Number.isInteger(race)||race<1||race>12)
+ if(!/^20\d{6}$/.test(String(date))||!Number.isInteger(venue)||venue<1||venue>24||
+  !Number.isInteger(race)||race<1||race>12)
   return {status:'race_specific_capture_required',eligibleForCalibration:false};
  try {
   const normalized={date:String(date),venue:String(expected.venue),race};
