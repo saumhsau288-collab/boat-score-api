@@ -68,3 +68,8 @@
 - `scripts/audit-score-result-join.mjs` を追加。保存された最終6艇評価点の有無と、既存の厳格な公式結果照合ゲートの保留理由を結合。**評価点があるだけでは照合可能としない。**
 - CLI: `node scripts/audit-score-result-join.mjs prediction-captures/20261120-44639859914.json`。公式結果を独立検証できた場合のみ第2引数に `verified-results.json` を渡す。結果なしの場合は保留判定。
 - 今回のCLI変更後のCIは別途確認すること。現時点では公式結果・公式締切・事前認証の独立証拠は不足。予想的中率と配点改善は主張しない。
+
+## 2026-11-21 実ZIP照合・行ずれ修正
+- 実ZIPの `20261120-44639859914.json` を再確認: ready14件（戸田1R、宮島1R・2R、鳴門3R、徳山3Rなど）、各 `rankedScores` 6艇、`authenticatedBeforeRace:false`。ZIP内に公式着順の独立証拠ファイルなし。
+- `audit-score-result-join.mjs` の**重要な行ずれ不具合**を修正。従来は288件の比較結果に14件のready評価点を配列インデックスで結合していたため、非readyレースが先にあると誤対応の可能性があった。元の `capture.records` インデックスに対応付けて修正し、非ready/ready/非readyの回帰テスト追加。
+- 修正後のCIを確認すること。引き続き実際の的中率・配点調整は保留。
