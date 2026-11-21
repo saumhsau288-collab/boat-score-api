@@ -111,3 +111,22 @@ test('duplicate start timing boat records are rejected',()=>{
  assert.equal(x.status,'invalid_start_timing_mapping');
  assert.equal(x.eligibleForCalibration,false);
 });
+
+test('complete verified six-boat ST and exhibition clear only their missing flags',()=>{
+ const startTimingByBoat=official.map(r=>({boat:r.boat,racerId:r.racerId,startTiming:0.1,verified:true}));
+ const exhibitionByBoat=official.map(r=>({boat:r.boat,racerId:r.racerId,exhibitionTime:6.8,verified:true}));
+ const x=buildResearchFeatureSnapshot({...base,startTimingByBoat,exhibitionByBoat});
+ assert.equal(x.status,'captured_research_inputs');
+ assert.ok(x.racers.every(r=>r.startTimingVerified&&r.exhibitionTimeVerified));
+ assert.equal(x.missing.includes('start_timing'),false);
+ assert.equal(x.missing.includes('exhibition'),false);
+ assert.ok(x.missing.includes('pre_race_source_authentication'));
+ assert.equal(x.eligibleForCalibration,false);
+});
+test('one unverified ST keeps the entire six-boat ST evidence incomplete',()=>{
+ const startTimingByBoat=official.map(r=>({boat:r.boat,racerId:r.racerId,startTiming:0.1,verified:r.boat!==6}));
+ const x=buildResearchFeatureSnapshot({...base,startTimingByBoat});
+ assert.ok(x.missing.includes('start_timing'));
+ assert.equal(x.racers[5].startTiming,null);
+ assert.equal(x.eligibleForCalibration,false);
+});
