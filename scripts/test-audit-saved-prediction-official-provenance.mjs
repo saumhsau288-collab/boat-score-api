@@ -6,10 +6,16 @@ const prediction={date:'20261120',venue:2,race:1,receivedAt:'2026-11-20T01:00:00
 const official={date:'20261120',venue:2,race:1,receivedAt:'2026-11-20T00:59:00Z',racers};
 const valid=audit({savedRecords:[prediction],officialRaces:[official]});
 assert.equal(valid.matched,1);
+assert.equal(valid.attempted,1);
+assert.equal(valid.held,0);
+assert.equal(valid.originalInputsVerified,0);
+assert.equal(valid.independentlyAuthenticatedBeforeRace,0);
+assert.deepEqual(valid.statuses,{retrospective_comparison_only:1});
 assert.equal(valid.rows[0].originalInputsVerified,false);
 assert.equal(valid.eligibleForCalibration,false);
 assert.equal(audit({savedRecords:[prediction],officialRaces:[]}).rows[0].status,'held_missing_official');
 assert.equal(audit({savedRecords:[prediction,prediction],officialRaces:[official]}).matched,0);
+assert.equal(audit({savedRecords:[prediction,prediction],officialRaces:[official]}).statuses.held_duplicate_prediction,2);
 assert.equal(audit({savedRecords:[prediction],officialRaces:[official,official]}).rows[0].status,'held_duplicate_official');
 assert.equal(audit({savedRecords:[prediction],officialRaces:[{...official,date:'20261121'}]}).matched,0);
 console.log('Saved prediction to official provenance join tests passed');
