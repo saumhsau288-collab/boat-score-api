@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {assessResearchSourceBundle} from './assess-research-source-bundle.mjs';
 const deadlineAt='2026-11-21T09:00:00Z',capturedAt='2026-11-21T08:00:00Z';
-const official={snapshot:{status:'captured_research_inputs',racers:Array.from({length:6},(_,i)=>({boat:i+1})),receivedAt:capturedAt,preRaceIndependentlyVerified:true},independentlyAuthenticated:true};
+const official={snapshot:{status:'captured_research_inputs',racers:Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i)})),receivedAt:capturedAt,preRaceIndependentlyVerified:true},independentlyAuthenticated:true};
 const item={capturedAt,independentlyAuthenticated:true,verified:true};
 const sources={official,averageST:{...item,kind:'pre_race_average_st'},exhibition:{...item},entry:{...item},weather:{...item},makulabo:{...item,identityVerified:true,sampleVerified:true}};
 assert.equal(assessResearchSourceBundle({sources,deadlineAt}).eligible,true);
