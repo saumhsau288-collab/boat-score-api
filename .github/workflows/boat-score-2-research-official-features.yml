@@ -90,6 +90,22 @@ jobs:
           CAPTURE_VENUE: ${{ inputs.venue }}
           CAPTURE_RACE: ${{ inputs.race }}
         run: node scripts/capture-research-makulabo-join.mjs
+      - name: Research-only official result identity check
+        if: always()
+        continue-on-error: true
+        env:
+          CAPTURE_DATE: ${{ inputs.capture_date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: |
+          venue_number=$((10#$CAPTURE_VENUE))
+          input="prediction-captures/research-official-${CAPTURE_DATE}-${venue_number}-${CAPTURE_RACE}.json"
+          output="prediction-captures/research-result-${CAPTURE_DATE}-${venue_number}-${CAPTURE_RACE}.json"
+          if [ -f "$input" ]; then
+            node scripts/capture-selected-research-result.mjs "$input" "$output"
+          else
+            echo 'Official snapshot missing; result identity check held.'
+          fi
       - name: Save research snapshot, even when incomplete
         if: always()
         uses: actions/upload-artifact@v4
@@ -98,6 +114,7 @@ jobs:
           path: |
             prediction-captures/research-official-*.json
             prediction-captures/research-makulabo-*.json
+            prediction-captures/research-result-*.json
             prediction-captures/daily-venue-candidates-*.json
           retention-days: 90
           if-no-files-found: warn
