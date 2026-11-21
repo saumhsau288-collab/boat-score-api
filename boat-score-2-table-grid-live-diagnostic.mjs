@@ -8,7 +8,9 @@ const response=await fetch(url,{signal:AbortSignal.timeout(25000)});
 if(!response.ok)throw Error('official_http_'+response.status);
 const html=await response.text();
 if(html.length>2_000_000)throw Error('html_too_large');
-console.log('SIX_RACERS_VERIFICATION',JSON.stringify(extractSixOfficialRacers(html)));
+const six=extractSixOfficialRacers(html);
+console.log('SIX_RACERS_VERIFICATION',JSON.stringify(six));
+if (!six.verified) process.exitCode = 1;
 const tables=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map(m=>m[0]);
 const clean=s=>s.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim().slice(0,40);
 for(let i=0;i<tables.length;i++){
