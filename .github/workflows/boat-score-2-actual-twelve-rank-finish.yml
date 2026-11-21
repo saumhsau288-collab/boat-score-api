@@ -1,0 +1,50 @@
+name: Research actual twelve-race rank-finish audit
+on:
+  push:
+    branches: [research/st-course-holdout-20261121]
+    paths: [.github/workflows/boat-score-2-actual-twelve-rank-finish.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download actual saved scores and official comparison
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p prediction-captures
+          for id in 14586303082 14701499660; do
+            gh api "/repos/${{ github.repository }}/actions/artifacts/$id/zip" > "prediction-captures/$id.zip"
+            unzip -o "prediction-captures/$id.zip" -d prediction-captures
+          done
+      - name: Audit saved scores against independently transcribed official finishes
+        run: |
+          node --input-type=module <<'EOF'
+          import fs from 'node:fs';
+          import {auditRankFinishWithOfficial} from './scripts/audit-rank-finish-official.mjs';
+          const saved=JSON.parse(fs.readFileSync('prediction-captures/20261120-44639859914.json','utf8'));
+          const official=JSON.parse(fs.readFileSync('prediction-captures/twelve-race-official-feature-comparison.json','utf8'));
+          const results=JSON.parse(fs.readFileSync('research/evidence/20261120-official-result-pages-transcription.json','utf8'));
+          const report=auditRankFinishWithOfficial({savedRecords:saved.records,officialRaces:official.races,results:results.results});
+          if(report.joinedCount!==12||report.rows.length!==13||
+            report.rows.filter(r=>r.status==='held_missing_join_data').length!==1||
+            report.rows.filter(r=>r.status==='retrospective_comparison_only').some(r=>r.boats.some(b=>!b.officialMetricsAvailable)))
+            throw Error('unexpected twelve-race rank-finish join');
+          fs.writeFileSync('prediction-captures/actual-twelve-rank-finish-audit.json',JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify({joined:report.joinedCount,missing:report.rows.length-report.joinedCount,
+            topScoreWinners:report.rows.filter(r=>r.topScoreActualFinish===1).length,
+            lowRankWinners:report.rows.filter(r=>r.winnerScoreRank>=4).length}));
+          EOF
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: actual-twelve-rank-finish-audit-${{ github.run_id }}
+          path: prediction-captures/actual-twelve-rank-finish-audit.json
+          retention-days: 30
