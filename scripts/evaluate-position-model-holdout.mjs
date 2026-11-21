@@ -28,6 +28,7 @@ export function evaluatePositionModelHoldout(reports){
  };
  const byDate={};
  const outsideWinnerCandidate={races:0,otherWins:0,highestOtherWins:0,byBoat:{},actualOtherWinnerByBoat:Object.fromEntries(Array.from({length:5},(_,i)=>[String(i+2),0]))};
+ const challengerGapTwoPlusTrifecta={races:0,challengerWins:0,challengerTop3:0,oneTop3:0,challengerFirstModelExact:0};
  const challengerGapTwoPlusByDate={};
  const challengerGapTwoPlus={inner234:{races:0,challengerWins:0,oneWins:0},outer56:{races:0,challengerWins:0,oneWins:0}};
  const otherLeadGap=Object.fromEntries(['under1','1to2','2plus'].map(k=>[k,{races:0,oneWins:0,bestOtherWins:0,otherWins:0,byBestOtherBoat:Object.fromEntries(Array.from({length:5},(_,i)=>[String(i+2),{races:0,wins:0}]))}]));
@@ -53,6 +54,14 @@ export function evaluatePositionModelHoldout(reports){
    const gapBand=otherLeadGap[gap>=2?'2plus':gap>=1?'1to2':'under1'];
    if(gap>=2){
     const group=bestOther<=4?'inner234':'outer56';
+    if(group==='inner234'){
+     challengerGapTwoPlusTrifecta.races++;
+     challengerGapTwoPlusTrifecta.challengerWins+=actual[0]===bestOther?1:0;
+     challengerGapTwoPlusTrifecta.challengerTop3+=actual.includes(bestOther)?1:0;
+     challengerGapTwoPlusTrifecta.oneTop3+=actual.includes(1)?1:0;
+     const challengerOrder=[bestOther,...model.filter(b=>b!==bestOther)].slice(0,3);
+     challengerGapTwoPlusTrifecta.challengerFirstModelExact+=challengerOrder.every((b,i)=>b===actual[i])?1:0;
+    }
     const target=challengerGapTwoPlus[group];target.races++;target.challengerWins+=actual[0]===bestOther?1:0;target.oneWins+=actual[0]===1?1:0;
     const day=challengerGapTwoPlusByDate[date]??={inner234:{races:0,challengerWins:0,oneWins:0},outer56:{races:0,challengerWins:0,oneWins:0}};
     const d=day[group];d.races++;d.challengerWins+=actual[0]===bestOther?1:0;d.oneWins+=actual[0]===1?1:0;
@@ -73,5 +82,5 @@ export function evaluatePositionModelHoldout(reports){
   counts.modelOnlyVsFixed+=m&&!f?1:0;counts.fixedOnlyVsModel+=f&&!m?1:0;
   counts.modelOnlyVsRank+=m&&!r?1:0;counts.rankOnlyVsModel+=r&&!m?1:0;
  }
- return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,otherLeadGap,challengerGapTwoPlus,challengerGapTwoPlusByDate,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
+ return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,otherLeadGap,challengerGapTwoPlus,challengerGapTwoPlusByDate,challengerGapTwoPlusTrifecta,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
 }
