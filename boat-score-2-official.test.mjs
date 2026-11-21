@@ -12,4 +12,9 @@ const mock=async()=>({ok:true,headers:new Headers({'content-type':'text/html'}),
 const result=await fetchOfficialRacelist(s,mock);
 assert.equal(result.status,'fetched');
 assert.equal(result.verified,false);
+const redirected=await fetchOfficialRacelist(s,async()=>({ok:true,status:200,url:'https://example.com/owpc/pc/race/racelist?hd=20261116&jcd=01&rno=1',headers:new Headers({'content-type':'text/html'}),text:async()=>sample}));
+assert.equal(redirected.status,'source_identity_mismatch');
+assert.equal(redirected.verified,false);
+const changedRace=await fetchOfficialRacelist(s,async()=>({ok:true,status:200,url:'https://www.boatrace.jp/owpc/pc/race/racelist?hd=20261116&jcd=01&rno=2',headers:new Headers({'content-type':'text/html'}),text:async()=>sample}));
+assert.equal(changedRace.reason,'official_race_query_changed');
 console.log('Official racelist verification tests passed');
