@@ -2,7 +2,7 @@ name: Research actual thirteen-race rank-finish audit
 on:
   push:
     branches: [research/st-course-holdout-20261121]
-    paths: [.github/workflows/boat-score-2-actual-twelve-rank-finish.yml, scripts/audit-rank-finish-official.mjs, scripts/test-audit-rank-finish-official.mjs, scripts/audit-prediction-input-provenance.mjs, scripts/test-audit-prediction-input-provenance.mjs, scripts/audit-saved-prediction-official-provenance.mjs, scripts/test-audit-saved-prediction-official-provenance.mjs, scripts/audit-future-feature-provenance.mjs, scripts/test-audit-future-feature-provenance.mjs, scripts/build-research-feature-evidence-record.mjs, scripts/test-build-research-feature-evidence-record.mjs, scripts/report-live-feature-readiness.mjs, scripts/test-report-live-feature-readiness.mjs]
+    paths: [.github/workflows/boat-score-2-actual-twelve-rank-finish.yml, scripts/audit-rank-finish-official.mjs, scripts/test-audit-rank-finish-official.mjs, scripts/audit-prediction-input-provenance.mjs, scripts/test-audit-prediction-input-provenance.mjs, scripts/audit-saved-prediction-official-provenance.mjs, scripts/test-audit-saved-prediction-official-provenance.mjs, scripts/audit-future-feature-provenance.mjs, scripts/test-audit-future-feature-provenance.mjs, scripts/build-research-feature-evidence-record.mjs, scripts/test-build-research-feature-evidence-record.mjs, scripts/report-live-feature-readiness.mjs, scripts/test-report-live-feature-readiness.mjs, scripts/analyze-winner-followers.mjs, scripts/analyze-winner-followers.test.mjs, research/evidence/20261120-official-result-pages-transcription.json]
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,6 +17,7 @@ jobs:
           node-version: '22'
       - name: Test date-safe historical join
         run: |
+          node scripts/analyze-winner-followers.test.mjs
           node scripts/test-audit-rank-finish-official.mjs
           node scripts/test-audit-prediction-input-provenance.mjs
           node scripts/test-audit-saved-prediction-official-provenance.mjs
