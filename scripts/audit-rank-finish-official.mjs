@@ -6,8 +6,13 @@ export function auditRankFinishWithOfficial({savedRecords=[],officialRaces=[],re
  const officialByKey=uniqueMap(officialRaces);
  const resultByKey=uniqueMap(results.filter(x=>x?.verified===true));
  const rows=[];
- for(const record of savedRecords.filter(x=>x?.response?.ready===true&&!(Number(x.venue)===9&&Number(x.race)===6))){
-  const k=key(record),official=k?officialByKey.get(k):null,result=k?resultByKey.get(k):null;
+ const eligibleSaved=savedRecords.filter(x=>x?.response?.ready===true&&!(dateOf(x)==='20261120'&&Number(x.venue)===9&&Number(x.race)===6));
+ const savedCounts=new Map();
+ for(const record of eligibleSaved){const k=key(record);if(k)savedCounts.set(k,(savedCounts.get(k)||0)+1);}
+ for(const record of eligibleSaved){
+  const k=key(record);
+  if(k&&savedCounts.get(k)>1){rows.push({date:dateOf(record),venue:Number(record.venue),race:Number(record.race),status:'held_duplicate_saved_prediction'});continue;}
+  const official=k?officialByKey.get(k):null,result=k?resultByKey.get(k):null;
   const scores=record?.response?.rankedScores;
   if(!official?.comparison?.rows||official.comparison.rows.length!==6||
     !Array.isArray(result?.finishOrder)||result.finishOrder.length!==6||
