@@ -18,6 +18,7 @@ assert.equal(ok.verified,true,JSON.stringify(ok));
 assert.equal(ok.racers.length,6);
 assert.deepEqual(ok.racers.map(r=>r.boat),[1,2,3,4,5,6]);
 assert.equal(ok.racers[0].racerId,'4201');
+assert.equal(ok.racers[0].name,'4201 / B1 選手1');
 assert.equal(ok.racers[0].averageSt,0.14);
 assert.equal(ok.racers[0].nationalWinRate,4.42);
 assert.equal(ok.racers[0].localWinRate,4.77);
