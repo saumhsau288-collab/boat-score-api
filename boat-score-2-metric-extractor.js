@@ -18,7 +18,7 @@ export function extractOfficialMetrics(html){
   diagnostics.tableSamples.push(sampleRows.map(m=>({
     thCount:(m[1].match(/<th\b/gi)||[]).length,
     tdCount:(m[1].match(/<td\b/gi)||[]).length,
-    racerLinks:(m[1].match(/racersearch\/profile\\?/gi)||[]).length,
+    racerLinks:(m[1].match(/racersearch\/profile\?/gi)||[]).length,
     rowspans:(m[1].match(/rowspan\s*=/gi)||[]).length,
     colspans:(m[1].match(/colspan\s*=/gi)||[]).length
   })));
