@@ -4,7 +4,13 @@ import {expandTableGrid} from './boat-score-2-table-grid-research.js';
 // rowspan block and match an explicit profile ID. No partial output is accepted.
 const plain=s=>String(s||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
 const firstNumber=(html,index)=>{const matches=plain(html).match(/\d+(?:\.\d+)?/g)||[];return matches[index]===undefined?null:Number(matches[index]);};
-// ST is a fractional time, not the third arbitrary number in the cell.\n// Accept only a unique 0.xx token; missing or ambiguous ST stays unavailable.\nconst averageSt=html=>{const tokens=plain(html).match(/(?<![\\d.])0\\.\\d{1,3}(?![\\d.])/g)||[];return tokens.length===1?Number(tokens[0]):null;};\nconst boatNumber=s=>{const t=plain(s).normalize('NFKC');return /^[1-6]$/.test(t)?Number(t):null;};
+// ST is a fractional time, not the third arbitrary number in the cell.
+// Accept only a unique 0.xx token; missing or ambiguous ST stays unavailable.
+const averageSt=html=>{
+ const tokens=plain(html).match(/(?<![\d.])0\.\d{1,3}(?![\d.])/g)||[];
+ return tokens.length===1?Number(tokens[0]):null;
+};
+const boatNumber=s=>{const t=plain(s).normalize('NFKC');return /^[1-6]$/.test(t)?Number(t):null;};
 function racerName(html,id) {
  const links=[...String(html||'').matchAll(/<a\b[^>]*href=[\"']([^\"']*)[\"'][^>]*>([\s\S]*?)<\/a>/gi)]
    .filter(m=>m[1].includes('racersearch/profile')&&m[1].includes('toban='+id));
