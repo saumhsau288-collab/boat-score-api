@@ -47,6 +47,9 @@ jobs:
           node scripts/test-identify-makulabo-sample-scope.mjs
           node scripts/test-apply-reviewed-makulabo-identities.mjs
           node scripts/test-evaluate-verified-makulabo-research.mjs
+          node boat-score-2-makulabo-source-table.test.mjs
+          node boat-score-2-makulabo-official-join.test.mjs
+          node boat-score-2-recent50-identity.test.mjs
       - name: Inspect official HTML grid (manual only)
         if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.live_diagnostic) }}
         env:
