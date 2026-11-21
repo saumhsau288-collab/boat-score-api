@@ -29,10 +29,17 @@ export function auditFutureFeatureProvenance({race,official,averageST=[],makulab
     /^[a-f0-9]{64}$/.test(String(x.responseSha256??''))&&validValue;
   });
  };
+ const officialCapture=time(official.receivedAt);
+ const officialSnapshotBeforePrediction=official.status==='captured_research_inputs'&&
+   official.racers.every(x=>x.sourceVerified===true)&&
+   Number.isFinite(officialCapture)&&officialCapture<=time(prediction.receivedAt)&&officialCapture<=cutoff&&
+   typeof official.sourceUrl==='string'&&official.sourceUrl.startsWith('https://www.boatrace.jp/')&&
+   /^[a-f0-9]{64}$/.test(String(official.responseSha256??''));
  const stVerified=evidence(averageST,'averageST'),makulaboVerified=evidence(makulabo,'makulabo');
  const originalInputsVerified=false; // Requires separate proof these exact records fed the predictor.
- return {status:stVerified&&makulaboVerified?'source_evidence_ready_original_inputs_unverified':'held',
-  reason:stVerified&&makulaboVerified?'original_prediction_inputs_not_authenticated':'feature_evidence_incomplete',
+ return {status:officialSnapshotBeforePrediction&&stVerified&&makulaboVerified?'source_evidence_ready_original_inputs_unverified':'held',
+  reason:officialSnapshotBeforePrediction&&stVerified&&makulaboVerified?'original_prediction_inputs_not_authenticated':'feature_evidence_incomplete',
+  officialSnapshotBeforePrediction,
   averageSTVerified:stVerified,makulabo50Verified:makulaboVerified,
   originalInputsVerified,eligibleForCalibration:false,scoreChangeApplied:false};
 }
