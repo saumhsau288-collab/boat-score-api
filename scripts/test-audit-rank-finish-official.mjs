@@ -17,6 +17,8 @@ assert.equal(upset.summary.topScoreByActualFinish[2],1);
 assert.equal(upset.summary.topScoreMisses.length,1);
 assert.equal(upset.summary.topScoreMisses[0].scoreGapToWinner,5);
 assert.equal(upset.eligibleForCalibration,false);
+assert.deepEqual(upset.summary.featureAvailability.preRaceAverageSTAvailable,{available:0,total:6});
+assert.deepEqual(upset.summary.featureAvailability.makulabo50Available,{available:0,total:6});
 assert.equal(upset.summary.topScoreMisses[0].topScoreFeatures.preRaceAverageSTAvailable,false);
 assert.equal(upset.summary.topScoreMisses[0].winnerFeatures.makulabo50Available,false);
 console.log('Date-scoped retrospective join and rank-distribution tests passed');
