@@ -27,6 +27,7 @@ export function summarizeRetrospectiveFinishRanks(records) {
   }
  }
  return {status:'retrospective_descriptive_only',compared,held,positions,
+  finishRankTop3Rates:positions.map(p=>({finish:p.finish,top3Count:p.rankCounts.slice(0,3).reduce((a,b)=>a+b,0),total:p.total,rate:p.total?p.rankCounts.slice(0,3).reduce((a,b)=>a+b,0)/p.total:null})),
   conditionalPairs:[...pairs.values()].sort((a,b)=>a.winner-b.winner||a.candidate-b.candidate).map(x=>({...x,secondRate:x.second/x.starts,thirdRate:x.third/x.starts})),
   eligibleForCalibration:false,authenticatedHistoricalPrediction:false,scoreChangeApplied:false,
   warning:'Actual winner and retrospective score ranking are post-event evidence; no predictive accuracy or deployment claim.'};
