@@ -9,4 +9,7 @@ assert.equal(prepare(official,heatmap,{eligible:false}).reason,'historical_cutof
 assert.equal(prepare(official,heatmap.map((r,i)=>i===0?{...r,runs:49,counts:[9,10,10,10,5,5]}:r),audit).reason,'not_exactly_50_races');
 assert.equal(prepare(official,heatmap.map((r,i)=>i===0?{...r,blankAsZeroInferred:true}:r),audit).reason,'inferred_blank_cells');
 assert.equal(prepare(official,heatmap.map((r,i)=>i===0?{...r,counts:[11,10,10,10,5,5]}:r),audit).reason,'invalid_heatmap_counts');
+const namedOfficial=official.map((r,i)=>({...r,name:'選手'+(i+1)}));
+const namedHeatmap=heatmap.map((r,i)=>({...r,name:i===0?'別の選手':'選手'+(i+1)}));
+assert.equal(prepare(namedOfficial,namedHeatmap,audit).reason,'racer_name_mismatch');
 console.log('Makulabo observed-run and scoring provenance gates passed');
