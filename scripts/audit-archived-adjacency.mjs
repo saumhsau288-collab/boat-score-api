@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {auditTopRatedBoatOne} from './audit-top-rated-boat-one.mjs';
+import {auditHighAbilityInnerFinish} from './audit-high-ability-inner-finish.mjs';
 import {auditOrderBenefitByAbilityGap} from './audit-order-benefit-by-ability-gap.mjs';
 import {assessPairedDayStability} from './assess-paired-day-stability.mjs';
 import {auditFixedWinnerPairedDays} from './audit-fixed-winner-paired-days.mjs';
@@ -52,6 +53,7 @@ export function aggregateArchivedDailyReports(reports) {
  }
  const twoStage=reports.length>=3?evaluateTwoStageArchive(reports):null;
  const readiness=auditProspectiveReadiness(rows);
+ const highAbilityInnerFinish=auditHighAbilityInnerFinish(reports);
  const topRatedBoatOne=auditTopRatedBoatOne(rows);
  const orderBenefitByAbilityGap=reports.length>=3?auditOrderBenefitByAbilityGap(reports):null;
  const fixedWinnerPairedDays=reports.length>=3?auditFixedWinnerPairedDays(reports):null;
