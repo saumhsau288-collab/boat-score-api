@@ -1,6 +1,7 @@
 // Analyze immutable historical-research-data daily reports, descriptively only.
 import fs from 'node:fs';
 import path from 'node:path';
+import {auditArchivedAbilityPlacement} from './audit-archived-ability-placement.mjs';
 import {auditTopThreeSandwich} from './audit-top-three-sandwich.mjs';
 import {auditFinishOrderPairs} from './audit-finish-order-pairs.mjs';
 import {auditOfficialJoinAdjacency} from './audit-official-join-adjacency.mjs';
@@ -19,7 +20,7 @@ export function aggregateArchivedDailyReports(reports) {
    }
   }
  }
- return {...auditOfficialJoinAdjacency({records:rows}),finishOrderPairs:auditFinishOrderPairs(rows),topThreePatterns:auditTopThreeSandwich(rows),archiveDays:dates.size,archiveDates:[...dates].sort()};
+ return {...auditOfficialJoinAdjacency({records:rows}),finishOrderPairs:auditFinishOrderPairs(rows),topThreePatterns:auditTopThreeSandwich(rows),archivedAbilityPlacement:auditArchivedAbilityPlacement(rows),archiveDays:dates.size,archiveDates:[...dates].sort()};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href) {
  try {
@@ -31,6 +32,6 @@ if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href) {
   const result=aggregateArchivedDailyReports(reports);
   fs.mkdirSync(path.dirname(output),{recursive:true});
   fs.writeFileSync(output,JSON.stringify(result,null,2)+'\n');
-  console.log(JSON.stringify({archiveDays:result.archiveDays,eligible:result.eligible,excluded:result.excluded,byWinningBoat:result.byWinningBoat,finishOrderPairs:result.finishOrderPairs,topThreePatterns:result.topThreePatterns}));
+  console.log(JSON.stringify({archiveDays:result.archiveDays,eligible:result.eligible,excluded:result.excluded,byWinningBoat:result.byWinningBoat,finishOrderPairs:result.finishOrderPairs,topThreePatterns:result.topThreePatterns,archivedAbilityPlacement:result.archivedAbilityPlacement}));
  }catch(e){console.error(e.message);process.exitCode=1;}
 }
