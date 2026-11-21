@@ -14,7 +14,7 @@ export function buildVerifiedScoringInputs(extraction) {
    return {ready:false,reason:'invalid_scoring_input',racers:[]};
   seen.add(boat);ids.add(racerId);
   const effectiveLocalWinRate=localWinRate===0?nationalWinRate:localWinRate;
-  out.push({boat,racerId,nationalWinRate,localWinRate,effectiveLocalWinRate,
+  out.push({boat,racerId,name:typeof name==='string'&&name.trim()?name.trim():null,nationalWinRate,localWinRate,effectiveLocalWinRate,
     racerWinRate:(nationalWinRate+effectiveLocalWinRate)/2,
     motorTwoWinRate,averageSt,averageStAvailable:averageSt!==null});
  }
