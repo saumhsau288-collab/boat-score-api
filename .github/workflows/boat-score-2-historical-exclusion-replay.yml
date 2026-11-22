@@ -38,6 +38,7 @@ jobs:
           node --check scripts/report-historical-inner-favorites.mjs
           node --check scripts/report-boat1-high-score.mjs
           node --check scripts/analyze-boat1-second.mjs
+          node --check scripts/report-top-three-rank-finish.mjs
       - name: Replay current app on historical official pages
         env:
           DATE: ${{ inputs.date }}
@@ -55,6 +56,8 @@ jobs:
         run: node scripts/report-boat1-high-score.mjs retrospective-exclusion-*.json
       - name: Examine boat 1 second-place cases and six-pick alternatives
         run: node scripts/analyze-boat1-second.mjs historical-boat1-high-score-report.json
+      - name: Audit top-three score ranks against every verified finish
+        run: node scripts/report-top-three-rank-finish.mjs retrospective-exclusion-*.json
       - name: Save diagnostic evidence
         uses: actions/upload-artifact@v4
         with:
@@ -64,4 +67,5 @@ jobs:
             historical-inner-favorites-report.json
             historical-boat1-high-score-report.json
             historical-boat1-second-analysis.json
+            historical-top-three-rank-finish-report.json
           if-no-files-found: error
