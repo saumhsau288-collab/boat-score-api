@@ -32,9 +32,10 @@ for(const venue of venues)for(const race of races){
  }catch(e){held.push({key,reason:'request_failed',detail:String(e.message||e).slice(0,100)});}
 }
 const strict=replayExclusionVariants(requests);
+const diagnostic=replayExclusionVariants(requests,{mode:'retrospective_diagnostic'});
 const out={date,mode:'retrospective_current_app_diagnostic_not_pre_race_validation',
- generatedAt:new Date().toISOString(),requests:requests.length,held,strictEvaluation:strict,
- evidence:requests,note:'All reconstructed rows intentionally fail strict pre-race checks. Never report their hit rate as prospective accuracy.'};
+ generatedAt:new Date().toISOString(),requests:requests.length,held,strictEvaluation:strict,retrospectiveDiagnostic:diagnostic,
+ evidence:requests,note:'Reconstructed rows intentionally fail strict pre-race checks. Diagnostic comparisons use current app scoring after the race, not immutable historical predictions.'};
 const file='retrospective-exclusion-'+date+(venueArg?'-'+venueArg:'')+(raceArg?'-'+raceArg:'')+'.json';
 fs.writeFileSync(file,JSON.stringify(out,null,2)+'\n');
-console.log(JSON.stringify({file,requests:requests.length,held:held.length,strictEligible:strict.summary.baseline_no_exclusion.eligible,reason:'historical reconstruction lacks pre-deadline captured scores'},null,2));
+console.log(JSON.stringify({file,requests:requests.length,held:held.length,strictEligible:strict.summary.baseline_no_exclusion.eligible,retrospectiveEligible:diagnostic.summary.baseline_no_exclusion.eligible,reason:'historical reconstruction lacks pre-deadline captured scores'},null,2));
