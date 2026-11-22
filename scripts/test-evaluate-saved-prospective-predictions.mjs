@@ -11,7 +11,7 @@ const p={date:'20261122',venue:2,race:3,capture,verification,ruleVersion:'inner-
 test('saved prediction is read and joined only with verified result',async()=>{
  const dir=await mkdtemp(join(tmpdir(),'boat-join-'));
  try{
-  await saveLockedProspectivePrediction(dir,p);
+  await saveLockedProspectivePrediction(dir,p,{now:()=>new Date('2026-11-22T10:03:00+09:00')});
   const result={date:'20261122',venue:2,race:3,resultVerified:true,finishOrder:[1,2,3,4,5,6]};
   const r=await evaluateSavedProspectivePredictions(dir,[result]);
   assert.equal(r.filesRead,1);assert.equal(r.matched,1);assert.equal(r.exactTrifecta,1);
