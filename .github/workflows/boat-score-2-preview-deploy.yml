@@ -205,6 +205,12 @@ jobs:
               const key=venue+':'+race;
               if(seenRaceKeys.has(key))throw Error('Duplicate race across morning rankings: '+key);
               seenRaceKeys.add(key);
+              // Older snapshots predate prediction-order persistence. Report, never backfill.
+              // New snapshots must include six unique boats to support future accuracy tests.
+              const order=pick.predictedOrder;
+              if(date>= '20261123'&&(!Array.isArray(order)||order.length!==6||
+                 new Set(order).size!==6||!order.every(n=>Number.isInteger(n)&&n>=1&&n<=6)))
+                throw Error('Morning ranking missing valid six-boat predictedOrder: '+key);
             }
           }
           console.log(JSON.stringify({date,httpStatus:status,status:d.status,venues:d.venues.length,
