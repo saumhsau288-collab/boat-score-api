@@ -14,4 +14,6 @@ assert.throws(()=>evaluateMorningRankingHistory(snapshot,[{...result(1,order),re
 assert.throws(()=>evaluateMorningRankingHistory(snapshot,[result(1,order),result(1,order)]),/Duplicate official/);
 assert.throws(()=>evaluateMorningRankingHistory({...snapshot,categories:{...snapshot.categories,upset:[pick('upset',1)]}},[result(1,order)]),/Duplicate ranked/);
 assert.throws(()=>evaluateMorningRankingHistory(snapshot,[result(1,[1,1,3,4,5,6])]),/Unverified/);
-console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, and four invalid-input guards passed. No real-race accuracy claimed.');
+const malformed={...snapshot,categories:{...snapshot.categories,main:[{...pick('main',1),predictedOrder:[1,2,3]}]}};
+assert.throws(()=>evaluateMorningRankingHistory(malformed,[]),/Invalid saved morning ranking:.*"predictedOrder":\[1,2,3\]/);
+console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, and five invalid-input guards passed. No real-race accuracy claimed.');
