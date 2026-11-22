@@ -187,10 +187,21 @@ jobs:
             throw Error('Completed venue does not have 12 verified races');
           if(d.status==='completed'&&completed.size!==venueSet.size)
             throw Error('Completed status conflicts with incomplete venue coverage');
+          const seenRaceKeys=new Set();
           for(const category of ['main','upset','chaos']){
             const picks=d.categories[category];
             if(!Array.isArray(picks)||picks.length>20)
               throw Error('Invalid '+category+' ranking size');
+            for(const pick of picks){
+              const venue=Number(pick?.venue),race=Number(pick?.race);
+              if(String(pick?.date)!==date||!venueSet.has(venue)||
+                 !Number.isInteger(race)||race<1||race>12||
+                 pick?.category!==category||pick?.status!=='provisional_not_calibrated')
+                throw Error('Invalid '+category+' race identity or provisional status');
+              const key=venue+':'+race;
+              if(seenRaceKeys.has(key))throw Error('Duplicate race across morning rankings: '+key);
+              seenRaceKeys.add(key);
+            }
           }
           console.log(JSON.stringify({date,httpStatus:status,status:d.status,venues:d.venues.length,
             completedVenues:d.completedVenues.length,eligible,failedVenues:(d.failedVenues||[]).length,
