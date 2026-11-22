@@ -100,11 +100,34 @@ jobs:
         run: |
           node --check generate-twelve-independent-methods.mjs
           node scripts/test-twelve-independent-preview.mjs
+      - name: Configure dedicated morning KV and 8 AM JST cron
+        env:
+          KV_NAMESPACE_ID: ${{ secrets.BOAT_SCORE_2_KV_NAMESPACE_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$KV_NAMESPACE_ID" ]; then
+            echo "::error::BOAT_SCORE_2_KV_NAMESPACE_ID is missing. Create a dedicated Cloudflare KV namespace and set this repository secret before deploying. Existing preview remains unchanged."
+            exit 1
+          fi
+          if ! [[ "$KV_NAMESPACE_ID" =~ ^[a-fA-F0-9]{32}$ ]]; then
+            echo "::error::BOAT_SCORE_2_KV_NAMESPACE_ID must be a 32-character Cloudflare KV namespace ID."
+            exit 1
+          fi
+          cat > wrangler.toml <<'TOML'
+          name = "boat-score-2-preview"
+          main = "worker.js"
+          compatibility_date = "2026-11-01"
+          workers_dev = true
+          [triggers]
+          crons = ["0 23 * * *"]
+          TOML
+          printf '\n[[kv_namespaces]]\nbinding = "MORNING_KV"\nid = "%s"\n' "$KV_NAMESPACE_ID" >> wrangler.toml
       - name: Deploy ONLY separate Boat Score 2 preview Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes wrangler@4 deploy worker.js --name boat-score-2-preview --compatibility-date 2026-11-01
+        run: npx --yes wrangler@4 deploy --config wrangler.toml
       - name: Verify deployed twelve-method preview
         shell: bash
         run: |
@@ -132,3 +155,16 @@ jobs:
           test "$status" = 400 || { echo "::error::Preview prediction API returned $status instead of 400"; exit 1; }
           node -e "if(require('./invalid.json').error!=='Invalid date, venue or race')process.exit(1)"
           echo 'Preview twelve-method API validation verified'
+      - name: Verify deployed morning storage binding
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://boat-score-2-preview.saumh-sau-288.workers.dev/api/morning/snapshot?date=20261122"
+          status=$(curl --silent --show-error --max-time 15 -o morning.json -w '%{http_code}' "$URL")
+          if [ "$status" = 503 ]; then
+            echo "::error::Morning storage binding is still missing after deployment"
+            exit 1
+          fi
+          test "$status" = 200 || test "$status" = 404 || { echo "::error::Unexpected morning API status: $status"; exit 1; }
+          node -e "const d=require('./morning.json');if(d.status==='not_configured')process.exit(1)"
+          echo "Morning KV binding is configured (snapshot may still be unavailable until first scheduled run)"
