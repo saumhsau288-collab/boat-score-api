@@ -47,6 +47,10 @@ jobs:
           node scripts/test-morning-coverage-guard.mjs
           node scripts/test-morning-winrate-fallback.mjs
           node scripts/test-evaluate-morning-ranking-history.mjs
+          node scripts/test-replay-exclusion-variants.mjs
+          node scripts/test-evaluate-saved-trifecta-selections.mjs
+          node --check scripts/replay-exclusion-variants.mjs
+          node --check scripts/audit-top-two-exclusions.mjs
           node scripts/test-morning-ranking-persistence.mjs
           node --check scripts/collect-morning-official-results.mjs
           node --test test-generate-twelve-independent-methods.mjs
