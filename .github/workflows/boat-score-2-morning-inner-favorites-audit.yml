@@ -1,11 +1,14 @@
 name: Boat Score 2 morning inner-favorites audit (research only)
 on:
+  schedule:
+    # 16:00 UTC = 01:00 JST next day, after the racing date ends.
+    - cron: '0 16 * * *'
   workflow_dispatch:
     inputs:
       date:
         description: "Saved morning snapshot date YYYYMMDD"
         required: true
-        default: "20261122"
+        default: "20261123"
         type: string
 permissions:
   contents: read
@@ -25,8 +28,12 @@ jobs:
         run: node --check scripts/audit-morning-inner-favorites.mjs
       - name: Audit saved morning MAIN shortlist
         env:
-          DATE: ${{ inputs.date }}
-        run: node scripts/audit-morning-inner-favorites.mjs "$DATE"
+          REQUESTED_DATE: ${{ inputs.date }}
+        run: |
+          # For scheduled runs at 16:00 UTC, the UTC date is the completed JST race date.
+          DATE="${REQUESTED_DATE:-$(date -u +%Y%m%d)}"
+          echo "Auditing saved morning MAIN shortlist for $DATE"
+          node scripts/audit-morning-inner-favorites.mjs "$DATE"
       - name: Save morning diagnostic
         uses: actions/upload-artifact@v4
         with:
