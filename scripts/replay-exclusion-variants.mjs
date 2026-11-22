@@ -50,6 +50,7 @@ export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
    const scoreFor=(first,second,third)=>{
     const a=boats.find(x=>x.boat===first),b=boats.find(x=>x.boat===second),c=boats.find(x=>x.boat===third);
     if(cfg.secondRule==='neighbor')return a.score*.55+(b.score+((Math.abs(first-second)===1)?5:0))*.30+c.score*.15;
+    if(cfg.secondRule==='multiwinner')return a.score*.55+(b.score+((Math.abs(first-second)===1)?5:0))*.30+c.score*.15;
     if(cfg.secondRule==='top2')return a.score*.55+(b.score*.75+b.top2Rate*.25)*.30+c.score*.15;
     return a.score*.55+b.score*.30+c.score*.15;
    };
