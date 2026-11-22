@@ -24,7 +24,7 @@ console.log('Original morning snapshot saved to '+snapshotFile);
 // A mismatch must be exposed, not repaired using post-race information.
 evaluateMorningRankingHistory(snapshot,[]);
 console.log('Saved morning prediction structure validated before official-result collection');
-const candidates=new Map();
+const candidates=new Map(),legacyWithoutOrder=[];
 for(const category of ['main','upset','chaos']){
  const picks=snapshot.categories?.[category];
  if(!Array.isArray(picks))throw Error('Missing ranking category '+category);
@@ -32,7 +32,12 @@ for(const category of ['main','upset','chaos']){
   if(p.date!==date||!Number.isInteger(p.venue)||!Number.isInteger(p.race))
    throw Error('Invalid ranked candidate');
   const key=p.venue+':'+p.race;
-  if(candidates.has(key))throw Error('Duplicate ranked candidate');
+  if(candidates.has(key)||legacyWithoutOrder.some(x=>x.key===key))
+   throw Error('Duplicate ranked candidate');
+  if(p.predictedOrder===undefined){
+   legacyWithoutOrder.push({key,category,venue:p.venue,race:p.race,reason:'saved_prediction_order_missing'});
+   continue;
+  }
   candidates.set(key,p);
  }
 }
@@ -50,9 +55,9 @@ for(const p of candidates.values()){
 }
 const summary=evaluateMorningRankingHistory(snapshot,results);
 const output={date,snapshotUpdatedAt:snapshot.updatedAt,snapshotStatus:snapshot.status,
- collectedAt:new Date().toISOString(),officialResults:results,held,summary,
+ collectedAt:new Date().toISOString(),officialResults:results,held,legacyWithoutOrder,summary,
  note:'Saved morning ranking comparison only. This is NOT a 12-method accuracy test.'};
 const path='morning-official-comparison-'+date+'.json';
 fs.writeFileSync(path,JSON.stringify(output,null,2)+'\n');
 console.log(JSON.stringify({file:path,savedCandidates:candidates.size,verifiedOfficialResults:results.length,
- held:held.length,summary},null,2));
+ held:held.length,legacyWithoutOrder:legacyWithoutOrder.length,summary},null,2));
