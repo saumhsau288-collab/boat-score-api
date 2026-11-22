@@ -34,7 +34,7 @@ const enriched=rows.map(x=>{
  const second=six(x.predictedOrder,'boat1_second');
  const winner=x.actual[0];
  const winnerRank=x.predictedOrder.indexOf(winner)+1;
- return {...x,winner,winnerRank,winnerScore:x.predictedOrder.indexOf(winner)<0?null:null,
+ return {...x,winner,winnerRank,
   boat1FixedSix:fixed,boat1SecondSix:second,boat1FixedSixHit:fixed.includes(actual),boat1SecondSixHit:second.includes(actual)};
 });
 const second=enriched.filter(x=>x.actual[1]===1);
