@@ -45,6 +45,7 @@ jobs:
           node scripts/test-top-two-exclusion.mjs
           node scripts/test-evaluate-top-two-history.mjs
           node scripts/test-morning-coverage-guard.mjs
+          node scripts/test-morning-winrate-fallback.mjs
           node --test test-generate-twelve-independent-methods.mjs
           node history-analysis.test.mjs
           node ranking.test.mjs
