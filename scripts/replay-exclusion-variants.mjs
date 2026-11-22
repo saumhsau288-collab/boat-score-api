@@ -1,7 +1,8 @@
 // Historical replay: run the saved/current pre-race scores through multiple exclusion-first variants.
 // Never use finish information in selection; results are consulted only after selections are frozen.
 import fs from 'node:fs';
-export function replayExclusionVariants(rows){
+export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
+ if(!['strict_pre_race','retrospective_diagnostic'].includes(mode))throw Error('Invalid evaluation mode');
  if(!Array.isArray(rows))throw Error('Expected array');
  const configs=[
   {id:'baseline_no_exclusion',n:0,rule:'score'},
@@ -24,7 +25,7 @@ export function replayExclusionVariants(rows){
   const valid=/^20\d{6}$/.test(String(row.date))&&Number.isInteger(row.venue)&&row.venue>=1&&row.venue<=24&&Number.isInteger(row.race)&&row.race>=1&&row.race<=12&&
    row.resultVerified===true&&Array.isArray(finish)&&finish.length===6&&new Set(finish).size===6&&finish.every(x=>Number.isInteger(x)&&x>=1&&x<=6)&&
    Array.isArray(boats)&&boats.length===6&&new Set(boats.map(x=>x.boat)).size===6&&boats.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))&&
-   typeof row.capturedAt==='string'&&typeof row.deadlineAt==='string'&&Number.isFinite(Date.parse(row.capturedAt))&&Number.isFinite(Date.parse(row.deadlineAt))&&Date.parse(row.capturedAt)<Date.parse(row.deadlineAt)&&row.incidentFree===true;
+   (mode==='retrospective_diagnostic'?(row.scoreSource==='current_app_recomputed_after_race'):(typeof row.capturedAt==='string'&&typeof row.deadlineAt==='string'&&Number.isFinite(Date.parse(row.capturedAt))&&Number.isFinite(Date.parse(row.deadlineAt))&&Date.parse(row.capturedAt)<Date.parse(row.deadlineAt)&&row.incidentFree===true));
   if(!valid){held.push({key,reason:'unverified_or_missing_pre_race_evidence'});continue;}
   const actual=finish.slice(0,3).join('-');
   const cases={};
@@ -53,7 +54,7 @@ export function replayExclusionVariants(rows){
   }
   detail.push({key,actual,cases});
  }
- return {records:rows.length,held,summary:Object.fromEntries(Object.entries(counts).map(([id,x])=>[id,{...x,exclusionSuccessRate:x.eligible?x.excludedTopTwoCorrect/x.eligible:null,trifectaSixRate:x.eligible?x.trifectaSixHit/x.eligible:null}])),detail,note:'Research only. Requires true pre-deadline historical scores and separately verified official finish. No claim of improvement without measured out-of-sample results.'};
+ return {mode,records:rows.length,held,summary:Object.fromEntries(Object.entries(counts).map(([id,x])=>[id,{...x,exclusionSuccessRate:x.eligible?x.excludedTopTwoCorrect/x.eligible:null,trifectaSixRate:x.eligible?x.trifectaSixHit/x.eligible:null}])),detail,note:mode==='retrospective_diagnostic'?'Retrospective diagnostic ONLY: current app recomputed historical scores may contain post-race revisions. Not prospective accuracy or validated improvement.':'Strict evaluation: pre-deadline historical scores and separately verified official finish required.'};
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
  if(process.argv.length!==3)throw Error('Usage: node scripts/replay-exclusion-variants.mjs verified-historical-evidence.json');
