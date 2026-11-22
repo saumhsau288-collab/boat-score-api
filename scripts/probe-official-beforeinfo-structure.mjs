@@ -1,5 +1,6 @@
 // Read-only research probe for one official beforeinfo page.
 // Never infer course from boat, nor treat page reachability as pre-race evidence.
+import {extractStartDisplayBoats} from './extract-start-display-boats.mjs';
 import {validateOfficialRaceUrl} from './capture-official-html-evidence.mjs';
 const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','');
 const expected={date,venue:'02',race:1};
@@ -18,6 +19,7 @@ try{
  const startTable=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)][2]?.[1]??'';
  const startCells=[...startTable.matchAll(/<td\b([^>]*)>([\s\S]*?)<\/td>/gi)].map((m,i)=>({position:i+1,attributes:m[1].slice(0,180),text:textOnly(m[2]).slice(0,35),innerMarkup:m[2].replace(/\s+/g,' ').slice(0,320)}));
  console.log(JSON.stringify({startDisplayCells:startCells}));
+ console.log(JSON.stringify({parsedStartDisplay:extractStartDisplayBoats(html)}));
  console.log(JSON.stringify({tableSummaries}));
  console.log(JSON.stringify({url,httpStatus:response.status,contentType:response.headers.get('content-type'),htmlBytes:Buffer.byteLength(html),tableCount:(html.match(/<table\b/gi)||[]).length,matchingLabels:Object.fromEntries(labels.map(x=>[x,headings.filter(h=>h.includes(x)).length])),beforeRaceVerified:false,courseMappingVerified:false}));
  if(response.status!==200||!/text\/html/i.test(response.headers.get('content-type')||''))process.exitCode=1;
