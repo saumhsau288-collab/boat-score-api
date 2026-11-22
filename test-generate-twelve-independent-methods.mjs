@@ -36,6 +36,17 @@ test('missing ability abstains for all methods requiring it',()=>{
  const out=generateTwelveIndependentMethods({racers:racers.map(({nationalRate,...r})=>r)});
  assert.ok(METHOD_IDS.every(id=>out.methods[id].status==='abstain'));
 });
-test('requires distinct boats and entry courses',()=>{
- assert.throws(()=>generateTwelveIndependentMethods({racers:[...racers.slice(0,5),{...racers[5],course:1}]}));
+test('duplicate boats throw, while unverified entry courses abstain safely',()=>{
+ assert.throws(()=>generateTwelveIndependentMethods({
+  racers:[...racers.slice(0,5),{...racers[5],boat:1}]
+ }),/Six unique boats required/);
+ const invalidCourses=generateTwelveIndependentMethods({
+  racers:[...racers.slice(0,5),{...racers[5],course:1}]
+ });
+ for(const id of ['favorite-3','upset-1','upset-3','upset-4','upset-5','upset-6']){
+  assert.equal(invalidCourses.methods[id].status,'abstain',id);
+ }
+ for(const id of ['favorite-1','favorite-2','favorite-4','favorite-5','favorite-6','upset-2']){
+  assert.equal(invalidCourses.methods[id].status,'predicted',id);
+ }
 });
