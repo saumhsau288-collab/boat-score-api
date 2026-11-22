@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {evaluateMorningRankingHistory} from './evaluate-morning-ranking-history.mjs';
+const order=[1,2,3,4,5,6];
+const pick=(category,race)=>({date:'20261122',venue:1,race,category,status:'provisional_not_calibrated',predictedOrder:order});
+const snapshot={date:'20261122',categories:{main:[pick('main',1)],upset:[pick('upset',2)],chaos:[]}};
+const result=(race,finish)=>({date:'20261122',venue:1,race,resultVerified:true,officialFinish:finish});
+const r=evaluateMorningRankingHistory(snapshot,[result(1,order)]);
+assert.equal(r.notTwelveMethods,true);
+assert.equal(r.byCategory.main.matched,1);
+assert.equal(r.byCategory.main.topThreeExactHits,1);
+assert.equal(r.byCategory.upset.matched,0);
+assert.equal(r.byCategory.upset.firstRate,null);
+assert.throws(()=>evaluateMorningRankingHistory(snapshot,[{...result(1,order),resultVerified:false}]),/Unverified/);
+assert.throws(()=>evaluateMorningRankingHistory(snapshot,[result(1,order),result(1,order)]),/Duplicate official/);
+assert.throws(()=>evaluateMorningRankingHistory({...snapshot,categories:{...snapshot.categories,upset:[pick('upset',1)]}},[result(1,order)]),/Duplicate ranked/);
+assert.throws(()=>evaluateMorningRankingHistory(snapshot,[result(1,[1,1,3,4,5,6])]),/Unverified/);
+console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, and four invalid-input guards passed. No real-race accuracy claimed.');
