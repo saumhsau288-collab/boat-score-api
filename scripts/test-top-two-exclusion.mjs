@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {rankTopTwoExclusions,evaluateTopTwoExclusions} from '../top-two-exclusion.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,course:i+1,nationalRate:7-i,localRate:0,averageST:0.15}));
+const snapshot={racers};
+const result=rankTopTwoExclusions(snapshot);
+assert.equal(result.status,'ranked');
+assert.deepEqual(result.candidates.exclude1,[6]);
+assert.deepEqual(result.candidates.exclude2,[6,5]);
+assert.deepEqual(result.candidates.exclude3,[6,5,4]);
+const stats=evaluateTopTwoExclusions([{snapshot,officialFinish:[1,2,3,4,5,6]},{snapshot,officialFinish:[6,1,2,3,4,5]}]);
+assert.deepEqual(stats.map(x=>[x.evaluated,x.success]),[[2,1],[2,1],[2,1]]);
+const incomplete={racers:racers.map(r=>({...r}))};
+delete incomplete.racers[0].averageST;
+assert.equal(rankTopTwoExclusions(incomplete).status,'abstain');
+assert.equal(evaluateTopTwoExclusions([{snapshot:incomplete,officialFinish:[1,2,3,4,5,6]}])[0].abstained,1);
+assert.throws(()=>evaluateTopTwoExclusions([{snapshot,officialFinish:[1,1,2,3,4,5]}]));
+console.log('Top-two exclusion: deterministic ranking, 1/2/3 exclusions, abstention and no leakage passed');
