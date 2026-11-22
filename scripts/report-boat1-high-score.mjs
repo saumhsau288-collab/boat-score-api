@@ -32,8 +32,20 @@ for(const path of paths){
   const gap=ranked[0].score-ranked[1].score;
   const order=ranked.map(x=>x.boat);
   const six=referenceSix(order);
+  const winnerRank=order.indexOf(actual[0])+1;
+  const boat1Finish=actual.indexOf(1)+1;
+  const firstFixedSix=six;
+  // Comparison is fair: exactly six distinct picks for each scenario.
+  // Flip only the first two positions of a reference pick when it starts with boat 1;
+  // retain other picks unchanged, then count unique outcomes.
+  const reversedSix=[...new Set(six.map(p=>{
+   const x=p.split('-');
+   return x[0]==='1'?[x[1],x[0],x[2]].join('-'):p;
+  }))];
   rows.push({key,gap,boat1Score:ranked[0].score,runnerUpScore:ranked[1].score,
    predictedOrder:order,actual:actual.slice(0,3),referenceSix:six,
+   boat1Finish,winnerRank,reverseSix:reversedSix,
+   reverseSixHit:reversedSix.includes(actual.slice(0,3).join('-')),
    boat1Win:actual[0]===1,boat1TopTwo:actual.slice(0,2).includes(1),
    boat1TopThree:actual.slice(0,3).includes(1),
    topTwoExact:actual[0]===1&&actual[1]===order[1],
@@ -43,17 +55,23 @@ for(const path of paths){
  for(const h of data.held||[])held.push({key:h.key,reason:h.reason||'source_held'});
 }
 function summary(items){
- const n=items.length,counts=Object.fromEntries(['boat1Win','boat1TopTwo','boat1TopThree','topTwoExact','topTwoAnyOrder','referenceSixHit'].map(k=>[k,items.filter(x=>x[k]).length]));
+ const n=items.length,counts=Object.fromEntries(['boat1Win','boat1TopTwo','boat1TopThree','topTwoExact','topTwoAnyOrder','referenceSixHit','reverseSixHit'].map(k=>[k,items.filter(x=>x[k]).length]));
  return {races:n,...counts,rates:Object.fromEntries(Object.entries(counts).map(([k,v])=>[k,n?v/n:null]))};
 }
 const groups={boat1_top_score_all:summary(rows),
+ boat1_finished_first:summary(rows.filter(x=>x.boat1Finish===1)),
+ boat1_finished_second:summary(rows.filter(x=>x.boat1Finish===2)),
+ boat1_finished_third_or_worse:summary(rows.filter(x=>x.boat1Finish>=3)),
  boat1_lead_at_least_3:summary(rows.filter(x=>x.gap>=3)),
  boat1_lead_at_least_6:summary(rows.filter(x=>x.gap>=6)),
  boat1_lead_below_3:summary(rows.filter(x=>x.gap<3)),
  boat1_lead_3_to_below_6:summary(rows.filter(x=>x.gap>=3&&x.gap<6))};
-const result={mode:'retrospective_boat1_top_score_only',sourceFiles:paths,
+const boat1SecondCases=rows.filter(x=>x.boat1Finish===2).map(x=>({key:x.key,actual:x.actual,
+ winnerRank:x.winnerRank,gap:x.gap,predictedOrder:x.predictedOrder,
+ referenceSixHit:x.referenceSixHit,reverseSixHit:x.reverseSixHit}));
+const result={mode:'retrospective_boat1_top_score_only',sourceFiles:paths,boat1SecondCases,
  eligible:rows.length,held:held.length,groups,details:rows,heldDetails:held,
- note:'Only races with boat 1 ranked first by current recomputed historical scores. Reference six picks are NOT the app six independent methods. Rates are retrospective diagnostics, not pre-race hit rates.'};
+ note:'Only races with boat 1 ranked first by current recomputed historical scores. Reference and reverse six picks are NOT the app six independent methods; reverse six is a diagnostic of swapping positions 1 and 2 in the reference picks. Rates are retrospective diagnostics, not pre-race hit rates.'};
 const file='historical-boat1-high-score-report.json';
 fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify({file,eligible:result.eligible,held:result.held,groups},null,2));
