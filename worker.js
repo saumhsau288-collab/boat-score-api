@@ -2516,6 +2516,7 @@ function classifyDailyRaceCandidates(races) {
     const spread=ordered[0].score-ordered[5].score;
     const outer=Math.max(...ordered.filter(x=>x.boat>=4).map(x=>x.score));
     const inner=Math.max(...ordered.filter(x=>x.boat<=3).map(x=>x.score));
+    // Persist the actual six-boat order before any result is known; never reconstruct later.
     const item={date:race.date,venue:race.venue,race:race.race,lead,spread,outerGap:outer-inner,
       status:'provisional_not_calibrated',predictedOrder:ordered.map(x=>x.boat)};
     const category=lead>=3&&ordered[0].boat<=3?'main':outer>=inner?'upset':'chaos';
