@@ -1,0 +1,29 @@
+name: Verify Boat Score 2 twelve independent methods (preview only)
+
+on:
+  push:
+    branches:
+      - fix-boat-score-2-syntax-20261115
+    paths:
+      - generate-twelve-independent-methods.mjs
+      - scripts/test-twelve-independent-preview.mjs
+      - .github/workflows/boat-score-2-twelve-methods-check.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-preview-methods:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix-boat-score-2-syntax-20261115
+          persist-credentials: false
+      - name: Check twelve-method module syntax
+        run: node --check generate-twelve-independent-methods.mjs
+      - name: Run isolated twelve-method regression test
+        run: node scripts/test-twelve-independent-preview.mjs
+      - name: Check preview worker syntax
+        run: node --input-type=module --check < worker.js
