@@ -811,7 +811,7 @@ if (u.pathname === '/api/predict/independent-methods') {
     exhibitionTime:exhibitions.get(row.boat)?.exhibitionTime,last50CoursePodiumRate:NaN}));
   let generated;
   try{generated=generateTwelveIndependentMethods({racers});}
-  catch(error){return reply(request,{ready:false,reason:'verified_entry_course_required',methods:{},detail:String(error?.message||error)});}
+  catch(error){return reply(request,{ready:false,reason:'invalid_six_boat_snapshot',methods:{},detail:String(error?.message||error)});}
   const methods=Object.fromEntries(Object.entries(generated.methods).map(([id,value])=>[id,{...value,
     trifecta:value.status==='predicted'?value.trifecta:null}]));
   return reply(request,{ready:true,date,venue,race,version:generated.version,methods,
