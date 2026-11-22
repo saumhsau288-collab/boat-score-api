@@ -41,6 +41,7 @@ jobs:
         run: |
           node --input-type=module --check < worker.js
           node --check generate-twelve-independent-methods.mjs
+          node scripts/test-twelve-independent-preview.mjs
           node --test test-generate-twelve-independent-methods.mjs
           node history-analysis.test.mjs
           node ranking.test.mjs
