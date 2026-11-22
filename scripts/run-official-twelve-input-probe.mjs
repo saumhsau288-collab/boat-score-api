@@ -16,5 +16,6 @@ if(!/^20\d{6}$/.test(date||'')||!Number.isInteger(Number(venue))||!Number.isInte
   independentlyAuthenticatedBeforeRace:result.independentlyAuthenticatedBeforeRace===true,
   readyMethods:result.readiness?.ready??[],
   missingFields:result.racers?.length===6?Object.fromEntries(['entryCourse','averageStartTiming','exhibitionTime','last50CoursePodiumRate'].map(key=>[key,result.racers.filter(r=>r[key]===null||r[key]===undefined).length])):null,
-  abstainedMethods:result.readiness?.abstained??[]}));
+  abstainedMethods:result.readiness?.abstained??[],
+  readinessInvalid:result.readiness?.invalid??null}));
 }
