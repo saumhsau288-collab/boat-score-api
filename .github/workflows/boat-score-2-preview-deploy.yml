@@ -96,8 +96,39 @@ jobs:
         run: |
           test -n "$CF_API_TOKEN" || { echo "::error::CLOUDFLARE_API_TOKEN missing"; exit 1; }
           test -n "$CF_ACCOUNT_ID" || { echo "::error::CLOUDFLARE_ACCOUNT_ID missing"; exit 1; }
+      - name: Verify twelve independent methods before deployment
+        run: |
+          node --check generate-twelve-independent-methods.mjs
+          node scripts/test-twelve-independent-preview.mjs
       - name: Deploy ONLY separate Boat Score 2 preview Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@4 deploy worker.js --name boat-score-2-preview --compatibility-date 2026-11-01
+      - name: Verify deployed twelve-method preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://boat-score-2-preview.saumh-sau-288.workers.dev"
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent --show-error --max-time 15 "$BASE/" -o preview.html &&
+               curl --fail --silent --show-error --max-time 15 "$BASE/api/version" -o version.json; then
+              break
+            fi
+            sleep 5
+          done
+          node <<'NODE'
+          const fs=require('node:fs');
+          const html=fs.readFileSync('preview.html','utf8');
+          for(const id of ['predictTwelveMethods','twelveMethodStatus','twelveMethodOutput']){
+            if(!html.includes('id="'+id+'"'))throw Error('Missing preview control: '+id);
+          }
+          if(!html.includes('/api/predict/independent-methods'))throw Error('Missing twelve-method API wiring');
+          const version=JSON.parse(fs.readFileSync('version.json','utf8'));
+          if(version.app!=='Boat Score 2 preview'||version.sourceBranch!=='fix-boat-score-2-syntax-20261115')throw Error('Unexpected preview deployment version');
+          console.log('Preview UI and source branch verified');
+          NODE
+          status=$(curl --silent --show-error --max-time 15 -o invalid.json -w '%{http_code}' "$BASE/api/predict/independent-methods?date=invalid&venue=1&race=1")
+          test "$status" = 400 || { echo "::error::Preview prediction API returned $status instead of 400"; exit 1; }
+          node -e "if(require('./invalid.json').error!=='Invalid date, venue or race')process.exit(1)"
+          echo 'Preview twelve-method API validation verified'
