@@ -258,7 +258,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <style>body{font-family:system-ui,sans-serif;background:#0b1424;color:#e5f0ff;margin:0}main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.65rem}section{background:#17253b;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 9px #172a4212}label{display:block;margin:12px 0 4px;font-weight:600}input,select,button{font:inherit;padding:11px;border:1px solid #b6c4d3;border-radius:8px;max-width:100%;box-sizing:border-box}button{background:#1768a6;color:white;border:0;margin:12px 0;cursor:pointer}button:disabled{opacity:.5}a{color:#72c8ff}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}small{color:#a9bdd5}.warn{color:#a64a00}.table-hint{font-size:.85rem;color:#a9bdd5;margin:10px 0 4px}.comparison-scroll{display:block;width:100%;max-width:100%;box-sizing:border-box;overflow-x:scroll;overflow-y:hidden;touch-action:pan-x pan-y;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;border:1px solid #354760;border-radius:8px}.comparison-scroll #comparison{width:1800px!important;min-width:1800px!important;table-layout:auto}.comparison-controls{display:flex;gap:8px}.comparison-controls button{flex:1;margin:4px 0 8px;padding:10px;font-size:.9rem}.comparison-scroll th,.comparison-scroll td{white-space:nowrap;padding:9px 11px;border-bottom:1px solid #354760;text-align:left}.comparison-scroll th:first-child,.comparison-scroll td:first-child{position:sticky;left:0;background:#17253b;z-index:1;box-shadow:2px 0 3px #0b1424}.comparison-scroll th:first-child{z-index:2}.prediction-side-by-side{display:flex;gap:12px;overflow-x:auto;align-items:stretch;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}.prediction-panel{flex:0 0 min(330px,85vw);min-width:0;padding:12px;border:1px solid #354760;border-radius:10px;box-sizing:border-box;scroll-snap-align:start}.prediction-panel h3{font-size:1rem;margin:0 0 8px}.prediction-panel pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}@media(min-width:760px){main{max-width:960px}.prediction-panel{flex:1 1 0}}</style></head>
 <body><main><h1>Boat Score 2</h1><small>開発版 20261115-racers-retry-diagnostics · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><p>公式情報の取得状況と分析候補を確認する開発プレビューです。</p>
 <section><h2>朝8時の全国事前評価</h2><p>当日開催場の公式日程を先に確認します。予想・ランキングはデータ確認が完了するまで表示しません。</p><button id="morningSaved">朝8時のサーバー保存結果</button><details><summary>朝8時の手動確認・再集計（開発用）</summary><button id="morningCheck">選択日の開催場を確認</button><button id="morningVenue">選択場の12Rを事前評価</button><button id="morningNational">全国の開催候補を集計</button></details><p id="morningStatus" role="status">未確認</p><pre id="morningOutput"></pre><div id="morningLinks" aria-label="朝8時のランキングからレースを選択"></div><small>本命20R・穴20R・大荒れ20R／本命6点・穴6点は公式6艇と基礎成績が確認できた場合のみ暫定表示します。展示・ST・進入・風・直近50走は予想点数に未反映です。</small></section>
-<section><h2>開催場・レースをまとめて選択</h2><label for="day">開催日</label><input type="date" id="day"><label for="venue">競艇場</label><select id="venue"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select><label for="race">レース</label><select id="race"><option value="">レースを選択</option><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="load">選択したレースの公式データを取得</button><button id="predictSelected">このレースを予想（本命6点・穴6点）</button><details id="beforeinfoDetails"><summary>直前情報の公式照合（展示・ST・進入・風）</summary><p>公式照合できた値だけを表示します。未確認項目は予想に加点しません。</p><button type="button" id="checkBeforeinfo">選択レースの直前情報を確認</button><pre id="beforeinfoStatus" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere">未取得。開催場・レースを選び、上の確認ボタンを押してください。</pre></details><p id="predictStatus" role="status">競艇場とレースを選択してください。</p><p id="predictionInputNotice" role="status" style="font-size:.9rem;line-height:1.5;color:#cbd5e1">予想は公式6艇・勝率・モーター成績による暫定評価です。選択レースの予想では、公式確認済みの展示タイムと数値の展示STが6艇分そろった場合に限り、小幅な補正を行います。展示STのF・L表示は、公式の選手平均STを照合できた場合だけ代用し、代用した艇を明示します。進入・チルト・風・波・まくらぼ50走は予想点数に未反映です。取得状況は予想結果の「直前情報の反映」で確認してください。</p><div class="prediction-side-by-side"><div class="prediction-panel"><h3>従来予想（本命・穴）</h3><pre id="predictOutput"></pre></div><div class="prediction-panel"><h3>まくらぼ＋直前情報の予想（試算）</h3><pre id="combinedPredictionOutput" role="status">公式6艇・展示タイム・展示ST・まくらぼ50走を照合後に表示します。未確認の場合は保留します。</pre></div></div><section><h3>12方法の比較（研究用）</h3><p>各方法の買い目を個別に表示します。必要な公式情報が不足する方法は保留します。</p><button type="button" id="predictTwelveMethods">12方法を表示</button><p id="twelveMethodStatus" role="status">開催日・場・レースを選び、ボタンを押してください。</p><pre id="twelveMethodOutput"></pre></section><details id="recent50CompareTab"><summary>まくらぼ50走反映：前後の点数・買い目比較（試算）</summary><p>6艇照合済みの場合のみ、直近50走の1着率から最大10点を加算して比較します。通常予想は変更しません。</p><pre id="recent50CompareOutput">予想実行後に表示します。</pre></details><details><summary>まくらぼ着順別ヒートマップ比較（試算）</summary><pre id="positionHeatmapOutput">まくらぼ取得後に予想を実行してください。</pre></details><details><summary>開催場の一括照合（任意・詳細）</summary><p><button id="schedule">開催場の一括照合（任意）</button></p><p id="scheduleStatus" role="status">公式出走表を確認できたレースだけ選択できます。</p><div id="scheduleOutput"></div><small>一括照合は参考情報です。開催の有無・出走表はレース取得時に公式確認し、未確認の情報は補いません。</small></details><p id="status" role="status"></p><p class="table-hint">選手比較表：横に指で動かすか、下の「右へ」「左へ」を押してください。</p><div class="comparison-controls"><button type="button" id="comparisonLeft">◀ 左へ</button><button type="button" id="comparisonRight">右へ ▶</button></div><div class="comparison-scroll" role="region" aria-label="出走選手の公式成績比較表（左右スクロール可能）" tabindex="0"><table id="comparison" style="border-collapse:collapse;width:max-content;min-width:100%;font-size:.84rem"><thead><tr><th>艇</th><th>選手名</th><th>登録番号</th><th>全国勝率</th><th>全国2連対率</th><th>全国3連対率</th><th>当地勝率</th><th>当地2連対率</th><th>当地3連対率</th><th>モーター</th><th>モーター2連対率</th><th>モーター3連対率</th><th>平均ST</th><th>展示タイム</th><th>展示ST</th><th>進入</th><th>チルト</th><th>まくらぼ50走</th></tr></thead><tbody id="comparisonBody"><tr><td colspan="18">レースを選んで「公式データを確認」を押してください</td></tr></tbody></table></div><small>選手の全国・当地2連対率／3連対率、モーター2連対率／3連対率を復元しました。公式照合できた場合のみ表示します。1着率・2着率・3着率の個別値はこの取得元からは未取得です。平均STは公式から個別に照合できた場合のみ表示します。まくらぼ50走は未確認です。</small><h3>選手の入賞率比較（公式照合済みのみ）</h3><div id="finishRateSummary" role="status">レースを選んで公式データを確認してください。</div><details><summary>公式データの取得結果・診断ログ</summary><pre id="output"></pre></details><h3>出走選手・診断ポイント</h3><div id="racerPoints" role="status">公式データ確認後に表示します。未確認項目は加点しません。</div></section>
+<section><h2>開催場・レースをまとめて選択</h2><label for="day">開催日</label><input type="date" id="day"><label for="venue">競艇場</label><select id="venue"><option value="">競艇場を選択</option><option value="1">桐生</option><option value="2">戸田</option><option value="3">江戸川</option><option value="4">平和島</option><option value="5">多摩川</option><option value="6">浜名湖</option><option value="7">蒲郡</option><option value="8">常滑</option><option value="9">津</option><option value="10">三国</option><option value="11">びわこ</option><option value="12">住之江</option><option value="13">尼崎</option><option value="14">鳴門</option><option value="15">丸亀</option><option value="16">児島</option><option value="17">宮島</option><option value="18">徳山</option><option value="19">下関</option><option value="20">若松</option><option value="21">芦屋</option><option value="22">福岡</option><option value="23">唐津</option><option value="24">大村</option></select><label for="race">レース</label><select id="race"><option value="">レースを選択</option><option value="1">1R</option><option value="2">2R</option><option value="3">3R</option><option value="4">4R</option><option value="5">5R</option><option value="6">6R</option><option value="7">7R</option><option value="8">8R</option><option value="9">9R</option><option value="10">10R</option><option value="11">11R</option><option value="12">12R</option></select><button id="load">選択したレースの公式データを取得</button><button id="predictSelected">このレースを予想（本命6点・穴6点）</button><details id="beforeinfoDetails"><summary>直前情報の公式照合（展示・ST・進入・風）</summary><p>公式照合できた値だけを表示します。未確認項目は予想に加点しません。</p><button type="button" id="checkBeforeinfo">選択レースの直前情報を確認</button><pre id="beforeinfoStatus" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere">未取得。開催場・レースを選び、上の確認ボタンを押してください。</pre></details><p id="predictStatus" role="status">競艇場とレースを選択してください。</p><p id="predictionInputNotice" role="status" style="font-size:.9rem;line-height:1.5;color:#cbd5e1">予想は公式6艇・勝率・モーター成績による暫定評価です。選択レースの予想では、公式確認済みの展示タイムと数値の展示STが6艇分そろった場合に限り、小幅な補正を行います。展示STのF・L表示は、公式の選手平均STを照合できた場合だけ代用し、代用した艇を明示します。進入・チルト・風・波・まくらぼ50走は予想点数に未反映です。取得状況は予想結果の「直前情報の反映」で確認してください。</p><div class="prediction-side-by-side"><div class="prediction-panel"><h3>従来予想（本命・穴）</h3><pre id="predictOutput"></pre></div><div class="prediction-panel"><h3>まくらぼ＋直前情報の予想（試算）</h3><details><summary>風・進入予測を手動変更</summary><small>確認できた値だけ入力。手入力は公式確認済みとは扱いません。</small><label for="trialWind">風向（スタート方向に対して）</label><select id="trialWind"><option value="">未確認</option><option value="head">向かい風</option><option value="tail">追い風</option><option value="cross">横風</option><option value="calm">無風</option></select><label for="trialWindSpeed">風速（m/s）</label><input id="trialWindSpeed" type="number" min="0" max="30" step="0.1" placeholder="未確認"><label for="trialEntry">進入予測（内から順に6艇）</label><input id="trialEntry" inputmode="numeric" placeholder="例：123456" maxlength="11"><button type="button" id="trialApply">変更を試算に反映</button><button type="button" id="trialClear">入力をクリア</button><p id="trialStatus" role="status">未入力。入力は選択中のレースだけに適用します。</p></details><pre id="combinedPredictionOutput" role="status">公式6艇・展示タイム・展示ST・まくらぼ50走を照合後に表示します。未確認の場合は保留します。</pre></div></div><section><h3>12方法の比較（研究用）</h3><p>各方法の買い目を個別に表示します。必要な公式情報が不足する方法は保留します。</p><button type="button" id="predictTwelveMethods">12方法を表示</button><p id="twelveMethodStatus" role="status">開催日・場・レースを選び、ボタンを押してください。</p><pre id="twelveMethodOutput"></pre></section><details id="recent50CompareTab"><summary>まくらぼ50走反映：前後の点数・買い目比較（試算）</summary><p>6艇照合済みの場合のみ、直近50走の1着率から最大10点を加算して比較します。通常予想は変更しません。</p><pre id="recent50CompareOutput">予想実行後に表示します。</pre></details><details><summary>まくらぼ着順別ヒートマップ比較（試算）</summary><pre id="positionHeatmapOutput">まくらぼ取得後に予想を実行してください。</pre></details><details><summary>開催場の一括照合（任意・詳細）</summary><p><button id="schedule">開催場の一括照合（任意）</button></p><p id="scheduleStatus" role="status">公式出走表を確認できたレースだけ選択できます。</p><div id="scheduleOutput"></div><small>一括照合は参考情報です。開催の有無・出走表はレース取得時に公式確認し、未確認の情報は補いません。</small></details><p id="status" role="status"></p><p class="table-hint">選手比較表：横に指で動かすか、下の「右へ」「左へ」を押してください。</p><div class="comparison-controls"><button type="button" id="comparisonLeft">◀ 左へ</button><button type="button" id="comparisonRight">右へ ▶</button></div><div class="comparison-scroll" role="region" aria-label="出走選手の公式成績比較表（左右スクロール可能）" tabindex="0"><table id="comparison" style="border-collapse:collapse;width:max-content;min-width:100%;font-size:.84rem"><thead><tr><th>艇</th><th>選手名</th><th>登録番号</th><th>全国勝率</th><th>全国2連対率</th><th>全国3連対率</th><th>当地勝率</th><th>当地2連対率</th><th>当地3連対率</th><th>モーター</th><th>モーター2連対率</th><th>モーター3連対率</th><th>平均ST</th><th>展示タイム</th><th>展示ST</th><th>進入</th><th>チルト</th><th>まくらぼ50走</th></tr></thead><tbody id="comparisonBody"><tr><td colspan="18">レースを選んで「公式データを確認」を押してください</td></tr></tbody></table></div><small>選手の全国・当地2連対率／3連対率、モーター2連対率／3連対率を復元しました。公式照合できた場合のみ表示します。1着率・2着率・3着率の個別値はこの取得元からは未取得です。平均STは公式から個別に照合できた場合のみ表示します。まくらぼ50走は未確認です。</small><h3>選手の入賞率比較（公式照合済みのみ）</h3><div id="finishRateSummary" role="status">レースを選んで公式データを確認してください。</div><details><summary>公式データの取得結果・診断ログ</summary><pre id="output"></pre></details><h3>出走選手・診断ポイント</h3><div id="racerPoints" role="status">公式データ確認後に表示します。未確認項目は加点しません。</div></section>
 <section><h2>過去レースの予想・確定結果比較</h2><p>上で開催日・競艇場・レースを選択してください。Boat Score 2と同じ予想APIで再計算し、公式の確定着順と照合します。</p><button id="compareHistorical">選択した過去レースを予想・結果照合</button><pre id="compareHistoricalOutput">未実行</pre><small>過去時点の保存済み予想ではありません。取得できる現在の公式成績で再計算する場合があり、朝8時の的中実績とは区別します。まくらぼと直前情報が未取得なら比較に含みません。</small></section><section><h2>まくらぼ直近50走</h2><p>開催日・競艇場・レースを選び、自動検索できます。空白の着順回数は0、49走は49走として照合します。</p><button type="button" id="searchMakulaboInBoatScore">まくらぼを自動検索</button><p id="makulaboSearchStatus" role="status"></p><div id="makulaboSearchResult"></div><p><a id="openMakulaboForRace" href="/tools/makulabo-screenshot">画像で確認・手動取り込み</a></p></section>
 <section><h2>本命・穴・大荒れランキング</h2><p class="warn">朝8時のサーバー集計は開発版です。保存結果ボタンから取得状況を確認できます。未確認データは補完せず、評価は暫定・未検証として表示します。</p><button id="screen">選択場の暫定分析を確認</button><p id="screenStatus" role="status"></p><pre id="screenOutput"></pre><small>選択場のみ・オンデマンド分析。検証済みの的中確率ではありません。</small></section>
 </main><script>
@@ -344,6 +344,42 @@ for(const el of [day,venue,race])el.addEventListener('change',syncMakulaboLink);
 syncMakulaboLink();
 let makulaboSearchToken=0,verifiedMakulabo=null;
 let lastComparisonPrediction=null;
+let trialConditions={key:null,wind:'',speed:null,entry:null};
+function resetTrialConditions(){
+ trialConditions={key:null,wind:'',speed:null,entry:null};
+ document.getElementById('trialWind').value='';
+ document.getElementById('trialWindSpeed').value='';
+ document.getElementById('trialEntry').value='';
+ document.getElementById('trialStatus').textContent='未入力。入力は選択中のレースだけに適用します。';
+}
+document.getElementById('trialApply').onclick=function(){
+ const wind=document.getElementById('trialWind').value;
+ const speedText=document.getElementById('trialWindSpeed').value.trim();
+ const speed=speedText===''?null:Number(speedText);
+ const entryText=document.getElementById('trialEntry').value.replace(/[\s,，\-ー→＞>]/g,'');
+ const entry=entryText===''?null:entryText.split('').map(Number);
+ const status=document.getElementById('trialStatus');
+ if((speed!==null&&(!Number.isFinite(speed)||speed<0||speed>30))||
+    (wind&&speed===null)||(speed!==null&&!wind)||
+    (entry&& (entry.length!==6||entry.some(x=>!Number.isInteger(x)||x<1||x>6)||new Set(entry).size!==6))){
+  status.textContent='入力を確認してください。風向と風速は両方入力、進入は1〜6を重複なく6艇入力します。';return;
+ }
+ trialConditions={key:dateCode()+':'+venue.value+':'+race.value,wind,speed,entry};
+ status.textContent='手入力の条件を保存しました（選択レースのみ・未検証の試算）。';
+ updateCombinedPredictionPanel();
+};
+document.getElementById('trialClear').onclick=function(){resetTrialConditions();updateCombinedPredictionPanel();};
+function trialPicks(rows){
+ const scores=new Map(rows.map(x=>[x.boat,x.score])),comb=[];
+ for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++){
+  if(a===b||a===c||b===c)continue;
+  comb.push({boats:[a,b,c],strength:scores.get(a)*.56+scores.get(b)*.29+scores.get(c)*.15});
+ }
+ comb.sort((a,b)=>b.strength-a.strength||a.boats.join('').localeCompare(b.boats.join('')));
+ const main=comb.slice(0,6).map(x=>x.boats),used=new Set(main.map(x=>x.join('-')));
+ const upset=comb.filter(x=>x.boats[0]>=4&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
+ return {main,upset};
+}
 function updateCombinedPredictionPanel(){
  const out=document.getElementById('combinedPredictionOutput');
  if(!out)return;
@@ -362,6 +398,31 @@ function updateCombinedPredictionPanel(){
  const main=comparison.match(/【本命6点】\n反映前：[^\n]*\n反映後：([^\n]*)/);
  const upset=comparison.match(/【穴6点】\n反映前：[^\n]*\n反映後：([^\n]*)/);
  if(!main||!upset){out.textContent='保留：6艇の評価点と買い目を照合できません。';return;}
+ const active=trialConditions.key===current.key?trialConditions:null;
+ if(active&&(active.entry||active.wind)){
+  const base=d.rankedScores;
+  if(!Array.isArray(base)||base.length!==6||new Set(base.map(x=>Number(x.boat))).size!==6||
+    !base.every(x=>Number.isInteger(Number(x.boat))&&Number.isFinite(x.score))){
+   out.textContent='保留：進入・風の再計算に必要な公式6艇の点数がありません。';return;
+  }
+  const rows=base.map(x=>{
+   const boat=Number(x.boat),recentPoints=recent.find(y=>y.boat===boat).points;
+   const course=active.entry?active.entry.indexOf(boat)+1:boat;
+   // Small, uncalibrated scenario adjustments: never label these as verified probabilities.
+   const entryPoints=active.entry?(3.5-course)*.7:0;
+   const windPoints=active.wind==='head'&&active.speed!==null?(course>=4?1:-1)*Math.min(active.speed,10)*.12:
+     active.wind==='tail'&&active.speed!==null?(course<=3?1:-1)*Math.min(active.speed,10)*.12:0;
+   return {boat,score:x.score+recentPoints+entryPoints+windPoints};
+  });
+  const picks=trialPicks(rows);
+  const format=arr=>arr.map((x,i)=>(i+1)+'. '+x.join('-')).join('\n');
+  out.textContent='【本命】6点\n'+format(picks.main)+'\n\n【穴】6点\n'+format(picks.upset)+
+   '\n\n【手入力の試算条件】\n進入予測：'+(active.entry?active.entry.join('-'):'未入力')+
+   '\n風：'+(active.wind?({head:'向かい風',tail:'追い風',cross:'横風',calm:'無風'}[active.wind])+' '+active.speed+'m/s':'未入力')+
+   '\n展示タイム・展示ST：公式反映済み\nまくらぼ50走：6艇照合済み'+
+   '\n※風・進入の加点は仮の感度設定で実測検証前です。横風は方向別の補正をしません。風・進入の手入力は公式情報ではありません。';
+  return;
+ }
  const lines=value=>value.split('、').map((x,i)=>(i+1)+'. '+x).join('\n');
  out.textContent='【本命】6点\n'+lines(main[1])+'\n\n【穴】6点\n'+lines(upset[1])+
   '\n\n【反映条件】\n公式展示タイム：反映済み\n公式展示ST：反映済み\nまくらぼ50走：6艇照合済み（最大10点加算）'+
@@ -617,6 +678,7 @@ document.getElementById('morningCheck').onclick=async function(){const st=docume
 document.getElementById('schedule').onclick=refreshRunningVenues;
 let selectedPredictionController=null;
 function clearSelectedPrediction(){
+ resetTrialConditions();
  if(selectedPredictionController){selectedPredictionController.abort();selectedPredictionController=null;}
  const button=document.getElementById('predictSelected');
  button.disabled=false;
