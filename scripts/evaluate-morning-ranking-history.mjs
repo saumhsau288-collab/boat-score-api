@@ -53,6 +53,7 @@ export function evaluateMorningRankingHistory(snapshot,results){
   summary.byCategory[category]={saved:picks.length,matched,missingPredictionOrder,
    notEvaluable:missingPredictionOrder,unmatched:picks.length-matched-missingPredictionOrder,
    firstHits,topTwoExactHits,topThreeExactHits,
+   evaluationStatus:matched?'evaluated_verified_official_results':missingPredictionOrder===picks.length&&picks.length?'not_evaluable_missing_saved_prediction_order':'no_verified_official_matches',
    firstRate:matched?firstHits/matched:null,
    topTwoExactRate:matched?topTwoExactHits/matched:null,
    topThreeExactRate:matched?topThreeExactHits/matched:null};
