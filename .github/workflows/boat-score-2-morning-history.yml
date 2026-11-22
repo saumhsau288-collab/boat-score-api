@@ -8,14 +8,21 @@ on:
         required: true
         default: '20261122'
         type: string
+  schedule:
+    # 01:00 JST on the following day; evaluate the previous Japan calendar date.
+    - cron: '0 16 * * *'
 
 permissions:
   contents: read
 
+concurrency:
+  group: boat-score-2-morning-history
+  cancel-in-progress: false
+
 jobs:
   evaluate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout isolated Boat Score 2 development code
         uses: actions/checkout@v4
@@ -26,18 +33,25 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate snapshot date
+      - name: Resolve and validate history date
         env:
-          HISTORY_DATE: ${{ inputs.date }}
+          REQUESTED_DATE: ${{ inputs.date }}
+          EVENT_NAME: ${{ github.event_name }}
         shell: bash
         run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "schedule" ]]; then
+            HISTORY_DATE=$(TZ=Asia/Tokyo date -d 'yesterday' +%Y%m%d)
+          else
+            HISTORY_DATE="$REQUESTED_DATE"
+          fi
           if [[ ! "$HISTORY_DATE" =~ ^20[0-9]{6}$ ]]; then
             echo "::error::Enter date as YYYYMMDD"
             exit 1
           fi
+          echo "HISTORY_DATE=$HISTORY_DATE" >> "$GITHUB_ENV"
+          echo "Evaluating immutable morning snapshot for $HISTORY_DATE"
       - name: Run independent official-result comparison
-        env:
-          HISTORY_DATE: ${{ inputs.date }}
         shell: bash
         run: |
           node scripts/test-evaluate-morning-ranking-history.mjs
@@ -46,9 +60,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: boat-score-2-morning-evidence-${{ inputs.date }}
+          name: boat-score-2-morning-evidence-${{ env.HISTORY_DATE }}
           path: |
-            morning-snapshot-${{ inputs.date }}.json
-            morning-official-comparison-${{ inputs.date }}.json
+            morning-snapshot-${{ env.HISTORY_DATE }}.json
+            morning-official-comparison-${{ env.HISTORY_DATE }}.json
           if-no-files-found: warn
           retention-days: 30
