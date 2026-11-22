@@ -46,5 +46,12 @@ export function evaluateTopTwoExclusions(cases) {
       if(pred.candidates['exclude'+t.excluded].every(b=>b!==finish[0]&&b!==finish[1]))t.success++;
     }
   }
-  return totals.map(t=>({...t,successRate:t.evaluated?t.success/t.evaluated:null}));
+  // Uniform random exclusions are a transparent reference, not a prediction model.
+  // P(no excluded boat in top 2) = C(4,n) / C(6,n), for n=1..3.
+  const randomBaselines={1:2/3,2:2/5,3:1/5};
+  return totals.map(t=>({...t,
+    successRate:t.evaluated?t.success/t.evaluated:null,
+    randomBaseline:randomBaselines[t.excluded],
+    improvementVsRandom:t.evaluated?t.success/t.evaluated-randomBaselines[t.excluded]:null
+  }));
 }
