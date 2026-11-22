@@ -5,10 +5,10 @@ on:
       date:
         description: "Historical date YYYYMMDD"
         required: true
-        default: "20261122"
+        default: "20261121"
         type: string
       venue:
-        description: "Venue number 1-24"
+        description: "Venue 1-24 or comma-separated venues (e.g. 2,3,4)"
         required: true
         default: "1"
         type: string
