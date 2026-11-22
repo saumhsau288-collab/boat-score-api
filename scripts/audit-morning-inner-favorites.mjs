@@ -29,13 +29,18 @@ function sixPicks(order){
 for(const item of main){
  const key=[date,item.venue,item.race].join(':');
  const order=item.predictedOrder;
+ const scoreRows=item.rankedScores;
+ const scoresValid=Array.isArray(scoreRows)&&scoreRows.length===6&&new Set(scoreRows.map(x=>x.boat)).size===6&&
+  scoreRows.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score));
+ const byBoat=scoresValid?new Map(scoreRows.map(x=>[x.boat,x.score])):null;
  const captureValid=typeof item.capturedAt==='string'&&!Number.isNaN(Date.parse(item.capturedAt));
  const orderValid=Array.isArray(order)&&order.length===6&&new Set(order).size===6&&
   order.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
- if(!captureValid||!orderValid){
-  held.push({key,reason:!captureValid&&!orderValid?'missing_capture_and_order':!captureValid?'missing_capture':'missing_order',
+ if(!captureValid||!orderValid||!scoresValid){
+  const missing=[...(!captureValid?['capture']:[]),...(!orderValid?['order']:[]),...(!scoresValid?['scores']:[])];
+  held.push({key,reason:'missing_'+missing.join('_'),
    capturedAtPresent:Boolean(item.capturedAt),orderPresent:Array.isArray(order),
-   orderCount:Array.isArray(order)?order.length:null,
+   scoresPresent:Array.isArray(scoreRows),orderCount:Array.isArray(order)?order.length:null,
    snapshotFields:Object.keys(item).sort()});continue;
  }
  const groupName=order[0]===1?(order[1]<=3?'boat1_first_inner_second':'boat1_first_outer_second'):(order[0]<=3?(order[1]<=3?'boat2or3_first_inner_second':'boat2or3_first_outer_second'):'not_inner_first');
@@ -51,14 +56,23 @@ for(const item of main){
  }
  const picks=sixPicks(order),hit=picks.includes(actual.slice(0,3).join('-'));
  const flags={winner:order[0]===actual[0],topTwoOrdered:order[0]===actual[0]&&order[1]===actual[1],trifectaSix:hit,innerTopTwo:actual[0]<=3&&actual[1]<=3};
- for(const name of ['all_main',groupName,'lead_ge_6'+(Number(item.lead)>=6?'_yes':'_no')]){
+ const innerTopTwoCount=order.slice(0,2).filter(x=>x<=3).length;
+ const innerScores=[1,2,3].map(boat=>byBoat.get(boat));
+ const outerScores=[4,5,6].map(boat=>byBoat.get(boat));
+ const innerOuterGap=Math.max(...innerScores)-Math.max(...outerScores);
+ const topInner=[...innerScores].sort((a,b)=>b-a);
+ const highInnerPair=innerTopTwoCount===2&&topInner[1]>Math.max(...outerScores);
+ for(const name of ['all_main',groupName,'lead_ge_6'+(Number(item.lead)>=6?'_yes':'_no'),
+    'inner_top2_count_'+innerTopTwoCount,
+    highInnerPair?'inner_pair_above_all_outer':'not_inner_pair_above_all_outer',
+    'inner_outer_gap_'+(innerOuterGap>=5?'at_least_5':innerOuterGap>=0?'zero_to_5':'below_zero')]){
   const g=group(name);g.eligible++;for(const [k,v] of Object.entries(flags))if(v)g[k]++;
  }
- details.push({key,group:groupName,lead:item.lead,predictedOrder:order,actual:actual.slice(0,3),referenceSixPicks:picks,flags});
+ details.push({key,group:groupName,lead:item.lead,innerTopTwoCount,innerOuterGap,highInnerPair,rankedScores:scoreRows,predictedOrder:order,actual:actual.slice(0,3),referenceSixPicks:picks,flags});
 }
 const holdReasons=Object.fromEntries([...new Set(held.map(x=>x.reason))].map(k=>[k,held.filter(x=>x.reason===k).length]));
 const result={date,holdReasons,mode:'saved_morning_main_only',snapshotStatus:snapshot.status,shortlist:main.length,eligible:details.length,held,
- caveat:'This evaluates saved ranked order and a transparent reference six-pick formula, NOT the app independent six methods. Top-two inner strength uses relative rank, NOT absolute raw scores. Morning capturedAt is present but no explicit deadline check is available.',
+ caveat:'This evaluates saved ranked order and a transparent reference six-pick formula, NOT the app independent six methods. Inner strength uses saved raw scores for top-two ranking and the two-high-inner versus all outer threshold; neither is a calibrated winning probability. Morning capturedAt is present but no explicit deadline check is available.',
  stats,details};
 const fs=await import('node:fs');
 const file='morning-inner-favorites-'+date+'.json';
