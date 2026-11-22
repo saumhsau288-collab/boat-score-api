@@ -21,7 +21,13 @@ export function auditTwelveMethodReadiness(snapshots){
     if(d.status==='predicted'){m.ready++;row.ready.push(id);}
     else{m.abstained++;m.reasons[d.reason]=(m.reasons[d.reason]??0)+1;row.abstained.push({id,reason:d.reason});}
    }
-  }catch(e){row.invalid=String(e.message||e);}
+  }catch(e){
+   row.invalid=String(e.message||e);
+   // A structurally invalid snapshot is not an evaluated method or a miss.
+   // Explain why no method could be run without inventing entry courses.
+   row.blockedMethods=[...METHOD_IDS];
+   row.blockedReason='invalid_six_racer_entry_course_snapshot';
+  }
   rows.push(row);
  }
  return {totalSnapshots:snapshots.length,validSnapshots:rows.filter(r=>r.invalid===null).length,
