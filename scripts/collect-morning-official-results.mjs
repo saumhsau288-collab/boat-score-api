@@ -16,6 +16,14 @@ if(!snapshotResponse.ok)throw Error('Saved snapshot unavailable: '+snapshotRespo
 const snapshot=snapshotResponse.data;
 if(snapshot.date!==date||snapshot.status!=='completed'||snapshot.calibrationStatus!=='not_yet_calibrated')
  throw Error('Snapshot is not a completed, uncalibrated morning record');
+// Preserve the unmodified morning snapshot for independent inspection even if validation fails.
+const snapshotFile='morning-snapshot-'+date+'.json';
+fs.writeFileSync(snapshotFile,JSON.stringify(snapshot,null,2)+'\n');
+console.log('Original morning snapshot saved to '+snapshotFile);
+// Validate every saved prediction BEFORE requesting dozens of official results.
+// A mismatch must be exposed, not repaired using post-race information.
+evaluateMorningRankingHistory(snapshot,[]);
+console.log('Saved morning prediction structure validated before official-result collection');
 const candidates=new Map();
 for(const category of ['main','upset','chaos']){
  const picks=snapshot.categories?.[category];
