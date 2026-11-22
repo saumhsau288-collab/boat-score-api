@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {evaluateSavedTrifectaSelections} from './evaluate-saved-trifecta-selections.mjs';
+const base={date:'20261122',venue:1,race:1,method:'traditional',category:'main',capturedAt:'2026-11-22T05:00:00.000Z',deadlineAt:'2026-11-22T06:21:00.000Z',picks:['3-1-5','3-5-1','1-3-5','3-1-2','1-5-3','3-1-6']};
+const result={date:'20261122',venue:1,race:1,resultVerified:true,officialFinish:[2,1,3,6,5,4]};
+let x=evaluateSavedTrifectaSelections([base],[result]);
+assert.equal(x.totals.misses,1);assert.equal(x.totals.firstBoatHits,0);assert.equal(x.hitRate,0);
+x=evaluateSavedTrifectaSelections([{...base,picks:['2-1-3',...base.picks.slice(0,5)]}],[result]);
+assert.equal(x.totals.hits,1);assert.equal(x.totals.firstTwoExactHits,1);
+x=evaluateSavedTrifectaSelections([{...base,capturedAt:'2026-11-22T07:00:00.000Z'}],[result]);
+assert.equal(x.totals.notEvaluable,1);assert.equal(x.hitRate,null);
+x=evaluateSavedTrifectaSelections([base],[]);
+assert.equal(x.totals.notEvaluable,1);
+x=evaluateSavedTrifectaSelections([{...base,picks:undefined}],[result]);
+assert.equal(x.totals.notEvaluable,1);
+assert.throws(()=>evaluateSavedTrifectaSelections([base,base],[result]),/duplicate/);
+assert.throws(()=>evaluateSavedTrifectaSelections([base],[{...result,resultVerified:false}]),/verified/);
+console.log('Saved six-pick evaluator: miss, hit, first-boat failure, post-deadline hold, missing evidence and duplicate guards passed.');
