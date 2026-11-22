@@ -22,3 +22,12 @@ test('unknown official result remains unmatched',()=>{
  const r=evaluateLockedProspectivePredictions([prediction],[]);
  assert.equal(r.unmatched,1);assert.equal(r.matched,0);
 });
+
+test('three repeated prediction keys remain excluded',()=>{
+ const r=evaluateLockedProspectivePredictions([prediction,prediction,prediction],[result]);
+ assert.equal(r.matched,0);assert.equal(r.admittedPredictions,0);
+});
+test('prediction cannot precede capture',()=>{
+ const r=evaluateLockedProspectivePredictions([{...prediction,predictedAt:'2026-11-22T09:59:00+09:00'}],[result]);
+ assert.equal(r.matched,0);
+});
