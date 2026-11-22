@@ -12,5 +12,7 @@ assert.equal(result.detail[0].cases.exclude_lowest_2.picks.length,6);
 assert.equal(result.summary.baseline_no_exclusion.firstCorrect,0);
 assert.equal(replayExclusionVariants([{...base,capturedAt:'2026-11-22T07:00:00Z'}]).held.length,1);
 assert.equal(replayExclusionVariants([{...base,boats:base.boats.map(({top2Rate,...x})=>x)}]).summary.exclude_weak_top2_1.eligible,0);
+assert.equal(replayExclusionVariants([{...base,boats:base.boats.map(({entryCourse,...x})=>x)}]).summary.exclude_score_course_1.eligible,0);
+assert.equal(replayExclusionVariants([{...base,boats:base.boats.map(x=>({...x,entryCourse:1}))}]).summary.exclude_score_course_2.eligible,0);
 assert.throws(()=>replayExclusionVariants([base,base]),/Duplicate/);
 console.log('Historical exclusion replay: eight variants, six picks, no post-deadline evidence, missing metric hold, duplicate guards passed.');
