@@ -24,7 +24,7 @@ console.log('Original morning snapshot saved to '+snapshotFile);
 // A mismatch must be exposed, not repaired using post-race information.
 evaluateMorningRankingHistory(snapshot,[]);
 console.log('Saved morning prediction structure validated before official-result collection');
-const candidates=new Map(),legacyWithoutOrder=[];
+const candidates=new Map(),legacyWithoutOrder=[],held=[];
 for(const category of ['main','upset','chaos']){
  const picks=snapshot.categories?.[category];
  if(!Array.isArray(picks))throw Error('Missing ranking category '+category);
@@ -34,6 +34,10 @@ for(const category of ['main','upset','chaos']){
   const key=p.venue+':'+p.race;
   if(candidates.has(key)||legacyWithoutOrder.some(x=>x.key===key))
    throw Error('Duplicate ranked candidate');
+  if(date>='20261123'&&(!p.capturedAt||Number.isNaN(Date.parse(p.capturedAt)))){
+   held.push({venue:p.venue,race:p.race,reason:'prediction_capture_timestamp_missing'});
+   continue;
+  }
   if(p.predictedOrder===undefined){
    legacyWithoutOrder.push({key,category,venue:p.venue,race:p.race,reason:'saved_prediction_order_missing'});
    continue;
@@ -41,7 +45,7 @@ for(const category of ['main','upset','chaos']){
   candidates.set(key,p);
  }
 }
-const results=[],held=[];
+const results=[];
 for(const p of candidates.values()){
  const url=base+'/api/official/result?date='+date+'&venue='+p.venue+'&race='+p.race;
  try{
