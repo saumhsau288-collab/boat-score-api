@@ -24,4 +24,6 @@ test('invalid course snapshot excluded from valid denominator',()=>{
  const r=auditTwelveMethodReadiness([bad]);
  assert.equal(r.validSnapshots,0);assert.equal(r.invalidSnapshots,1);
  assert.equal(r.methods['favorite-1'].ready,0);
+ assert.equal(r.rows[0].blockedMethods.length,12);
+ assert.equal(r.rows[0].blockedReason,'invalid_six_racer_entry_course_snapshot');
 });
