@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 const categories=['main','upset','chaos'];
 export function isValidMorningCaptureTimestamp(value){
- return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(value)&&
+ return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)&&
    Number.isFinite(Date.parse(value));
 }
 export function evaluateMorningRankingHistory(snapshot,results){
