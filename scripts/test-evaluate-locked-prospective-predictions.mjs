@@ -41,3 +41,8 @@ test('verification after race start is rejected',()=>{
  const late={...verification,verifiedAt:'2026-11-22T10:12:00+09:00'};
  assert.equal(evaluateLockedProspectivePredictions([{...prediction,verification:late}],[result]).matched,0);
 });
+
+test('prediction timestamp without timezone is not trusted',()=>{
+ const r=evaluateLockedProspectivePredictions([{...prediction,predictedAt:'2026-11-22T10:02:00'}],[result]);
+ assert.equal(r.matched,0);assert.equal(r.rejected[0].reason,'rule_or_prediction_time_invalid');
+});
