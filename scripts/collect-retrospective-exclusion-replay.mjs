@@ -1,12 +1,12 @@
 // Retrospective diagnostics only: re-run the CURRENT app scoring on historical race pages.
 // Historical endpoints can be revised; these are NOT immutable pre-race predictions.
-// Usage: node scripts/collect-retrospective-exclusion-replay.mjs YYYYMMDD [venue] [race]
+// Usage: node scripts/collect-retrospective-exclusion-replay.mjs YYYYMMDD [venue|venue,venue] [race]
 import fs from 'node:fs';
 import {replayExclusionVariants} from './replay-exclusion-variants.mjs';
 const [date,venueArg,raceArg]=process.argv.slice(2);
-if(!/^20\d{6}$/.test(date||'')||(venueArg&&!/^([1-9]|1\d|2[0-4])$/.test(venueArg))||(raceArg&&!/^([1-9]|1[0-2])$/.test(raceArg)))throw Error('Usage: node scripts/collect-retrospective-exclusion-replay.mjs YYYYMMDD [venue] [race]');
+if(!/^20\d{6}$/.test(date||'')||(venueArg&&!/^([1-9]|1\d|2[0-4])(,([1-9]|1\d|2[0-4]))*$/.test(venueArg))||(raceArg&&!/^([1-9]|1[0-2])$/.test(raceArg)))throw Error('Usage: node scripts/collect-retrospective-exclusion-replay.mjs YYYYMMDD [venue|venue,venue] [race]');
 const base='https://boat-score-2-preview.saumh-sau-288.workers.dev';
-const venues=venueArg?[Number(venueArg)]:Array.from({length:24},(_,i)=>i+1);
+const venues=venueArg?[...new Set(venueArg.split(',').map(Number))]:Array.from({length:24},(_,i)=>i+1);
 const races=raceArg?[Number(raceArg)]:Array.from({length:12},(_,i)=>i+1);
 const requests=[],held=[];
 async function json(path){
@@ -33,9 +33,10 @@ for(const venue of venues)for(const race of races){
 }
 const strict=replayExclusionVariants(requests);
 const diagnostic=replayExclusionVariants(requests,{mode:'retrospective_diagnostic'});
-const out={date,mode:'retrospective_current_app_diagnostic_not_pre_race_validation',
+const venueSummaries=Object.fromEntries(venues.map(venue=>{const subset=requests.filter(x=>x.venue===venue);const x=replayExclusionVariants(subset,{mode:'retrospective_diagnostic'});return [venue,{races:subset.length,summary:x.summary}]}));
+const out={date,venues,venueSummaries,mode:'retrospective_current_app_diagnostic_not_pre_race_validation',
  generatedAt:new Date().toISOString(),requests:requests.length,held,strictEvaluation:strict,retrospectiveDiagnostic:diagnostic,
  evidence:requests,note:'Reconstructed rows intentionally fail strict pre-race checks. Diagnostic comparisons use current app scoring after the race, not immutable historical predictions.'};
-const file='retrospective-exclusion-'+date+(venueArg?'-'+venueArg:'')+(raceArg?'-'+raceArg:'')+'.json';
+const file='retrospective-exclusion-'+date+(venueArg?'-'+venueArg.replaceAll(',','_'):'')+(raceArg?'-'+raceArg:'')+'.json';
 fs.writeFileSync(file,JSON.stringify(out,null,2)+'\n');
 console.log(JSON.stringify({file,requests:requests.length,held:held.length,strictEligible:strict.summary.baseline_no_exclusion.eligible,retrospectiveEligible:diagnostic.summary.baseline_no_exclusion.eligible,reason:'historical reconstruction lacks pre-deadline captured scores'},null,2));
