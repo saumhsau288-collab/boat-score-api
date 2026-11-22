@@ -53,7 +53,11 @@ const enriched=rows.map(x=>{
   boat1FixedSixHit:fixed.includes(actual),boat1SecondSixHit:second.includes(actual),balancedSecondSixHit:balanced.includes(actual)};
 });
 const second=enriched.filter(x=>x.actual[1]===1);
+const gapBands=[{name:'gap_under_3',min:-Infinity,max:3},{name:'gap_3_to_under_6',min:3,max:6},{name:'gap_6_to_under_12',min:6,max:12},{name:'gap_12_to_under_20',min:12,max:20},{name:'gap_at_least_20',min:20,max:Infinity}];
+const scoreGapBands=Object.fromEntries(gapBands.map(b=>[b.name,group(enriched.filter(x=>x.gap>=b.min&&x.gap<b.max))]));
+const winnerRanks=Object.fromEntries([1,2,3,4,5,6].map(n=>[String(n),group(enriched.filter(x=>x.winnerRank===n))]));
 const report={mode:'retrospective_boat1_second_diagnostic',eligible:enriched.length,
+ scoreGapBands,winnerRanks,
  totals:group(enriched),boat1Second:group(second),
  winnerRankAmongBoat1Second:Object.fromEntries([2,3,4,5,6].map(n=>[n,second.filter(x=>x.winnerRank===n).length])),
  scoreGapWhenBoat1Second:second.map(x=>({key:x.key,gap:x.gap,winner:x.winner,winnerRank:x.winnerRank,actual:x.actual,
@@ -63,5 +67,5 @@ const report={mode:'retrospective_boat1_second_diagnostic',eligible:enriched.len
  note:'All six-pick strategies are illustrative deterministic comparisons, not the app original six methods. Current historical scores were reconstructed after the event. No start, motor or exhibition data are available in this report; do not infer their effect.'};
 fs.writeFileSync('historical-boat1-second-analysis.json',JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({file:'historical-boat1-second-analysis.json',totals:report.totals,
- boat1Second:report.boat1Second,winnerRankAmongBoat1Second:report.winnerRankAmongBoat1Second,
+ boat1Second:report.boat1Second,scoreGapBands:report.scoreGapBands,winnerRanks:report.winnerRanks,winnerRankAmongBoat1Second:report.winnerRankAmongBoat1Second,
  scoreGapWhenBoat1Second:report.scoreGapWhenBoat1Second},null,2));
