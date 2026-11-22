@@ -1,6 +1,7 @@
 // Research-only audit of old saved API responses against twelve new method requirements.
 // Ranked ticket slots and aggregate scores are NOT substitutes for six-racer feature vectors.
 import {auditTwelveMethodReadiness} from './audit-twelve-method-readiness.mjs';
+import {adaptExistingScoreInputsToTwelve} from './adapt-existing-score-inputs-to-twelve.mjs';
 export function auditArchivedCaptureForTwelveMethods(capture){
  if(!Array.isArray(capture?.records))throw TypeError('capture.records[] required');
  const ready=capture.records.filter(r=>r?.httpStatus===200&&r?.response?.ready===true);
@@ -14,7 +15,7 @@ export function auditArchivedCaptureForTwelveMethods(capture){
   if(racers.length!==6)continue;
   completeSixBoatFeatureVectors++;
   for(const key of fieldNames)if(racers.every(x=>typeof x?.[key]==='number'&&Number.isFinite(x[key])))counts[key]++;
-  snapshots.push({date:r.date,venue:r.venue,race:r.race,racers});
+  snapshots.push(adaptExistingScoreInputsToTwelve({date:r.date,venue:r.venue,race:r.race,racers}).snapshot);
  }
  const readiness=auditTwelveMethodReadiness(snapshots);
  return {totalRecords:capture.records.length,readyOldRankedPredictions:ready.length,
