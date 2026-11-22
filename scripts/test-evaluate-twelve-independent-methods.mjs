@@ -15,7 +15,7 @@ test('reports twelve independent method rates and deduplicated six/twelve covera
 });
 test('rejects incomplete methods without silently substituting picks',()=>{
  const out=evaluateTwelveIndependentMethods([{...p,methods:{...methods,'upset-6':undefined}}],[r]);
- assert.equal(out.totals.races,0);assert.equal(out.totals.missingMethods,1);
+ assert.equal(out.totals.races,0);assert.equal(out.totals.missingMethods,1);assert.equal(out.methods['favorite-1'].evaluated,1);assert.equal(out.coverage.favoriteSix,1);assert.equal(out.coverage.upsetSix,null);
 });
 test('unverified pre-race evidence is excluded',()=>{
  assert.equal(evaluateTwelveIndependentMethods([{...p,preRaceVerified:false}],[r]).totals.excluded,1);
@@ -28,4 +28,15 @@ test('rejects fabricated late write times',()=>{
 test('rejects malformed official finish order',()=>{
  const out=evaluateTwelveIndependentMethods([p],[{...r,finishOrder:[1,2,3,4,5,7]}]);
  assert.equal(out.totals.excluded,1);
+});
+
+test('different per-method denominators are reported without treating missing as a miss',()=>{
+ const incomplete={...p,methods:{...methods,'favorite-2':undefined}};
+ const out=evaluateTwelveIndependentMethods([p,{...incomplete,race:4}],[r,{...r,race:4}]);
+ assert.equal(out.methods['favorite-1'].evaluated,2);
+ assert.equal(out.methods['favorite-2'].evaluated,1);
+ assert.equal(out.methods['favorite-2'].missing,1);
+ assert.equal(out.totals.favoriteRaces,1);
+ assert.equal(out.totals.upsetRaces,2);
+ assert.equal(out.totals.races,1);
 });
