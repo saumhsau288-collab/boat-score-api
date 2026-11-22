@@ -8,7 +8,7 @@ if(!/^20\d{6}$/.test(date||'')||(venueArg&&!/^([1-9]|1\d|2[0-4])$/.test(venueArg
 const base='https://boat-score-2-preview.saumh-sau-288.workers.dev';
 const venues=venueArg?[Number(venueArg)]:Array.from({length:24},(_,i)=>i+1);
 const races=raceArg?[Number(raceArg)]:Array.from({length:12},(_,i)=>i+1);
-const requests=[],held=[],results=[];
+const requests=[],held=[];
 async function json(path){
  const res=await fetch(base+path,{signal:AbortSignal.timeout(35000)});
  return {ok:res.ok,data:await res.json()};
