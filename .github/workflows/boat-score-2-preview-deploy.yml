@@ -129,4 +129,22 @@ jobs:
           if (missing.length) throw new Error('Missing deployed screenshot tool controls: ' + missing.join(', '));
           console.log('Deployed screenshot tool includes all expected controls');
           NODE
-
+      - name: Smoke-test deployed twelve-method UI and endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://boat-score-2-preview.saumh-sau-288.workers.dev"
+          curl --fail --silent --show-error --max-time 25 "$BASE/" -o preview-home.html
+          node <<'NODE'
+          const fs=require('node:fs');
+          const html=fs.readFileSync('preview-home.html','utf8');
+          for(const id of ['predictTwelveMethods','twelveMethodStatus','twelveMethodOutput']) {
+            if(!html.includes('id="'+id+'"'))throw new Error('Missing deployed twelve-method control: '+id);
+          }
+          if(!html.includes('/api/predict/independent-methods'))throw new Error('Twelve-method API is not wired in deployed UI');
+          console.log('Deployed preview contains all twelve-method controls and API wiring');
+          NODE
+          status=$(curl --silent --show-error --max-time 25 -o endpoint.json -w '%{http_code}' "$BASE/api/predict/independent-methods?date=invalid&venue=1&race=1")
+          test "$status" = 400 || { echo "::error::Unexpected twelve-method endpoint HTTP $status"; exit 1; }
+          node -e "const d=require('./endpoint.json');if(d.error!=='Invalid date, venue or race')process.exit(1)"
+          echo 'Deployed twelve-method API responds and validates inputs'
