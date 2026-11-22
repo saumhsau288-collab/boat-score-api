@@ -21,6 +21,9 @@ jobs:
         run: |
           DATE_JST="$(TZ=Asia/Tokyo date +%Y%m%d)"
           node scripts/run-official-twelve-input-probe.mjs "$DATE_JST" 02 1 official-probe.json
+      - name: Require successful extraction for green status
+        run: |
+          node -e "const r=require('./official-probe.json');if(r.status!=='mapped'||r.racers?.length!==6){console.error('Official extraction unsuccessful:',r.status,r.error||r.reason||'unknown');process.exit(1)}"
       - name: Summarize observed extraction without claiming forecast verification
         if: always()
         shell: bash
