@@ -1,0 +1,49 @@
+name: Boat Score 2 historical exclusion replay (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Historical date YYYYMMDD"
+        required: true
+        default: "20261122"
+        type: string
+      venue:
+        description: "Venue number 1-24"
+        required: true
+        default: "1"
+        type: string
+      race:
+        description: "Race number 1-12"
+        required: true
+        default: "1"
+        type: string
+permissions:
+  contents: read
+jobs:
+  retrospective:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout isolated Boat Score 2 development branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix-boat-score-2-syntax-20261115
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate replay logic
+        run: |
+          node scripts/test-replay-exclusion-variants.mjs
+          node --check scripts/collect-retrospective-exclusion-replay.mjs
+      - name: Replay current app on historical official pages
+        env:
+          DATE: ${{ inputs.date }}
+          VENUE: ${{ inputs.venue }}
+          RACE: ${{ inputs.race }}
+        run: node scripts/collect-retrospective-exclusion-replay.mjs "$DATE" "$VENUE" "$RACE"
+      - name: Save diagnostic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-retrospective-exclusion
+          path: retrospective-exclusion-*.json
+          if-no-files-found: error
