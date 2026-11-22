@@ -1,0 +1,19 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+
+const src=fs.readFileSync(new URL('../worker.js',import.meta.url),'utf8');
+const from=src.indexOf('function classifyDailyRaceCandidates(');
+const to=src.indexOf('\nfunction summarizeHistoricalOuterFollow(',from);
+assert.ok(from>=0&&to>from,'Production morning ranking function must be present');
+const classify=vm.runInNewContext(src.slice(from,to)+'\nclassifyDailyRaceCandidates;');
+const boats=[1,2,3,4,5,6].map((boat,i)=>({boat,score:30-i*5}));
+const row={date:'20261123',venue:1,race:1,officialVerified:true,statsVerified:true,rankedScores:boats};
+const outcome=classify([row]);
+const predictions=[...outcome.main,...outcome.upset,...outcome.chaos];
+assert.equal(predictions.length,1,'One verified race should be ranked once');
+assert.equal(predictions[0].predictedOrder.join(','),'1,2,3,4,5,6','Predicted order must persist in saved morning ranking');
+assert.equal(predictions[0].date,'20261123');
+assert.equal(predictions[0].status,'provisional_not_calibrated');
+assert.equal(classify([{...row,statsVerified:false}]).main.length,0,'Unverified metrics must not be ranked');
+console.log('Production morning ranking persists 6-boat predictedOrder; unverified records held.');
