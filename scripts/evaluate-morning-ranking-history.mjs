@@ -2,6 +2,10 @@
 // This evaluates only ranked candidates (up to 20 per category), NOT the 12 independent methods.
 import fs from 'node:fs';
 const categories=['main','upset','chaos'];
+export function isValidMorningCaptureTimestamp(value){
+ return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(value)&&
+   Number.isFinite(Date.parse(value));
+}
 export function evaluateMorningRankingHistory(snapshot,results){
  if(!snapshot||!/^20\d{6}$/.test(String(snapshot.date))||!snapshot.categories||
     !Array.isArray(results))throw Error('Invalid snapshot or results');
@@ -22,7 +26,7 @@ export function evaluateMorningRankingHistory(snapshot,results){
  for(const category of categories){
   const picks=snapshot.categories[category];
   if(!Array.isArray(picks)||picks.length>20)throw Error('Invalid ranking category');
-  let matched=0,firstHits=0,topTwoExactHits=0,topThreeExactHits=0,missingPredictionOrder=0;
+  let matched=0,firstHits=0,topTwoExactHits=0,topThreeExactHits=0,missingPredictionOrder=0,missingCaptureTimestamp=0,notEvaluable=0;
   for(const p of picks){
    if(String(p.date)!==String(snapshot.date)||p.category!==category||
       p.status!=='provisional_not_calibrated'||!Number.isInteger(p.venue)||
@@ -38,11 +42,14 @@ export function evaluateMorningRankingHistory(snapshot,results){
     }));
    const key=p.venue+':'+p.race;
    if(seen.has(key))throw Error('Duplicate ranked race');
-   // Missing predictions in older stored snapshots cannot be reconstructed after a race.
-   // Treat those entries as not evaluable, never as a loss or an invented success.
-   if(!Array.isArray(p.predictedOrder))missingPredictionOrder++;
+   // Missing evidence is neither a loss nor a hit, and cannot be reconstructed post-race.
+   const noOrder=p.predictedOrder===undefined;
+   const noCapture=String(snapshot.date)>='20261123'&&!isValidMorningCaptureTimestamp(p.capturedAt);
+   if(noOrder)missingPredictionOrder++;
+   if(noCapture)missingCaptureTimestamp++;
+   if(noOrder||noCapture)notEvaluable++;
    seen.add(key);
-   if(p.predictedOrder===undefined)continue;
+   if(noOrder||noCapture)continue;
    const result=byRace.get(key);
    if(!result)continue;
    matched++;
@@ -50,10 +57,10 @@ export function evaluateMorningRankingHistory(snapshot,results){
    if(p.predictedOrder.slice(0,2).every((x,i)=>x===result.officialFinish[i]))topTwoExactHits++;
    if(p.predictedOrder.slice(0,3).every((x,i)=>x===result.officialFinish[i]))topThreeExactHits++;
   }
-  summary.byCategory[category]={saved:picks.length,matched,missingPredictionOrder,
-   notEvaluable:missingPredictionOrder,unmatched:picks.length-matched-missingPredictionOrder,
+  summary.byCategory[category]={saved:picks.length,matched,missingPredictionOrder,missingCaptureTimestamp,
+   notEvaluable,unmatched:picks.length-matched-notEvaluable,
    firstHits,topTwoExactHits,topThreeExactHits,
-   evaluationStatus:matched?'evaluated_verified_official_results':missingPredictionOrder===picks.length&&picks.length?'not_evaluable_missing_saved_prediction_order':'no_verified_official_matches',
+   evaluationStatus:matched?'evaluated_verified_official_results':missingPredictionOrder===picks.length&&picks.length?'not_evaluable_missing_saved_prediction_order':missingCaptureTimestamp===picks.length&&picks.length?'not_evaluable_missing_capture_timestamp':'no_verified_official_matches',
    firstRate:matched?firstHits/matched:null,
    topTwoExactRate:matched?topTwoExactHits/matched:null,
    topThreeExactRate:matched?topThreeExactHits/matched:null};
