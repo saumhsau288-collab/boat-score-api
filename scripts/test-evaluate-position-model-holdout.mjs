@@ -27,3 +27,8 @@ test('training remains frozen as new dates arrive',()=>{
 test('missing a frozen training day fails closed',()=>{
  assert.throws(()=>evaluatePositionModelHoldout([...training.slice(1),makeDay('20261122')]),/frozen/);
 });
+
+test('duplicate and malformed daily dates fail closed',()=>{
+ assert.throws(()=>evaluatePositionModelHoldout([...training,makeDay('20261118'),makeDay('20261118')]),/duplicate evaluation date/);
+ assert.throws(()=>evaluatePositionModelHoldout([...training,makeDay('bad-date')]),/invalid evaluation date/);
+});
