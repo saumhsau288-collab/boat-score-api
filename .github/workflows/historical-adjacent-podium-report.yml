@@ -138,6 +138,10 @@ jobs:
           git fetch --depth=1 origin historical-research-data
           mkdir -p /tmp/boat-score-verified-daily
           git archive FETCH_HEAD verified-daily | tar -xf - -C /tmp/boat-score-verified-daily
+          echo 'ARCHIVE_AVAILABLE_DATES:'
+          find /tmp/boat-score-verified-daily/verified-daily -maxdepth 1 -type f -name '20??????.json' -printf '%f\\n' | sort
+          echo 'ARCHIVE_LATEST_DATE:'
+          find /tmp/boat-score-verified-daily/verified-daily -maxdepth 1 -type f -name '20??????.json' -printf '%f\\n' | sort | tail -1
       - name: Audit real official historical results
         run: |
           node scripts/audit-archived-adjacency.mjs /tmp/boat-score-verified-daily/verified-daily reports/historical-adjacent-podium.json
