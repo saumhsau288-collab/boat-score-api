@@ -10,6 +10,7 @@ if(!file){console.error('Usage: node scripts/evaluate-top-two-history.mjs verifi
 const rows=fs.readFileSync(file,'utf8').split(/\r?\n/).filter(Boolean).map((line,i)=>{
   try{return JSON.parse(line);}catch{throw Error('Invalid JSON at line '+(i+1));}
 });
+if(rows.length===0)throw Error('No verified pre-race records supplied');
 const seen=new Set(),cases=[];
 for(const [i,row] of rows.entries()){
   const key=[row.date,row.venue,row.race].join(':');
@@ -19,12 +20,15 @@ for(const [i,row] of rows.entries()){
   seen.add(key);
   const before=Date.parse(row.observedAt),cutoff=Date.parse(row.cutoffAt);
   if(row.sourceVerified!==true||row.resultVerified!==true||!Number.isFinite(before)||
-     !Number.isFinite(cutoff)||before>=cutoff)
+     !Number.isFinite(cutoff)||before>=cutoff||
+     new Date(cutoff+9*3600000).toISOString().slice(0,10).replace(/-/g,'')!==String(row.date)||
+     new Date(before+9*3600000).toISOString().slice(0,10).replace(/-/g,'')!==String(row.date))
     throw Error('Verified pre-race snapshot and official finish required at line '+(i+1));
   if(!Array.isArray(row.officialFinish)||row.officialFinish.length!==6||
      new Set(row.officialFinish).size!==6||
      row.officialFinish.some(n=>!Number.isInteger(n)||n<1||n>6))
     throw Error('Invalid official finish at line '+(i+1));
+  if(!row.snapshot||!Array.isArray(row.snapshot.racers))throw Error('Missing pre-race racers at line '+(i+1));
   cases.push({snapshot:row.snapshot,officialFinish:row.officialFinish});
 }
 const metrics=evaluateTopTwoExclusions(cases);
