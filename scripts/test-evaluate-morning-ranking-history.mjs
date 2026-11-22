@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {evaluateMorningRankingHistory} from './evaluate-morning-ranking-history.mjs';
+import {evaluateMorningRankingHistory,isValidMorningCaptureTimestamp} from './evaluate-morning-ranking-history.mjs';
 const order=[1,2,3,4,5,6];
 const pick=(category,race)=>({date:'20261122',venue:1,race,category,status:'provisional_not_calibrated',predictedOrder:order});
 const snapshot={date:'20261122',categories:{main:[pick('main',1)],upset:[pick('upset',2)],chaos:[]}};
@@ -27,4 +27,36 @@ const mixedResult=evaluateMorningRankingHistory(mixed,[result(1,order),result(3,
 assert.equal(mixedResult.byCategory.main.matched,1);
 assert.equal(mixedResult.byCategory.main.missingPredictionOrder,1);
 assert.equal(mixedResult.byCategory.main.firstRate,1);
-console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, five invalid-input guards and legacy exclusion passed. No real-race accuracy claimed.');
+
+const capture='2026-11-22T23:00:00.000Z'; // 08:00 JST, November 23
+assert.equal(isValidMorningCaptureTimestamp(capture),true);
+assert.equal(isValidMorningCaptureTimestamp('2026-11-22 23:00:00'),false);
+assert.equal(isValidMorningCaptureTimestamp('invalid'),false);
+const tomorrowPick=(category,race,additional={})=>({
+ ...pick(category,race),date:'20261123',capturedAt:capture,...additional
+});
+const nextSnapshot={date:'20261123',categories:{
+ main:[tomorrowPick('main',1),tomorrowPick('main',3,{capturedAt:undefined})],
+ upset:[tomorrowPick('upset',2,{predictedOrder:undefined})],
+ chaos:[]
+}};
+const nextResult=(race)=>({...result(race,order),date:'20261123'});
+const nextEval=evaluateMorningRankingHistory(nextSnapshot,[nextResult(1),nextResult(3),nextResult(2)]);
+assert.equal(nextEval.byCategory.main.saved,2);
+assert.equal(nextEval.byCategory.main.matched,1);
+assert.equal(nextEval.byCategory.main.missingCaptureTimestamp,1);
+assert.equal(nextEval.byCategory.main.notEvaluable,1);
+assert.equal(nextEval.byCategory.main.firstRate,1);
+assert.equal(nextEval.byCategory.upset.matched,0);
+assert.equal(nextEval.byCategory.upset.missingPredictionOrder,1);
+assert.equal(nextEval.byCategory.upset.notEvaluable,1);
+assert.equal(nextEval.byCategory.upset.firstRate,null);
+const bothMissing={...nextSnapshot,categories:{...nextSnapshot.categories,main:[
+ tomorrowPick('main',1,{capturedAt:undefined,predictedOrder:undefined})
+]}};
+const bothEval=evaluateMorningRankingHistory(bothMissing,[]);
+assert.equal(bothEval.byCategory.main.missingCaptureTimestamp,1);
+assert.equal(bothEval.byCategory.main.missingPredictionOrder,1);
+assert.equal(bothEval.byCategory.main.notEvaluable,1); // do not double-count missing evidence
+assert.equal(bothEval.byCategory.main.unmatched,0);
+console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, five invalid-input guards, legacy exclusion and capture-time denominators passed. No real-race accuracy claimed.');
