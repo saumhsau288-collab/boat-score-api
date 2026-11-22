@@ -2,7 +2,8 @@ import {assessProspectiveAdmission} from './assess-prospective-admission.mjs';
 
 // Research-only: immutable pre-race predictions must be recorded before result matching.
 // This module does not fetch, authenticate, persist or predict races.
-const keyOf=r=>[r.date,r.venue,r.race].join('-');
+const keyOf=r=>[r?.date,r?.venue,r?.race].join('-');
+const explicitTime=s=>typeof s==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
 const validOrder=o=>Array.isArray(o)&&o.length===6&&new Set(o).size===6&&o.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
 const validTrifecta=o=>Array.isArray(o)&&o.length===3&&new Set(o).size===3&&o.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
 export function evaluateLockedProspectivePredictions(predictions,results){
@@ -18,7 +19,7 @@ export function evaluateLockedProspectivePredictions(predictions,results){
   if(gate.snapshot.date!==String(p.date)||gate.snapshot.venue!==p.venue||gate.snapshot.race!==p.race){rejected.push({key:k,reason:'capture_identity_mismatch'});continue;}
   if(Date.parse(p.verification.verifiedAt)>=Date.parse(gate.snapshot.scheduledStartAt)||Date.parse(p.verification.verifiedAt)>Date.parse(p.predictedAt)){rejected.push({key:k,reason:'source_verified_too_late'});continue;}
   if(!validTrifecta(p.predictedTrifecta)||p.predictedFirst!==p.predictedTrifecta[0]){rejected.push({key:k,reason:'invalid_prediction'});continue;}
-  if(p.ruleVersion!=='inner-challenger-frozen-20261122'||typeof p.predictedAt!=='string'||!Number.isFinite(Date.parse(p.predictedAt))||Date.parse(p.predictedAt)>=Date.parse(gate.snapshot.scheduledStartAt)||Date.parse(p.predictedAt)<Date.parse(gate.snapshot.capturedAt)){rejected.push({key:k,reason:'rule_or_prediction_time_invalid'});continue;}
+  if(p.ruleVersion!=='inner-challenger-frozen-20261122'||!explicitTime(p.predictedAt)||Date.parse(p.predictedAt)>=Date.parse(gate.snapshot.scheduledStartAt)||Date.parse(p.predictedAt)<Date.parse(gate.snapshot.capturedAt)){rejected.push({key:k,reason:'rule_or_prediction_time_invalid'});continue;}
   admitted.set(k,p);
  }
  const resultMap=new Map(),duplicates=new Set();
