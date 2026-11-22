@@ -24,7 +24,7 @@ console.log('Original morning snapshot saved to '+snapshotFile);
 // A mismatch must be exposed, not repaired using post-race information.
 evaluateMorningRankingHistory(snapshot,[]);
 console.log('Saved morning prediction structure validated before official-result collection');
-const candidates=new Map(),legacyWithoutOrder=[],held=[];
+const candidates=new Map(),legacyWithoutOrder=[],held=[],seenCandidateKeys=new Set();
 for(const category of ['main','upset','chaos']){
  const picks=snapshot.categories?.[category];
  if(!Array.isArray(picks))throw Error('Missing ranking category '+category);
@@ -32,8 +32,9 @@ for(const category of ['main','upset','chaos']){
   if(p.date!==date||!Number.isInteger(p.venue)||!Number.isInteger(p.race))
    throw Error('Invalid ranked candidate');
   const key=p.venue+':'+p.race;
-  if(candidates.has(key)||legacyWithoutOrder.some(x=>x.key===key))
+  if(seenCandidateKeys.has(key))
    throw Error('Duplicate ranked candidate');
+  seenCandidateKeys.add(key);
   if(date>='20261123'&&(!p.capturedAt||Number.isNaN(Date.parse(p.capturedAt)))){
    held.push({venue:p.venue,race:p.race,reason:'prediction_capture_timestamp_missing'});
    continue;
