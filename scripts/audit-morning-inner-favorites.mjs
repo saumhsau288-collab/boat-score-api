@@ -44,8 +44,8 @@ for(const item of main){
    snapshotFields:Object.keys(item).sort()});continue;
  }
  const groupName=order[0]===1?(order[1]<=3?'boat1_first_inner_second':'boat1_first_outer_second'):(order[0]<=3?(order[1]<=3?'boat2or3_first_inner_second':'boat2or3_first_outer_second'):'not_inner_first');
- // Inner high scorers are approximated by top-ranked boats because the snapshot API
- // does not expose raw per-boat scores. Never claim absolute score thresholds were checked.
+ // Inner strength is evaluated only from the immutable saved per-boat morning scores.
+ // Do not use reconstructed scores from the official pages after the race.
  let official;
  try{official=await fetchJson('/api/official/result?date='+date+'&venue='+item.venue+'&race='+item.race);}
  catch(e){held.push({key,reason:'official_result_fetch_failed'});continue;}
