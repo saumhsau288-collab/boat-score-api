@@ -1,0 +1,47 @@
+name: Research twelve-method capture readiness (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      venue:
+        description: 'One venue number (1-24); research only'
+        required: true
+        default: '2'
+      race_count:
+        description: 'Number of races to sample (1-12)'
+        required: true
+        default: '1'
+permissions:
+  contents: read
+jobs:
+  research-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate bounded manual inputs
+        env:
+          VENUE: ${{ inputs.venue }}
+          RACE_COUNT: ${{ inputs.race_count }}
+        run: |
+          node -e "const v=Number(process.env.VENUE),r=Number(process.env.RACE_COUNT);if(!Number.isInteger(v)||v<1||v>24||!Number.isInteger(r)||r<1||r>12)process.exit(1)"
+      - name: Capture existing deployed API read-only (no deployment)
+        env:
+          CAPTURE_VENUES: ${{ inputs.venue }}
+          CAPTURE_RACES: ${{ inputs.race_count }}
+        run: node scripts/capture-existing-boat-score-2-predictions.mjs
+      - name: Report actual six-racer feature readiness (no hit rates)
+        run: |
+          for f in prediction-captures/*.json; do
+            node scripts/report-archived-twelve-inputs.mjs "$f" > twelve-method-input-readiness.json
+          done
+          node -e "const r=require('./twelve-method-input-readiness.json');console.log(JSON.stringify({readyOld:r.readyOldRankedPredictions,sixRacerVectors:r.completeSixBoatFeatureVectors,omitted:r.omittedWithoutSixBoatInputs,authenticated:r.authenticatedBeforeRace}))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: research-twelve-input-readiness-${{ github.run_id }}
+          path: |
+            prediction-captures/*.json
+            twelve-method-input-readiness.json
+          retention-days: 30
