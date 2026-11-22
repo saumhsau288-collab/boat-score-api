@@ -52,6 +52,7 @@ jobs:
           node --check scripts/replay-exclusion-variants.mjs
           node --check scripts/audit-top-two-exclusions.mjs
           node scripts/test-morning-ranking-persistence.mjs
+          node scripts/test-morning-inner-favorites.mjs
           node --check scripts/audit-morning-inner-favorites.mjs
           node <<'NODE'
           const fs=require('node:fs');
