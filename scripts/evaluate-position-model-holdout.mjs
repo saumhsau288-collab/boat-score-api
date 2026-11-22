@@ -32,6 +32,7 @@ export function evaluatePositionModelHoldout(reports){
  };
  const byDate={};
  const outsideWinnerCandidate={races:0,otherWins:0,highestOtherWins:0,byBoat:{},actualOtherWinnerByBoat:Object.fromEntries(Array.from({length:5},(_,i)=>[String(i+2),0]))};
+ const futureIndependent={startDate:'20261122',races:0,switchedRaces:0,originalWinnerCorrect:0,hybridWinnerCorrect:0,originalExact:0,hybridExact:0,fixed123Exact:0,byDate:{},status:'NO_NEW_DATES'};
  const hybridTrifecta={races:0,hybridExact:0,originalExact:0,fixed123Exact:0,hybridOnlyVsOriginal:0,originalOnlyVsHybrid:0,switchedRaces:0,originalWinnerCorrect:0,hybridWinnerCorrect:0,byPredictedWinner:Object.fromEntries(Array.from({length:6},(_,i)=>[String(i+1),{races:0,exact:0}])),byDate:{}};
  const challengerGapTwoPlusTrifecta={races:0,challengerWins:0,challengerTop3:0,oneTop3:0,challengerFirstModelExact:0,forcedWinnerExact:0,originalModelExact:0,fixed123Exact:0,forcedOnlyVsOriginal:0,originalOnlyVsForced:0};
  const challengerGapTwoPlusByDate={};
@@ -55,6 +56,18 @@ export function evaluatePositionModelHoldout(reports){
   const winnerGroup=hybridTrifecta.byPredictedWinner[String(hybrid[0])];winnerGroup.races++;winnerGroup.exact+=h?1:0;
   hybridTrifecta.races++;hybridTrifecta.hybridExact+=h?1:0;hybridTrifecta.originalExact+=m?1:0;hybridTrifecta.fixed123Exact+=f?1:0;hybridTrifecta.switchedRaces+=switchWinner?1:0;
   hybridTrifecta.hybridOnlyVsOriginal+=h&&!m?1:0;hybridTrifecta.originalOnlyVsHybrid+=m&&!h?1:0;
+  if(date>=futureIndependent.startDate){
+   futureIndependent.races++;
+   futureIndependent.switchedRaces+=switchWinner?1:0;
+   futureIndependent.originalWinnerCorrect+=model[0]===actual[0]?1:0;
+   futureIndependent.hybridWinnerCorrect+=hybrid[0]===actual[0]?1:0;
+   futureIndependent.originalExact+=m?1:0;
+   futureIndependent.hybridExact+=h?1:0;
+   futureIndependent.fixed123Exact+=f?1:0;
+   const d=futureIndependent.byDate[date]??={races:0,switchedRaces:0,originalExact:0,hybridExact:0};
+   d.races++;d.switchedRaces+=switchWinner?1:0;d.originalExact+=m?1:0;d.hybridExact+=h?1:0;
+   futureIndependent.status='RETROSPECTIVE_ARCHIVE_ONLY';
+  }
   const hybridDay=hybridTrifecta.byDate[date]??={races:0,switchedRaces:0,hybridExact:0,originalExact:0,fixed123Exact:0,originalWinnerCorrect:0,hybridWinnerCorrect:0,switchedWinnerCorrect:0};
   hybridDay.originalWinnerCorrect+=model[0]===actual[0]?1:0;
   hybridDay.hybridWinnerCorrect+=hybrid[0]===actual[0]?1:0;
@@ -107,5 +120,5 @@ export function evaluatePositionModelHoldout(reports){
   counts.modelOnlyVsFixed+=m&&!f?1:0;counts.fixedOnlyVsModel+=f&&!m?1:0;
   counts.modelOnlyVsRank+=m&&!r?1:0;counts.rankOnlyVsModel+=r&&!m?1:0;
  }
- return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,otherLeadGap,challengerGapTwoPlus,challengerGapTwoPlusByDate,challengerGapTwoPlusTrifecta,hybridTrifecta,frozenTrainingEnd:trainingEnd,independentFutureDates:days.slice(split).filter(d=>String(d.date)>='20261122').map(d=>String(d.date)),warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
+ return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,otherLeadGap,challengerGapTwoPlus,challengerGapTwoPlusByDate,challengerGapTwoPlusTrifecta,hybridTrifecta,futureIndependent,frozenTrainingEnd:trainingEnd,independentFutureDates:days.slice(split).filter(d=>String(d.date)>='20261122').map(d=>String(d.date)),warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
 }
