@@ -1,6 +1,6 @@
 // Research-only v0: twelve DISTINCT deterministic trifecta rules.
 // Input is a pre-race six-racer snapshot. No results, odds, or hindsight accepted.
-export const METHOD_VERSION='independent-v0-20261122';
+export const METHOD_VERSION='independent-v1-20261122';
 export const METHOD_IDS=[...Array.from({length:6},(_,i)=>'favorite-'+(i+1)),...Array.from({length:6},(_,i)=>'upset-'+(i+1))];
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
 const rank=(arr,score,ascending=false,tieScore=null)=>[...arr].sort((a,b)=>{
