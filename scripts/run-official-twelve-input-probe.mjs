@@ -14,5 +14,7 @@ if(!/^20\d{6}$/.test(date||'')||!Number.isInteger(Number(venue))||!Number.isInte
  console.log(JSON.stringify({status:result.status,reason:result.reason||null,
   sourceUrl:result.sourceUrl||null,numberOfRacers:result.racers?.length??0,
   independentlyAuthenticatedBeforeRace:result.independentlyAuthenticatedBeforeRace===true,
-  readyMethods:result.readiness?.ready??[]}));
+  readyMethods:result.readiness?.ready??[],
+  missingFields:result.racers?.length===6?Object.fromEntries(['entryCourse','averageStartTiming','exhibitionTime','last50CoursePodiumRate'].map(key=>[key,result.racers.filter(r=>r[key]===null||r[key]===undefined).length])):null,
+  abstainedMethods:result.readiness?.abstained??[]}));
 }
