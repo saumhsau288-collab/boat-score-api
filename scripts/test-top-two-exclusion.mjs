@@ -9,6 +9,8 @@ assert.deepEqual(result.candidates.exclude2,[6,5]);
 assert.deepEqual(result.candidates.exclude3,[6,5,4]);
 const stats=evaluateTopTwoExclusions([{snapshot,officialFinish:[1,2,3,4,5,6]},{snapshot,officialFinish:[6,1,2,3,4,5]}]);
 assert.deepEqual(stats.map(x=>[x.evaluated,x.success]),[[2,1],[2,1],[2,1]]);
+assert.deepEqual(stats.map(x=>x.randomBaseline),[2/3,2/5,1/5]);
+assert.deepEqual(stats.map(x=>x.improvementVsRandom),[1/2-2/3,1/2-2/5,1/2-1/5]);
 const incomplete={racers:racers.map(r=>({...r}))};
 delete incomplete.racers[0].averageST;
 assert.equal(rankTopTwoExclusions(incomplete).status,'abstain');
