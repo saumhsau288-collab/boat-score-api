@@ -1,0 +1,35 @@
+name: Boat Score 2 morning inner-favorites audit (research only)
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Saved morning snapshot date YYYYMMDD"
+        required: true
+        default: "20261122"
+        type: string
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout isolated Boat Score 2 research branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix-boat-score-2-syntax-20261115
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check audit syntax
+        run: node --check scripts/audit-morning-inner-favorites.mjs
+      - name: Audit saved morning MAIN shortlist
+        env:
+          DATE: ${{ inputs.date }}
+        run: node scripts/audit-morning-inner-favorites.mjs "$DATE"
+      - name: Save morning diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-morning-inner-favorites
+          path: morning-inner-favorites-*.json
+          if-no-files-found: error
