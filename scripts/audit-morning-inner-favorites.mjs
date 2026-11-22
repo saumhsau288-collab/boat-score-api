@@ -34,10 +34,14 @@ for(const item of main){
   scoreRows.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score));
  const byBoat=scoresValid?new Map(scoreRows.map(x=>[x.boat,x.score])):null;
  const captureValid=typeof item.capturedAt==='string'&&!Number.isNaN(Date.parse(item.capturedAt));
+ // Cron collects only 08:00–08:59 JST; reject any late or backdated capture.
+ const captureMs=captureValid?Date.parse(item.capturedAt):NaN;
+ const windowStart=Date.parse(date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8)+'T08:00:00+09:00');
+ const captureInMorningWindow=captureValid&&captureMs>=windowStart&&captureMs<windowStart+60*60*1000;
  const orderValid=Array.isArray(order)&&order.length===6&&new Set(order).size===6&&
   order.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
- if(!captureValid||!orderValid||!scoresValid){
-  const missing=[...(!captureValid?['capture']:[]),...(!orderValid?['order']:[]),...(!scoresValid?['scores']:[])];
+ if(!captureValid||!captureInMorningWindow||!orderValid||!scoresValid){
+  const missing=[...(!captureValid?['capture']:!captureInMorningWindow?['outside_8am_window']:[]),...(!orderValid?['order']:[]),...(!scoresValid?['scores']:[])];
   held.push({key,reason:'missing_'+missing.join('_'),
    capturedAtPresent:Boolean(item.capturedAt),orderPresent:Array.isArray(order),
    scoresPresent:Array.isArray(scoreRows),orderCount:Array.isArray(order)?order.length:null,
@@ -72,7 +76,7 @@ for(const item of main){
 }
 const holdReasons=Object.fromEntries([...new Set(held.map(x=>x.reason))].map(k=>[k,held.filter(x=>x.reason===k).length]));
 const result={date,holdReasons,mode:'saved_morning_main_only',snapshotStatus:snapshot.status,shortlist:main.length,eligible:details.length,held,
- caveat:'This evaluates saved ranked order and a transparent reference six-pick formula, NOT the app independent six methods. Inner strength uses saved raw scores for top-two ranking and the two-high-inner versus all outer threshold; neither is a calibrated winning probability. Morning capturedAt is present but no explicit deadline check is available.',
+ caveat:'This evaluates saved ranked order and a transparent reference six-pick formula, NOT the app independent six methods. Inner strength uses saved raw scores for top-two ranking and the two-high-inner versus all outer threshold; neither is a calibrated winning probability. Only snapshots captured 08:00–08:59 JST on the target race date are eligible; this does not guarantee every race was collected before its own deadline.',
  stats,details};
 const fs=await import('node:fs');
 const file='morning-inner-favorites-'+date+'.json';
