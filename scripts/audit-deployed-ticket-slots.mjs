@@ -5,7 +5,7 @@ import {validTrifectaPicks,verifiedPodium} from './backtest-comparison-eligibili
 const key=r=>[r?.date,Number(r?.venue),Number(r?.race)].join('|');
 const explicitTime=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
 const officialUrl=(result,row)=>{try{const u=new URL(result?.sourceUrl);return u.protocol==='https:'&&u.hostname==='www.boatrace.jp'&&u.pathname==='/owpc/pc/race/raceresult'&&u.searchParams.getAll('hd').length===1&&u.searchParams.getAll('jcd').length===1&&u.searchParams.getAll('rno').length===1&&u.searchParams.get('hd')===String(row.date)&&Number(u.searchParams.get('jcd'))===Number(row.venue)&&Number(u.searchParams.get('rno'))===Number(row.race);}catch{return false;}};
-const beforeCutoff=row=>explicitTime(row?.receivedAt)&&explicitTime(row?.officialCutoffAt)&&Date.parse(row.receivedAt)<Date.parse(row.officialCutoffAt);
+const beforeCutoff=(row,result)=>explicitTime(row?.receivedAt)&&explicitTime(result?.officialCutoffAt)&&Date.parse(row.receivedAt)<Date.parse(result.officialCutoffAt);
 export function auditDeployedTicketSlots(capture,results){
  if(!Array.isArray(capture?.records)||!Array.isArray(results))throw new TypeError('capture.records and results required');
  const index=new Map(),duplicateResults=new Set();
@@ -17,7 +17,7 @@ export function auditDeployedTicketSlots(capture,results){
  for(const row of capture.records){
   const k=key(row),result=index.get(k),actual=duplicateResults.has(k)?null:verifiedPodium(result);
   if(counts.get(k)!==1){hold('duplicate_capture');continue;}
-  if(capture.authenticatedBeforeRace!==true||row.preRaceVerified!==true||row.savedBeforeCutoff!==true||!beforeCutoff(row)){hold('pre_race_unverified');continue;}
+  if(capture.authenticatedBeforeRace!==true||row.preRaceVerified!==true||row.savedBeforeCutoff!==true||!beforeCutoff(row,result)){hold('pre_race_unverified');continue;}
   if(!actual||!officialUrl(result,row)){hold('official_result_unverified_or_missing');continue;}
   if(row.response?.ready!==true||!validTrifectaPicks(row.response.main)||!validTrifectaPicks(row.response.upset)){hold('invalid_saved_tickets');continue;}
   summary.compared++;
