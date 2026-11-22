@@ -10,8 +10,19 @@ async function fetchJson(path){
  if(!res.ok)throw Error('HTTP '+res.status);
  return res.json();
 }
-const snapshot=await fetchJson('/api/morning/snapshot?date='+date);
-if(!Array.isArray(snapshot?.categories?.main))throw Error('No verified saved morning MAIN category');
+let snapshot;
+try { snapshot=await fetchJson('/api/morning/snapshot?date='+date); }
+catch(error) {
+ const report={date,mode:'saved_morning_main_only',status:'snapshot_unavailable',shortlist:0,eligible:0,held:[],
+  holdReasons:{snapshot_unavailable:1},stats:{},details:[],error:String(error?.message||error),
+  caveat:'No saved morning snapshot was available. No prediction accuracy can be inferred.'};
+ const fs=await import('node:fs');
+ const file='morning-inner-favorites-'+date+'.json';
+ fs.writeFileSync(file,JSON.stringify(report,null,2)+'\\n');
+ console.log(JSON.stringify({file,status:report.status,eligible:0,holdReasons:report.holdReasons}));
+ process.exit(0);
+}
+if(!Array.isArray(snapshot?.categories?.main))throw Error('Saved morning snapshot has no valid MAIN category');
 const main=snapshot.categories.main;
 const stats={},details=[],held=[];
 function group(key){return stats[key]??={eligible:0,winner:0,topTwoOrdered:0,trifectaSix:0,innerTopTwo:0};}
