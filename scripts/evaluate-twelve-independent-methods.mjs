@@ -3,6 +3,8 @@
 const methods=[...Array.from({length:6},(_,i)=>'favorite-'+(i+1)),...Array.from({length:6},(_,i)=>'upset-'+(i+1))];
 const validTriple=t=>Array.isArray(t)&&t.length===3&&new Set(t).size===3&&t.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
 const key=r=>[r?.date,r?.venue,r?.race].join('|');
+const validFinish=o=>Array.isArray(o)&&o.length===6&&new Set(o).size===6&&o.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
+const validTime=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
 export function evaluateTwelveIndependentMethods(predictions,results){
  if(!Array.isArray(predictions)||!Array.isArray(results))throw new TypeError('arrays required');
  const index=new Map();
@@ -13,8 +15,8 @@ export function evaluateTwelveIndependentMethods(predictions,results){
  for(const p of predictions){
   const k=key(p);if(seen.has(k))throw new Error('duplicate prediction '+k);seen.add(k);
   const r=index.get(k);
-  if(!r||r.resultVerified!==true||!Array.isArray(r.finishOrder)||r.finishOrder.length!==6||new Set(r.finishOrder).size!==6){totals.excluded++;continue;}
-  if(p.preRaceVerified!==true||p.ruleVersionsFrozen!==true||p.savedBeforeStart!==true){totals.excluded++;continue;}
+  if(!r||r.resultVerified!==true||!validFinish(r.finishOrder)){totals.excluded++;continue;}
+  if(p.preRaceVerified!==true||p.ruleVersionsFrozen!==true||p.savedBeforeStart!==true||!validTime(p.capturedAt)||!validTime(p.predictedAt)||!validTime(p.writtenAt)||!validTime(p.scheduledStartAt)||!(Date.parse(p.capturedAt)<=Date.parse(p.predictedAt)&&Date.parse(p.predictedAt)<=Date.parse(p.writtenAt)&&Date.parse(p.writtenAt)<Date.parse(p.scheduledStartAt))){totals.excluded++;continue;}
   if(!p.methods||typeof p.methods!=='object'||methods.some(m=>!validTriple(p.methods[m]?.trifecta)||typeof p.methods[m]?.ruleVersion!=='string'||!p.methods[m].ruleVersion.trim())){totals.missingMethods++;continue;}
   totals.races++;
   const actual=r.finishOrder.slice(0,3).join('-');
