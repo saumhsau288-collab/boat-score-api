@@ -2483,7 +2483,9 @@ function buildMorningRaceInputs(date,venue,race,official) {
     .map((x,i)=>[x.boat,6-i]));
   const winRanks=ranks('win'),motorRanks=ranks('motor');
   const localVerified=scoreRows.every(x=>Number.isFinite(x.local)&&x.local>=0&&x.local<=10);
-  const averageWinRates=new Map(scoreRows.map(x=>[x.boat,localVerified?(x.win+x.local)/2:x.win]));
+  // A verified local win rate of 0.00 means use the national rate as fallback,
+  // never penalize the racer by averaging against a zero sample.
+  const averageWinRates=new Map(scoreRows.map(x=>[x.boat,localVerified?(x.win+(x.local===0?x.win:x.local))/2:x.win]));
   const averageRanks=new Map(scoreRows.slice().sort((a,b)=>averageWinRates.get(b.boat)-averageWinRates.get(a.boat)||a.boat-b.boat).map((x,i)=>[x.boat,6-i]));
   const placesVerified=scoreRows.every(x=>Number.isFinite(x.top2)&&x.top2>=0&&x.top2<=100&&Number.isFinite(x.top3)&&x.top3>=x.top2&&x.top3<=100);
   const top2Ranks=placesVerified?ranks('top2'):null,top3Ranks=placesVerified?ranks('top3'):null;
