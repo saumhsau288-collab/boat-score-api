@@ -1,0 +1,52 @@
+name: Evaluate saved Boat Score 2 morning predictions
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Historical morning snapshot date (YYYYMMDD)'
+        required: true
+        default: '20261122'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout isolated Boat Score 2 development code
+        uses: actions/checkout@v4
+        with:
+          ref: fix-boat-score-2-syntax-20261115
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate snapshot date
+        env:
+          HISTORY_DATE: ${{ inputs.date }}
+        shell: bash
+        run: |
+          if [[ ! "$HISTORY_DATE" =~ ^20[0-9]{6}$ ]]; then
+            echo "::error::Enter date as YYYYMMDD"
+            exit 1
+          fi
+      - name: Run independent official-result comparison
+        env:
+          HISTORY_DATE: ${{ inputs.date }}
+        shell: bash
+        run: |
+          node scripts/test-evaluate-morning-ranking-history.mjs
+          node scripts/collect-morning-official-results.mjs "$HISTORY_DATE"
+      - name: Save official-result comparison for inspection
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: boat-score-2-morning-official-comparison-${{ inputs.date }}
+          path: morning-official-comparison-${{ inputs.date }}.json
+          if-no-files-found: error
+          retention-days: 30
