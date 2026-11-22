@@ -7,16 +7,17 @@ const validOrder=o=>Array.isArray(o)&&o.length===6&&new Set(o).size===6&&o.every
 const validTrifecta=o=>Array.isArray(o)&&o.length===3&&new Set(o).size===3&&o.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
 export function evaluateLockedProspectivePredictions(predictions,results){
  if(!Array.isArray(predictions)||!Array.isArray(results))throw new TypeError('prediction and result arrays required');
- const admitted=new Map(),rejected=[];
+ const admitted=new Map(),rejected=[],seen=new Set();
  for(const p of predictions){
   const k=keyOf(p);
-  if(admitted.has(k)||rejected.some(x=>x.key===k)){rejected.push({key:k,reason:'duplicate_prediction'});admitted.delete(k);continue;}
+  if(seen.has(k)){rejected.push({key:k,reason:'duplicate_prediction'});admitted.delete(k);continue;}
+  seen.add(k);
   if(!/^20\d{6}$/.test(String(p?.date))||String(p.date)<'20261122'||!Number.isInteger(p?.venue)||!Number.isInteger(p?.race)){rejected.push({key:k,reason:'invalid_identity_or_date'});continue;}
   const gate=assessProspectiveAdmission(p.capture,p.verification);
   if(!gate.admitted){rejected.push({key:k,reason:gate.reason});continue;}
   if(gate.snapshot.date!==String(p.date)||gate.snapshot.venue!==p.venue||gate.snapshot.race!==p.race){rejected.push({key:k,reason:'capture_identity_mismatch'});continue;}
   if(!validTrifecta(p.predictedTrifecta)||p.predictedFirst!==p.predictedTrifecta[0]){rejected.push({key:k,reason:'invalid_prediction'});continue;}
-  if(p.ruleVersion!=='inner-challenger-frozen-20261122'||typeof p.predictedAt!=='string'||!Number.isFinite(Date.parse(p.predictedAt))||Date.parse(p.predictedAt)>=Date.parse(gate.snapshot.scheduledStartAt)){rejected.push({key:k,reason:'rule_or_prediction_time_invalid'});continue;}
+  if(p.ruleVersion!=='inner-challenger-frozen-20261122'||typeof p.predictedAt!=='string'||!Number.isFinite(Date.parse(p.predictedAt))||Date.parse(p.predictedAt)>=Date.parse(gate.snapshot.scheduledStartAt)||Date.parse(p.predictedAt)<Date.parse(gate.snapshot.capturedAt)){rejected.push({key:k,reason:'rule_or_prediction_time_invalid'});continue;}
   admitted.set(k,p);
  }
  const resultMap=new Map(),duplicates=new Set();
