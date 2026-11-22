@@ -207,6 +207,7 @@ jobs:
             console.log("RATE_BY_BOAT_PLACEMENT="+JSON.stringify(r.rateByBoatPlacement));
             console.log("RELATIVE_ABILITY_PLACEMENT="+JSON.stringify(r.relativeAbilityPlacement));
             console.log("POSITION_MODEL_HOLDOUT="+JSON.stringify(r.positionModelHoldout));
+            console.log("FROZEN_FUTURE_VALIDATION="+JSON.stringify(r.positionModelHoldout.futureIndependent));
             console.log("SECOND_CHOICE_BY_BOAT_ONE_LOCAL_ADVANTAGE="+JSON.stringify(r.secondChoiceByBoatOneLocalAdvantage));
           '
       - uses: actions/upload-artifact@v4
