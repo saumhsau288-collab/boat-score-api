@@ -437,7 +437,7 @@ function updateRecent50Compare(){
  const base=d.rankedScores;
  if(!Array.isArray(base)||base.length!==6||new Set(base.map(x=>Number(x.boat))).size!==6||
   !base.every(x=>Number.isInteger(Number(x.boat))&&Number(x.boat)>=1&&Number(x.boat)<=6&&typeof x.score==='number'&&Number.isFinite(x.score))){
-  out.textContent='公式の6艇分の基礎点数が不足しています。';return;
+  out.textContent='公式の6艇分の基礎点数が不足しています。';updateCombinedPredictionPanel();return;
  }
  const before=base.map(x=>({boat:Number(x.boat),score:x.score}));
  const after=before.map(x=>({boat:x.boat,score:x.score+recent.find(y=>y.boat===x.boat).points}));
@@ -543,11 +543,11 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
    updateRecent50Compare();
   updatePositionHeatmap();
   const updated=syncVerifiedMakulaboComparison();
-  status.textContent='まくらぼ6艇の取得・照合成功。選手比較表への反映：'+updated+'/6艇。参考加点は予想実行時に別表示します（買い目未反映）。'+(updated===0?'比較表の行数：'+document.getElementById('comparisonBody').querySelectorAll('tr').length+'。表示中の艇番と取得データの照合を確認してください。':'')+' 予想点数への反映は未実装です。';
+  status.textContent='まくらぼ6艇の取得・照合成功。選手比較表への反映：'+updated+'/6艇。'+(lastComparisonPrediction?.key===date+':'+v+':'+r?'右側の「まくらぼ＋直前情報の予想」を再計算しました。公式直前情報が不足する場合は保留を表示します。':'続けて「このレースを予想」を押すと、取得済みの公式直前情報と組み合わせて右側に試算します。')+(updated===0?'比較表の行数：'+document.getElementById('comparisonBody').querySelectorAll('tr').length+'。表示中の艇番と取得データの照合を確認してください。':'');
  }catch(e){if(token===makulaboSearchToken)status.textContent='自動検索に失敗しました：'+(e.name==='TimeoutError'?'65秒以内に取得・公式照合が完了しませんでした':'通信エラー（'+String(e.message||e).slice(0,80)+'）');}
  finally{if(token===makulaboSearchToken)this.disabled=false;}
 };
-for(const el of [day,venue,race])el.addEventListener('change',()=>{makulaboSearchToken++;verifiedMakulabo=null;document.getElementById('makulaboSearchResult').replaceChildren();document.getElementById('makulaboSearchStatus').textContent='';document.getElementById('searchMakulaboInBoatScore').disabled=false;});
+for(const el of [day,venue,race])el.addEventListener('change',()=>{makulaboSearchToken++;verifiedMakulabo=null;document.getElementById('makulaboSearchResult').replaceChildren();document.getElementById('makulaboSearchStatus').textContent='';document.getElementById('searchMakulaboInBoatScore').disabled=false;updateCombinedPredictionPanel();});
 
 let scheduleRequest=0,raceListRequest=0,scheduleController=null,raceListController=null;
 async function refreshRunningVenues(){
