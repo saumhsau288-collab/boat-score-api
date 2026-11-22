@@ -46,8 +46,22 @@ const gapBands=Object.fromEntries([
  ['under_3',0,3],['3_to_under_6',3,6],['6_to_under_12',6,12],
  ['12_to_under_20',12,20],['20_plus',20,Infinity]
 ].map(([name,min,max])=>[name,summarize(rows.filter(x=>x.scoreGap>=min&&x.scoreGap<max))]));
+// Never equate a historical non-win with a safe exclusion rule.
+const outerLeaders=rows.filter(x=>x.leaderBoat>=5);
+const outerLeaderBreakdown={
+ all:summarize(outerLeaders),
+ byVenue:Object.fromEntries([...new Set(outerLeaders.map(x=>x.venue))].sort((a,b)=>a-b).map(v=>[v,summarize(outerLeaders.filter(x=>x.venue===v))])),
+ scoreGapBands:Object.fromEntries([
+  ['under_3',0,3],['3_to_under_6',3,6],['6_to_under_12',6,12],
+  ['12_to_under_20',12,20],['20_plus',20,Infinity]
+ ].map(([name,min,max])=>[name,summarize(outerLeaders.filter(x=>x.scoreGap>=min&&x.scoreGap<max))])),
+ cases:outerLeaders.map(x=>({key:x.key,venue:x.venue,leaderBoat:x.leaderBoat,scoreGap:x.scoreGap,
+  leaderFinish:x.leaderFinish,actualTopThree:x.actualTopThree,actualTopThreeRanks:x.actualTopThreeRanks})),
+ caution:'Observed zero outer-leader wins in a small post-hoc sample is not proof of zero win probability or a justified exclusion.'
+};
+const venueGroups=Object.fromEntries([...new Set(rows.map(x=>x.venue))].sort((a,b)=>a-b).map(v=>[v,summarize(rows.filter(x=>x.venue===v))]));
 const output={mode:'retrospective_top_three_rank_finish_diagnostic',sourceFiles:paths,
- eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,details:rows,heldDetails:held,
+ eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,outerLeaderBreakdown,details:rows,heldDetails:held,
  note:'All scores recomputed after racing. This is not pre-race accuracy. Winner/runner-up ranks are positions in recomputed score order; topThreeTopTwo means both actual first and second were among the three highest-scored racers. No odds, ST, motor or exhibition inputs are present in this evidence.'};
 fs.writeFileSync('historical-top-three-rank-finish-report.json',JSON.stringify(output,null,2)+'\n');
-console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands},null,2));
+console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,outerLeaderBreakdown:output.outerLeaderBreakdown},null,2));
