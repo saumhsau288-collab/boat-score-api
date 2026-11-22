@@ -23,6 +23,9 @@ for(const path of paths){
   if(seen.has(key))throw Error('Duplicate race: '+key);
   seen.add(key);
   const boats=e.boats,finish=e.officialFinish;
+  if(e.scoreSource!=='current_app_recomputed_after_race'){
+   held.push({key,reason:'unexpected_score_source'});continue;
+  }
   if(e.resultVerified!==true||!Array.isArray(boats)||boats.length!==6||new Set(boats.map(x=>x.boat)).size!==6||
     !boats.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))||
     !Array.isArray(finish)||finish.length!==6||new Set(finish).size!==6||
@@ -34,7 +37,8 @@ for(const path of paths){
   const innerScores=boats.filter(x=>x.boat<=3).map(x=>x.score).sort((a,b)=>b-a);
   const outerMax=Math.max(...boats.filter(x=>x.boat>=4).map(x=>x.score));
   const highInnerPair=innerTopTwoCount===2&&innerScores[1]>outerMax;
-  const row={key,order,actual:finish.slice(0,3),innerTopTwoCount,highInnerPair,
+  const scoreGap=boats.find(x=>x.boat===order[0]).score-boats.find(x=>x.boat===order[1]).score;
+  const row={key,order,actual:finish.slice(0,3),innerTopTwoCount,highInnerPair,scoreGap,
     topScoreWinner:order[0]===finish[0],
     topTwoExact:order[0]===finish[0]&&order[1]===finish[1],
     topTwoAnyOrder:new Set(order.slice(0,2)).size===2&&order.slice(0,2).every(x=>finish.slice(0,2).includes(x)),
@@ -42,7 +46,8 @@ for(const path of paths){
   details.push(row);
   for(const group of ['all','inner_top2_count_'+innerTopTwoCount,
     highInnerPair?'inner_pair_above_all_outer':'not_inner_pair_above_all_outer',
-    'score_leader_'+(order[0]<=3?'inner':'outer')])add(group,row);
+    'score_leader_'+(order[0]<=3?'inner':'outer'),
+    'score_lead_'+(scoreGap>=6?'at_least_6':scoreGap>=3?'3_to_6':'below_3')])add(group,row);
  }
  for(const h of data.held||[])held.push({key:h.key,reason:h.reason||'source_held'});
 }
