@@ -1,0 +1,33 @@
+// Regression tests for immutable morning MAIN shortlist inner strength evidence.
+import fs from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const source=fs.readFileSync('worker.js','utf8');
+const start=source.indexOf('function classifyDailyRaceCandidates(');
+const end=source.indexOf('function summarizeHistoricalOuterFollow(',start);
+assert(start>=0&&end>start,'Morning classifier must exist');
+const classify=vm.runInNewContext(source.slice(start,end)+'\nclassifyDailyRaceCandidates');
+const race=(scores,venue=1,r=1)=>({date:'20261123',venue,race:r,officialVerified:true,statsVerified:true,
+ capturedAt:'2026-11-22T23:00:00.000Z',rankedScores:scores.map((score,i)=>({boat:i+1,score}))});
+const innerStrong=classify([race([60,55,48,36,33,30])]);
+assert.equal(innerStrong.main.length,1);
+const item=innerStrong.main[0];
+assert.equal(item.innerTopTwoCount,2);
+assert.equal(item.innerTopThreeCount,3);
+assert.equal(item.innerTopScore,60);
+assert.equal(item.outerTopScore,36);
+assert.deepEqual(Array.from(item.innerTopTwoBoats),[1,2]);
+assert.deepEqual(Array.from(item.predictedOrder),[1,2,3,4,5,6]);
+assert.equal(item.rankedScores.length,6);
+assert.equal(item.rankedScores[0].score,60);
+assert.equal(item.capturedAt,'2026-11-22T23:00:00.000Z');
+const secondInnerFirst=classify([race([53,62,49,40,36,32],2,2)]);
+assert.equal(secondInnerFirst.main.length,1);
+assert.equal(secondInnerFirst.main[0].predictedOrder[0],2);
+assert.equal(secondInnerFirst.main[0].innerTopTwoCount,2);
+const outerFirst=classify([race([48,47,45,65,32,30],3,3)]);
+assert.equal(outerFirst.main.length,0);
+assert.equal(outerFirst.upset.length,1);
+const invalid=classify([{...race([60,55,48,36,33,30]),statsVerified:false}]);
+assert.equal(invalid.held,1);
+console.log('Morning inner-favorite regression: saved scores, 1/2-leading inner racers, outer leader exclusion, and unverified hold passed.');
