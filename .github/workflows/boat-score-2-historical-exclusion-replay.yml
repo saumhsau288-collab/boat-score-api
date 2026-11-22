@@ -35,6 +35,7 @@ jobs:
         run: |
           node scripts/test-replay-exclusion-variants.mjs
           node --check scripts/collect-retrospective-exclusion-replay.mjs
+          node --check scripts/report-historical-inner-favorites.mjs
       - name: Replay current app on historical official pages
         env:
           DATE: ${{ inputs.date }}
@@ -46,9 +47,13 @@ jobs:
           else
             node scripts/collect-retrospective-exclusion-replay.mjs "$DATE" "$VENUE"
           fi
+      - name: Compare historical inner-side score leaders with official finishes
+        run: node scripts/report-historical-inner-favorites.mjs retrospective-exclusion-*.json
       - name: Save diagnostic evidence
         uses: actions/upload-artifact@v4
         with:
           name: boat-score-2-retrospective-exclusion
-          path: retrospective-exclusion-*.json
+          path: |
+            retrospective-exclusion-*.json
+            historical-inner-favorites-report.json
           if-no-files-found: error
