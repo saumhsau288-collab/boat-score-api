@@ -14,5 +14,11 @@ assert.equal(replayExclusionVariants([{...base,capturedAt:'2026-11-22T07:00:00Z'
 assert.equal(replayExclusionVariants([{...base,boats:base.boats.map(({top2Rate,...x})=>x)}]).summary.exclude_weak_top2_1.eligible,0);
 assert.equal(replayExclusionVariants([{...base,boats:base.boats.map(({entryCourse,...x})=>x)}]).summary.exclude_score_course_1.eligible,0);
 assert.equal(replayExclusionVariants([{...base,boats:base.boats.map(x=>({...x,entryCourse:1}))}]).summary.exclude_score_course_2.eligible,0);
+const retrospective={...base,scoreSource:'current_app_recomputed_after_race',capturedAt:null,deadlineAt:null,incidentFree:null};
+assert.equal(replayExclusionVariants([retrospective]).held.length,1);
+const diagnostic=replayExclusionVariants([retrospective],{mode:'retrospective_diagnostic'});
+assert.equal(diagnostic.mode,'retrospective_diagnostic');
+assert.equal(diagnostic.summary.baseline_no_exclusion.eligible,1);
+assert.equal(replayExclusionVariants([{...retrospective,scoreSource:'untrusted'}],{mode:'retrospective_diagnostic'}).held.length,1);
 assert.throws(()=>replayExclusionVariants([base,base]),/Duplicate/);
 console.log('Historical exclusion replay: eight variants, six picks, no post-deadline evidence, missing metric hold, duplicate guards passed.');
