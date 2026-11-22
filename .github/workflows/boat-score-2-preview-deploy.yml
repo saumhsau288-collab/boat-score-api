@@ -177,6 +177,21 @@ jobs:
             throw Error('Invalid verified race count');
           const eligible=counts.reduce((a,n)=>a+n,0);
           if(eligible!==d.eligible)throw Error('Verified race count does not match eligible');
+          const venueSet=new Set(d.venues.map(Number));
+          if(venueSet.size!==d.venues.length||[...venueSet].some(n=>!Number.isInteger(n)||n<1||n>24))
+            throw Error('Invalid or duplicated scheduled venue');
+          const completed=new Set(d.completedVenues.map(Number));
+          if(completed.size!==d.completedVenues.length||[...completed].some(n=>!venueSet.has(n)))
+            throw Error('Invalid or duplicated completed venue');
+          if([...completed].some(n=>Number(d.verifiedRacesByVenue?.[n])!==12))
+            throw Error('Completed venue does not have 12 verified races');
+          if(d.status==='completed'&&completed.size!==venueSet.size)
+            throw Error('Completed status conflicts with incomplete venue coverage');
+          for(const category of ['main','upset','chaos']){
+            const picks=d.categories[category];
+            if(!Array.isArray(picks)||picks.length>20)
+              throw Error('Invalid '+category+' ranking size');
+          }
           console.log(JSON.stringify({date,httpStatus:status,status:d.status,venues:d.venues.length,
             completedVenues:d.completedVenues.length,eligible,failedVenues:(d.failedVenues||[]).length,
             main:(d.categories.main||[]).length,upset:(d.categories.upset||[]).length,
