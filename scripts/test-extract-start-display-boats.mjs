@@ -14,3 +14,11 @@ test('rejects duplicate boats',()=>{
  const html='<table><th>スタート展示</th>'+[1,2,3,4,5,5].map(n=>cell(n,'.12')).join('')+'</table>';
  assert.equal(extractStartDisplayBoats(html).status,'duplicate_boats');
 });
+
+test('preserves display order independently from boat numbers',()=>{
+ const html='<table><th>スタート展示</th>'+[2,1,3,4,6,5].map(n=>cell(n,'.12')).join('')+'</table>';
+ const r=extractStartDisplayBoats(html);
+ assert.equal(r.status,'parsed_start_display');
+ assert.deepEqual(r.boats.map(x=>x.boat),[2,1,3,4,6,5]);
+ assert.equal(r.actualEntryCourseVerified,false);
+});
