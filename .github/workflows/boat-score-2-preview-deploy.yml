@@ -150,3 +150,35 @@ jobs:
           test "$status" = 400 || { echo "::error::Unexpected twelve-method endpoint HTTP $status"; exit 1; }
           node -e "const d=require('./endpoint.json');if(d.error!=='Invalid date, venue or race')process.exit(1)"
           echo 'Deployed twelve-method API responds and validates inputs'
+
+      - name: Inspect deployed morning snapshot without assuming completion
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATE=$(TZ=Asia/Tokyo date +%Y%m%d)
+          BASE="https://boat-score-2-preview.saumh-sau-288.workers.dev"
+          status=$(curl --silent --show-error --max-time 25 -o morning-snapshot.json -w '%{http_code}' "$BASE/api/morning/snapshot?date=$DATE")
+          node - "$status" "$DATE" <<'NODE'
+          const fs=require('node:fs');
+          const status=Number(process.argv[2]),date=process.argv[3];
+          let d;
+          try{d=JSON.parse(fs.readFileSync('morning-snapshot.json','utf8'));}
+          catch{throw Error('Morning snapshot response is not valid JSON');}
+          if(status===404&&d.status==='not_available'){
+            console.log(JSON.stringify({date,httpStatus:status,status:d.status,verifiedRaces:0,message:'Morning snapshot not saved yet'}));
+            process.exit(0);
+          }
+          if(status!==200)throw Error('Unexpected morning snapshot HTTP '+status+': '+JSON.stringify(d).slice(0,200));
+          if(d.date!==date||!Array.isArray(d.venues)||!Array.isArray(d.completedVenues)||!d.categories)
+            throw Error('Morning snapshot has an invalid structure');
+          const counts=Object.values(d.verifiedRacesByVenue||{});
+          if(counts.some(n=>!Number.isInteger(n)||n<0||n>12))
+            throw Error('Invalid verified race count');
+          const eligible=counts.reduce((a,n)=>a+n,0);
+          if(eligible!==d.eligible)throw Error('Verified race count does not match eligible');
+          console.log(JSON.stringify({date,httpStatus:status,status:d.status,venues:d.venues.length,
+            completedVenues:d.completedVenues.length,eligible,failedVenues:(d.failedVenues||[]).length,
+            main:(d.categories.main||[]).length,upset:(d.categories.upset||[]).length,
+            chaos:(d.categories.chaos||[]).length,
+            note:'Observed snapshot only; not a historical accuracy test.'}));
+          NODE
