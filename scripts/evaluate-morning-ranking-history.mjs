@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 const categories=['main','upset','chaos'];
 export function evaluateMorningRankingHistory(snapshot,results){
- if(!snapshot||!/^20\\d{6}$/.test(String(snapshot.date))||!snapshot.categories||
+ if(!snapshot||!/^20\d{6}$/.test(String(snapshot.date))||!snapshot.categories||
     !Array.isArray(results))throw Error('Invalid snapshot or results');
  const byRace=new Map();
  for(const r of results){
