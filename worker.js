@@ -2626,8 +2626,17 @@ function classifyDailyRaceCandidates(races) {
     const outer=Math.max(...ordered.filter(x=>x.boat>=4).map(x=>x.score));
     const inner=Math.max(...ordered.filter(x=>x.boat<=3).map(x=>x.score));
     // Persist the actual six-boat order before any result is known; never reconstruct later.
+    // Morning-only, immutable candidate metrics. Retain the actual scoring input for
+    // future audit of whether INNER racers were genuinely high scoring.
+    // Do not reconstruct these metrics retrospectively from revised race pages.
+    const innerRanked=ordered.filter(x=>x.boat<=3);
+    const innerTopTwoCount=ordered.slice(0,2).filter(x=>x.boat<=3).length;
     const item={date:race.date,venue:race.venue,race:race.race,lead,spread,outerGap:outer-inner,
       capturedAt:race.capturedAt||null,
+      rankedScores:ordered.map(x=>({boat:x.boat,score:x.score})),
+      innerTopTwoCount,innerTopThreeCount:ordered.slice(0,3).filter(x=>x.boat<=3).length,
+      innerTopScore:inner,outerTopScore:outer,
+      innerTopTwoBoats:ordered.slice(0,2).filter(x=>x.boat<=3).map(x=>x.boat),
       status:'provisional_not_calibrated',predictedOrder:ordered.map(x=>x.boat)};
     const category=lead>=3&&ordered[0].boat<=3?'main':outer>=inner?'upset':'chaos';
     categories[category].push({...item,category,score:category==='main'?lead:category==='upset'?outer-inner:-spread});
