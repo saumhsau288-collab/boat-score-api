@@ -3,6 +3,8 @@
 // Never present slot hit rates as independent method performance.
 import {validTrifectaPicks,verifiedPodium} from './backtest-comparison-eligibility.mjs';
 const key=r=>[r?.date,Number(r?.venue),Number(r?.race)].join('|');
+const explicitTime=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
+const beforeCutoff=row=>explicitTime(row?.receivedAt)&&explicitTime(row?.officialCutoffAt)&&Date.parse(row.receivedAt)<Date.parse(row.officialCutoffAt);
 export function auditDeployedTicketSlots(capture,results){
  if(!Array.isArray(capture?.records)||!Array.isArray(results))throw new TypeError('capture.records and results required');
  const index=new Map();
@@ -14,7 +16,7 @@ export function auditDeployedTicketSlots(capture,results){
  for(const row of capture.records){
   const k=key(row),result=index.get(k),actual=verifiedPodium(result);
   if(counts.get(k)!==1){hold('duplicate_capture');continue;}
-  if(capture.authenticatedBeforeRace!==true||row.preRaceVerified!==true||row.savedBeforeCutoff!==true){hold('pre_race_unverified');continue;}
+  if(capture.authenticatedBeforeRace!==true||row.preRaceVerified!==true||row.savedBeforeCutoff!==true||!beforeCutoff(row)){hold('pre_race_unverified');continue;}
   if(!actual){hold('official_result_unverified_or_missing');continue;}
   if(row.response?.ready!==true||!validTrifectaPicks(row.response.main)||!validTrifectaPicks(row.response.upset)){hold('invalid_saved_tickets');continue;}
   summary.compared++;
