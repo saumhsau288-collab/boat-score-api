@@ -10,7 +10,7 @@ export async function probeOfficialTwelveInputs(selection,fetcher=fetch){
  if(target.status!=='ok')return {status:'invalid_selection',details:target};
  const requestedAt=new Date().toISOString();
  try{
-  const response=await fetcher(target.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(9000)});
+  const response=await fetcher(target.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(20000)});
   const receivedAt=new Date().toISOString();
   if(!response.ok)return {status:'upstream_error',sourceUrl:target.url,httpStatus:response.status,requestedAt,receivedAt};
   if(!/text\/html/i.test(response.headers.get('content-type')||''))return {status:'invalid_content_type',sourceUrl:target.url,requestedAt,receivedAt};
