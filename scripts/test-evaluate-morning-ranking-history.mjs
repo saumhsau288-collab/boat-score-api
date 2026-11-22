@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {evaluateMorningRankingHistory,isValidMorningCaptureTimestamp} from './evaluate-morning-ranking-history.mjs';
+import {evaluateMorningRankingHistory,isValidMorningCaptureTimestamp,isCaptureOnMorningDate} from './evaluate-morning-ranking-history.mjs';
 const order=[1,2,3,4,5,6];
 const pick=(category,race)=>({date:'20261122',venue:1,race,category,status:'provisional_not_calibrated',predictedOrder:order});
 const snapshot={date:'20261122',categories:{main:[pick('main',1)],upset:[pick('upset',2)],chaos:[]}};
@@ -32,6 +32,10 @@ const capture='2026-11-22T23:00:00.000Z'; // 08:00 JST, November 23
 assert.equal(isValidMorningCaptureTimestamp(capture),true);
 assert.equal(isValidMorningCaptureTimestamp('2026-11-22 23:00:00'),false);
 assert.equal(isValidMorningCaptureTimestamp('invalid'),false);
+assert.equal(isCaptureOnMorningDate(capture,'20261123'),true);
+assert.equal(isCaptureOnMorningDate('2026-11-22T14:59:59.999Z','20261123'),false);
+assert.equal(isCaptureOnMorningDate('2026-11-23T14:59:59.999Z','20261123'),true);
+assert.equal(isCaptureOnMorningDate('2026-11-23T15:00:00.000Z','20261123'),false);
 const tomorrowPick=(category,race,additional={})=>({
  ...pick(category,race),date:'20261123',capturedAt:capture,...additional
 });
@@ -47,6 +51,13 @@ assert.equal(nextEval.byCategory.main.matched,1);
 assert.equal(nextEval.byCategory.main.missingCaptureTimestamp,1);
 assert.equal(nextEval.byCategory.main.notEvaluable,1);
 assert.equal(nextEval.byCategory.main.firstRate,1);
+const wrongDay={...nextSnapshot,categories:{...nextSnapshot.categories,main:[
+ tomorrowPick('main',1,{capturedAt:'2026-11-23T15:00:00.000Z'})
+]}};
+const wrongDayEval=evaluateMorningRankingHistory(wrongDay,[nextResult(1)]);
+assert.equal(wrongDayEval.byCategory.main.matched,0);
+assert.equal(wrongDayEval.byCategory.main.missingCaptureTimestamp,1);
+assert.equal(wrongDayEval.byCategory.main.firstRate,null);
 assert.equal(nextEval.byCategory.upset.matched,0);
 assert.equal(nextEval.byCategory.upset.missingPredictionOrder,1);
 assert.equal(nextEval.byCategory.upset.notEvaluable,1);
