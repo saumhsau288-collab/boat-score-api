@@ -16,7 +16,9 @@ export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
   {id:'exclude_lowest_1_conditional_second',n:1,rule:'score',secondRule:'neighbor'},
   {id:'exclude_lowest_2_conditional_second',n:2,rule:'score',secondRule:'neighbor'},
   {id:'exclude_lowest_1_top2_second',n:1,rule:'score',secondRule:'top2'},
-  {id:'exclude_lowest_2_top2_second',n:2,rule:'score',secondRule:'top2'}
+  {id:'exclude_lowest_2_top2_second',n:2,rule:'score',secondRule:'top2'},
+  {id:'multi_winner_top2_1',n:1,rule:'score',secondRule:'multiwinner'},
+  {id:'multi_winner_top2_2',n:2,rule:'score',secondRule:'multiwinner'}
  ];
  const counts=Object.fromEntries(configs.map(x=>[x.id,{eligible:0,excludedTopTwoCorrect:0,firstCorrect:0,firstTwoCorrect:0,trifectaSixHit:0,excludedWinner:0,excludedRunnerUp:0}]));
  const held=[],detail=[];
@@ -52,10 +54,35 @@ export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
     return a.score*.55+b.score*.30+c.score*.15;
    };
    const combinations=[];
+   // Diversify first-place candidates before selecting runner-up for each one.
+   // This is a test hypothesis: no finish data is used to generate picks.
+   if(cfg.secondRule==='multiwinner'){
+    const leaders=remaining.slice(0,Math.min(3,remaining.length));
+    const byWinner=[];
+    for(const first of leaders){
+     const choices=[];
+     for(const second of remaining)for(const third of thirdCandidates){
+      if(first===second||first===third||second===third)continue;
+      choices.push({pick:[first,second,third].join('-'),score:scoreFor(first,second,third)});
+     }
+     choices.sort((a,b)=>b.score-a.score||a.pick.localeCompare(b.pick));
+     byWinner.push(choices);
+    }
+    const diversified=[];
+    for(let round=0;diversified.length<6&&round<6;round++){
+     for(const choices of byWinner){
+      const choice=choices[round];
+      if(choice&&!diversified.some(x=>x.pick===choice.pick))diversified.push(choice);
+      if(diversified.length===6)break;
+     }
+    }
+    combinations.push(...diversified);
+   }else{
    for(const first of remaining)for(const second of remaining)for(const third of thirdCandidates){
     if(first===second||first===third||second===third)continue;
     const score=scoreFor(first,second,third);
     combinations.push({pick:[first,second,third].join('-'),score});
+   }
    }
    combinations.sort((a,b)=>b.score-a.score||a.pick.localeCompare(b.pick));
    const picks=combinations.slice(0,6).map(x=>x.pick);
