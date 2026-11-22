@@ -4,7 +4,11 @@ import {rankNationalLocalAverage} from './audit-boat-one-national-local-average.
 export function evaluatePositionModelHoldout(reports){
  if(!Array.isArray(reports)||reports.length<3)throw TypeError('three or more daily reports required');
  const days=[...reports].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
- const split=Math.ceil(days.length*.6);
+ // Frozen six-day training period: adding new archive days must NEVER retrain this model.
+ const trainingEnd='20261117';
+ const split=days.findIndex(d=>String(d.date)>trainingEnd);
+ if(split<0||split<1||days.slice(0,split).some(d=>String(d.date)<'20261112'))throw new Error('frozen training dates 20261112–20261117 and later evaluation dates required');
+ if(days.slice(0,split).map(d=>String(d.date)).join(',')!=='20261112,20261113,20261114,20261115,20261116,20261117')throw new Error('frozen six-day training set incomplete or changed');
  const flatten=ds=>ds.flatMap(d=>d.reports.flatMap(v=>v.records));
  const prepare=rows=>rows.flatMap(r=>{
   let ranked;try{ranked=rankNationalLocalAverage(r?.racers)}catch{return []}
@@ -103,5 +107,5 @@ export function evaluatePositionModelHoldout(reports){
   counts.modelOnlyVsFixed+=m&&!f?1:0;counts.fixedOnlyVsModel+=f&&!m?1:0;
   counts.modelOnlyVsRank+=m&&!r?1:0;counts.rankOnlyVsModel+=r&&!m?1:0;
  }
- return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,otherLeadGap,challengerGapTwoPlus,challengerGapTwoPlusByDate,challengerGapTwoPlusTrifecta,hybridTrifecta,warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
+ return {trainingDates:days.slice(0,split).map(d=>d.date),holdoutDates:days.slice(split).map(d=>d.date),trainingRaces:train.length,holdout:counts,byDate,byPredictedWinner,byActualWinner,byBoatOneRank,outsideWinnerCandidate,candidateStrategies,otherLeadGap,challengerGapTwoPlus,challengerGapTwoPlusByDate,challengerGapTwoPlusTrifecta,hybridTrifecta,frozenTrainingEnd:trainingEnd,independentFutureDates:days.slice(split).filter(d=>String(d.date)>='20261122').map(d=>String(d.date)),warning:'Research only. Independent per-position probabilities multiplied without joint calibration; actual entry course and genuine pre-race rates not verified. Do not deploy or claim prospective accuracy.'};
 }
