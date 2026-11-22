@@ -45,6 +45,7 @@ jobs:
           node scripts/test-top-two-exclusion.mjs
           node scripts/test-evaluate-top-two-history.mjs
           node scripts/test-morning-coverage-guard.mjs
+          node scripts/test-morning-winrate-fallback.mjs
           node --test test-generate-twelve-independent-methods.mjs
           node history-analysis.test.mjs
           node ranking.test.mjs
@@ -177,6 +178,32 @@ jobs:
             throw Error('Invalid verified race count');
           const eligible=counts.reduce((a,n)=>a+n,0);
           if(eligible!==d.eligible)throw Error('Verified race count does not match eligible');
+          const venueSet=new Set(d.venues.map(Number));
+          if(venueSet.size!==d.venues.length||[...venueSet].some(n=>!Number.isInteger(n)||n<1||n>24))
+            throw Error('Invalid or duplicated scheduled venue');
+          const completed=new Set(d.completedVenues.map(Number));
+          if(completed.size!==d.completedVenues.length||[...completed].some(n=>!venueSet.has(n)))
+            throw Error('Invalid or duplicated completed venue');
+          if([...completed].some(n=>Number(d.verifiedRacesByVenue?.[n])!==12))
+            throw Error('Completed venue does not have 12 verified races');
+          if(d.status==='completed'&&completed.size!==venueSet.size)
+            throw Error('Completed status conflicts with incomplete venue coverage');
+          const seenRaceKeys=new Set();
+          for(const category of ['main','upset','chaos']){
+            const picks=d.categories[category];
+            if(!Array.isArray(picks)||picks.length>20)
+              throw Error('Invalid '+category+' ranking size');
+            for(const pick of picks){
+              const venue=Number(pick?.venue),race=Number(pick?.race);
+              if(String(pick?.date)!==date||!venueSet.has(venue)||
+                 !Number.isInteger(race)||race<1||race>12||
+                 pick?.category!==category||pick?.status!=='provisional_not_calibrated')
+                throw Error('Invalid '+category+' race identity or provisional status');
+              const key=venue+':'+race;
+              if(seenRaceKeys.has(key))throw Error('Duplicate race across morning rankings: '+key);
+              seenRaceKeys.add(key);
+            }
+          }
           console.log(JSON.stringify({date,httpStatus:status,status:d.status,venues:d.venues.length,
             completedVenues:d.completedVenues.length,eligible,failedVenues:(d.failedVenues||[]).length,
             main:(d.categories.main||[]).length,upset:(d.categories.upset||[]).length,
