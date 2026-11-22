@@ -3,9 +3,11 @@
 export const METHOD_VERSION='independent-v0-20261122';
 export const METHOD_IDS=[...Array.from({length:6},(_,i)=>'favorite-'+(i+1)),...Array.from({length:6},(_,i)=>'upset-'+(i+1))];
 const finite=x=>typeof x==='number'&&Number.isFinite(x);
-const rank=(arr,score,ascending=false)=>[...arr].sort((a,b)=>{
+const rank=(arr,score,ascending=false,tieScore=null)=>[...arr].sort((a,b)=>{
  const d=ascending?score(a)-score(b):score(b)-score(a);
- return d||a.course-b.course||a.boat-b.boat;
+ if(d)return d;
+ if(tieScore){const tie=tieScore(b)-tieScore(a);if(tie)return tie;}
+ return a.course-b.course||a.boat-b.boat;
 });
 const triple=arr=>arr.slice(0,3).map(x=>x.boat);
 const top=(arr,score,asc=false)=>rank(arr,score,asc)[0];
@@ -24,16 +26,16 @@ export function generateTwelveIndependentMethods(snapshot){
  const requireRule=(id,ok,reason,fn)=>ok?emit(id,fn()):missing(id,reason);
  const ab=()=>rank(racers,ability);
  const adjusted=r=>ability(r)+(7-r.course)*0.12;
- const st=()=>rank(racers,r=>r.averageST,true);
- const motor=()=>rank(racers,r=>r.motor2Rate);
- const exhibition=()=>rank(racers,r=>r.exhibitionTime,true);
- const last50=()=>rank(racers,r=>r.last50CoursePodiumRate);
+ const st=()=>rank(racers,r=>r.averageST,true,ability);
+ const motor=()=>rank(racers,r=>r.motor2Rate,false,ability);
+ const exhibition=()=>rank(racers,r=>r.exhibitionTime,true,ability);
+ const last50=()=>rank(racers,r=>r.last50CoursePodiumRate,false,ability);
  requireRule('favorite-1',validAbility,'missing_ability',ab);
- requireRule('favorite-2',validAbility&&has('averageST'),'missing_average_st_or_ability',()=>rank(racers,r=>-r.averageST+ability(r)*0.0001));
+ requireRule('favorite-2',validAbility&&has('averageST'),'missing_average_st_or_ability',st);
  requireRule('favorite-3',validAbility,'missing_ability',()=>rank(racers,adjusted));
- requireRule('favorite-4',validAbility&&has('motor2Rate',x=>x>=0&&x<=100),'missing_motor_or_ability',()=>rank(racers,r=>r.motor2Rate+ability(r)*0.0001));
- requireRule('favorite-5',validAbility&&has('exhibitionTime',x=>x>0),'missing_exhibition_or_ability',()=>rank(racers,r=>-r.exhibitionTime+ability(r)*0.000001));
- requireRule('favorite-6',validAbility&&has('last50CoursePodiumRate',x=>x>=0&&x<=100),'missing_last50_or_ability',()=>rank(racers,r=>r.last50CoursePodiumRate+ability(r)*0.0001));
+ requireRule('favorite-4',validAbility&&has('motor2Rate',x=>x>=0&&x<=100),'missing_motor_or_ability',motor);
+ requireRule('favorite-5',validAbility&&has('exhibitionTime',x=>x>0),'missing_exhibition_or_ability',exhibition);
+ requireRule('favorite-6',validAbility&&has('last50CoursePodiumRate',x=>x>=0&&x<=100),'missing_last50_or_ability',last50);
  if(validAbility){
   const leader=ab()[0],remaining=racers.filter(r=>r!==leader);
   const ordered=rank(remaining,adjusted);
@@ -57,7 +59,7 @@ export function generateTwelveIndependentMethods(snapshot){
    const winner=exhibitionCandidates[0];return [winner,...rank(racers.filter(r=>r!==winner),adjusted).slice(0,2)];
   });
   requireRule('upset-2',has('averageST'),'missing_average_st',()=>{
-   const ordered=rank(remaining,r=>-r.averageST+ability(r)*0.0001);
+   const ordered=rank(remaining,r=>r.averageST,true,ability);
    return [ordered[0],ordered[1],leader];
   });
  }else for(let i=1;i<=6;i++)missing('upset-'+i,'missing_ability');
