@@ -16,4 +16,15 @@ assert.throws(()=>evaluateMorningRankingHistory({...snapshot,categories:{...snap
 assert.throws(()=>evaluateMorningRankingHistory(snapshot,[result(1,[1,1,3,4,5,6])]),/Unverified/);
 const malformed={...snapshot,categories:{...snapshot.categories,main:[{...pick('main',1),predictedOrder:[1,2,3]}]}};
 assert.throws(()=>evaluateMorningRankingHistory(malformed,[]),/Invalid saved morning ranking:.*"predictedOrder":\[1,2,3\]/);
-console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, and five invalid-input guards passed. No real-race accuracy claimed.');
+const legacy={...snapshot,categories:{...snapshot.categories,main:[((({predictedOrder,...rest})=>rest)(pick('main',1)))]}};
+const skipped=evaluateMorningRankingHistory(legacy,[result(1,order)]);
+assert.equal(skipped.byCategory.main.saved,1);
+assert.equal(skipped.byCategory.main.missingPredictionOrder,1);
+assert.equal(skipped.byCategory.main.matched,0);
+assert.equal(skipped.byCategory.main.firstRate,null);
+const mixed={...snapshot,categories:{...snapshot.categories,main:[pick('main',1),((({predictedOrder,...rest})=>({...rest,race:3}))(pick('main',3)))]}};
+const mixedResult=evaluateMorningRankingHistory(mixed,[result(1,order),result(3,order)]);
+assert.equal(mixedResult.byCategory.main.matched,1);
+assert.equal(mixedResult.byCategory.main.missingPredictionOrder,1);
+assert.equal(mixedResult.byCategory.main.firstRate,1);
+console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, five invalid-input guards and legacy exclusion passed. No real-race accuracy claimed.');
