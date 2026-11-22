@@ -31,3 +31,13 @@ test('prediction cannot precede capture',()=>{
  const r=evaluateLockedProspectivePredictions([{...prediction,predictedAt:'2026-11-22T09:59:00+09:00'}],[result]);
  assert.equal(r.matched,0);
 });
+
+test('verification after prediction cannot retroactively admit a race',()=>{
+ const late={...verification,verifiedAt:'2026-11-22T10:05:00+09:00'};
+ const r=evaluateLockedProspectivePredictions([{...prediction,verification:late}],[result]);
+ assert.equal(r.matched,0);assert.equal(r.rejected[0].reason,'source_verified_too_late');
+});
+test('verification after race start is rejected',()=>{
+ const late={...verification,verifiedAt:'2026-11-22T10:12:00+09:00'};
+ assert.equal(evaluateLockedProspectivePredictions([{...prediction,verification:late}],[result]).matched,0);
+});
