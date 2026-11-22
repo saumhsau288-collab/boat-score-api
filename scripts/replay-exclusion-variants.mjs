@@ -29,9 +29,9 @@ export function replayExclusionVariants(rows){
   const actual=finish.slice(0,3).join('-');
   const cases={};
   for(const cfg of configs){
-   const rankValue=x=>cfg.rule==='top2'?x.top2Rate:cfg.rule==='course'?x.score+(7-(x.entryCourse||x.boat))*.5:x.score;
+   const rankValue=x=>cfg.rule==='top2'?x.top2Rate:cfg.rule==='course'?x.score+(7-x.entryCourse)*.5:x.score;
    if(cfg.rule==='top2'&&!boats.every(x=>Number.isFinite(x.top2Rate))){cases[cfg.id]={status:'held_missing_top2_rate'};continue;}
-   if(cfg.rule==='course'&&!boats.every(x=>Number.isInteger(x.entryCourse)&&x.entryCourse>=1&&x.entryCourse<=6)&&!boats.every(x=>x.entryCourse===undefined)){cases[cfg.id]={status:'held_invalid_entry'};continue;}
+   if(cfg.rule==='course'&&(!boats.every(x=>Number.isInteger(x.entryCourse)&&x.entryCourse>=1&&x.entryCourse<=6)||new Set(boats.map(x=>x.entryCourse)).size!==6)){cases[cfg.id]={status:'held_invalid_entry'};continue;}
    // Exclude by a selected ranking, then order remaining first/second by original app score.
    const byExclusion=[...boats].sort((a,b)=>rankValue(b)-rankValue(a)||a.boat-b.boat);
    const excluded=byExclusion.slice(6-cfg.n).map(x=>x.boat);
