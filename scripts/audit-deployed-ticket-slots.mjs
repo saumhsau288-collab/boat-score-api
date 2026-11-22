@@ -3,7 +3,7 @@
 // Never present slot hit rates as independent method performance.
 import {validTrifectaPicks,verifiedPodium} from './backtest-comparison-eligibility.mjs';
 const key=r=>[r?.date,Number(r?.venue),Number(r?.race)].join('|');
-const explicitTime=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
+const explicitTime=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
 const officialUrl=(result,row)=>{try{const u=new URL(result?.sourceUrl);return u.protocol==='https:'&&u.hostname==='www.boatrace.jp'&&u.pathname==='/owpc/pc/race/raceresult'&&u.searchParams.getAll('hd').length===1&&u.searchParams.getAll('jcd').length===1&&u.searchParams.getAll('rno').length===1&&u.searchParams.get('hd')===String(row.date)&&Number(u.searchParams.get('jcd'))===Number(row.venue)&&Number(u.searchParams.get('rno'))===Number(row.race);}catch{return false;}};
 const beforeCutoff=(row,result)=>explicitTime(row?.receivedAt)&&explicitTime(result?.officialCutoffAt)&&Date.parse(row.receivedAt)<Date.parse(result.officialCutoffAt);
 export function auditDeployedTicketSlots(capture,results){
