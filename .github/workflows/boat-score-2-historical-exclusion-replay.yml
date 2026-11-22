@@ -13,9 +13,9 @@ on:
         default: "1"
         type: string
       race:
-        description: "Race number 1-12"
-        required: true
-        default: "1"
+        description: "Race number 1-12 (leave empty for all 12 races)"
+        required: false
+        default: ""
         type: string
 permissions:
   contents: read
@@ -40,7 +40,12 @@ jobs:
           DATE: ${{ inputs.date }}
           VENUE: ${{ inputs.venue }}
           RACE: ${{ inputs.race }}
-        run: node scripts/collect-retrospective-exclusion-replay.mjs "$DATE" "$VENUE" "$RACE"
+        run: |
+          if [ -n "$RACE" ]; then
+            node scripts/collect-retrospective-exclusion-replay.mjs "$DATE" "$VENUE" "$RACE"
+          else
+            node scripts/collect-retrospective-exclusion-replay.mjs "$DATE" "$VENUE"
+          fi
       - name: Save diagnostic evidence
         uses: actions/upload-artifact@v4
         with:
