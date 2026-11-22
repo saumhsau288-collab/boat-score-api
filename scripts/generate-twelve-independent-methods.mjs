@@ -61,5 +61,6 @@ export function generateTwelveIndependentMethods(snapshot){
    return [ordered[0],ordered[1],leader];
   });
  }else for(let i=1;i<=6;i++)missing('upset-'+i,'missing_ability');
+ result.methods=Object.fromEntries(METHOD_IDS.map(id=>[id,result.methods[id]]));
  return result;
 }
