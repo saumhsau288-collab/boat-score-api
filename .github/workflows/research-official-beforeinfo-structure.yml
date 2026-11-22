@@ -1,0 +1,20 @@
+name: Research official beforeinfo structure
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/research-official-beforeinfo-structure.yml'
+      - 'scripts/probe-official-beforeinfo-structure.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect one official beforeinfo table structure
+        run: node scripts/probe-official-beforeinfo-structure.mjs
