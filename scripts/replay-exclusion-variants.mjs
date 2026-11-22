@@ -18,7 +18,11 @@ export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
   {id:'exclude_lowest_1_top2_second',n:1,rule:'score',secondRule:'top2'},
   {id:'exclude_lowest_2_top2_second',n:2,rule:'score',secondRule:'top2'},
   {id:'multi_winner_top2_1',n:1,rule:'score',secondRule:'multiwinner'},
-  {id:'multi_winner_top2_2',n:2,rule:'score',secondRule:'multiwinner'}
+  {id:'multi_winner_top2_2',n:2,rule:'score',secondRule:'multiwinner'},
+  {id:'multi_winner_two_1',n:1,rule:'score',secondRule:'multiwinner',winnerCount:2},
+  {id:'multi_winner_two_2',n:2,rule:'score',secondRule:'multiwinner',winnerCount:2},
+  {id:'multi_winner_two_no_neighbor_1',n:1,rule:'score',secondRule:'multiwinner_plain',winnerCount:2},
+  {id:'multi_winner_three_no_neighbor_1',n:1,rule:'score',secondRule:'multiwinner_plain',winnerCount:3}
  ];
  const counts=Object.fromEntries(configs.map(x=>[x.id,{eligible:0,excludedTopTwoCorrect:0,firstCorrect:0,firstTwoCorrect:0,trifectaSixHit:0,excludedWinner:0,excludedRunnerUp:0}]));
  const held=[],detail=[];
@@ -51,14 +55,15 @@ export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
     const a=boats.find(x=>x.boat===first),b=boats.find(x=>x.boat===second),c=boats.find(x=>x.boat===third);
     if(cfg.secondRule==='neighbor')return a.score*.55+(b.score+((Math.abs(first-second)===1)?5:0))*.30+c.score*.15;
     if(cfg.secondRule==='multiwinner')return a.score*.55+(b.score+((Math.abs(first-second)===1)?5:0))*.30+c.score*.15;
+    if(cfg.secondRule==='multiwinner_plain')return a.score*.55+b.score*.30+c.score*.15;
     if(cfg.secondRule==='top2')return a.score*.55+(b.score*.75+b.top2Rate*.25)*.30+c.score*.15;
     return a.score*.55+b.score*.30+c.score*.15;
    };
    const combinations=[];
    // Diversify first-place candidates before selecting runner-up for each one.
    // This is a test hypothesis: no finish data is used to generate picks.
-   if(cfg.secondRule==='multiwinner'){
-    const leaders=remaining.slice(0,Math.min(3,remaining.length));
+   if(cfg.secondRule==='multiwinner'||cfg.secondRule==='multiwinner_plain'){
+    const leaders=remaining.slice(0,Math.min(cfg.winnerCount||3,remaining.length));
     const byWinner=[];
     for(const first of leaders){
      const choices=[];
