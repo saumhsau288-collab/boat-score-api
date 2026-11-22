@@ -12,7 +12,11 @@ export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
   {id:'exclude_weak_top2_1',n:1,rule:'top2'},
   {id:'exclude_weak_top2_2',n:2,rule:'top2'},
   {id:'exclude_score_course_1',n:1,rule:'course'},
-  {id:'exclude_score_course_2',n:2,rule:'course'}
+  {id:'exclude_score_course_2',n:2,rule:'course'},
+  {id:'exclude_lowest_1_conditional_second',n:1,rule:'score',secondRule:'neighbor'},
+  {id:'exclude_lowest_2_conditional_second',n:2,rule:'score',secondRule:'neighbor'},
+  {id:'exclude_lowest_1_top2_second',n:1,rule:'score',secondRule:'top2'},
+  {id:'exclude_lowest_2_top2_second',n:2,rule:'score',secondRule:'top2'}
  ];
  const counts=Object.fromEntries(configs.map(x=>[x.id,{eligible:0,excludedTopTwoCorrect:0,firstCorrect:0,firstTwoCorrect:0,trifectaSixHit:0,excludedWinner:0,excludedRunnerUp:0}]));
  const held=[],detail=[];
@@ -31,7 +35,7 @@ export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
   const cases={};
   for(const cfg of configs){
    const rankValue=x=>cfg.rule==='top2'?x.top2Rate:cfg.rule==='course'?x.score+(7-x.entryCourse)*.5:x.score;
-   if(cfg.rule==='top2'&&!boats.every(x=>Number.isFinite(x.top2Rate))){cases[cfg.id]={status:'held_missing_top2_rate'};continue;}
+   if((cfg.rule==='top2'||cfg.secondRule==='top2')&&!boats.every(x=>Number.isFinite(x.top2Rate))){cases[cfg.id]={status:'held_missing_top2_rate'};continue;}
    if(cfg.rule==='course'&&(!boats.every(x=>Number.isInteger(x.entryCourse)&&x.entryCourse>=1&&x.entryCourse<=6)||new Set(boats.map(x=>x.entryCourse)).size!==6)){cases[cfg.id]={status:'held_invalid_entry'};continue;}
    // Exclude by a selected ranking, then order remaining first/second by original app score.
    const byExclusion=[...boats].sort((a,b)=>rankValue(b)-rankValue(a)||a.boat-b.boat);
@@ -39,10 +43,18 @@ export function replayExclusionVariants(rows,{mode='strict_pre_race'}={}){
    const remaining=boats.filter(x=>!excluded.includes(x.boat)).sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat);
    const thirdCandidates=boats.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat);
    // Six combinations. Excluded boats may still be used for third place.
+   // Conditional second place is scored after fixing each possible winner.
+   // 'neighbor' is a course-adjacency hypothesis, not a proven racing law.
+   const scoreFor=(first,second,third)=>{
+    const a=boats.find(x=>x.boat===first),b=boats.find(x=>x.boat===second),c=boats.find(x=>x.boat===third);
+    if(cfg.secondRule==='neighbor')return a.score*.55+(b.score+((Math.abs(first-second)===1)?5:0))*.30+c.score*.15;
+    if(cfg.secondRule==='top2')return a.score*.55+(b.score*.75+b.top2Rate*.25)*.30+c.score*.15;
+    return a.score*.55+b.score*.30+c.score*.15;
+   };
    const combinations=[];
    for(const first of remaining)for(const second of remaining)for(const third of thirdCandidates){
     if(first===second||first===third||second===third)continue;
-    const score=boats.find(x=>x.boat===first).score*.55+boats.find(x=>x.boat===second).score*.30+boats.find(x=>x.boat===third).score*.15;
+    const score=scoreFor(first,second,third);
     combinations.push({pick:[first,second,third].join('-'),score});
    }
    combinations.sort((a,b)=>b.score-a.score||a.pick.localeCompare(b.pick));
