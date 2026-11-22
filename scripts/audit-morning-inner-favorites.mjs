@@ -18,7 +18,7 @@ catch(error) {
   caveat:'No saved morning snapshot was available. No prediction accuracy can be inferred.'};
  const fs=await import('node:fs');
  const file='morning-inner-favorites-'+date+'.json';
- fs.writeFileSync(file,JSON.stringify(report,null,2)+'\\n');
+ fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');
  console.log(JSON.stringify({file,status:report.status,eligible:0,holdReasons:report.holdReasons}));
  process.exit(0);
 }
