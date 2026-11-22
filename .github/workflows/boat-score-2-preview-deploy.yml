@@ -43,6 +43,8 @@ jobs:
           node --check generate-twelve-independent-methods.mjs
           node scripts/test-twelve-independent-preview.mjs
           node scripts/test-top-two-exclusion.mjs
+          node scripts/test-morning-coverage-guard.mjs
+          node scripts/test-top-two-exclusion.mjs
           node --test test-generate-twelve-independent-methods.mjs
           node history-analysis.test.mjs
           node ranking.test.mjs
