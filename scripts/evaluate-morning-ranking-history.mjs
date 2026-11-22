@@ -30,7 +30,11 @@ export function evaluateMorningRankingHistory(snapshot,results){
       !Array.isArray(p.predictedOrder)||p.predictedOrder.length!==6||
       new Set(p.predictedOrder).size!==6||
       !p.predictedOrder.every(x=>Number.isInteger(x)&&x>=1&&x<=6))
-    throw Error('Invalid saved morning ranking');
+    throw Error('Invalid saved morning ranking: '+JSON.stringify({
+      category,venue:p?.venue,race:p?.race,date:p?.date,status:p?.status,
+      recordedCategory:p?.category,predictedOrder:p?.predictedOrder,
+      availableFields:p&&typeof p==='object'?Object.keys(p):[]
+    }));
    const key=p.venue+':'+p.race;
    if(seen.has(key))throw Error('Duplicate ranked race');
    seen.add(key);
