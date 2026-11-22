@@ -16,6 +16,7 @@ export function evaluateLockedProspectivePredictions(predictions,results){
   const gate=assessProspectiveAdmission(p.capture,p.verification);
   if(!gate.admitted){rejected.push({key:k,reason:gate.reason});continue;}
   if(gate.snapshot.date!==String(p.date)||gate.snapshot.venue!==p.venue||gate.snapshot.race!==p.race){rejected.push({key:k,reason:'capture_identity_mismatch'});continue;}
+  if(Date.parse(p.verification.verifiedAt)>=Date.parse(gate.snapshot.scheduledStartAt)||Date.parse(p.verification.verifiedAt)>Date.parse(p.predictedAt)){rejected.push({key:k,reason:'source_verified_too_late'});continue;}
   if(!validTrifecta(p.predictedTrifecta)||p.predictedFirst!==p.predictedTrifecta[0]){rejected.push({key:k,reason:'invalid_prediction'});continue;}
   if(p.ruleVersion!=='inner-challenger-frozen-20261122'||typeof p.predictedAt!=='string'||!Number.isFinite(Date.parse(p.predictedAt))||Date.parse(p.predictedAt)>=Date.parse(gate.snapshot.scheduledStartAt)||Date.parse(p.predictedAt)<Date.parse(gate.snapshot.capturedAt)){rejected.push({key:k,reason:'rule_or_prediction_time_invalid'});continue;}
   admitted.set(k,p);
