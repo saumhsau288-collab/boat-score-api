@@ -10,9 +10,9 @@ try{
  const html=await response.text();
  const headings=[...html.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/gi)].map(m=>m[1].replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
  const labels=['スタート展示','展示タイム','進入','ST','コース','選手名','艇番'];
- const textOnly=s=>s.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\\s+/g,' ').trim();
- const tableSummaries=[...html.matchAll(/<table\\b[^>]*>([\\s\\S]*?)<\\/table>/gi)].map((m,index)=>{
-  const cells=[...m[1].matchAll(/<(th|td)\\b[^>]*>([\\s\\S]*?)<\\/\\1>/gi)].map(x=>({tag:x[1].toLowerCase(),text:textOnly(x[2]).slice(0,45)}));
+ const textOnly=s=>s.replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/\s+/g,' ').trim();
+ const tableSummaries=[...html.matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)].map((m,index)=>{
+  const cells=[...m[1].matchAll(/<(th|td)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map(x=>({tag:x[1].toLowerCase(),text:textOnly(x[2]).slice(0,45)}));
   return {index,headerCells:cells.filter(x=>x.tag==='th').slice(0,22),dataCellCount:cells.filter(x=>x.tag==='td').length,firstDataCells:cells.filter(x=>x.tag==='td').slice(0,12)};
  });
  console.log(JSON.stringify({tableSummaries}));
