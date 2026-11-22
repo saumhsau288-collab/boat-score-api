@@ -3,6 +3,7 @@
 // actual entry, historical ST, exhibition or last-50 course podium.
 import {officialRacelistUrl} from '../boat-score-2-official.js';
 import {extractOfficialMetrics} from '../boat-score-2-metric-extractor.js';
+import {extractGroupedOfficialSix} from './extract-grouped-official-six.mjs';
 import {validateOfficialMetrics} from '../boat-score-2-official-metrics.js';
 import {adaptVerifiedOfficialMetricsToTwelve} from './adapt-verified-official-metrics-to-twelve.mjs';
 export async function probeOfficialTwelveInputs(selection,fetcher=fetch){
@@ -16,8 +17,9 @@ export async function probeOfficialTwelveInputs(selection,fetcher=fetch){
   if(!/text\/html/i.test(response.headers.get('content-type')||''))return {status:'invalid_content_type',sourceUrl:target.url,requestedAt,receivedAt};
   const html=await response.text();
   if(html.length>2_000_000)return {status:'response_too_large',requestedAt,receivedAt};
-  const parsed=extractOfficialMetrics(html);
-  if(!parsed.verified)return {status:'insufficient_data',reason:parsed.reason,requestedAt,receivedAt};
+  const initial=extractOfficialMetrics(html);
+  const parsed=initial.verified?initial:extractGroupedOfficialSix(html);
+  if(!parsed.verified)return {status:'insufficient_data',sourceUrl:target.url,reason:parsed.reason,initialReason:initial.reason,requestedAt,receivedAt};
   const checked=validateOfficialMetrics(parsed.racers);
   if(!checked.verified)return {status:'insufficient_data',reason:checked.reason,requestedAt,receivedAt};
   const adapted=adaptVerifiedOfficialMetricsToTwelve({official:parsed.racers});
