@@ -3,7 +3,7 @@ import {assessProspectiveAdmission} from './assess-prospective-admission.mjs';
 // Research-only: immutable pre-race predictions must be recorded before result matching.
 // This module does not fetch, authenticate, persist or predict races.
 const keyOf=r=>[r?.date,r?.venue,r?.race].join('-');
-const explicitTime=s=>typeof s==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
+const explicitTime=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
 const validOrder=o=>Array.isArray(o)&&o.length===6&&new Set(o).size===6&&o.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
 const validTrifecta=o=>Array.isArray(o)&&o.length===3&&new Set(o).size===3&&o.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
 export function evaluateLockedProspectivePredictions(predictions,results){
