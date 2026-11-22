@@ -29,9 +29,14 @@ function sixPicks(order){
 for(const item of main){
  const key=[date,item.venue,item.race].join(':');
  const order=item.predictedOrder;
- if(!item.capturedAt||!Array.isArray(order)||order.length!==6||new Set(order).size!==6||
-    !order.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){
-  held.push({key,reason:'missing_immutable_morning_order_or_capture'});continue;
+ const captureValid=typeof item.capturedAt==='string'&&!Number.isNaN(Date.parse(item.capturedAt));
+ const orderValid=Array.isArray(order)&&order.length===6&&new Set(order).size===6&&
+  order.every(x=>Number.isInteger(x)&&x>=1&&x<=6);
+ if(!captureValid||!orderValid){
+  held.push({key,reason:!captureValid&&!orderValid?'missing_capture_and_order':!captureValid?'missing_capture':'missing_order',
+   capturedAtPresent:Boolean(item.capturedAt),orderPresent:Array.isArray(order),
+   orderCount:Array.isArray(order)?order.length:null,
+   snapshotFields:Object.keys(item).sort()});continue;
  }
  const groupName=order[0]===1?(order[1]<=3?'boat1_first_inner_second':'boat1_first_outer_second'):(order[0]<=3?(order[1]<=3?'boat2or3_first_inner_second':'boat2or3_first_outer_second'):'not_inner_first');
  // Inner high scorers are approximated by top-ranked boats because the snapshot API
@@ -51,10 +56,11 @@ for(const item of main){
  }
  details.push({key,group:groupName,lead:item.lead,predictedOrder:order,actual:actual.slice(0,3),referenceSixPicks:picks,flags});
 }
-const result={date,mode:'saved_morning_main_only',snapshotStatus:snapshot.status,shortlist:main.length,eligible:details.length,held,
+const holdReasons=Object.fromEntries([...new Set(held.map(x=>x.reason))].map(k=>[k,held.filter(x=>x.reason===k).length]));
+const result={date,holdReasons,mode:'saved_morning_main_only',snapshotStatus:snapshot.status,shortlist:main.length,eligible:details.length,held,
  caveat:'This evaluates saved ranked order and a transparent reference six-pick formula, NOT the app independent six methods. Top-two inner strength uses relative rank, NOT absolute raw scores. Morning capturedAt is present but no explicit deadline check is available.',
  stats,details};
 const fs=await import('node:fs');
 const file='morning-inner-favorites-'+date+'.json';
 fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
-console.log(JSON.stringify({file,shortlist:main.length,eligible:details.length,held:held.length,stats},null,2));
+console.log(JSON.stringify({file,shortlist:main.length,eligible:details.length,held:held.length,holdReasons,stats},null,2));
