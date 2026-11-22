@@ -7,6 +7,18 @@ on:
       - 'scripts/extract-start-display-boats.mjs'
       - 'scripts/test-extract-start-display-boats.mjs'
   workflow_dispatch:
+    inputs:
+      race_date:
+        description: 'Race date YYYYMMDD (blank uses today in Japan)'
+        type: string
+      venue:
+        description: 'Venue number 1–24'
+        type: string
+        default: '02'
+      race:
+        description: 'Race number 1–12'
+        type: string
+        default: '1'
 permissions:
   contents: read
 jobs:
@@ -21,4 +33,9 @@ jobs:
       - name: Test strict six-boat start-display extraction
         run: node --test scripts/test-extract-start-display-boats.mjs
       - name: Inspect one official beforeinfo table structure
-        run: node scripts/probe-official-beforeinfo-structure.mjs
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          RACE_DATE: ${{ inputs.race_date }}
+          VENUE: ${{ inputs.venue }}
+          RACE: ${{ inputs.race }}
+        run: node scripts/probe-official-beforeinfo-structure.mjs "${RACE_DATE:-$(TZ=Asia/Tokyo date +%Y%m%d)}" "${VENUE:-02}" "${RACE:-1}"
