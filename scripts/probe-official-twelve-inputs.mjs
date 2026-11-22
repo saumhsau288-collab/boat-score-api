@@ -12,8 +12,8 @@ export async function probeOfficialTwelveInputs(selection,fetcher=fetch){
  try{
   const response=await fetcher(target.url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(9000)});
   const receivedAt=new Date().toISOString();
-  if(!response.ok)return {status:'upstream_error',httpStatus:response.status,requestedAt,receivedAt};
-  if(!/text\/html/i.test(response.headers.get('content-type')||''))return {status:'invalid_content_type',requestedAt,receivedAt};
+  if(!response.ok)return {status:'upstream_error',sourceUrl:target.url,httpStatus:response.status,requestedAt,receivedAt};
+  if(!/text\/html/i.test(response.headers.get('content-type')||''))return {status:'invalid_content_type',sourceUrl:target.url,requestedAt,receivedAt};
   const html=await response.text();
   if(html.length>2_000_000)return {status:'response_too_large',requestedAt,receivedAt};
   const parsed=extractOfficialMetrics(html);
@@ -26,5 +26,5 @@ export async function probeOfficialTwelveInputs(selection,fetcher=fetch){
    racers:adapted.racers,readiness:adapted.methodReadiness,
    independentlyAuthenticatedBeforeRace:false,officialCutoffVerified:false,
    warning:'Source parsing verified six-racer metrics only; not independently authenticated pre-race capture or a valid twelve-method historical trial.'};
- }catch(e){return {status:'fetch_failed',error:String(e?.message||e),requestedAt,receivedAt:new Date().toISOString()};}
+ }catch(e){return {status:'fetch_failed',sourceUrl:target.url,error:String(e?.message||e),requestedAt,receivedAt:new Date().toISOString()};}
 }
