@@ -155,8 +155,10 @@ async function runScheduledMorning(env,scheduledTime) {
       // Retry only missing races; never mark a venue complete after a partial scan.
       const completedRaces=new Set(state.records.filter(x=>x.date===date&&x.venue===venue&&x.ready===true).map(x=>x.race));
       const missingRaces=Array.from({length:12},(_,i)=>i+1).filter(r=>!completedRaces.has(r));
-      const rows=await mapOfficialLimited(missingRaces,3,async race=>
-        buildMorningRaceInputs(date,venue,race,await fetchOfficialRacers(date,venue,race)));
+      const rows=await mapOfficialLimited(missingRaces,3,async race=>{
+        const row=buildMorningRaceInputs(date,venue,race,await fetchOfficialRacers(date,venue,race));
+        return row.ready===true?{...row,capturedAt:new Date().toISOString()}:row;
+      });
       const existing=new Set(state.records.map(x=>x.date+':'+x.venue+':'+x.race));
       for(const row of rows.filter(x=>x.ready===true)){
         const id=row.date+':'+row.venue+':'+row.race;
@@ -2518,6 +2520,7 @@ function classifyDailyRaceCandidates(races) {
     const inner=Math.max(...ordered.filter(x=>x.boat<=3).map(x=>x.score));
     // Persist the actual six-boat order before any result is known; never reconstruct later.
     const item={date:race.date,venue:race.venue,race:race.race,lead,spread,outerGap:outer-inner,
+      capturedAt:race.capturedAt||null,
       status:'provisional_not_calibrated',predictedOrder:ordered.map(x=>x.boat)};
     const category=lead>=3&&ordered[0].boat<=3?'main':outer>=inner?'upset':'chaos';
     categories[category].push({...item,category,score:category==='main'?lead:category==='upset'?outer-inner:-spread});
