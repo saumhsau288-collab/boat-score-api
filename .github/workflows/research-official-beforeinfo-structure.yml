@@ -4,6 +4,8 @@ on:
     paths:
       - '.github/workflows/research-official-beforeinfo-structure.yml'
       - 'scripts/probe-official-beforeinfo-structure.mjs'
+      - 'scripts/extract-start-display-boats.mjs'
+      - 'scripts/test-extract-start-display-boats.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,5 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Test strict six-boat start-display extraction
+        run: node --test scripts/test-extract-start-display-boats.mjs
       - name: Inspect one official beforeinfo table structure
         run: node scripts/probe-official-beforeinfo-structure.mjs
