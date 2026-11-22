@@ -52,6 +52,16 @@ jobs:
           node --check scripts/replay-exclusion-variants.mjs
           node --check scripts/audit-top-two-exclusions.mjs
           node scripts/test-morning-ranking-persistence.mjs
+          node --check scripts/audit-morning-inner-favorites.mjs
+          node <<'NODE'
+          const fs=require('node:fs');
+          const source=fs.readFileSync('worker.js','utf8');
+          const classifier=source.slice(source.indexOf('function classifyDailyRaceCandidates('),source.indexOf('function summarizeHistoricalOuterFollow('));
+          for(const field of ['rankedScores:ordered.map','innerTopTwoCount','innerTopThreeCount','innerTopScore','outerTopScore']){
+            if(!classifier.includes(field))throw new Error('Missing saved morning MAIN metric: '+field);
+          }
+          console.log('Morning MAIN preserves six scores and inner strength evidence');
+          NODE
           node --check scripts/collect-morning-official-results.mjs
           node --test test-generate-twelve-independent-methods.mjs
           node history-analysis.test.mjs
