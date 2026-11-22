@@ -42,11 +42,13 @@ jobs:
         run: |
           node scripts/test-evaluate-morning-ranking-history.mjs
           node scripts/collect-morning-official-results.mjs "$HISTORY_DATE"
-      - name: Save official-result comparison for inspection
-        if: success()
+      - name: Preserve original snapshot and comparison even on failure
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: boat-score-2-morning-official-comparison-${{ inputs.date }}
-          path: morning-official-comparison-${{ inputs.date }}.json
-          if-no-files-found: error
+          name: boat-score-2-morning-evidence-${{ inputs.date }}
+          path: |
+            morning-snapshot-${{ inputs.date }}.json
+            morning-official-comparison-${{ inputs.date }}.json
+          if-no-files-found: warn
           retention-days: 30
