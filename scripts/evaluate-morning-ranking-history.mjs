@@ -22,14 +22,15 @@ export function evaluateMorningRankingHistory(snapshot,results){
  for(const category of categories){
   const picks=snapshot.categories[category];
   if(!Array.isArray(picks)||picks.length>20)throw Error('Invalid ranking category');
-  let matched=0,firstHits=0,topTwoExactHits=0,topThreeExactHits=0;
+  let matched=0,firstHits=0,topTwoExactHits=0,topThreeExactHits=0,missingPredictionOrder=0;
   for(const p of picks){
    if(String(p.date)!==String(snapshot.date)||p.category!==category||
       p.status!=='provisional_not_calibrated'||!Number.isInteger(p.venue)||
       p.venue<1||p.venue>24||!Number.isInteger(p.race)||p.race<1||p.race>12||
-      !Array.isArray(p.predictedOrder)||p.predictedOrder.length!==6||
-      new Set(p.predictedOrder).size!==6||
-      !p.predictedOrder.every(x=>Number.isInteger(x)&&x>=1&&x<=6))
+      (p.predictedOrder!==undefined&&
+       (!Array.isArray(p.predictedOrder)||p.predictedOrder.length!==6||
+        new Set(p.predictedOrder).size!==6||
+        !p.predictedOrder.every(x=>Number.isInteger(x)&&x>=1&&x<=6))))
     throw Error('Invalid saved morning ranking: '+JSON.stringify({
       category,venue:p?.venue,race:p?.race,date:p?.date,status:p?.status,
       recordedCategory:p?.category,predictedOrder:p?.predictedOrder,
@@ -37,7 +38,11 @@ export function evaluateMorningRankingHistory(snapshot,results){
     }));
    const key=p.venue+':'+p.race;
    if(seen.has(key))throw Error('Duplicate ranked race');
+   // Missing predictions in older stored snapshots cannot be reconstructed after a race.
+   // Treat those entries as not evaluable, never as a loss or an invented success.
+   if(!Array.isArray(p.predictedOrder))missingPredictionOrder++;
    seen.add(key);
+   if(p.predictedOrder===undefined)continue;
    const result=byRace.get(key);
    if(!result)continue;
    matched++;
@@ -45,7 +50,8 @@ export function evaluateMorningRankingHistory(snapshot,results){
    if(p.predictedOrder.slice(0,2).every((x,i)=>x===result.officialFinish[i]))topTwoExactHits++;
    if(p.predictedOrder.slice(0,3).every((x,i)=>x===result.officialFinish[i]))topThreeExactHits++;
   }
-  summary.byCategory[category]={saved:picks.length,matched,unmatched:picks.length-matched,
+  summary.byCategory[category]={saved:picks.length,matched,missingPredictionOrder,
+   notEvaluable:missingPredictionOrder,unmatched:picks.length-matched-missingPredictionOrder,
    firstHits,topTwoExactHits,topThreeExactHits,
    firstRate:matched?firstHits/matched:null,
    topTwoExactRate:matched?topTwoExactHits/matched:null,
