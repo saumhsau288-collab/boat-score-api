@@ -6,7 +6,7 @@ import {extractOfficialMetrics} from '../boat-score-2-metric-extractor.js';
 import {validateOfficialMetrics} from '../boat-score-2-official-metrics.js';
 import {adaptVerifiedOfficialMetricsToTwelve} from './adapt-verified-official-metrics-to-twelve.mjs';
 export async function probeOfficialTwelveInputs(selection,fetcher=fetch){
- const target=officialRacelistUrl(selection);
+ const target=officialRacelistUrl({...selection,venue:Number.isInteger(Number(selection?.venue))?String(selection.venue).padStart(2,'0'):selection?.venue});
  if(target.status!=='ok')return {status:'invalid_selection',details:target};
  const requestedAt=new Date().toISOString();
  try{
