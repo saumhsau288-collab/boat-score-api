@@ -1,4 +1,4 @@
-name: Deploy Boat Score 2 preview (manual only)
+name: Deploy Boat Score 2 isolated preview
 
 on:
   workflow_dispatch:
@@ -7,24 +7,58 @@ permissions:
   contents: read
 
 concurrency:
-  group: boat-score-2-preview-only
+  group: boat-score-2-preview-deploy
   cancel-in-progress: false
 
 jobs:
   deploy-preview:
     runs-on: ubuntu-latest
+    environment: boat-score-2-preview
     steps:
+      - name: Check required credentials
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CF_API_TOKEN" ] || [ -z "$CF_ACCOUNT_ID" ]; then
+            echo "::error::Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub Actions secrets."
+            exit 1
+          fi
       - name: Checkout Boat Score 2 development branch only
         uses: actions/checkout@v4
         with:
           ref: fix-boat-score-2-syntax-20261115
           persist-credentials: false
-      - name: Verify isolated branch
+      - name: Confirm isolated source branch
         run: |
           test "$(git branch --show-current)" = "fix-boat-score-2-syntax-20261115"
-          test -f worker.js
-      - name: Validate Worker syntax
-        run: node --input-type=module --check < worker.js
+          echo "Deploying Boat Score 2 development branch only"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Worker syntax and ranking
+        run: |
+          node --input-type=module --check < worker.js
+          node --check generate-twelve-independent-methods.mjs
+          node scripts/test-twelve-independent-preview.mjs
+          node scripts/test-top-two-exclusion.mjs
+          node scripts/test-evaluate-top-two-history.mjs
+          node scripts/test-morning-coverage-guard.mjs
+          node --test test-generate-twelve-independent-methods.mjs
+          node history-analysis.test.mjs
+          node ranking.test.mjs
+      - name: Check required review handlers before deploy
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const source = fs.readFileSync('worker.js', 'utf8');
+          for (const handler of ["document.getElementById('reviewResult').addEventListener", "document.getElementById('loadSelectedRaceEvidence').addEventListener", "document.getElementById('fetchOfficialFinish').addEventListener"]) {
+            if (!source.includes(handler)) throw new Error('Missing review handler: ' + handler);
+          }
+          console.log('Required Boat Score 2 review handlers present');
+          NODE
       - name: Diagnose official site connectivity from GitHub runner
         shell: bash
         run: |
@@ -47,71 +81,12 @@ jobs:
             print(json.dumps(result,ensure_ascii=False),flush=True)
           print("Connectivity-only probe; HTTP success does not verify six racer records.")
           PY
-      - name: Inspect official racelist HTML and six-boat candidates
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import urllib.request, urllib.parse, re, json, time, html
-          url="https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd=15&hd=20261116"
-          started=time.monotonic()
-          try:
-            request=urllib.request.Request(url,headers={"Accept":"text/html","User-Agent":"Mozilla/5.0"})
-            with urllib.request.urlopen(request,timeout=22) as response:
-              raw=response.read(2_000_001)
-              charset=response.headers.get_content_charset() or "utf-8"
-              status=response.status
-            if len(raw)>2_000_000:
-              raise ValueError("HTML exceeds 2MB safety limit")
-            page=raw.decode(charset,errors="replace")
-            # Extract official racer registration numbers from links only.
-            links=re.findall(r'<a\\b[^>]*href\\s*=\\s*["\\x27]([^"\\x27]+)["\\x27]',page,re.I)
-            racer_ids=[]
-            for link in links:
-              link=html.unescape(link)
-              if "racer" not in link.lower():continue
-              params=urllib.parse.parse_qs(urllib.parse.urlsplit(link).query)
-              for value in params.get("toban",[]):
-                if re.fullmatch(r"[0-9]{4}",value):racer_ids.append(value)
-            unique=list(dict.fromkeys(racer_ids))
-            result={"source":"pc_racelist","httpStatus":status,"htmlBytes":len(raw),
-              "elapsedMs":round((time.monotonic()-started)*1000),
-              "racerLinkCount":len(racer_ids),"uniqueRacerIds":unique,
-              "exactlySixUniqueRacerIds":len(unique)==6,
-              "verified":False,
-              "note":"Candidate identifiers only. Six boats must be matched to official lane rows before use."}
-            print(json.dumps(result,ensure_ascii=False))
-          except Exception as error:
-            print(json.dumps({"source":"pc_racelist","errorType":type(error).__name__,
-              "error":str(error)[:150],"elapsedMs":round((time.monotonic()-started)*1000),
-              "verified":False},ensure_ascii=False))
-          PY
-      - name: Verify isolated preview version metadata
-        run: |
-          grep -F "sourceBranch:'fix-boat-score-2-syntax-20261115'" worker.js
-          grep -F "app:'Boat Score 2 preview'" worker.js
-      - name: Check Cloudflare credentials are configured
-        env:
-          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          test -n "$CF_API_TOKEN" || { echo "::error::CLOUDFLARE_API_TOKEN missing"; exit 1; }
-          test -n "$CF_ACCOUNT_ID" || { echo "::error::CLOUDFLARE_ACCOUNT_ID missing"; exit 1; }
-      - name: Verify twelve independent methods before deployment
-        run: |
-          node --check generate-twelve-independent-methods.mjs
-          node scripts/test-twelve-independent-preview.mjs
-      - name: Configure dedicated morning KV and 8 AM JST cron
+      - name: Configure isolated morning storage and schedule
         env:
           KV_NAMESPACE_ID: ${{ secrets.BOAT_SCORE_2_KV_NAMESPACE_ID }}
-        shell: bash
         run: |
-          set -euo pipefail
           if [ -z "$KV_NAMESPACE_ID" ]; then
-            echo "::error::BOAT_SCORE_2_KV_NAMESPACE_ID is missing. Create a dedicated Cloudflare KV namespace and set this repository secret before deploying. Existing preview remains unchanged."
-            exit 1
-          fi
-          if ! [[ "$KV_NAMESPACE_ID" =~ ^[a-fA-F0-9]{32}$ ]]; then
-            echo "::error::BOAT_SCORE_2_KV_NAMESPACE_ID must be a 32-character Cloudflare KV namespace ID."
+            echo "::error::Set BOAT_SCORE_2_KV_NAMESPACE_ID to a dedicated KV namespace for Boat Score 2."
             exit 1
           fi
           cat > wrangler.toml <<'TOML'
@@ -120,51 +95,91 @@ jobs:
           compatibility_date = "2026-11-01"
           workers_dev = true
           [triggers]
-          crons = ["0 23 * * *"]
+          crons = ["*/5 23 * * *"]
           TOML
           printf '\n[[kv_namespaces]]\nbinding = "MORNING_KV"\nid = "%s"\n' "$KV_NAMESPACE_ID" >> wrangler.toml
-      - name: Deploy ONLY separate Boat Score 2 preview Worker
+      - name: Deploy isolated preview Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@4 deploy --config wrangler.toml
-      - name: Verify deployed twelve-method preview
+      - name: Verify deployed preview version
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://boat-score-2-preview.saumh-sau-288.workers.dev/api/version"
+          for attempt in 1 2 3 4 5; do
+            if curl --fail --silent --show-error --max-time 15 "$URL" -o version.json &&
+              node -e "const fs=require('fs');const d=require('./version.json');const src=fs.readFileSync('worker.js','utf8');const match=src.match(/build:'([^']+)'/);if(!match||d.app!=='Boat Score 2 preview'||d.build!==match[1]||d.sourceBranch!=='fix-boat-score-2-syntax-20261115')process.exit(1)"; then
+              echo "Verified isolated preview build and source branch"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Preview version endpoint does not match expected Boat Score 2 development build"
+          exit 1
+      - name: Smoke-test screenshot tool HTML and controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://boat-score-2-preview.saumh-sau-288.workers.dev/tools/makulabo-screenshot"
+          curl --fail --silent --show-error --max-time 25 "$URL" -o screenshot-tool.html
+          node <<'NODE'
+          const fs = require('node:fs');
+          const html = fs.readFileSync('screenshot-tool.html', 'utf8');
+          const ids = ['loadCsvCard','loadBeforeInfo','fetchOfficialFinish','reviewResult','scanOfficialResults','loadSelectedRaceEvidence','reviewSelectedEvidence','exportReviews','importReviews'];
+          const missing = ids.filter(id => !html.includes('id="' + id + '"'));
+          if (missing.length) throw new Error('Missing deployed screenshot tool controls: ' + missing.join(', '));
+          console.log('Deployed screenshot tool includes all expected controls');
+          NODE
+      - name: Smoke-test deployed twelve-method UI and endpoint
         shell: bash
         run: |
           set -euo pipefail
           BASE="https://boat-score-2-preview.saumh-sau-288.workers.dev"
-          for attempt in 1 2 3 4 5; do
-            if curl --fail --silent --show-error --max-time 15 "$BASE/" -o preview.html &&
-               curl --fail --silent --show-error --max-time 15 "$BASE/api/version" -o version.json; then
-              break
-            fi
-            sleep 5
-          done
+          curl --fail --silent --show-error --max-time 25 "$BASE/" -o preview-home.html
           node <<'NODE'
           const fs=require('node:fs');
-          const html=fs.readFileSync('preview.html','utf8');
-          for(const id of ['predictTwelveMethods','twelveMethodStatus','twelveMethodOutput']){
-            if(!html.includes('id="'+id+'"'))throw Error('Missing preview control: '+id);
+          const html=fs.readFileSync('preview-home.html','utf8');
+          for(const id of ['predictTwelveMethods','twelveMethodStatus','twelveMethodOutput']) {
+            if(!html.includes('id="'+id+'"'))throw new Error('Missing deployed twelve-method control: '+id);
           }
-          if(!html.includes('/api/predict/independent-methods'))throw Error('Missing twelve-method API wiring');
-          const version=JSON.parse(fs.readFileSync('version.json','utf8'));
-          if(version.app!=='Boat Score 2 preview'||version.sourceBranch!=='fix-boat-score-2-syntax-20261115')throw Error('Unexpected preview deployment version');
-          console.log('Preview UI and source branch verified');
+          if(!html.includes('/api/predict/independent-methods'))throw new Error('Twelve-method API is not wired in deployed UI');
+          console.log('Deployed preview contains all twelve-method controls and API wiring');
           NODE
-          status=$(curl --silent --show-error --max-time 15 -o invalid.json -w '%{http_code}' "$BASE/api/predict/independent-methods?date=invalid&venue=1&race=1")
-          test "$status" = 400 || { echo "::error::Preview prediction API returned $status instead of 400"; exit 1; }
-          node -e "if(require('./invalid.json').error!=='Invalid date, venue or race')process.exit(1)"
-          echo 'Preview twelve-method API validation verified'
-      - name: Verify deployed morning storage binding
+          status=$(curl --silent --show-error --max-time 25 -o endpoint.json -w '%{http_code}' "$BASE/api/predict/independent-methods?date=invalid&venue=1&race=1")
+          test "$status" = 400 || { echo "::error::Unexpected twelve-method endpoint HTTP $status"; exit 1; }
+          node -e "const d=require('./endpoint.json');if(d.error!=='Invalid date, venue or race')process.exit(1)"
+          echo 'Deployed twelve-method API responds and validates inputs'
+
+      - name: Inspect deployed morning snapshot without assuming completion
         shell: bash
         run: |
           set -euo pipefail
-          URL="https://boat-score-2-preview.saumh-sau-288.workers.dev/api/morning/snapshot?date=20261122"
-          status=$(curl --silent --show-error --max-time 15 -o morning.json -w '%{http_code}' "$URL")
-          if [ "$status" = 503 ]; then
-            echo "::error::Morning storage binding is still missing after deployment"
-            exit 1
-          fi
-          test "$status" = 200 || test "$status" = 404 || { echo "::error::Unexpected morning API status: $status"; exit 1; }
-          node -e "const d=require('./morning.json');if(d.status==='not_configured')process.exit(1)"
-          echo "Morning KV binding is configured (snapshot may still be unavailable until first scheduled run)"
+          DATE=$(TZ=Asia/Tokyo date +%Y%m%d)
+          BASE="https://boat-score-2-preview.saumh-sau-288.workers.dev"
+          status=$(curl --silent --show-error --max-time 25 -o morning-snapshot.json -w '%{http_code}' "$BASE/api/morning/snapshot?date=$DATE")
+          node - "$status" "$DATE" <<'NODE'
+          const fs=require('node:fs');
+          const status=Number(process.argv[2]),date=process.argv[3];
+          let d;
+          try{d=JSON.parse(fs.readFileSync('morning-snapshot.json','utf8'));}
+          catch{throw Error('Morning snapshot response is not valid JSON');}
+          if(status===404&&d.status==='not_available'){
+            console.log(JSON.stringify({date,httpStatus:status,status:d.status,verifiedRaces:0,message:'Morning snapshot not saved yet'}));
+            process.exit(0);
+          }
+          if(status!==200)throw Error('Unexpected morning snapshot HTTP '+status+': '+JSON.stringify(d).slice(0,200));
+          if(d.date!==date||!Array.isArray(d.venues)||!Array.isArray(d.completedVenues)||!d.categories)
+            throw Error('Morning snapshot has an invalid structure');
+          const counts=Object.values(d.verifiedRacesByVenue||{});
+          if(counts.some(n=>!Number.isInteger(n)||n<0||n>12))
+            throw Error('Invalid verified race count');
+          const eligible=counts.reduce((a,n)=>a+n,0);
+          if(eligible!==d.eligible)throw Error('Verified race count does not match eligible');
+          console.log(JSON.stringify({date,httpStatus:status,status:d.status,venues:d.venues.length,
+            completedVenues:d.completedVenues.length,eligible,failedVenues:(d.failedVenues||[]).length,
+            main:(d.categories.main||[]).length,upset:(d.categories.upset||[]).length,
+            chaos:(d.categories.chaos||[]).length,
+            note:'Observed snapshot only; not a historical accuracy test.'}));
+          NODE
