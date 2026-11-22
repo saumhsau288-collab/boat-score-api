@@ -25,6 +25,12 @@ catch(error) {
 if(!Array.isArray(snapshot?.categories?.main))throw Error('Saved morning snapshot has no valid MAIN category');
 const main=snapshot.categories.main;
 const stats={},details=[],held=[];
+const coverage={status:snapshot.status||'unknown',eligibleRecords:snapshot.eligible??null,
+ venues:Array.isArray(snapshot.venues)?snapshot.venues.length:null,
+ completedVenues:Array.isArray(snapshot.completedVenues)?snapshot.completedVenues.length:null,
+ failedVenues:Array.isArray(snapshot.failedVenues)?snapshot.failedVenues.length:null,
+ exhaustedVenues:Array.isArray(snapshot.exhaustedVenues)?snapshot.exhaustedVenues.length:null,
+ scheduleLastCheck:snapshot.scheduleLastCheck||'unknown'};
 function group(key){return stats[key]??={eligible:0,winner:0,topTwoOrdered:0,trifectaSix:0,innerTopTwo:0};}
 function sixPicks(order){
  // Research-only reference six-pick construction, not a claim to reproduce app's independent 6 methods.
@@ -86,10 +92,12 @@ for(const item of main){
  details.push({key,group:groupName,lead:item.lead,innerTopTwoCount,innerOuterGap,highInnerPair,rankedScores:scoreRows,predictedOrder:order,actual:actual.slice(0,3),referenceSixPicks:picks,flags});
 }
 const holdReasons=Object.fromEntries([...new Set(held.map(x=>x.reason))].map(k=>[k,held.filter(x=>x.reason===k).length]));
-const result={date,holdReasons,mode:'saved_morning_main_only',snapshotStatus:snapshot.status,shortlist:main.length,eligible:details.length,held,
+if(main.length===0)held.push({key:date,reason:'empty_main_shortlist',coverage});
+const finalHoldReasons=Object.fromEntries([...new Set(held.map(x=>x.reason))].map(k=>[k,held.filter(x=>x.reason===k).length]));
+const result={date,holdReasons:finalHoldReasons,coverage,mode:'saved_morning_main_only',snapshotStatus:snapshot.status,shortlist:main.length,eligible:details.length,held,
  caveat:'This evaluates saved ranked order and a transparent reference six-pick formula, NOT the app independent six methods. Inner strength uses saved raw scores for top-two ranking and the two-high-inner versus all outer threshold; neither is a calibrated winning probability. Only snapshots captured 08:00–08:59 JST on the target race date are eligible; this does not guarantee every race was collected before its own deadline.',
  stats,details};
 const fs=await import('node:fs');
 const file='morning-inner-favorites-'+date+'.json';
 fs.writeFileSync(file,JSON.stringify(result,null,2)+'\n');
-console.log(JSON.stringify({file,shortlist:main.length,eligible:details.length,held:held.length,holdReasons,stats},null,2));
+console.log(JSON.stringify({file,shortlist:main.length,eligible:details.length,held:held.length,holdReasons:finalHoldReasons,coverage,stats},null,2));
