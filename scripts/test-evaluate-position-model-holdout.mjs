@@ -15,6 +15,12 @@ test('training remains frozen as new dates arrive',()=>{
  assert.equal(b.trainingRaces,6);
  assert.deepEqual(b.trainingDates,a.trainingDates);
  assert.deepEqual(b.independentFutureDates,['20261122']);
+ assert.equal(a.futureIndependent.status,'NO_NEW_DATES');
+ assert.equal(a.futureIndependent.races,0);
+ assert.equal(b.futureIndependent.status,'RETROSPECTIVE_ARCHIVE_ONLY');
+ assert.equal(b.futureIndependent.races,1);
+ assert.equal(b.futureIndependent.originalExact,1);
+ assert.equal(b.futureIndependent.hybridExact,1);
  assert.equal(a.holdout.races,1);
  assert.equal(b.holdout.races,2);
 });
