@@ -6,6 +6,11 @@ export function isValidMorningCaptureTimestamp(value){
  return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)&&
    Number.isFinite(Date.parse(value));
 }
+export function isCaptureOnMorningDate(value,date){
+ if(!isValidMorningCaptureTimestamp(value)||!/^20\\d{6}$/.test(String(date)))return false;
+ const jstDate=new Date(Date.parse(value)+9*60*60*1000).toISOString().slice(0,10).replace(/-/g,'');
+ return jstDate===String(date);
+}
 export function evaluateMorningRankingHistory(snapshot,results){
  if(!snapshot||!/^20\d{6}$/.test(String(snapshot.date))||!snapshot.categories||
     !Array.isArray(results))throw Error('Invalid snapshot or results');
@@ -44,7 +49,7 @@ export function evaluateMorningRankingHistory(snapshot,results){
    if(seen.has(key))throw Error('Duplicate ranked race');
    // Missing evidence is neither a loss nor a hit, and cannot be reconstructed post-race.
    const noOrder=p.predictedOrder===undefined;
-   const noCapture=String(snapshot.date)>='20261123'&&!isValidMorningCaptureTimestamp(p.capturedAt);
+   const noCapture=String(snapshot.date)>='20261123'&&!isCaptureOnMorningDate(p.capturedAt,snapshot.date);
    if(noOrder)missingPredictionOrder++;
    if(noCapture)missingCaptureTimestamp++;
    if(noOrder||noCapture)notEvaluable++;
