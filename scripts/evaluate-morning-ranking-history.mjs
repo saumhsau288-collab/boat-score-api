@@ -7,7 +7,7 @@ export function isValidMorningCaptureTimestamp(value){
    Number.isFinite(Date.parse(value));
 }
 export function isCaptureOnMorningDate(value,date){
- if(!isValidMorningCaptureTimestamp(value)||!/^20\\d{6}$/.test(String(date)))return false;
+ if(!isValidMorningCaptureTimestamp(value)||!/^20\d{6}$/.test(String(date)))return false;
  const jstDate=new Date(Date.parse(value)+9*60*60*1000).toISOString().slice(0,10).replace(/-/g,'');
  return jstDate===String(date);
 }
