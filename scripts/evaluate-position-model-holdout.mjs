@@ -4,8 +4,10 @@ import {rankNationalLocalAverage} from './audit-boat-one-national-local-average.
 export function evaluatePositionModelHoldout(reports){
  if(!Array.isArray(reports)||reports.length<3)throw TypeError('three or more daily reports required');
  const days=[...reports].sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+ if(days.some((d,i)=>i>0&&String(d.date)===String(days[i-1].date)))throw new Error('duplicate evaluation date');
  // Frozen six-day training period: adding new archive days must NEVER retrain this model.
  const trainingEnd='20261117';
+ if(days.some(d=>!/^20\\d{6}$/.test(String(d.date))))throw new Error('invalid evaluation date');
  const split=days.findIndex(d=>String(d.date)>trainingEnd);
  if(split<0||split<1||days.slice(0,split).some(d=>String(d.date)<'20261112'))throw new Error('frozen training dates 20261112–20261117 and later evaluation dates required');
  if(days.slice(0,split).map(d=>String(d.date)).join(',')!=='20261112,20261113,20261114,20261115,20261116,20261117')throw new Error('frozen six-day training set incomplete or changed');
