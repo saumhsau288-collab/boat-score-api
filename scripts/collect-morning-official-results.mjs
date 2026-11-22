@@ -2,7 +2,7 @@
 // Usage: node scripts/collect-morning-official-results.mjs YYYYMMDD
 // Read-only network calls; no prediction recomputation and no KV modifications.
 import fs from 'node:fs';
-import {evaluateMorningRankingHistory} from './evaluate-morning-ranking-history.mjs';
+import {evaluateMorningRankingHistory,isValidMorningCaptureTimestamp} from './evaluate-morning-ranking-history.mjs';
 const date=process.argv[2];
 if(!/^20\d{6}$/.test(date||''))throw Error('Usage: node scripts/collect-morning-official-results.mjs YYYYMMDD');
 const base='https://boat-score-2-preview.saumh-sau-288.workers.dev';
@@ -35,7 +35,7 @@ for(const category of ['main','upset','chaos']){
   if(seenCandidateKeys.has(key))
    throw Error('Duplicate ranked candidate');
   seenCandidateKeys.add(key);
-  if(date>='20261123'&&(!p.capturedAt||Number.isNaN(Date.parse(p.capturedAt)))){
+  if(date>='20261123'&&!isValidMorningCaptureTimestamp(p.capturedAt)){
    held.push({venue:p.venue,race:p.race,reason:'prediction_capture_timestamp_missing'});
    continue;
   }
