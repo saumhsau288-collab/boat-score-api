@@ -8,9 +8,16 @@ const category=r=>{
 const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
 export function diagnoseArchiveReadiness(archives,focusKeys=[]){
  const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
- const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
+ const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
  const focus=new Set(focusKeys);
- for(const a of archives)for(const r of Array.isArray(a?.records)?a.records:[]){
+ for(const a of archives){
+  const day=String(a?.date??'unknown');
+  const start=typeof a?.captureStart==='string'?Date.parse(a.captureStart):NaN;
+  const local=Number.isFinite(start)?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(start)):null;
+  const jstDay=Number.isFinite(start)?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(start)).replace(/\D/g,''):null;
+  const jstClock=Number.isFinite(start)?new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(start)):null;
+  captureWindowByDay[day]={captureStart:a?.captureStart??null,jstClock,jstDay,dateMatches:jstDay===day,scheduledMorningWindow:jstDay===day&&jstClock>='07:45'&&jstClock<='08:30'};
+  for(const r of Array.isArray(a?.records)?a.records:[]){
   const reason=category(r);totals[reason]++;
   const raceNumber=String(r?.race??'missing');
   const dayKey=String(a?.date??r?.date??'unknown');
@@ -85,5 +92,6 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
    responseReady:r?.response?.ready===true,diagnosticFieldNames:r?.response&&typeof r.response==='object'?
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
- return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+ }
+ return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
 }
