@@ -10,4 +10,7 @@ assert.throws(()=>planCaptureFromReviewedManifest({...manifest,reviewedAt:'inval
 assert.throws(()=>planCaptureFromReviewedManifest({...manifest,sourceUrl:'http://example.com'},{requestedDate:'20261123'}),/schedule_source_url_required/);
 assert.throws(()=>planCaptureFromReviewedManifest(manifest,{requestedDate:'20261124'}),/matching_verified_date_required/);
 assert.throws(()=>planCaptureFromReviewedManifest({...manifest,activeVenues:[2,2]},{requestedDate:'20261123'}),/Invalid venues/);
+assert.throws(()=>planCaptureFromReviewedManifest({...manifest,reviewedAt:'2026-11-01T00:00:00Z'},{requestedDate:'20261123'}),/review_outside_schedule_window/);
+assert.throws(()=>planCaptureFromReviewedManifest({...manifest,reviewedAt:'2026-11-25T00:00:00Z'},{requestedDate:'20261123'}),/review_outside_schedule_window/);
+assert.throws(()=>planCaptureFromReviewedManifest({...manifest,date:'20260230'},{requestedDate:'20260230'}),/invalid_schedule_date/);
 console.log('PASS: reviewed schedule manifest requires matching date, review timestamp, HTTPS source and valid venues');
