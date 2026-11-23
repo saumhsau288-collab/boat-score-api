@@ -27,6 +27,7 @@ on:
       - 'scripts/*prediction-official-source.mjs'
       - 'scripts/*capture-times.mjs'
       - 'scripts/*saved-prediction-official-pairs.mjs'
+      - 'scripts/*twelve-methods-with-results.mjs'
       - 'scripts/*capture-with-original-inputs.mjs'
       - 'scripts/*save-original-input-capture.mjs'
       - 'scripts/*inspect-saved-twelve-picks.mjs'
@@ -139,6 +140,9 @@ jobs:
           echo "::endgroup::"
           echo "::group::31 offline saved prediction/official pair inventory"
           if node scripts/test-inspect-saved-prediction-official-pairs.mjs; then echo "PASS: offline saved pair inventory"; else echo "FAIL: offline saved pair inventory"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::32 twelve independent method result counters"
+          if node scripts/test-compare-twelve-methods-with-results.mjs; then echo "PASS: twelve independent method counters"; else echo "FAIL: twelve independent method counters"; failures=$((failures+1)); fi
           echo "::endgroup::"
           echo "Failed checks: $failures"
           test "$failures" -eq 0
