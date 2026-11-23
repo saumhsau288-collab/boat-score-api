@@ -68,6 +68,8 @@ on:
       - 'scripts/test-audit-scoring-inputs-in-archives.mjs'
       - 'scripts/audit-archived-ranked-scores.mjs'
       - 'scripts/test-audit-archived-ranked-scores.mjs'
+      - 'scripts/audit-ticket-score-alignment.mjs'
+      - 'scripts/test-audit-ticket-score-alignment.mjs'
 permissions:
   contents: read
   actions: read
@@ -108,6 +110,7 @@ jobs:
           node scripts/test-compare-ability-start-course-research.mjs
           node scripts/test-audit-scoring-inputs-in-archives.mjs
           node scripts/test-audit-archived-ranked-scores.mjs
+          node scripts/test-audit-ticket-score-alignment.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
@@ -187,6 +190,7 @@ jobs:
           import {classifyPredictionReadiness} from './scripts/classify-prediction-readiness.mjs';
           import {auditScoringInputsInArchives} from './scripts/audit-scoring-inputs-in-archives.mjs';
           import {auditArchivedRankedScores} from './scripts/audit-archived-ranked-scores.mjs';
+          import {auditTicketScoreAlignment} from './scripts/audit-ticket-score-alignment.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
           });
@@ -210,6 +214,7 @@ jobs:
           console.log('READINESS_STATE_INVENTORY '+JSON.stringify(readinessStates));
           console.log('SCORING_INPUT_AVAILABILITY '+JSON.stringify(auditScoringInputsInArchives(archives),null,2));
           console.log('ARCHIVED_RANKED_SCORES '+JSON.stringify(auditArchivedRankedScores(archives),null,2));
+          console.log('TICKET_SCORE_ALIGNMENT '+JSON.stringify(auditTicketScoreAlignment(archives),null,2));
           console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
             '20261118:2:1','20261118:2:2','20261118:2:3',
             '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
