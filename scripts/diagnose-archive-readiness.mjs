@@ -157,7 +157,7 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
  }
- const duplicateRaceKeys=Object.entries(raceOccurrenceCounts).filter(([,n])=>n>1).map(([raceKey,occurrences])=>({raceKey,occurrences,snapshots:raceSnapshotTimes[raceKey],distinctRequestTimes:new Set(raceSnapshotTimes[raceKey].map(s=>s.requestedAt).filter(Boolean)).size})).sort((a,b)=>a.raceKey.localeCompare(b.raceKey));
+ const duplicateRaceKeys=Object.entries(raceOccurrenceCounts).filter(([,n])=>n>1).map(([raceKey,occurrences])=>{const snapshots=raceSnapshotTimes[raceKey];const validTimes=snapshots.map(s=>s.requestedAt).filter(t=>t!==null&&Number.isFinite(Date.parse(t)));return {raceKey,occurrences,snapshots,distinctRequestTimes:new Set(validTimes.map(t=>new Date(t).toISOString())).size,missingRequestTimes:snapshots.filter(s=>s.requestedAt===null).length,invalidRequestTimes:snapshots.filter(s=>s.requestedAt!==null&&!Number.isFinite(Date.parse(s.requestedAt))).length};}).sort((a,b)=>a.raceKey.localeCompare(b.raceKey));
  const officialFailureSummary={
   http403:Object.entries(officialFailureByDayAndHalf).filter(([k])=>k.endsWith(':official_http_403')).reduce((n,[,v])=>n+v,0),
   officialTimeout:Object.entries(officialFailureByDayAndHalf).filter(([k])=>k.endsWith(':official_timeout')).reduce((n,[,v])=>n+v,0),
