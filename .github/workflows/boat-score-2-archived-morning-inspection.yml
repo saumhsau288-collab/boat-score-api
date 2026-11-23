@@ -33,6 +33,7 @@ on:
       - 'scripts/test-predict-twelve-independent-hypotheses.mjs'
       - 'scripts/compare-saved-tickets-to-twelve-hypotheses.mjs'
       - 'scripts/test-compare-saved-tickets-to-twelve-hypotheses.mjs'
+      - 'scripts/run-saved-tickets-to-twelve-hypotheses.mjs'
       - 'scripts/diagnose-archive-readiness.mjs'
       - 'scripts/test-diagnose-archive-readiness.mjs'
       - 'scripts/research-capture-retry-policies.mjs'
@@ -59,6 +60,7 @@ jobs:
           node scripts/test-run-saved-tickets-to-spatial.mjs
           node scripts/test-predict-twelve-independent-hypotheses.mjs
           node scripts/test-compare-saved-tickets-to-twelve-hypotheses.mjs
+          node --check scripts/run-saved-tickets-to-twelve-hypotheses.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
