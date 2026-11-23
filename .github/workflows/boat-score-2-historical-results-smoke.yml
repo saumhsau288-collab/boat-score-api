@@ -32,6 +32,19 @@ jobs:
         run: |
           node scripts/extract-official-result-racers.mjs research-historical/official-raw.json research-historical/parsed.json
           node scripts/extract-official-result-racers.mjs research-historical/official-raw-20261120.json research-historical/parsed-20261120.json
+      - name: Explain missing result mappings without exposing HTML
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          for(const file of ['research-historical/parsed.json','research-historical/parsed-20261120.json']){
+            const data=JSON.parse(fs.readFileSync(file,'utf8'));
+            for(const row of data.rows){
+              console.log(JSON.stringify({date:row.date,venue:row.venue,race:row.race,status:row.status,
+                parsedRacers:row.racers?.length??0,entryCoursesExtracted:row.entryCoursesExtracted??false,
+                independentlyVerified:row.racerFinishIndependentlyVerified===true}));
+            }
+          }
+          NODE
       - name: Upload research evidence
         if: always()
         uses: actions/upload-artifact@v4
