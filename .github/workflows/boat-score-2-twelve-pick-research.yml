@@ -10,6 +10,8 @@ on:
       - 'scripts/*strategy-provenance.mjs'
       - 'scripts/test-morning-missing-data.mjs'
       - 'boat-score-2-morning.js'
+      - 'boat-score-2-scoring.js'
+      - 'scripts/test-prestart-missing-data.mjs'
       - '.github/workflows/boat-score-2-twelve-pick-research.yml'
 jobs:
   verify:
@@ -33,3 +35,4 @@ jobs:
           node scripts/test-prepare-snapshots-from-morning-capture.mjs
           node scripts/test-audit-strategy-provenance.mjs
           node scripts/test-morning-missing-data.mjs
+          node scripts/test-prestart-missing-data.mjs
