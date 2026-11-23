@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {summarizeTwelvePickReadiness} from './summarize-twelve-pick-readiness.mjs';
+import {explainTwelvePickArchiveRows} from './explain-twelve-pick-archive-rows.mjs';
 export function inspectSavedTwelvePickDirectory(directory){
  const files=fs.readdirSync(directory).filter(n=>n.endsWith('.json')).sort();
  const rows=[],invalidFiles=[];
@@ -15,6 +16,7 @@ export function inspectSavedTwelvePickDirectory(directory){
  }
  return {status:'research_only',filesScanned:files.length,parsedFiles:rows.length,
   invalidFiles,readiness:summarizeTwelvePickReadiness(rows),
+  perRace:explainTwelvePickArchiveRows(rows).rows,
   note:'File contents and caller-supplied evidence flags are not independently authenticated.'};
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(new URL(import.meta.url).pathname)){
