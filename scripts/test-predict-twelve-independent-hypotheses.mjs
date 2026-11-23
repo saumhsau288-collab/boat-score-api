@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {predictTwelveIndependentHypotheses} from './predict-twelve-independent-hypotheses.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,score:8-i,avgStart:.12+i*.01}));
+const r=predictTwelveIndependentHypotheses(racers);
+assert.equal(r.main.length,6);
+assert.equal(r.upset.length,6);
+assert.equal(r.distinctStrategies,12);
+assert.equal(r.distinctTickets,12);
+assert.equal(new Set([...r.main,...r.upset].map(x=>x.strategyId)).size,12);
+assert.equal(new Set([...r.main,...r.upset].map(x=>x.ticket.join('-'))).size,12);
+assert.ok(r.main.every(x=>x.ticket[0]<=3));
+assert.ok(r.upset.every(x=>x.ticket[0]>=4));
+assert.deepEqual(predictTwelveIndependentHypotheses([...racers].reverse()),r);
+assert.throws(()=>predictTwelveIndependentHypotheses(racers.slice(1)),/six_valid_pre_race_racers_required/);
+console.log('PASS: twelve distinct heuristic strategies produce twelve unique, deterministic tickets');
