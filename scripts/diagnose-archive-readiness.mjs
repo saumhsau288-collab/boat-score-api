@@ -16,6 +16,10 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
   if(!dateCategories[day])dateCategories[day]={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
   dateCategories[day][reason]++;
   const code=String(r?.httpStatus??'missing');statusCodes[code]=(statusCodes[code]||0)+1;
+  if(Array.isArray(r?.attempts)&&r.attempts.some((item,i)=>i>0&&item?.httpStatus===200)){
+   const k=r?.response?.ready===true?'ready':r?.response?.ready===false?'not_ready':'unknown';
+   successfulRetryReadiness[k]++;
+  }
   if(reason==='http_non_200'){
    const fields=Object.keys(r??{}).filter(k=>/error|reason|message|status|fail|attempt|retry|time/i.test(k)).sort();
    const signature=fields.join(',')||'(no diagnostic fields)';missingHttpFields[signature]=(missingHttpFields[signature]||0)+1;
@@ -27,10 +31,6 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
    const t=Array.isArray(r?.attempts)?'array':r?.attempts===undefined?'absent':r?.attempts===null?'null':typeof r.attempts;
    attemptValueTypes[t]=(attemptValueTypes[t]||0)+1;
    if(Array.isArray(r?.attempts)){
-    if(r.attempts.some((item,i)=>i>0&&item?.httpStatus===200)){
-     const k=r?.response?.ready===true?'ready':r?.response?.ready===false?'not_ready':'unknown';
-     successfulRetryReadiness[k]++;
-    }
     const n=String(r.attempts.length);attemptArrayLengths[n]=(attemptArrayLengths[n]||0)+1;
     for(const item of r.attempts){
      const shape=item&&typeof item==='object'&&!Array.isArray(item)?Object.keys(item).sort().join(','):'non_object';
