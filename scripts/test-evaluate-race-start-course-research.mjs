@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {evaluateRaceWithStartAndCourse as evaluate} from './evaluate-race-start-course-research.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:6,localWinRate:0,motorTwoWinRate:40,recent50WinRate:20,exhibitionScore:50,avgStart:.15}));
+const result=evaluate(racers);
+assert.equal(result.status,'evaluated');
+assert.equal(result.racers.length,6);
+assert.equal(result.racers[0].boat,1);
+assert.equal(result.racers[0].abilityScore,result.racers[5].abilityScore);
+const faster=racers.map(r=>({...r,avgStart:r.boat===6?.08:.18}));
+const speed=evaluate(faster,{abilityWeight:.7,startWeight:.3,courseWeight:0});
+assert.equal(speed.racers[0].boat,6);
+assert.equal(evaluate(racers.map((r,i)=>i===0?{...r,avgStart:null}:r)).status,'insufficient_start_data');
+assert.throws(()=>evaluate(racers,{abilityWeight:.8,startWeight:.3,courseWeight:0}),/sum_to_one/);
+console.log('PASS: ability/ST/course scoring preserves fallback and fails closed on missing ST');
