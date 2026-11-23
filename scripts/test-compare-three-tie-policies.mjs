@@ -14,4 +14,21 @@ assert.ok(r.changedFromBaseline.winnerOnly>0);
 assert.ok(r.changedFromBaseline.fullExclusion>0);
 assert.ok(r.examples[0].tickets.winnerOnly.some(p=>p.includes(2))); // retained in lower positions
 assert.ok(r.examples[0].tickets.fullExclusion.every(p=>!p.includes(2)));
+
+const noTie=[71,85,60,84,50,40].map((score,i)=>({boat:i+1,course:i+1,courseVerified:true,score}));
+const noTieResult=compareThreeTiePolicies([{...row([2,4,1]),boats:noTie}]);
+assert.equal(noTieResult.changedFromBaseline.winnerOnly,0);
+assert.equal(noTieResult.changedFromBaseline.fullExclusion,0);
+// Boat number and actual entry course may differ: course decides the tie.
+const swapped=boats.map(b=>({...b,course:b.boat===2?5:b.boat===4?2:b.course}));
+const swappedResult=compareThreeTiePolicies([{...row([2,4,1]),boats:swapped}]);
+assert.equal(swappedResult.examples[0].leaders.baseline,4);
+assert.equal(swappedResult.examples[0].leaders.winnerOnly,2);
+// All six scores equal: full exclusion cannot form a trifecta.
+const allEqual=boats.map(b=>({...b,score:80}));
+const insufficient=compareThreeTiePolicies([{...row([6,5,4]),boats:allEqual}]);
+assert.equal(insufficient.arms.fullExclusion.trifecta,0);
+assert.equal(insufficient.changedFromBaseline.fullExclusion,1);
+const badCourse=boats.map((b,i)=>i===0?{...b,course:2}:b);
+assert.equal(compareThreeTiePolicies([{...row([4,2,1]),boats:badCourse}]).eligible,0);
 console.log('Three-policy synthetic fixture passed; NOT an empirical backtest.');
