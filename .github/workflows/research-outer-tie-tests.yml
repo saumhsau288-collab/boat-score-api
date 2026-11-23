@@ -16,6 +16,8 @@ on:
       - 'scripts/test-sweep-outer-thresholds.mjs'
       - 'scripts/validate-historical-provenance.mjs'
       - 'scripts/test-validate-historical-provenance.mjs'
+      - 'scripts/unique-historical-races.mjs'
+      - 'scripts/test-unique-historical-races.mjs'
       - '.github/workflows/research-outer-tie-tests.yml'
   workflow_dispatch:
 permissions:
@@ -42,6 +44,8 @@ jobs:
           node --check scripts/test-sweep-outer-thresholds.mjs
           node --check scripts/validate-historical-provenance.mjs
           node --check scripts/test-validate-historical-provenance.mjs
+          node --check scripts/unique-historical-races.mjs
+          node --check scripts/test-unique-historical-races.mjs
       - name: Two-policy fixture
         run: node scripts/test-compare-outer-tie-historical.mjs
       - name: Three-policy fixture
@@ -54,6 +58,8 @@ jobs:
         run: node scripts/test-sweep-outer-thresholds.mjs
       - name: Provenance gate fixture
         run: node scripts/test-validate-historical-provenance.mjs
+      - name: Historical race identity fixture
+        run: node scripts/test-unique-historical-races.mjs
       - name: Test status summary
         if: always()
         run: |
