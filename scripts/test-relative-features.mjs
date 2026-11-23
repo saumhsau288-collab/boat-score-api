@@ -12,4 +12,16 @@ assert.equal(s[3].boat,2);
 const missing=boats.map(b=>b.boat===4?{...b,averageST:null}:b);
 assert.equal(relativeFeatures(missing)[3].startAdvantageVsInner,null);
 assert.throws(()=>relativeFeatures(boats.map((b,i)=>i===0?{...b,course:2}:b)),/verified_unique/);
+// A high-scored 4th-course boat can be challenged by a faster 5th-course boat.
+const challenge=boats.map(b=>({...b,averageST:b.course===4?0.18:b.course===5?0.12:b.averageST,
+ exhibitionTime:b.course===4?6.82:b.course===5?6.73:b.exhibitionTime}));
+const adjacent=relativeFeatures(challenge);
+assert.equal(adjacent[4].innerBoat,4);
+assert.equal(adjacent[4].startAdvantageVsInner,0.06);
+assert.equal(adjacent[4].exhibitionAdvantageVsInner,0.09);
+// No fictitious value when exhibition data is missing.
+const noExhibition=challenge.map(b=>b.boat===5?{...b,exhibitionTime:undefined}:b);
+assert.equal(relativeFeatures(noExhibition)[4].exhibitionAdvantageVsInner,null);
+// Missing course verification must fail closed.
+assert.throws(()=>relativeFeatures(boats.map((b,i)=>i===3?{...b,courseVerified:false}:b)),/verified_unique/);
 console.log('Relative features: synthetic assertions passed; no historical accuracy claim.');
