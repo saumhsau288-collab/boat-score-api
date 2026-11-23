@@ -5,6 +5,8 @@ boats[5].averageST=.10;boats[5].exhibitionTime=6.70;boats[5].motorTwoWinRate=80;
 const r=auditTwelveStrategyDiversity([{date:'20261124',venue:1,race:1,boats}]);
 assert.equal(r.analyzed,1);assert.equal(r.records[0].uniqueTickets,r.records[0].generated);
 assert.ok(r.records[0].distinctFirstBoats<=6);
+assert.ok(r.records[0].winnerConcentration>=1/6&&r.records[0].winnerConcentration<=1);
+assert.ok(Object.values(r.methods).every(m=>Number.isInteger(m.soleFirstBoatStrategy)));
 assert.equal(Object.keys(r.methods).length,12);
 assert.ok(r.methods.F1.eligible===1);
 assert.equal(auditTwelveStrategyDiversity([{boats:boats.map(b=>({...b,courseVerified:false}))}]).invalid,1);
