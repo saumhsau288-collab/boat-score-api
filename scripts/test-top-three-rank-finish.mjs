@@ -47,6 +47,20 @@ try{
  assert.equal(out.rankLaneMatrix['1']['2'].races,0);
  assert.equal(out.rankLaneMatrix['1']['2'].topTwoRate,null);
  assert.equal(Object.values(out.rankLaneMatrix['1']).reduce((sum,x)=>sum+x.races,0),3);
+ // Thirty verified misses are still not enough to claim a low 1st-place risk:
+ // the Wilson 95% upper bound for 0/30 is about 11.35%.
+ const thirty=Array.from({length:30},(_,i)=>make('20261119',2+(i%3),1+Math.floor(i/3)%12,5,[1,2,3,4,5,6]));
+ fs.writeFileSync(inputPath,JSON.stringify({...input,evidence:thirty}));
+ const runThirty=spawnSync(process.execPath,[script,inputPath],{cwd:dir,encoding:'utf8'});
+ assert.equal(runThirty.status,0,runThirty.stderr);
+ const outThirty=JSON.parse(fs.readFileSync(path.join(dir,'historical-top-three-rank-finish-report.json'),'utf8'));
+ const zeroWins=outThirty.exclusionResearch.first.find(x=>x.rank===1&&x.boat===5);
+ assert.equal(zeroWins.races,30);
+ assert.equal(zeroWins.hits,0);
+ assert.ok(zeroWins.upper95>0.11&&zeroWins.upper95<0.12);
+ assert.equal(zeroWins.screeningStatus,'research_candidate');
+ // Zero top-two finishes must also remain a candidate, never an automatic exclusion.
+ assert.equal(outThirty.exclusionResearch.topTwo.find(x=>x.rank===1&&x.boat===5).screeningStatus,'research_candidate');
  const duplicate={...input,evidence:[evidence[0],evidence[0]]};
  fs.writeFileSync(inputPath,JSON.stringify(duplicate));
  const fail=spawnSync(process.execPath,[script,inputPath],{cwd:dir,encoding:'utf8'});
