@@ -11,8 +11,8 @@ export function appendResearchDraft(file,draft){
  if(hash(canonical)!==draft.sha256)throw Error('Draft hash mismatch');
  if(!/^([a-f0-9]{64})$/.test(draft.sha256))throw Error('Invalid SHA256');
  const key=keyOf(draft);
- // A single writer is required. O_EXCL prevents overwriting the research file
- // but this is not a concurrency-safe transactional store.
+ // A single writer is required. Append mode does not prevent concurrent writers,
+ // duplicate races, or partial writes; this is not a transactional store.
  const existing=fs.existsSync(file)?fs.readFileSync(file,'utf8').trim().split('\n').filter(Boolean).map(JSON.parse):[];
  for(const entry of existing){
   if(hash(JSON.stringify(entry.draft))!==entry.sha256)throw Error('Existing record integrity failure');
