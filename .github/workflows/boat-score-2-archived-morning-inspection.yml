@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/boat-score-2-archived-morning-inspection.yml'
       - 'scripts/inspect-raw-morning-capture.mjs'
+      - 'scripts/audit-capture-response-shapes.mjs'
 permissions:
   contents: read
   actions: read
@@ -40,6 +41,7 @@ jobs:
           import fs from 'node:fs';
           import path from 'node:path';
           import {inspectRawMorningCapture} from './scripts/inspect-raw-morning-capture.mjs';
+          import {auditResponseShape} from './scripts/audit-capture-response-shapes.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);
             return e.isDirectory()?walk(p):e.name.endsWith('.json')?[p]:[];
@@ -47,9 +49,12 @@ jobs:
           const files=walk('archived-captures').filter(file=>/20\d{6}-\d+\.json$/.test(path.basename(file)));
           if(!files.length)throw Error('No dated raw capture JSON found in retained artifacts');
           const reports=files.map(file=>{
-            const report=inspectRawMorningCapture(JSON.parse(fs.readFileSync(file,'utf8')));
+            const raw=JSON.parse(fs.readFileSync(file,'utf8'));
+            const report=inspectRawMorningCapture(raw);
+            const shapes=auditResponseShape(raw);
             if(report.status!=='research_only')throw Error('Unexpected raw capture shape in '+file);
-            return {sourceFile:file,...report};
+            return {sourceFile:file,...report,responseFieldNames:shapes.possibleScoreInputFieldNames,
+              topLevelResponseFields:Object.keys(shapes.topLevelKeys).sort(),readyResponsesShapeInspected:shapes.readyResponsesInspected};
           });
           console.log(JSON.stringify({status:'real_artifact_structure_inspected',reports,
             actualRaceResultsVerified:0,hitRateMeasured:false},null,2));
