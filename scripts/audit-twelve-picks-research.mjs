@@ -4,6 +4,11 @@ const validOrder = a => Array.isArray(a) && a.length === 3 &&
   a.every(x => Number.isInteger(x) && x >= 1 && x <= 6) &&
   new Set(a).size === 3;
 const key = a => a.join('-');
+const jstDate = iso => {
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(iso));
+ const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+ return p.year+p.month+p.day;
+};
 export function auditTwelvePicks(rows) {
   if (!Array.isArray(rows)) return {status:'invalid_input'};
   const seen = new Set(), accepted = [], excluded = [];
@@ -25,7 +30,9 @@ export function auditTwelvePicks(rows) {
       typeof row?.cutoffAt === 'string' &&
       Number.isFinite(Date.parse(row.predictionCapturedAt)) &&
       Number.isFinite(Date.parse(row.cutoffAt)) &&
-      Date.parse(row.predictionCapturedAt) < Date.parse(row.cutoffAt);
+      Date.parse(row.predictionCapturedAt) < Date.parse(row.cutoffAt) &&
+      jstDate(row.predictionCapturedAt) === String(row.date) &&
+      jstDate(row.cutoffAt) === String(row.date);
     if (!validRace || !validOrder(row?.actual) || !validPicks || !validEvidence || seen.has(raceKey)) {
       excluded.push({raceKey,reason:'missing_or_duplicate_verified_pre_race_evidence'});
       continue;
