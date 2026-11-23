@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {auditTicketScoreAlignment as audit} from './audit-ticket-score-alignment.mjs';
+const scores=Array.from({length:6},(_,i)=>({boat:i+1,score:6-i}));
+const ticket=[1,2,3];
+const r=audit([{records:[{response:{ready:true,rankedScores:scores,main:Array(6).fill(ticket),upset:Array(6).fill([6,5,4])}},{response:{ready:true,rankedScores:scores,main:[],upset:[]}}]}]);
+assert.equal(r.ready,2);
+assert.equal(r.eligible,1);
+assert.equal(r.excluded,1);
+assert.equal(r.mainFirstPlaceTopScore,6);
+assert.equal(r.upsetFirstPlaceTopScore,0);
+assert.equal(r.uniqueTicketsPerRace[2],1);
+assert.equal(r.firstPlaceScoreRank['6'],6);
+console.log('PASS: descriptive ticket-score alignment without outcome claims');
