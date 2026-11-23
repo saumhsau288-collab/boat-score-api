@@ -22,7 +22,7 @@ for(const path of paths){
   const ranked=[...boats].sort((a,b)=>b.score-a.score||a.boat-b.boat);
   const order=ranked.map(x=>x.boat);
   const finishRanks=finish.map(x=>order.indexOf(x)+1);
-  rows.push({key,venue:e.venue,leaderBoat:order[0],scoreGap:ranked[0].score-ranked[1].score,
+  rows.push({key,date:e.date,venue:e.venue,leaderBoat:order[0],scoreGap:ranked[0].score-ranked[1].score,
    predictedRankOrder:order,actualTopThree:finish.slice(0,3),actualTopThreeRanks:finishRanks.slice(0,3),
    leaderFinish:finish.indexOf(order[0])+1,
    topThreeWinner:finishRanks[0]<=3,
@@ -86,9 +86,22 @@ const exclusionResearch=Object.fromEntries(['first','topTwo'].map(target=>[targe
    screeningStatus:n<30?'insufficient_sample':upper95<=0.15?'research_candidate':'not_supported'};
  })).sort((a,b)=>a.rank-b.rank||a.boat-b.boat)
 ]));
+// Day-level breakdown exposes unstable patterns rather than pooling all dates.
+// These remain post-race diagnostic summaries, never live exclusion decisions.
+const dateGroups=Object.fromEntries([...new Set(rows.map(x=>x.date))].sort().map(date=>[
+ date,{...summarize(rows.filter(x=>x.date===date)),
+  rankLaneCounts:Object.fromEntries(['first','topTwo'].map(target=>[target,
+   Object.entries(rankLaneMatrix).flatMap(([rank,lanes])=>Object.keys(lanes).map(boat=>{
+    const subset=rows.filter(x=>x.date===date&&x.predictedRankOrder[Number(rank)-1]===Number(boat));
+    return {rank:Number(rank),boat:Number(boat),races:subset.length,
+     hits:subset.filter(x=>target==='first'?x.actualTopThree[0]===Number(boat):
+      x.actualTopThree.slice(0,2).includes(Number(boat))).length};
+   })).filter(x=>x.races>0)
+  ]))}
+]));
 const venueGroups=Object.fromEntries([...new Set(rows.map(x=>x.venue))].sort((a,b)=>a-b).map(v=>[v,summarize(rows.filter(x=>x.venue===v))]));
 const output={mode:'retrospective_top_three_rank_finish_diagnostic',sourceFiles:paths,
- eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,outerLeaderBreakdown,rankLaneMatrix,exclusionResearch,details:rows,heldDetails:held,
+ eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,dateGroups,outerLeaderBreakdown,rankLaneMatrix,exclusionResearch,details:rows,heldDetails:held,
  note:'All scores recomputed after racing. This is not pre-race accuracy. Winner/runner-up ranks are positions in recomputed score order; topThreeTopTwo means both actual first and second were among the three highest-scored racers. No odds, ST, motor or exhibition inputs are present in this evidence. Screening statuses are descriptive only and must never trigger automatic pre-race exclusions.'};
 fs.writeFileSync('historical-top-three-rank-finish-report.json',JSON.stringify(output,null,2)+'\n');
-console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix,exclusionResearch:output.exclusionResearch},null,2));
+console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,dateGroups:output.dateGroups,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix,exclusionResearch:output.exclusionResearch},null,2));
