@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {auditTwelveStrategyDiversity} from './audit-twelve-strategy-diversity.mjs';
+const boats=[90,82,74,88,70,65].map((score,i)=>({boat:i+1,course:i+1,courseVerified:true,score,averageST:.20,exhibitionTime:6.80,motorTwoWinRate:40}));
+boats[5].averageST=.10;boats[5].exhibitionTime=6.70;boats[5].motorTwoWinRate=80;
+const r=auditTwelveStrategyDiversity([{date:'20261124',venue:1,race:1,boats}]);
+assert.equal(r.analyzed,1);assert.equal(r.records[0].uniqueTickets,r.records[0].generated);
+assert.ok(r.records[0].distinctFirstBoats<=6);
+assert.equal(Object.keys(r.methods).length,12);
+assert.ok(r.methods.F1.eligible===1);
+assert.equal(auditTwelveStrategyDiversity([{boats:boats.map(b=>({...b,courseVerified:false}))}]).invalid,1);
+console.log('Twelve strategy diversity synthetic assertions passed.');
