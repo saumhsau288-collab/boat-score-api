@@ -13,24 +13,45 @@ async function json(path){
  const res=await fetch(base+path,{signal:AbortSignal.timeout(35000)});
  return {ok:res.ok,data:await res.json()};
 }
-for(const venue of venues)for(const race of races){
- const key=date+':'+venue+':'+race;
- const query='?date='+date+'&venue='+venue+'&race='+race;
- try{
-  const [p,o]=await Promise.all([json('/api/predict/selected-race'+query),json('/api/official/result'+query)]);
-  if(!p.ok||p.data.ready!==true||!Array.isArray(p.data.rankedScores)||p.data.rankedScores.length!==6){
-   held.push({key,reason:'current_app_historical_score_unavailable'});continue;
+// Bounded concurrency reduces wall-clock time without flooding the preview API.
+// Every race still gets the same two endpoints, and failed races remain held.
+const tasks=venues.flatMap(venue=>races.map(race=>({venue,race})));
+const CONCURRENCY=6;
+let cursor=0;
+const collected=new Array(tasks.length);
+async function worker(){
+ while(true){
+  const index=cursor++;
+  if(index>=tasks.length)return;
+  const {venue,race}=tasks[index];
+  const key=date+':'+venue+':'+race;
+  const query='?date='+date+'&venue='+venue+'&race='+race;
+  try{
+   const [p,o]=await Promise.all([json('/api/predict/selected-race'+query),json('/api/official/result'+query)]);
+   if(!p.ok||p.data.ready!==true||!Array.isArray(p.data.rankedScores)||p.data.rankedScores.length!==6){
+    collected[index]={held:{key,reason:'current_app_historical_score_unavailable'}};continue;
+   }
+   if(!o.ok||o.data.verified!==true||!Array.isArray(o.data.finishOrder)||o.data.finishOrder.length!==6){
+    collected[index]={held:{key,reason:'official_finish_unverified'}};continue;
+   }
+   collected[index]={row:{date,venue,race,scoreSource:'current_app_recomputed_after_race',
+    officialFinish:o.data.finishOrder,resultVerified:true,
+    boats:p.data.rankedScores.map(x=>({boat:x.boat,score:x.score})),
+    capturedAt:null,deadlineAt:null,incidentFree:null}};
+  }catch(e){
+   collected[index]={held:{key,reason:'request_failed',detail:String(e.message||e).slice(0,100)}};
   }
-  if(!o.ok||o.data.verified!==true||!Array.isArray(o.data.finishOrder)||o.data.finishOrder.length!==6){
-   held.push({key,reason:'official_finish_unverified'});continue;
-  }
-  // No deadline capture is available for reconstructed history. Do not forge it.
-  const row={date,venue,race,scoreSource:'current_app_recomputed_after_race',officialFinish:o.data.finishOrder,
-   resultVerified:true,boats:p.data.rankedScores.map(x=>({boat:x.boat,score:x.score})),
-   capturedAt:null,deadlineAt:null,incidentFree:null};
-  requests.push(row);
- }catch(e){held.push({key,reason:'request_failed',detail:String(e.message||e).slice(0,100)});}
+ }
 }
+const started=Date.now();
+await Promise.all(Array.from({length:Math.min(CONCURRENCY,tasks.length)},()=>worker()));
+for(const item of collected){
+ if(item.row)requests.push(item.row);
+ else held.push(item.held);
+}
+const fetchElapsedSeconds=Math.round((Date.now()-started)/1000);
+console.log(JSON.stringify({fetchTasks:tasks.length,concurrency:CONCURRENCY,fetchElapsedSeconds,requests:requests.length,held:held.length}));
+
 const strict=replayExclusionVariants(requests);
 const diagnostic=replayExclusionVariants(requests,{mode:'retrospective_diagnostic'});
 const venueSummaries=Object.fromEntries(venues.map(venue=>{const subset=requests.filter(x=>x.venue===venue);const x=replayExclusionVariants(subset,{mode:'retrospective_diagnostic'});return [venue,{races:subset.length,summary:x.summary}]}));
