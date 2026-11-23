@@ -59,9 +59,22 @@ const outerLeaderBreakdown={
   leaderFinish:x.leaderFinish,actualTopThree:x.actualTopThree,actualTopThreeRanks:x.actualTopThreeRanks})),
  caution:'Observed zero outer-leader wins in a small post-hoc sample is not proof of zero win probability or a justified exclusion.'
 };
+// Count actual 1st/2nd outcomes for every (score rank, boat lane).
+// Each cell is evaluated over races, never post-selected on the actual winner.
+const rankLaneMatrix=Object.fromEntries([1,2,3,4,5,6].map(rank=>[String(rank),
+ Object.fromEntries([1,2,3,4,5,6].map(boat=>{
+  const subset=rows.filter(x=>x.predictedRankOrder[rank-1]===boat);
+  const first=subset.filter(x=>x.actualTopThree[0]===boat).length;
+  const second=subset.filter(x=>x.actualTopThree[1]===boat).length;
+  const topTwo=first+second;
+  return [String(boat),{races:subset.length,first,second,topTwo,third:subset.filter(x=>x.actualTopThree[2]===boat).length,
+   outsideTopTwo:subset.length-topTwo,
+   topTwoRate:subset.length?topTwo/subset.length:null,
+   firstRate:subset.length?first/subset.length:null}];
+ }))]));
 const venueGroups=Object.fromEntries([...new Set(rows.map(x=>x.venue))].sort((a,b)=>a-b).map(v=>[v,summarize(rows.filter(x=>x.venue===v))]));
 const output={mode:'retrospective_top_three_rank_finish_diagnostic',sourceFiles:paths,
- eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,outerLeaderBreakdown,details:rows,heldDetails:held,
+ eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,outerLeaderBreakdown,rankLaneMatrix,details:rows,heldDetails:held,
  note:'All scores recomputed after racing. This is not pre-race accuracy. Winner/runner-up ranks are positions in recomputed score order; topThreeTopTwo means both actual first and second were among the three highest-scored racers. No odds, ST, motor or exhibition inputs are present in this evidence.'};
 fs.writeFileSync('historical-top-three-rank-finish-report.json',JSON.stringify(output,null,2)+'\n');
-console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,outerLeaderBreakdown:output.outerLeaderBreakdown},null,2));
+console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix},null,2));
