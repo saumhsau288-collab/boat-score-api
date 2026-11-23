@@ -65,7 +65,11 @@ jobs:
                   hasRacerLabel:m[0].includes('ボートレーサー'),
                   rows:(m[0].match(/<tr\b/gi)||[]).length,
                   cells:(m[0].match(/<td\b/gi)||[]).length})),
-                hasRaceResultLabel:html.includes('レース結果')}));
+                hasRaceResultLabel:html.includes('レース結果'),
+                pageTitle:(html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]??'').slice(0,120),
+                containsRaceresult:html.includes('raceresult'),
+                hasNoDataMessage:/データがありません|該当するデータ|開催していません|レースがありません|レース中止/.test(html),
+                headingCount:(html.match(/<h[1-6]\b/gi)||[]).length}));
             }
           }
           NODE
