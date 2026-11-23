@@ -26,7 +26,7 @@ assert.deepEqual(timing.timingByDayAndHalf['20261120:late'],{timestampsPresent:1
 const windows=diagnoseArchiveReadiness([
  {date:'20261118',captureStart:'2026-11-18T08:42:55Z',records:[]},
  {date:'20261120',captureStart:'2026-11-19T23:42:35Z',records:[]},
- {date:'20261121',captureStart:'2026-11-20T23:59:00Z',records:[]},
+ {date:'20261121',captureStart:'2026-11-20T23:09:00Z',records:[]},
  {date:'20261122',captureStart:'2026-11-21T23:00:00Z',records:[]}
 ]);
 assert.equal(windows.captureWindowByDay['20261118'].jstClock,'17:42');
