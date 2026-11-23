@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {auditArchivedRankedScores as audit} from './audit-archived-ranked-scores.mjs';
+const boats=Array.from({length:6},(_,i)=>({boat:i+1,score:90-i}));
+const r=audit([{date:'20261118',records:[{response:{ready:true,rankedScores:boats}},{response:{ready:true,rankedScores:boats.map((x,i)=>i===0?{...x,score:null}:x)}},{response:{ready:false,rankedScores:boats}}]}]);
+assert.equal(r.readyResponses,2);
+assert.equal(r.rankedScoresArrays,2);
+assert.equal(r.sixUniqueBoats,2);
+assert.equal(r.finiteScoreRows,1);
+assert.equal(r.shapeKeys.score,2);
+assert.equal(audit([]).readyResponses,0);
+console.log('PASS: archived ranked-score audit does not infer missing feature inputs');
