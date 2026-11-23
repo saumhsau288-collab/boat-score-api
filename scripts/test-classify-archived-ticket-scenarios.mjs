@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {classifyArchivedTicketScenarios as classify} from './classify-archived-ticket-scenarios.mjs';
+const s=Array.from({length:6},(_,i)=>({boat:i+1,score:6-i}));
+const p={ready:true,rankedScores:s,main:[[1,2,3],[1,4,2],[2,1,3],[4,1,2],[1,2,3],[3,2,1]],upset:[[6,1,2],[1,5,2],[1,2,3],[2,3,4],[3,4,5],[1,3,4]]};
+const o=classify([{records:[{response:p}]}]);
+assert.equal(o.races,1);assert.equal(o.groups.main.total,6);
+assert.equal(o.groups.main.firstRankFourToSix,1);
+assert.equal(o.groups.main.firstRankTwoOrThree,2);
+assert.equal(o.groups.main.topFirstLowPartner,1);
+assert.equal(o.groups.main.topFirstNoLowPartner,2);
+for(const g of ['main','upset'])assert.equal(o.groups[g].total,Object.entries(o.groups[g]).filter(([k])=>k!=='total').reduce((sum,[,v])=>sum+v,0));
+console.log('PASS: disjoint archived ticket scenarios sum to all tickets');
