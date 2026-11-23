@@ -31,7 +31,14 @@ export function auditTwelvePicks(rows) {
     const validEvidence = row?.preRacePredictionsSaved === true &&
       row?.independentlyAuthenticatedCapture === true &&
       typeof row?.predictionSourceUrl === 'string' && row.predictionSourceUrl.startsWith('https://') &&
-      officialUrl(row?.officialResultSourceUrl) && row?.officialCutoffVerified === true &&
+      officialUrl(row?.officialResultSourceUrl) &&
+      (()=>{const u=new URL(row.officialResultSourceUrl);
+        return u.pathname==='/owpc/pc/race/raceresult' &&
+          ['hd','jcd','rno'].every(k=>u.searchParams.getAll(k).length===1) &&
+          u.searchParams.get('hd')===String(row.date) &&
+          Number(u.searchParams.get('jcd'))===row.venue &&
+          Number(u.searchParams.get('rno'))===row.race;
+      })() && row?.officialCutoffVerified === true &&
       row?.officialResultVerified === true &&
       typeof row?.predictionCapturedAt === 'string' &&
       typeof row?.cutoffAt === 'string' &&
