@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {inspectSavedPredictionOfficialPairs} from './inspect-saved-prediction-official-pairs.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i)}));
+const prediction={date:'20261123',venue:2,race:3,ready:true,main:Array(6).fill('1-2-3'),upset:Array(6).fill('2-1-3'),capturedAt:'2026-11-23T09:00:00+09:00',cutoffAt:'2026-11-23T09:10:00+09:00'};
+const official={date:'20261123',venue:2,race:3,racersVerified:true,statsVerified:true,racersByBoat:racers,statsByBoat:racers.map(r=>({...r,nationwide:{winRate:6},local:{winRate:0},motor:{secondPlaceRate:35},averageST:.15})),capturedAt:'2026-11-23T09:01:00+09:00'};
+const r=inspectSavedPredictionOfficialPairs([{prediction,official},{prediction,official:{...official,race:4}},{prediction:{...prediction,capturedAt:'2026-11-23T09:11:00+09:00'},official}]);
+assert.equal(r.pairsScanned,3);
+assert.equal(r.joined,2);
+assert.equal(r.temporallyPlausible,1);
+assert.equal(r.accuracyEligible,0);
+assert.equal(r.rows[1].status,'race_identity_mismatch');
+assert.equal(r.rows[2].temporalErrors.includes('prediction_not_before_cutoff'),true);
+assert.throws(()=>inspectSavedPredictionOfficialPairs({}));
+console.log('PASS: saved prediction/official pair inventory (synthetic only)');
