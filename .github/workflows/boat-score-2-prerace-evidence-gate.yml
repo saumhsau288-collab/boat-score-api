@@ -42,6 +42,8 @@ jobs:
           node --check scripts/compare-saved-old-new-methods.test.mjs
           node --check scripts/audit-paired-comparison-fairness.mjs
           node --check scripts/audit-paired-comparison-fairness.test.mjs
+          node --check scripts/inspect-saved-morning-capture.mjs
+          node --check scripts/inspect-saved-morning-capture.test.mjs
       - name: Test evidence gate offline
         run: |
           node scripts/validate-independent-prerace-evidence.test.mjs
@@ -55,3 +57,4 @@ jobs:
           node scripts/report-independent-method-accuracy.test.mjs
           node scripts/compare-saved-old-new-methods.test.mjs
           node scripts/audit-paired-comparison-fairness.test.mjs
+          node scripts/inspect-saved-morning-capture.test.mjs
