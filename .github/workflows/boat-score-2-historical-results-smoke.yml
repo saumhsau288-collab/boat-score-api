@@ -6,6 +6,8 @@ on:
       - '.github/workflows/boat-score-2-historical-results-smoke.yml'
       - 'scripts/retry-failed-official-pages.mjs'
       - 'scripts/test-retry-failed-official-pages.mjs'
+      - 'scripts/extract-official-result-racers.mjs'
+      - 'scripts/test-extract-official-result-racers.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,6 +23,7 @@ jobs:
         run: |
           node scripts/test-fetch-manual-official-historical-results.mjs
           node scripts/test-retry-failed-official-pages.mjs
+          node scripts/test-extract-official-result-racers.mjs
       - name: Fetch historical official result pages read-only
         run: |
           mkdir -p research-historical
