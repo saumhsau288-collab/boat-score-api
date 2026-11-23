@@ -135,6 +135,7 @@ jobs:
           import path from 'node:path';
           import {inventoryArchiveOfficialMatches} from './scripts/inventory-archive-official-matches.mjs';
           import {diagnoseArchiveReadiness} from './scripts/diagnose-archive-readiness.mjs';
+          import {summarizeCaptureFailureTypes} from './scripts/classify-capture-failures.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
           });
@@ -147,6 +148,7 @@ jobs:
           });
           const out=inventoryArchiveOfficialMatches(archives,results);
           console.log(JSON.stringify(out,null,2));
+          console.log('FAILURE_TYPES '+JSON.stringify(summarizeCaptureFailureTypes(archives),null,2));
           console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
             '20261118:2:1','20261118:2:2','20261118:2:3',
             '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
