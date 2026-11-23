@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {explainTwelvePickArchiveRows as explain} from './explain-twelve-pick-archive-rows.mjs';
+assert.equal(explain(null).status,'invalid_input');
+const r=explain([{date:'20261123',venue:1,race:1,scoreInputs:null}]);
+assert.equal(r.rows.length,1);
+assert.equal(r.rows[0].accuracyEligible,false);
+assert.ok(r.rows[0].reasons.includes('original_inputs_incomplete'));
+assert.ok(r.rows[0].reasons.includes('not_eligible_for_accuracy_audit'));
+assert.equal(r.rows[0].authenticatedByThisTool,false);
+console.log('Per-row evidence diagnostics fixture passed');
