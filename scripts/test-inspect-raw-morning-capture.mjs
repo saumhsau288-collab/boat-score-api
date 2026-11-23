@@ -8,6 +8,7 @@ assert.equal(r.counts.records,2);
 assert.equal(r.counts.ready,1);
 assert.equal(r.counts.originalSixInputsComplete,0);
 assert.equal(r.counts.readyWithoutOriginalSixInputs,1);
+assert.equal(r.missingOriginalInputReasons.six_racers_required,1);
 assert.equal(r.eligibleForAccuracyAudit,0);
 assert.equal(inspect({authenticatedBeforeRace:true,records:rows}).status,'invalid_raw_capture');
 console.log('Raw morning artifact structural audit fixture passed');
