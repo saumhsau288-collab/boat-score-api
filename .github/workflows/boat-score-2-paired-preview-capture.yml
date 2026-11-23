@@ -1,5 +1,9 @@
 name: Research-only paired preview endpoint capture
 on:
+  push:
+    branches: [diagnose-twelve-pick-tests-20261123]
+    paths:
+      - '.github/workflows/boat-score-2-paired-preview-capture.yml'
   workflow_dispatch:
     inputs:
       date:
@@ -29,7 +33,14 @@ jobs:
           CAPTURE_DATE: ${{ inputs.date }}
           CAPTURE_VENUE: ${{ inputs.venue }}
           CAPTURE_RACE: ${{ inputs.race }}
-        run: node scripts/capture-paired-preview-endpoints.mjs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CAPTURE_DATE:-}" ]; then CAPTURE_DATE=$(TZ=Asia/Tokyo date +%Y%m%d); fi
+          if [ -z "${CAPTURE_VENUE:-}" ]; then CAPTURE_VENUE=2; fi
+          if [ -z "${CAPTURE_RACE:-}" ]; then CAPTURE_RACE=1; fi
+          export CAPTURE_DATE CAPTURE_VENUE CAPTURE_RACE
+          node scripts/capture-paired-preview-endpoints.mjs
       - name: Upload raw paired capture for later independent audit
         if: always()
         uses: actions/upload-artifact@v4
