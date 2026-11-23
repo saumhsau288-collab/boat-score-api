@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {auditPairedComparisonReadiness} from './audit-paired-comparison-readiness.mjs';
+const capture={authenticatedBeforeRace:false,records:[{date:'20261123',venue:1,race:1,httpStatus:200,receivedAt:'2026-11-22T23:50:00Z',response:{ready:true,main:[[1,2,3]],upset:[]}}]};
+const r=auditPairedComparisonReadiness(capture);
+assert.equal(r.total,1);assert.equal(r.eligibleForPairedComparison,0);
+assert.equal(r.blockingReasons.missing_original_six_plus_six,1);
+assert.equal(r.blockingReasons.missing_complete_six_boat_features,1);
+assert.equal(r.blockingReasons.independent_pre_race_evidence_missing,1);
+assert.equal(r.blockingReasons.official_cutoff_evidence_missing,1);
+console.log('PASS: paired readiness audit exposes missing evidence without asserting historical accuracy');
