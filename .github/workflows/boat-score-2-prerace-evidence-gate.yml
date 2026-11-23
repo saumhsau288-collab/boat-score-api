@@ -28,9 +28,12 @@ jobs:
           node --check scripts/audit-morning-capture-evidence.test.mjs
           node --check scripts/bridge-racer-evidence-to-method-gate.mjs
           node --check scripts/bridge-racer-evidence-to-method-gate.test.mjs
+          node --check scripts/evaluate-saved-independent-methods.mjs
+          node --check scripts/evaluate-saved-independent-methods.test.mjs
       - name: Test evidence gate offline
         run: |
           node scripts/validate-independent-prerace-evidence.test.mjs
           node scripts/audit-independent-morning-capture.test.mjs
           node scripts/audit-morning-capture-evidence.test.mjs
           node scripts/bridge-racer-evidence-to-method-gate.test.mjs
+          node scripts/evaluate-saved-independent-methods.test.mjs
