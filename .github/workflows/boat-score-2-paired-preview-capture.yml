@@ -1,0 +1,40 @@
+name: Research-only paired preview endpoint capture
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Race date YYYYMMDD (JST)'
+        required: true
+        type: string
+      venue:
+        description: 'Venue 1-24'
+        required: true
+        type: string
+      race:
+        description: 'Race 1-12'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture selected prediction and official data (read-only)
+        env:
+          CAPTURE_DATE: ${{ inputs.date }}
+          CAPTURE_VENUE: ${{ inputs.venue }}
+          CAPTURE_RACE: ${{ inputs.race }}
+        run: node scripts/capture-paired-preview-endpoints.mjs
+      - name: Upload raw paired capture for later independent audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paired-preview-${{ github.run_id }}
+          path: prediction-captures/paired-*.json
+          if-no-files-found: warn
+          retention-days: 30
