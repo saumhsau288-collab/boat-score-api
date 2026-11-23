@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {joinPredictionWithOfficialSource} from './join-prediction-official-source.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4001+i)}));
+const p={date:'20261123',venue:2,race:3,ready:true,main:['1-2-3','1-3-2','1-2-4','1-4-2','1-3-4','1-4-3'],upset:['2-1-3','2-3-1','3-1-2','3-2-1','4-1-2','4-2-1']};
+const o={date:'20261123',venue:2,race:3,racersVerified:true,statsVerified:true,racersByBoat:racers,statsByBoat:racers.map(r=>({...r,nationwide:{winRate:6},local:{winRate:0},motor:{secondPlaceRate:35},averageST:.15}))};
+let r=joinPredictionWithOfficialSource(p,o);
+assert.equal(r.joined,true);
+assert.equal(r.sourceInputsByBoat.length,6);
+assert.equal(r.sourceCompleteness.missing.recent50WinRate,6);
+assert.equal(r.accuracyEligible,false);
+assert.equal(r.officialResultVerified,false);
+assert.equal(joinPredictionWithOfficialSource(p,{...o,race:4}).status,'race_identity_mismatch');
+assert.equal(joinPredictionWithOfficialSource({...p,ready:false},o).status,'prediction_not_ready');
+assert.equal(joinPredictionWithOfficialSource(p,{...o,statsVerified:false}).status,'official_source_unverified');
+console.log('PASS: research prediction-to-official-source join (synthetic only)');
