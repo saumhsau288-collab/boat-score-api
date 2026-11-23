@@ -18,7 +18,7 @@ All 42 ready records fail the strict six-racer input check with `six_racers_requ
 
 The repository root `worker.js` handles `/api/makulabo/heatmap` and `/api/test`, **not** the deployed `/api/predict/selected-race` route. Therefore editing `worker.js` would not repair the observed prediction-response omission. Do not change or redeploy this Worker as a supposed fix.
 
-The isolated predictor source `research/boat-score-2-preview-worker.mjs` and its test `scripts/test-preview-prediction-worker.mjs` should be inspected before implementing any optional research-only diagnostic response. The existing deployed predictor reports method `weighted_national50_local20_motor30_unvalidated`; this must not be confused with offline twelve-method research.
+The separate experiment branch `experiment-racer-start-course-20261119` contains `research/boat-score-2-preview-worker.mjs` and `scripts/test-preview-prediction-worker.mjs`. Inspection confirms that this source serves `/api/predict`, **not** `/api/predict/selected-race`; its official-racelist response contains a `ranking` with per-racer original national/local rates, average ST and score breakdown, but lacks verified motor, exhibition, recent50 and entry course. The experiment branch is not proof of the source or deployment revision behind the existing `boat-score-2-preview` `/api/predict/selected-race` endpoint. Exact deployed source remains unverified; do not change the experiment Worker as if it were the missing endpoint. The existing deployed predictor reports method `weighted_national50_local20_motor30_unvalidated`; this must not be confused with offline twelve-method research.
 
 ## Safe next implementation
 
