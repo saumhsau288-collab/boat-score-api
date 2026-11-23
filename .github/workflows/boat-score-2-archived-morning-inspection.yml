@@ -11,6 +11,9 @@ on:
       - 'scripts/compare-twelve-methods-with-results.mjs'
       - 'scripts/inventory-archive-official-matches.mjs'
       - 'scripts/test-inventory-archive-official-matches.mjs'
+      - 'scripts/official-403-circuit-breaker.mjs'
+      - 'scripts/test-official-403-circuit-breaker.mjs'
+      - 'scripts/capture-existing-boat-score-2-predictions.mjs'
       - 'scripts/diagnose-archive-readiness.mjs'
       - 'scripts/test-diagnose-archive-readiness.mjs'
       - 'scripts/research-capture-retry-policies.mjs'
@@ -29,6 +32,8 @@ jobs:
         run: |
           node scripts/test-inventory-archive-official-matches.mjs
           node scripts/test-diagnose-archive-readiness.mjs
+          node scripts/test-official-403-circuit-breaker.mjs
+          node --check scripts/capture-existing-boat-score-2-predictions.mjs
       - name: Download two known retained raw capture artifacts read-only
         env:
           GH_TOKEN: ${{ github.token }}
