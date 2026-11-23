@@ -38,4 +38,8 @@ assert.deepEqual(nonfinish.racers.map(r=>r.resultStatus),[null,null,null,null,'�
 assert.deepEqual(nonfinish.podium,[1,2,3]);
 assert.equal(nonfinish.racers[4].actualEntryCourse,5);
 assert.equal(nonfinish.eligibleForScoreChange,false);
+const noResult=extract({pages:[{...page,html:'<html><title>結果</title><p>データがありません</p></html>'}]}).rows[0];
+assert.equal(noResult.status,'official_page_no_result_data');
+assert.equal(noResult.eligibleForScoreChange,false);
+assert.equal(extract({pages:[{...page,html:'<html><p>unexpected markup</p></html>'}]}).rows[0].status,'finish_table_not_found');
 console.log('Saved official result racer finish parser tests passed');
