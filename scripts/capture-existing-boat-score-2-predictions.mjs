@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {fetchWithTimeoutRetry} from './fetch-with-timeout-retry.mjs';
 import {buildCaptureTasks} from './build-morning-capture-tasks.mjs';
+import {createOfficial403CircuitBreaker} from './official-403-circuit-breaker.mjs';
 
 const base = process.env.BOAT_SCORE_URL || 'https://boat-score-2-preview.saumh-sau-288.workers.dev';
 function jstDate(now) {
@@ -29,9 +30,7 @@ const scheduledTrigger = run.trigger === 'schedule';
 const rows = [];
 const tasks = buildCaptureTasks(venues,maxRaces);
 let cursor = 0;
-let consecutiveOfficial403 = 0;
-let stoppedForOfficial403 = false;
-const official403StopThreshold = 3;
+const breaker=createOfficial403CircuitBreaker(3);
 async function capture({venue,race}) {
   const url = new URL('/api/predict/selected-race',base);
   url.search = new URLSearchParams({date,venue:String(venue),race:String(race),mode:'beforeinfo'}).toString();
@@ -48,19 +47,14 @@ async function capture({venue,race}) {
     response:payload,rawResponseNonJson:payload===null,source:'existing_deployed_Boat_Score_2_selected_race'};
 }
 await Promise.all(Array.from({length:3},async()=>{
- while(cursor<tasks.length && !stoppedForOfficial403){
+ while(cursor<tasks.length && !breaker.stopped){
   const index=cursor++;
   const record=await capture(tasks[index]);
   rows[index]=record;
-  if(record.response?.officialStatsRetry==='official_http_403'){
-   consecutiveOfficial403++;
-   if(consecutiveOfficial403>=official403StopThreshold)stoppedForOfficial403=true;
-  }else if(record.httpStatus===200){
-   consecutiveOfficial403=0;
-  }
+  breaker.observe(record);
  }
 }));
-const summary={date,requestedVenues:venues,requestedMaxRaces:maxRaces,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,scheduledTrigger,run,base,attempted:rows.filter(Boolean).length,stoppedForOfficial403,official403StopThreshold,planned:tasks.length,
+const summary={date,requestedVenues:venues,requestedMaxRaces:maxRaces,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,scheduledTrigger,run,base,attempted:rows.filter(Boolean).length,stoppedForOfficial403:breaker.stopped,official403StopThreshold:breaker.threshold,planned:tasks.length,
   httpSuccess:rows.filter(x=>x.httpStatus===200).length,ready:rows.filter(x=>x.response?.ready===true).length,
   records:rows,authenticatedBeforeRace:false,
   warning:'Raw server-observed responses only. Workflow trigger, matching JST date and 08:00 capture window are timing checks, not proof of pre-race capture. No verified official start times, model provenance, or independently authenticated pre-race snapshots. Do not calculate prediction accuracy from this file without further validation.'};
