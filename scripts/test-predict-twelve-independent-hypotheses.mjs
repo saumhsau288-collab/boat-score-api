@@ -17,4 +17,12 @@ assert.equal(predictTwelveIndependentHypotheses(withCourses).distinctTickets,12)
 assert.deepEqual(predictTwelveIndependentHypotheses([...withCourses].reverse()),predictTwelveIndependentHypotheses(withCourses));
 assert.throws(()=>predictTwelveIndependentHypotheses(withCourses.map((x,i)=>i===0?{...x,course:1}:x)),/six_unique_courses_required/);
 assert.throws(()=>predictTwelveIndependentHypotheses(withCourses.map((x,i)=>i===0?{...x,course:7}:x)),/six_valid_pre_race_racers_required/);
+const unrestricted=predictTwelveIndependentHypotheses(racers,{candidateMode:'unrestricted'});
+assert.equal(unrestricted.candidateMode,'unrestricted');
+assert.equal(unrestricted.distinctTickets,12);
+assert.equal(unrestricted.main.length,6);
+assert.equal(unrestricted.upset.length,6);
+assert.deepEqual(predictTwelveIndependentHypotheses([...racers].reverse(),{candidateMode:'unrestricted'}),unrestricted);
+assert.throws(()=>predictTwelveIndependentHypotheses(racers,{candidateMode:'unknown'}),/invalid_candidate_mode/);
+assert.deepEqual(predictTwelveIndependentHypotheses(racers,{candidateMode:'legacy'}),r);
 console.log('PASS: twelve distinct heuristic strategies produce twelve unique, deterministic tickets');
