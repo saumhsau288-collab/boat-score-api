@@ -101,3 +101,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - New `scripts/audit-all-outer-pairs.mjs` compares all 15 ordered pairs of verified actual entry courses, filtering to inner score >= outer score. Includes 4-vs-6 and other non-adjacent comparisons, distinct equal-score and inner-higher subgroups, ST/exhibition differences, and exact winner/second/third counts.
 - Each flagged outer boat is deduplicated within a race for race-level rates; pair-level counts remain correlated. Added synthetic test `scripts/test-audit-all-outer-pairs.mjs` with 4-vs-6, exact first/second/third scenarios, and added it to research GitHub Actions workflow.
 - Saved on research branch only; CI pass, authentic pre-cutoff data, and actual accuracy remain unverified. Input must be independently provenance-checked and race-deduplicated upstream.
+
+## Provenance-gated all-course entrypoint
+- Added `scripts/evaluate-verified-outer-pairs.mjs` that first excludes all duplicate/invalid race identities, then rejects rows failing the provenance-format gate, then calls `auditAllOuterPairs` on eligible rows only. Reports identity and provenance rejection counts separately.
+- Added `scripts/test-evaluate-verified-outer-pairs.mjs` synthetic fixture for 4-vs-6, duplicates, late capture, invalid date, and CI wiring.
+- Limit: provenance gate only validates parseable time strings, source URL shapes and declared flags; it does not independently verify source authenticity or actual pre-cutoff acquisition. CI run and real-world accuracy still unverified. Research branch only; no production change.
