@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {planVerifiedVenueCapture} from './plan-verified-venue-capture.mjs';
+const args={verifiedActiveVenues:[2,7],maxRaces:3,verificationDate:'20261123',requestedDate:'20261123'};
+const plan=planVerifiedVenueCapture(args);
+assert.equal(plan.planned,6);
+assert.deepEqual(plan.tasks,[{venue:2,race:1},{venue:7,race:1},{venue:2,race:2},{venue:7,race:2},{venue:2,race:3},{venue:7,race:3}]);
+assert.throws(()=>planVerifiedVenueCapture({...args,verificationDate:'20261122'}),/matching_verified_date_required/);
+assert.throws(()=>planVerifiedVenueCapture({...args,verifiedActiveVenues:[]}),/verified_active_venues_required/);
+assert.throws(()=>planVerifiedVenueCapture({...args,verifiedActiveVenues:[2,2]}),/Invalid venues/);
+assert.throws(()=>planVerifiedVenueCapture({...args,verifiedActiveVenues:[25]}),/Invalid venues/);
+console.log('PASS: verified venue research planner rejects missing, stale, and invalid venue lists');
