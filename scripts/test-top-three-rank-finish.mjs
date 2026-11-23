@@ -70,6 +70,29 @@ try{
  assert.equal(zeroWins.screeningStatus,'research_candidate');
  // Zero top-two finishes must also remain a candidate, never an automatic exclusion.
  assert.equal(outThirty.exclusionResearch.topTwo.find(x=>x.rank===1&&x.boat===5).screeningStatus,'research_candidate');
+ // Independent held-out day: one unexpected win must be counted, not hidden.
+ const holdout=[
+  make('20261120',2,1,5,[5,1,2,3,4,6]),
+  make('20261120',2,2,5,[1,2,3,4,5,6])
+ ];
+ fs.writeFileSync(inputPath,JSON.stringify({...input,evidence:[...thirty,...holdout]}));
+ const runHoldout=spawnSync(process.execPath,[script,inputPath],{cwd:dir,encoding:'utf8'});
+ assert.equal(runHoldout.status,0,runHoldout.stderr);
+ const outHoldout=JSON.parse(fs.readFileSync(path.join(dir,'historical-top-three-rank-finish-report.json'),'utf8'));
+ const day=outHoldout.leaveOneDayOut['20261120'];
+ assert.equal(day.trainingRaces,30);
+ assert.equal(day.heldOutRaces,2);
+ const firstCandidate=day.candidates.find(x=>x.target==='first'&&x.rank===1&&x.boat===5);
+ assert.ok(firstCandidate,'prior-day training should nominate the 5-boat rank-1 combination');
+ assert.equal(firstCandidate.trainingRaces,30);
+ assert.equal(firstCandidate.trainingHits,0);
+ assert.equal(firstCandidate.heldOutRaces,2);
+ assert.equal(firstCandidate.heldOutHits,1,'unexpected winner must be counted');
+ const topTwoCandidate=day.candidates.find(x=>x.target==='topTwo'&&x.rank===1&&x.boat===5);
+ assert.ok(topTwoCandidate);
+ assert.equal(topTwoCandidate.heldOutHits,1);
+ assert.equal(outHoldout.leaveOneDayOut['20261119'].trainingRaces,2);
+ assert.equal(outHoldout.leaveOneDayOut['20261119'].candidates.length,0);
  const duplicate={...input,evidence:[evidence[0],evidence[0]]};
  fs.writeFileSync(inputPath,JSON.stringify(duplicate));
  const fail=spawnSync(process.execPath,[script,inputPath],{cwd:dir,encoding:'utf8'});
