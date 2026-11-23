@@ -25,6 +25,7 @@ on:
       - 'scripts/*six-racer-stage.mjs'
       - 'scripts/*official-six-racer-inputs.mjs'
       - 'scripts/*prediction-official-source.mjs'
+      - 'scripts/*capture-times.mjs'
       - 'scripts/*capture-with-original-inputs.mjs'
       - 'scripts/*save-original-input-capture.mjs'
       - 'scripts/*inspect-saved-twelve-picks.mjs'
@@ -131,6 +132,9 @@ jobs:
           echo "::endgroup::"
           echo "::group::29 prediction-to-official-source identity join"
           if node scripts/test-join-prediction-official-source.mjs; then echo "PASS: prediction-to-official-source join"; else echo "FAIL: prediction-to-official-source join"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::30 cutoff timestamp plausibility"
+          if node scripts/test-inspect-capture-times.mjs; then echo "PASS: cutoff timestamp plausibility"; else echo "FAIL: cutoff timestamp plausibility"; failures=$((failures+1)); fi
           echo "::endgroup::"
           echo "Failed checks: $failures"
           test "$failures" -eq 0
