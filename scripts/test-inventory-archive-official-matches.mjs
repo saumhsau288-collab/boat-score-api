@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {inventoryArchiveOfficialMatches as inventory} from './inventory-archive-official-matches.mjs';
+const archive={authenticatedBeforeRace:false,records:[{date:'20261118',venue:2,race:1,response:{ready:true}},{date:'20261118',venue:2,race:2,response:{ready:false}}]};
+const official={rows:[{date:'20261118',venue:2,race:1,status:'parsed_needs_independent_review',podium:[1,2,3],racerFinishIndependentlyVerified:false},{date:'20261118',venue:2,race:3,status:'official_page_no_result_data'}]};
+const r=inventory([archive],[official]);
+assert.equal(r.officialRaceKeys,2);assert.equal(r.overlappingRaceKeys,1);
+assert.equal(r.diagnosticMatches,1);assert.equal(r.eligibleForAccuracy,0);
+assert.equal(r.rows.every(row=>row.eligibleForAccuracy===false),true);
+assert.equal(inventory([{...archive,records:[archive.records[0],archive.records[0]]}],[official]).diagnosticMatches,0);
+console.log('PASS: race-key joins never imply verified accuracy and duplicates are excluded');
