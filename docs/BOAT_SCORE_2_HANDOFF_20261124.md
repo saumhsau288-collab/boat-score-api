@@ -38,3 +38,12 @@ Previous checkpoint: `docs/BOAT_SCORE_2_CHECKPOINT_20261123.md`
 
 ## User-facing wording
 Explain progress in Japanese, concise and precise. Never claim the code has been executed, the app updated, or historical accuracy improved unless independently verified.
+
+## Update 2026-11-24 — external site feature research and CI
+- External data-site feature review saved to `research/20261124-external-prediction-features.md`. Relevant candidate inputs: verified actual entry, relative adjacent ST/exhibition deltas, racer course win method, exhibition ST consistency, venue weather/waves. These are hypotheses only, not proven improvements.
+- `scripts/relative-features.mjs` now calculates adjacent inner/outer boat ST and exhibition-time advantages from six unique verified entry courses; null when inputs are missing. `scripts/test-relative-features.mjs` provides synthetic fixtures.
+- `.github/workflows/research-outer-tie-tests.yml` now includes all three synthetic suites and triggers on changes to relative feature code. Latest workflow edit commit: `5eaec4024562f2817fc541975bfc854ca284cfc0`.
+- Fixed duplicate course in course-swap fixture. Three-policy comparator now counts `fullExclusion.insufficientTickets` when fewer than six tickets are generated; examples include full-exclusion-only changes.
+- GitHub commits are verified. **No successful GitHub Actions run has been confirmed** and no authenticated historical comparison has been run. Earlier assistant statement of local test success should NOT be treated as proof unless logs are produced.
+- Production scoring, original Boat Score, and public Worker remain unchanged.
+- Next: verify CI run logs and correct failures; gather authenticated pre-cutoff six-racer scores and actual course data; evaluate additional features on held-out races without future information leakage.
