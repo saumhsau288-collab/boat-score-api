@@ -2,7 +2,7 @@
 // Usage: node scripts/collect-morning-official-results.mjs YYYYMMDD
 // Read-only network calls; no prediction recomputation and no KV modifications.
 import fs from 'node:fs';
-import {evaluateMorningRankingHistory,isCaptureOnMorningDate} from './evaluate-morning-ranking-history.mjs';
+import {evaluateMorningRankingHistory,isCaptureOnMorningDate,isValidMorningCaptureTimestamp} from './evaluate-morning-ranking-history.mjs';
 const date=process.argv[2];
 if(!/^20\d{6}$/.test(date||''))throw Error('Usage: node scripts/collect-morning-official-results.mjs YYYYMMDD');
 const base='https://boat-score-2-preview.saumh-sau-288.workers.dev';
@@ -41,6 +41,15 @@ for(const category of ['main','upset','chaos']){
   }
   if(p.predictedOrder===undefined){
    legacyWithoutOrder.push({key,category,venue:p.venue,race:p.race,reason:'saved_prediction_order_missing'});
+   continue;
+  }
+  // Do not spend official-result requests on a record that cannot prove pre-cutoff capture.
+  if(!isValidMorningCaptureTimestamp(p.deadlineAt)){
+   held.push({venue:p.venue,race:p.race,reason:'verified_deadline_missing'});
+   continue;
+  }
+  if(!isValidMorningCaptureTimestamp(p.capturedAt)||Date.parse(p.capturedAt)>=Date.parse(p.deadlineAt)){
+   held.push({venue:p.venue,race:p.race,reason:'prediction_not_before_deadline'});
    continue;
   }
   candidates.set(key,p);
