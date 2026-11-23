@@ -23,6 +23,8 @@ on:
       - 'scripts/test-run-saved-capture-result-comparison.mjs'
       - 'scripts/run-spatial-hypothesis-comparison.mjs'
       - 'scripts/test-run-spatial-hypothesis-comparison.mjs'
+      - 'scripts/compare-saved-tickets-to-spatial.mjs'
+      - 'scripts/test-compare-saved-tickets-to-spatial.mjs'
       - 'scripts/diagnose-archive-readiness.mjs'
       - 'scripts/test-diagnose-archive-readiness.mjs'
       - 'scripts/research-capture-retry-policies.mjs'
@@ -44,6 +46,7 @@ jobs:
           node scripts/test-compare-spatial-hypothesis.mjs
           node scripts/test-run-saved-capture-result-comparison.mjs
           node scripts/test-run-spatial-hypothesis-comparison.mjs
+          node scripts/test-compare-saved-tickets-to-spatial.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
