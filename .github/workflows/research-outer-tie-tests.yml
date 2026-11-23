@@ -10,6 +10,8 @@ on:
       - 'scripts/test-compare-three-tie-policies.mjs'
       - 'scripts/relative-features.mjs'
       - 'scripts/test-relative-features.mjs'
+      - 'scripts/audit-outer-challenges.mjs'
+      - 'scripts/test-audit-outer-challenges.mjs'
       - '.github/workflows/research-outer-tie-tests.yml'
   workflow_dispatch:
 permissions:
@@ -30,12 +32,16 @@ jobs:
           node --check scripts/test-compare-outer-tie-historical.mjs
           node --check scripts/test-compare-three-tie-policies.mjs
           node --check scripts/test-relative-features.mjs
+          node --check scripts/audit-outer-challenges.mjs
+          node --check scripts/test-audit-outer-challenges.mjs
       - name: Two-policy fixture
         run: node scripts/test-compare-outer-tie-historical.mjs
       - name: Three-policy fixture
         run: node scripts/test-compare-three-tie-policies.mjs
       - name: Adjacent-course relative features
         run: node scripts/test-relative-features.mjs
+      - name: Outer-challenge audit fixture
+        run: node scripts/test-audit-outer-challenges.mjs
       - name: Test status summary
         if: always()
         run: |
