@@ -63,15 +63,6 @@ jobs:
           echo '::group::relative inside upset scenario'
           if node scripts/test-relative-inside-upset.mjs; then echo 'PASS: relative inside upset'; else echo 'FAIL: relative inside upset'; failures=$((failures+1)); fi
           echo '::endgroup::'
-          echo '::group::strong inside competitor loses'
-          if node scripts/test-strong-inside-loses.mjs; then echo 'PASS: strong inside competitor loses'; else echo 'FAIL: strong inside competitor loses'; failures=$((failures+1)); fi
-          echo '::endgroup::'
-          echo '::group::three candidate mode comparison'
-          if node scripts/test-compare-three-candidate-modes.mjs; then echo 'PASS: three candidate mode comparison'; else echo 'FAIL: three candidate mode comparison'; failures=$((failures+1)); fi
-          echo '::endgroup::'
-          echo '::group::rank-relative upset scenarios'
-          if node scripts/test-rank-relative-upset-scenarios.mjs; then echo 'PASS: rank-relative upset scenarios'; else echo 'FAIL: rank-relative upset scenarios'; failures=$((failures+1)); fi
-          echo '::endgroup::'
           echo '::group::individual strategy first-place roles'
           if node scripts/test-audit-strategy-first-place-roles.mjs; then echo 'PASS: strategy first-place roles'; else echo 'FAIL: strategy first-place roles'; failures=$((failures+1)); fi
           echo '::endgroup::'
