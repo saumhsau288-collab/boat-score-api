@@ -58,6 +58,8 @@ on:
       - 'scripts/test-audit-missing-inputs.mjs'
       - 'scripts/audit-verification-diagnostic-gaps.mjs'
       - 'scripts/test-audit-verification-diagnostic-gaps.mjs'
+      - 'scripts/classify-prediction-readiness.mjs'
+      - 'scripts/test-classify-prediction-readiness.mjs'
 permissions:
   contents: read
   actions: read
@@ -93,6 +95,7 @@ jobs:
           node scripts/test-audit-not-ready-official-stats.mjs
           node scripts/test-audit-missing-inputs.mjs
           node scripts/test-audit-verification-diagnostic-gaps.mjs
+          node scripts/test-classify-prediction-readiness.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
@@ -169,6 +172,7 @@ jobs:
           import {auditNotReadyOfficialStats} from './scripts/audit-not-ready-official-stats.mjs';
           import {auditMissingInputs} from './scripts/audit-missing-inputs.mjs';
           import {auditVerificationDiagnosticGaps} from './scripts/audit-verification-diagnostic-gaps.mjs';
+          import {classifyPredictionReadiness} from './scripts/classify-prediction-readiness.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
           });
@@ -188,6 +192,8 @@ jobs:
           console.log('NOT_READY_OFFICIAL_STATS '+JSON.stringify(auditNotReadyOfficialStats(archives),null,2));
           console.log('MISSING_INPUT_AUDIT '+JSON.stringify(auditMissingInputs(archives),null,2));
           console.log('VERIFICATION_DIAGNOSTIC_GAPS '+JSON.stringify(auditVerificationDiagnosticGaps(archives),null,2));
+          const readinessStates={};for(const a of archives)for(const r of a.records??[]){const x=classifyPredictionReadiness(r.response);readinessStates[x.state]=(readinessStates[x.state]??0)+1;}
+          console.log('READINESS_STATE_INVENTORY '+JSON.stringify(readinessStates));
           console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
             '20261118:2:1','20261118:2:2','20261118:2:3',
             '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
