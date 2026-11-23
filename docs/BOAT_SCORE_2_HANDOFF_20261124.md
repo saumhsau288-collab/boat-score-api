@@ -135,3 +135,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Added `scripts/twelve-independent-strategies.mjs`: six differently weighted favorite strategies (score, inner course, average ST, exhibition, motor, balanced) and six distinct relative-outer upset hypotheses (score, ST, exhibition, motor, leader second, leader out of top three). One ticket per hypothesis; no duplicate tickets; can return null when qualifier absent.
 - Requires six verified unique entry courses and complete score/ST/exhibition/motor fields. Uses boat ID only for identity; relative outer logic uses verified course. Synthetic Node test ran locally and passed; corresponding GitHub test and workflow added, CI run unverified.
 - WARNING: Different heuristic weighting does not prove statistically independent methods or improved accuracy. Score normalization and threshold values are provisional. Real archived captures lack verified courses and cannot validate this model. No deployment or production code changes.
+
+## Twelve-strategy diversity diagnostics
+- Added `scripts/audit-twelve-strategy-diversity.mjs` and synthetic fixture; workflow now checks both. Measures distinct first-place boats, each strategy's no-pick rate, same winner and same top-two set across strategy pairs, and generated unique tickets.
+- Critical distinction: 12 different formulas or unique tickets do NOT demonstrate statistical independence. Diversity metrics should be inspected before any empirical accuracy testing.
+- Research-only. New fixture CI/local execution not yet confirmed; no historical accuracy claims, no production deployment.
