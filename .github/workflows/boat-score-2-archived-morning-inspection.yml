@@ -80,6 +80,8 @@ on:
       - 'scripts/test-audit-ticket-slot-scenarios.mjs'
       - 'scripts/audit-ticket-slot-overlap.mjs'
       - 'scripts/test-audit-ticket-slot-overlap.mjs'
+      - 'scripts/audit-first-two-slot-differences.mjs'
+      - 'scripts/test-audit-first-two-slot-differences.mjs'
 permissions:
   contents: read
   actions: read
@@ -126,6 +128,7 @@ jobs:
           node scripts/test-classify-archived-ticket-scenarios.mjs
           node scripts/test-audit-ticket-slot-scenarios.mjs
           node scripts/test-audit-ticket-slot-overlap.mjs
+          node scripts/test-audit-first-two-slot-differences.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
@@ -211,6 +214,7 @@ jobs:
           import {classifyArchivedTicketScenarios} from './scripts/classify-archived-ticket-scenarios.mjs';
           import {auditTicketSlotScenarios} from './scripts/audit-ticket-slot-scenarios.mjs';
           import {auditTicketSlotOverlap} from './scripts/audit-ticket-slot-overlap.mjs';
+          import {auditFirstTwoSlotDifferences} from './scripts/audit-first-two-slot-differences.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
           });
@@ -240,6 +244,7 @@ jobs:
           console.log('TICKET_SCENARIOS '+JSON.stringify(classifyArchivedTicketScenarios(archives),null,2));
           console.log('TICKET_SLOT_SCENARIOS '+JSON.stringify(auditTicketSlotScenarios(archives),null,2));
           console.log('TICKET_SLOT_OVERLAP '+JSON.stringify(auditTicketSlotOverlap(archives),null,2));
+          console.log('FIRST_TWO_SLOT_DIFFERENCES '+JSON.stringify(auditFirstTwoSlotDifferences(archives),null,2));
           console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
             '20261118:2:1','20261118:2:2','20261118:2:3',
             '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
