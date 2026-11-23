@@ -43,7 +43,7 @@ jobs:
             const p=path.join(dir,e.name);
             return e.isDirectory()?walk(p):e.name.endsWith('.json')?[p]:[];
           });
-          const files=walk('archived-captures').filter(file=>/20\\d{6}-\\d+\\.json$/.test(path.basename(file)));
+          const files=walk('archived-captures').filter(file=>/20\d{6}-\d+\.json$/.test(path.basename(file)));
           if(!files.length)throw Error('No dated raw capture JSON found in retained artifacts');
           const reports=files.map(file=>{
             const report=inspectRawMorningCapture(JSON.parse(fs.readFileSync(file,'utf8')));
