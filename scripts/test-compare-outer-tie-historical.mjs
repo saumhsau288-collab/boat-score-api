@@ -6,9 +6,9 @@ import {execFileSync} from 'node:child_process';
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'outer-tie-'));
 const rows=[
  {date:'20261120',venue:1,race:1,capturedBeforeCutoff:true,officialResultVerified:true,
-  actual:[4,2,5],boats:[1,2,3,4,5,6].map((boat,i)=>({boat,course:boat,courseVerified:true,score:[70,85,60,85,50,40][i]}))},
+  actual:[4,2,1],boats:[1,2,3,4,5,6].map((boat,i)=>({boat,course:boat,courseVerified:true,score:[70,85,60,85,50,40][i]}))},
  {date:'20261120',venue:1,race:2,capturedBeforeCutoff:false,officialResultVerified:true,
-  actual:[4,2,5],boats:[1,2,3,4,5,6].map(boat=>({boat,course:boat,courseVerified:true,score:80}))}
+  actual:[4,2,1],boats:[1,2,3,4,5,6].map(boat=>({boat,course:boat,courseVerified:true,score:80}))}
 ];
 try{
  const file=path.join(dir,'fixtures.json');fs.writeFileSync(file,JSON.stringify(rows));
