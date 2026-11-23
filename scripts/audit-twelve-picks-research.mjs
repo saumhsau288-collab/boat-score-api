@@ -14,8 +14,7 @@ export function auditTwelvePicks(rows) {
       Number.isInteger(row?.race) && row.race >= 1 && row.race <= 12;
     const validPicks = Array.isArray(row?.main) && row.main.length === 6 &&
       Array.isArray(row?.upset) && row.upset.length === 6 &&
-      [...row.main,...row.upset].every(validOrder) &&
-      new Set([...row.main,...row.upset].map(key)).size === 12;
+      [...row.main,...row.upset].every(validOrder);
     const officialUrl = value => { try { const u = new URL(value); return u.protocol === 'https:' && (u.hostname === 'boatrace.jp' || u.hostname.endsWith('.boatrace.jp')) && !u.username && !u.password; } catch { return false; } };
     const validEvidence = row?.preRacePredictionsSaved === true &&
       row?.independentlyAuthenticatedCapture === true &&
@@ -45,6 +44,7 @@ export function auditTwelvePicks(rows) {
     mainAnyHits:accepted.filter(row=>row.main.some(p=>key(p)===actual(row))).length,
     upsetAnyHits:accepted.filter(row=>row.upset.some(p=>key(p)===actual(row))).length,
     anyTwelveHits:accepted.filter(row=>[...row.main,...row.upset].some(p=>key(p)===actual(row))).length,
+    uniqueTicketCounts:accepted.map(row=>({date:row.date,venue:row.venue,race:row.race,uniqueTickets:new Set([...row.main,...row.upset].map(key)).size})),
     deployedWeightsChanged:false,
     warning:'Only saved pre-cutoff predictions with verified results qualify. These are hit rates, not return rates; no weights are adjusted.'};
 }
