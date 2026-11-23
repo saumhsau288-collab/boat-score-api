@@ -64,6 +64,8 @@ on:
       - 'scripts/test-evaluate-race-start-course-research.mjs'
       - 'scripts/compare-ability-start-course-research.mjs'
       - 'scripts/test-compare-ability-start-course-research.mjs'
+      - 'scripts/audit-scoring-inputs-in-archives.mjs'
+      - 'scripts/test-audit-scoring-inputs-in-archives.mjs'
 permissions:
   contents: read
   actions: read
@@ -102,6 +104,7 @@ jobs:
           node scripts/test-classify-prediction-readiness.mjs
           node scripts/test-evaluate-race-start-course-research.mjs
           node scripts/test-compare-ability-start-course-research.mjs
+          node scripts/test-audit-scoring-inputs-in-archives.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
@@ -179,6 +182,7 @@ jobs:
           import {auditMissingInputs} from './scripts/audit-missing-inputs.mjs';
           import {auditVerificationDiagnosticGaps} from './scripts/audit-verification-diagnostic-gaps.mjs';
           import {classifyPredictionReadiness} from './scripts/classify-prediction-readiness.mjs';
+          import {auditScoringInputsInArchives} from './scripts/audit-scoring-inputs-in-archives.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
           });
@@ -200,6 +204,7 @@ jobs:
           console.log('VERIFICATION_DIAGNOSTIC_GAPS '+JSON.stringify(auditVerificationDiagnosticGaps(archives),null,2));
           const readinessStates={};for(const a of archives)for(const r of a.records??[]){const x=classifyPredictionReadiness(r.response);readinessStates[x.state]=(readinessStates[x.state]??0)+1;}
           console.log('READINESS_STATE_INVENTORY '+JSON.stringify(readinessStates));
+          console.log('SCORING_INPUT_AVAILABILITY '+JSON.stringify(auditScoringInputsInArchives(archives),null,2));
           console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
             '20261118:2:1','20261118:2:2','20261118:2:3',
             '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
