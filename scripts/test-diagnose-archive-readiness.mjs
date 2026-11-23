@@ -97,4 +97,11 @@ const invalidCounts=diagnoseArchiveReadiness([{date:'20261124',planned:0,attempt
 assert.ok(invalidCounts.captureIntegrityWarnings.some(w=>w.code==='invalid_planned_count'));
 assert.ok(invalidCounts.captureIntegrityWarnings.some(w=>w.code==='invalid_attempted_count'));
 
+
+const repeatedRace=diagnoseArchiveReadiness([
+ {date:'20261123',planned:1,attempted:1,records:[{date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:true}}]},
+ {date:'20261123',planned:1,attempted:1,records:[{date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:false}}]}
+]);
+assert.deepEqual(repeatedRace.duplicateRaceKeys,[{raceKey:'20261123:1:1',occurrences:2}]);
+
 console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
