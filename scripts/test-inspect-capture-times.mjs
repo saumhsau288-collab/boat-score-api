@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {inspectCaptureTimes} from './inspect-capture-times.mjs';
+const x={predictionCapturedAt:'2026-11-23T09:00:00+09:00',officialCapturedAt:'2026-11-23T09:01:00+09:00',cutoffAt:'2026-11-23T09:10:00+09:00'};
+assert.equal(inspectCaptureTimes(x).passes,true);
+assert.equal(inspectCaptureTimes(x).accuracyEligible,false);
+assert.equal(inspectCaptureTimes({...x,predictionCapturedAt:x.cutoffAt}).errors.includes('prediction_not_before_cutoff'),true);
+assert.equal(inspectCaptureTimes({...x,officialCapturedAt:'2026-11-23T00:11:00Z'}).errors.includes('official_data_not_before_cutoff'),true);
+assert.equal(inspectCaptureTimes({...x,cutoffAt:null}).passes,false);
+assert.equal(inspectCaptureTimes({...x,predictionCapturedAt:'2026-11-23T09:00:00'}).passes,false);
+console.log('PASS: timestamp plausibility without authentication (synthetic only)');
