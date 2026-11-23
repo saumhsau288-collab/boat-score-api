@@ -1,0 +1,36 @@
+name: Research read-only morning snapshot audit
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'JST date YYYYMMDD (existing saved snapshot only)'
+        required: true
+        type: string
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate date and collect read-only preview snapshot
+        env:
+          TARGET_DATE: ${{ inputs.date }}
+        run: |
+          if ! [[ "$TARGET_DATE" =~ ^20[0-9]{6}$ ]]; then
+            echo "Invalid YYYYMMDD date" >&2
+            exit 1
+          fi
+          node scripts/fetch-readonly-morning-ranking-snapshot.mjs "$TARGET_DATE" "morning-snapshot-audit-${TARGET_DATE}.json"
+      - name: Upload evidence audit without deployment
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-morning-snapshot-audit
+          path: morning-snapshot-audit-*.json
+          if-no-files-found: warn
+          retention-days: 14
