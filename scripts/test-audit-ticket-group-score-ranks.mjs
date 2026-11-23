@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {auditTicketGroupScoreRanks as audit} from './audit-ticket-group-score-ranks.mjs';
+const scores=Array.from({length:6},(_,i)=>({boat:i+1,score:10-i}));
+const out=audit([{records:[{response:{ready:true,rankedScores:scores,main:Array(6).fill([1,2,3]),upset:Array(6).fill([6,5,4])}},{response:{ready:true,rankedScores:[],main:[],upset:[]}}]}]);
+assert.equal(out.races,1);
+assert.equal(out.excluded,1);
+assert.equal(out.groups.main.firstRankCounts['1'],6);
+assert.equal(out.groups.upset.firstRankCounts['6'],6);
+assert.equal(out.groups.main.distinctFirstBoatsPerRace['1'],1);
+assert.equal(out.groups.upset.tickets,6);
+console.log('PASS: main and upset first-place score ranks are counted separately');
