@@ -8,7 +8,7 @@ const category=r=>{
 const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
 export function diagnoseArchiveReadiness(archives,focusKeys=[]){
  const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
- const statusCodes={};const shapes={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const dateCategories={};
+ const statusCodes={};const shapes={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const dateCategories={};
  const focus=new Set(focusKeys);
  for(const a of archives)for(const r of Array.isArray(a?.records)?a.records:[]){
   const reason=category(r);totals[reason]++;
@@ -37,6 +37,9 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
      const start=Date.parse(item?.requestedAt),end=Date.parse(item?.receivedAt),ms=end-start;
      const bucket=!Number.isFinite(ms)||ms<0?'invalid':ms<5000?'under_5s':ms<15000?'from_5_to_15s':ms<30000?'from_15_to_30s':'over_30s';
      attemptDurationsMs[bucket]++;
+     const ordinal=Number.isInteger(item?.attempt)?String(item.attempt):'unlabeled';
+     if(!attemptByOrdinal[ordinal])attemptByOrdinal[ordinal]={count:0,under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};
+     attemptByOrdinal[ordinal].count++;attemptByOrdinal[ordinal][bucket]++;
 
     }
    }
@@ -53,5 +56,5 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
    responseReady:r?.response?.ready===true,diagnosticFieldNames:r?.response&&typeof r.response==='object'?
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
- return {totals,statusCodes,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+ return {totals,statusCodes,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
 }
