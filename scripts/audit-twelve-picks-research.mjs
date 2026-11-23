@@ -14,7 +14,8 @@ export function auditTwelvePicks(rows) {
       Number.isInteger(row?.race) && row.race >= 1 && row.race <= 12;
     const validPicks = Array.isArray(row?.main) && row.main.length === 6 &&
       Array.isArray(row?.upset) && row.upset.length === 6 &&
-      [...row.main,...row.upset].every(validOrder);
+      [...row.main,...row.upset].every(validOrder) &&
+      new Set([...row.main,...row.upset].map(key)).size === 12;
     const officialUrl = value => { try { const u = new URL(value); return u.protocol === 'https:' && (u.hostname === 'boatrace.jp' || u.hostname.endsWith('.boatrace.jp')) && !u.username && !u.password; } catch { return false; } };
     const validEvidence = row?.preRacePredictionsSaved === true &&
       row?.independentlyAuthenticatedCapture === true &&
