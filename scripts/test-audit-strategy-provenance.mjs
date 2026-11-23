@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {auditStrategyProvenance} from './audit-strategy-provenance.mjs';
+const mainStrategyIds=Array.from({length:6},(_,i)=>'main_'+(i+1));
+const upsetStrategyIds=Array.from({length:6},(_,i)=>'upset_'+(i+1));
+const strategyVersions=Object.fromEntries([...mainStrategyIds,...upsetStrategyIds].map(id=>[id,'v1']));
+const input={mainStrategyIds,upsetStrategyIds,strategyVersions};
+assert.equal(auditStrategyProvenance({}).status,'missing_strategy_provenance');
+assert.equal(auditStrategyProvenance({...input,upsetStrategyIds:[mainStrategyIds[0],...upsetStrategyIds.slice(1)]}).status,'duplicate_strategy_ids');
+assert.equal(auditStrategyProvenance({...input,strategyVersions:{}}).status,'missing_strategy_versions');
+const result=auditStrategyProvenance(input);
+assert.equal(result.status,'declared_distinct_strategy_ids');
+assert.equal(result.distinctStrategies,false);
+console.log('Strategy provenance metadata fixture passed; algorithm independence remains unverified');
