@@ -11,14 +11,14 @@ const rows=cases.map(([scenario,scores,starts])=>{
  const racers=scores.map((score,i)=>({boat:i+1,score,avgStart:starts[i]}));
  const out=compareThreeCandidateModes(racers);
  assert.equal(out.rows.length,12);
- assert.equal(out.rankRelativeFallback,out.topAbilityBoats.length===6);
- if(out.rankRelativeFallback)assert.deepEqual(out.rows.map(r=>r.tickets.rank_relative),out.rows.map(r=>r.tickets.unrestricted));
+ assert.equal(out.rankRelativeFallback,false);
+
  assert.deepEqual(compareThreeCandidateModes([...racers].reverse()),out);
  for(const mode of ['legacy','unrestricted','rank_relative']){
   assert.equal(out.summary[mode].distinctTickets,12);
   assert.equal(Object.values(out.summary[mode].firstCounts).reduce((a,b)=>a+b,0),12);
  }
- if(out.topAbilityBoats.length<6)assert.equal(out.summary.rank_relative.upsetFirstOnTopAbility,0);
+ assert.equal(out.summary.rank_relative.upsetFirstOnStrongInside,0);
  assert.equal(out.summary.legacy.changedTicketsFromLegacy,0);
  return {scenario,topAbilityBoats:out.topAbilityBoats,rankRelativeFallback:out.rankRelativeFallback,summary:out.summary};
 });
