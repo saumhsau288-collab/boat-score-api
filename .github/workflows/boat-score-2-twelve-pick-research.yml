@@ -12,6 +12,7 @@ on:
       - 'scripts/*rank-relative-upset-scenarios.mjs'
       - 'scripts/*three-candidate-modes.mjs'
       - 'scripts/*strong-inside-loses.mjs'
+      - 'scripts/*relative-inside-upset.mjs'
       - 'scripts/*capture-from-api-response.mjs'
       - 'scripts/*save-twelve-pick-capture.mjs'
       - 'scripts/*snapshots-from-morning-capture.mjs'
@@ -58,6 +59,9 @@ jobs:
           failures=0
           echo '::group::research first-place candidate mode regression'
           if node scripts/test-predict-twelve-independent-hypotheses.mjs; then echo 'PASS: candidate mode regression'; else echo 'FAIL: candidate mode regression'; failures=$((failures+1)); fi
+          echo '::endgroup::'
+          echo '::group::relative inside upset scenario'
+          if node scripts/test-relative-inside-upset.mjs; then echo 'PASS: relative inside upset'; else echo 'FAIL: relative inside upset'; failures=$((failures+1)); fi
           echo '::endgroup::'
           echo '::group::strong inside competitor loses'
           if node scripts/test-strong-inside-loses.mjs; then echo 'PASS: strong inside competitor loses'; else echo 'FAIL: strong inside competitor loses'; failures=$((failures+1)); fi
