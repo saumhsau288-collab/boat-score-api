@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {diagnoseScoreOverlap} from './diagnose-score-overlap.mjs';
+const fallback=diagnoseScoreOverlap({nationalWinRate:6,localWinRate:0});
+assert.equal(fallback.localFallbackUsed,true);
+assert.equal(fallback.combinedNationalWeightWhenFallback,70);
+assert.equal(fallback.missingStartTiming,true);
+assert.equal(fallback.missingCourse,true);
+const distinct=diagnoseScoreOverlap({nationalWinRate:6,localWinRate:5,startTiming:0.15,course:4});
+assert.equal(distinct.localFallbackUsed,false);
+assert.equal(distinct.combinedNationalWeightWhenFallback,null);
+assert.equal(distinct.missingStartTiming,false);
+assert.equal(distinct.missingCourse,false);
+console.log('Score overlap diagnostic fixtures passed (no prediction recalibration)');
