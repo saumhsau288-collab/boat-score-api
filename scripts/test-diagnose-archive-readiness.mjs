@@ -7,6 +7,6 @@ const r=diagnoseArchiveReadiness([{records:[
 ]}],['20261118:2:1']);
 assert.deepEqual(r.totals,{ready:1,http_non_200:1,missing_response_object:0,http_200_not_ready:1});
 assert.equal(r.nonReadyReasons.source_unavailable,1);
-assert.equal(r.missingHttpDiagnosticFieldShapes.error,1);
+assert.equal(r.missingHttpDiagnosticFieldShapes['error,httpStatus'],1);
 assert.equal(r.focused[0].category,'http_200_not_ready');
 console.log('PASS: archived non-ready reasons and missing HTTP metadata are counted');
