@@ -26,6 +26,8 @@ try{
  assert.equal(out.eligible,3);
  assert.equal(out.dateGroups['20261120'].races,3);
  assert.equal(out.leaveOneDayOut['20261120'].trainingRaces,0);
+ assert.equal(out.forwardDayValidation['20261120'].trainingRaces,0);
+ assert.equal(out.forwardDayValidation['20261120'].candidates.length,0);
  assert.equal(out.leaveOneDayOut['20261120'].heldOutRaces,3);
  assert.equal(out.leaveOneDayOut['20261120'].candidates.length,0);
  assert.equal(out.dateGroups['20261120'].rankLaneCounts.first.find(x=>x.rank===1&&x.boat===5).hits,0);
@@ -64,6 +66,7 @@ try{
  assert.equal(zeroWins.races,30);
  assert.equal(outThirty.dateGroups['20261119'].races,30);
  assert.equal(outThirty.leaveOneDayOut['20261119'].trainingRaces,0);
+ assert.equal(outThirty.forwardDayValidation['20261119'].trainingRaces,0);
  assert.equal(outThirty.leaveOneDayOut['20261119'].candidates.length,0);
  assert.equal(zeroWins.hits,0);
  assert.ok(zeroWins.upper95>0.11&&zeroWins.upper95<0.12);
@@ -79,6 +82,11 @@ try{
  const runHoldout=spawnSync(process.execPath,[script,inputPath],{cwd:dir,encoding:'utf8'});
  assert.equal(runHoldout.status,0,runHoldout.stderr);
  const outHoldout=JSON.parse(fs.readFileSync(path.join(dir,'historical-top-three-rank-finish-report.json'),'utf8'));
+ const forward=outHoldout.forwardDayValidation['20261120'];
+ assert.equal(forward.trainingRaces,30);
+ assert.equal(forward.heldOutRaces,2);
+ assert.equal(forward.candidates.find(x=>x.target==='first'&&x.rank===1&&x.boat===5).heldOutHits,1);
+ assert.equal(outHoldout.forwardDayValidation['20261119'].candidates.length,0);
  const day=outHoldout.leaveOneDayOut['20261120'];
  assert.equal(day.trainingRaces,30);
  assert.equal(day.heldOutRaces,2);
