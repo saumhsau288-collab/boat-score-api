@@ -10,6 +10,7 @@ on:
       - 'scripts/*candidate-mode-group-separation.mjs'
       - 'scripts/*strategy-first-place-roles.mjs'
       - 'scripts/*rank-relative-upset-scenarios.mjs'
+      - 'scripts/*three-candidate-modes.mjs'
       - 'scripts/*capture-from-api-response.mjs'
       - 'scripts/*save-twelve-pick-capture.mjs'
       - 'scripts/*snapshots-from-morning-capture.mjs'
@@ -56,6 +57,9 @@ jobs:
           failures=0
           echo '::group::research first-place candidate mode regression'
           if node scripts/test-predict-twelve-independent-hypotheses.mjs; then echo 'PASS: candidate mode regression'; else echo 'FAIL: candidate mode regression'; failures=$((failures+1)); fi
+          echo '::endgroup::'
+          echo '::group::three candidate mode comparison'
+          if node scripts/test-compare-three-candidate-modes.mjs; then echo 'PASS: three candidate mode comparison'; else echo 'FAIL: three candidate mode comparison'; failures=$((failures+1)); fi
           echo '::endgroup::'
           echo '::group::rank-relative upset scenarios'
           if node scripts/test-rank-relative-upset-scenarios.mjs; then echo 'PASS: rank-relative upset scenarios'; else echo 'FAIL: rank-relative upset scenarios'; failures=$((failures+1)); fi
