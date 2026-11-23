@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {classifyAbilityCourseStart} from './classify-ability-course-start.mjs';
+const racer=(boat,win=6,st=0.15)=>({boat,course:boat,nationalWinRate:win,localWinRate:win,motorTwoWinRate:40,recent50WinRate:40,exhibitionScore:50,startTiming:st});
+const base=Array.from({length:6},(_,i)=>racer(i+1,5));
+assert.equal(classifyAbilityCourseStart(base).category,'uncertain');
+const inside=base.map(r=>r.boat===1?racer(1,9):r);
+assert.equal(classifyAbilityCourseStart(inside).category,'inside_supported');
+const outside=base.map(r=>r.boat===6?racer(6,9,0.10):r);
+assert.equal(classifyAbilityCourseStart(outside).category,'outside_counter_candidate');
+assert.equal(classifyAbilityCourseStart(outside).scoreAdjustment,0);
+const swapped=inside.map(r=>r.boat===1?{...r,course:2}:r.boat===2?{...r,course:1}:r);
+assert.equal(classifyAbilityCourseStart(swapped).insideBoat,2);
+assert.equal(classifyAbilityCourseStart(base.map(r=>r.boat===6?{...r,startTiming:null}:r)).status,'insufficient_course_start_data');
+assert.equal(classifyAbilityCourseStart(base.map(r=>r.boat===6?{...r,nationalWinRate:null}:r)).status,'insufficient_ability_data');
+console.log('Combined ability/course/start fixture passed; no calibrated probabilities');
