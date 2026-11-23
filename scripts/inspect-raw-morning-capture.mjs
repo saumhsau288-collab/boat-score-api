@@ -4,6 +4,7 @@ const validPick=p=>Array.isArray(p)&&p.length===3&&p.every(n=>Number.isInteger(n
 export function inspectRawMorningCapture(payload){
  if(payload?.authenticatedBeforeRace!==false||!Array.isArray(payload?.records))
   return {status:'invalid_raw_capture'};
+ const missingOriginalInputReasons={};
  const counts={records:payload.records.length,http200:0,ready:0,twelvePicksPresent:0,
   originalSixInputsComplete:0,readyWithoutOriginalSixInputs:0};
  for(const r of payload.records){
@@ -13,11 +14,15 @@ export function inspectRawMorningCapture(payload){
   const x=r.response;
   if(['main','upset'].every(k=>Array.isArray(x[k])&&x[k].length===6&&x[k].every(validPick)))
    counts.twelvePicksPresent++;
-  if(validateSixRacerSourceInputs(x.scoreInputsByBoat).status==='complete_unverified_inputs')
+  const inputCheck=validateSixRacerSourceInputs(x.scoreInputsByBoat);
+  if(inputCheck.status==='complete_unverified_inputs')
    counts.originalSixInputsComplete++;
-  else counts.readyWithoutOriginalSixInputs++;
+  else {
+   counts.readyWithoutOriginalSixInputs++;
+   for(const reason of inputCheck.errors)missingOriginalInputReasons[reason]=(missingOriginalInputReasons[reason]||0)+1;
+  }
  }
- return {status:'research_only',date:payload.date??null,counts,
+ return {status:'research_only',date:payload.date??null,counts,missingOriginalInputReasons,
   independentlyVerifiedPreRace:0,eligibleForAccuracyAudit:0,
   warning:'Counts are structural only. Raw morning artifact is explicitly unauthenticated; no historical hit-rate inference.'};
 }
