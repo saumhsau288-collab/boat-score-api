@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {auditOuterChallenges} from './audit-outer-challenges.mjs';
-const boats=[70,85,60,85,50,40].map((score,i)=>({boat:i+1,course:i+1,courseVerified:true,score,averageST:0.20,exhibitionTime:6.80}));
+const boats=[70,85,90,85,50,40].map((score,i)=>({boat:i+1,course:i+1,courseVerified:true,score,averageST:0.20,exhibitionTime:6.80}));
 boats[3].averageST=0.12;boats[3].exhibitionTime=6.72;
 const row=actual=>({date:'20261124',venue:1,race:1,capturedBeforeCutoff:true,officialResultVerified:true,boats,actual});
 const r=auditOuterChallenges([row([4,2,1]),row([2,4,1]),{...row([4,2,1]),capturedBeforeCutoff:false}]);
