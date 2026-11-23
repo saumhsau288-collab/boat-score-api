@@ -24,6 +24,6 @@ export function inventoryArchiveOfficialMatches(archives,officialReports){
   diagnosticMatch:official.count===1&&official.parsed===1&&predictions.get(raceKey)?.count===1&&predictions.get(raceKey)?.ready===1,
   eligibleForAccuracy:false})).sort((a,b)=>a.raceKey.localeCompare(b.raceKey));
  return {officialRaceKeys:results.size,archiveRaceKeys:predictions.size,overlappingRaceKeys:rows.filter(r=>r.prediction).length,
-  diagnosticMatches:rows.filter(r=>r.diagnosticMatch).length,eligibleForAccuracy:0,rows,
+  diagnosticMatches:rows.filter(r=>r.diagnosticMatch).length,overlapReady:rows.filter(r=>r.prediction?.ready===1).length,overlapParsed:rows.filter(r=>r.official.parsed===1).length,overlapNotReady:rows.filter(r=>r.prediction?.ready===0).length,overlapMissingResult:rows.filter(r=>r.official.parsed===0).length,eligibleForAccuracy:0,rows,
   warning:'Race-key joins are descriptive only. Archived captures and parsed results lack independent pre-race/result verification; do not infer hits or update scores.'};
 }
