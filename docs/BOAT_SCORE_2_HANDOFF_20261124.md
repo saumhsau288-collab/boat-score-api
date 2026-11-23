@@ -106,3 +106,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Added `scripts/evaluate-verified-outer-pairs.mjs` that first excludes all duplicate/invalid race identities, then rejects rows failing the provenance-format gate, then calls `auditAllOuterPairs` on eligible rows only. Reports identity and provenance rejection counts separately.
 - Added `scripts/test-evaluate-verified-outer-pairs.mjs` synthetic fixture for 4-vs-6, duplicates, late capture, invalid date, and CI wiring.
 - Limit: provenance gate only validates parseable time strings, source URL shapes and declared flags; it does not independently verify source authenticity or actual pre-cutoff acquisition. CI run and real-world accuracy still unverified. Research branch only; no production change.
+
+## Rechecked historical evidence artifact availability (2026-11-24)
+- GitHub connector `fetch_workflow_run_artifacts` confirmed run `44639859914` still lists artifact ID `14586303082`, name `boat-score-2-morning-raw-44639859914`, `expired:false`, size `66177` bytes, created `2026-11-20T00:02:39Z`.
+- This is artifact metadata verification, not inspection of the archive contents. Earlier read-only evidence inventory reported 288 attempts, 203 HTTP 200, 14 ready, zero complete explicit six-racer score input vectors. Do not promote those records to authenticated pre-cutoff accuracy evidence.
+- GitHub API workflow-run list endpoint was not allowed through available fetch tool, so current CI run success remains unverified. Continue with independent capture provenance and real outcome matching, without changing production.
