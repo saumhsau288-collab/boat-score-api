@@ -8,7 +8,7 @@ const category=r=>{
 const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
 export function diagnoseArchiveReadiness(archives,focusKeys=[]){
  const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
- const statusCodes={};const shapes={};const focused=[];const notReadyReasons={};const missingHttpFields={};
+ const statusCodes={};const shapes={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};
  const focus=new Set(focusKeys);
  for(const a of archives)for(const r of Array.isArray(a?.records)?a.records:[]){
   const reason=category(r);totals[reason]++;
@@ -16,6 +16,9 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
   if(reason==='http_non_200'){
    const fields=Object.keys(r??{}).filter(k=>/error|reason|message|status|fail|attempt|retry|time/i.test(k)).sort();
    const signature=fields.join(',')||'(no diagnostic fields)';missingHttpFields[signature]=(missingHttpFields[signature]||0)+1;
+   const error=r?.error;
+   const label=typeof error==='string' ? (/timeout|timed out|abort/i.test(error)?'timeout_or_abort':/fetch|network|connect|dns|socket/i.test(error)?'network_or_fetch':/http|status/i.test(error)?'http_status_error':'other_string_error') : error==null?'missing_error':typeof error;
+   missingHttpErrorCategories[label]=(missingHttpErrorCategories[label]||0)+1;
   }
   if(reason==='http_200_not_ready'){
    const raw=r.response.reason;
@@ -29,5 +32,5 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
    responseReady:r?.response?.ready===true,diagnosticFieldNames:r?.response&&typeof r.response==='object'?
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
- return {totals,statusCodes,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+ return {totals,statusCodes,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
 }
