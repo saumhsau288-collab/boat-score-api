@@ -118,9 +118,27 @@ const leaveOneDayOut=Object.fromEntries(distinctDates.map(date=>{
  return [date,{trainingRaces:training.length,heldOutRaces:test.length,candidates,
   note:'No same-day selection. A candidate with zero held-out races provides no validation.'}];
 }));
+// Forward-only historical check: train on earlier dates, test on later dates.
+// Unlike leave-one-day-out, this never uses future results to select a past-day rule.
+const forwardDayValidation=Object.fromEntries(distinctDates.map(date=>{
+ const training=rows.filter(x=>x.date<date),test=rows.filter(x=>x.date===date);
+ const candidates=[];
+ for(const target of ['first','topTwo'])for(let rank=1;rank<=6;rank++)for(let boat=1;boat<=6;boat++){
+  const matches=x=>x.predictedRankOrder[rank-1]===boat;
+  const hits=x=>target==='first'?x.actualTopThree[0]===boat:x.actualTopThree.slice(0,2).includes(boat);
+  const train=training.filter(matches),trainHits=train.filter(hits).length;
+  const upper95=wilsonUpper(trainHits,train.length);
+  if(train.length<30||upper95>0.15)continue;
+  const heldOut=test.filter(matches);
+  candidates.push({target,rank,boat,trainingRaces:train.length,trainingHits:trainHits,
+   trainingUpper95:upper95,heldOutRaces:heldOut.length,heldOutHits:heldOut.filter(hits).length});
+ }
+ return [date,{trainingRaces:training.length,heldOutRaces:test.length,candidates,
+  note:'Only earlier dates are used to select candidates. Post-race recomputed scores still prevent claims of live predictive accuracy.'}];
+}));
 const venueGroups=Object.fromEntries([...new Set(rows.map(x=>x.venue))].sort((a,b)=>a-b).map(v=>[v,summarize(rows.filter(x=>x.venue===v))]));
 const output={mode:'retrospective_top_three_rank_finish_diagnostic',sourceFiles:paths,
- eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,dateGroups,leaveOneDayOut,outerLeaderBreakdown,rankLaneMatrix,exclusionResearch,details:rows,heldDetails:held,
+ eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,dateGroups,leaveOneDayOut,forwardDayValidation,outerLeaderBreakdown,rankLaneMatrix,exclusionResearch,details:rows,heldDetails:held,
  note:'All scores recomputed after racing. This is not pre-race accuracy. Winner/runner-up ranks are positions in recomputed score order; topThreeTopTwo means both actual first and second were among the three highest-scored racers. No odds, ST, motor or exhibition inputs are present in this evidence. Screening statuses are descriptive only and must never trigger automatic pre-race exclusions.'};
 fs.writeFileSync('historical-top-three-rank-finish-report.json',JSON.stringify(output,null,2)+'\n');
-console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,dateGroups:output.dateGroups,leaveOneDayOut:output.leaveOneDayOut,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix,exclusionResearch:output.exclusionResearch},null,2));
+console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,dateGroups:output.dateGroups,leaveOneDayOut:output.leaveOneDayOut,forwardDayValidation:output.forwardDayValidation,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix,exclusionResearch:output.exclusionResearch},null,2));
