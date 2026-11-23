@@ -24,7 +24,10 @@ jobs:
           node --check scripts/validate-independent-prerace-evidence.test.mjs
           node --check scripts/audit-independent-morning-capture.mjs
           node --check scripts/audit-independent-morning-capture.test.mjs
+          node --check scripts/audit-morning-capture-evidence.mjs
+          node --check scripts/audit-morning-capture-evidence.test.mjs
       - name: Test evidence gate offline
         run: |
           node scripts/validate-independent-prerace-evidence.test.mjs
           node scripts/audit-independent-morning-capture.test.mjs
+          node scripts/audit-morning-capture-evidence.test.mjs
