@@ -15,7 +15,11 @@ export function auditTwelvePicks(rows) {
     const validPicks = Array.isArray(row?.main) && row.main.length === 6 &&
       Array.isArray(row?.upset) && row.upset.length === 6 &&
       [...row.main,...row.upset].every(validOrder);
-    const officialUrl = value => { try { const u = new URL(value); return u.protocol === 'https:' && (u.hostname === 'boatrace.jp' || u.hostname.endsWith('.boatrace.jp')) && !u.username && !u.password; } catch { return false; } };\n    const validEvidence = row?.preRacePredictionsSaved === true &&\n      row?.independentlyAuthenticatedCapture === true &&\n      typeof row?.predictionSourceUrl === 'string' && row.predictionSourceUrl.startsWith('https://') &&\n      officialUrl(row?.officialResultSourceUrl) && row?.officialCutoffVerified === true &&
+    const officialUrl = value => { try { const u = new URL(value); return u.protocol === 'https:' && (u.hostname === 'boatrace.jp' || u.hostname.endsWith('.boatrace.jp')) && !u.username && !u.password; } catch { return false; } };
+    const validEvidence = row?.preRacePredictionsSaved === true &&
+      row?.independentlyAuthenticatedCapture === true &&
+      typeof row?.predictionSourceUrl === 'string' && row.predictionSourceUrl.startsWith('https://') &&
+      officialUrl(row?.officialResultSourceUrl) && row?.officialCutoffVerified === true &&
       row?.officialResultVerified === true &&
       typeof row?.predictionCapturedAt === 'string' &&
       typeof row?.cutoffAt === 'string' &&
