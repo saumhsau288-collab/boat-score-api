@@ -83,6 +83,7 @@ const duplicateDays=diagnoseArchiveReadiness([
 ]);
 assert.ok(duplicateDays.captureIntegrityWarnings.some(w=>w.code==='duplicate_archive_day'));
 assert.equal(duplicateDays.captureCoverageByArchive.length,2);
+assert.equal(duplicateDays.archiveCountByDay['20261123'],2);
 assert.deepEqual(duplicateDays.captureCoverageByArchive.map(x=>x.archiveIndex),[0,1]);
 const distinctDuplicateDays=diagnoseArchiveReadiness([
  {date:'20261123',planned:2,attempted:1,records:[{date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:true}}]},
