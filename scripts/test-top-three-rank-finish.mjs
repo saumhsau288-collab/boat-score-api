@@ -32,6 +32,16 @@ try{
  assert.equal(out.venueGroups['5'].races,1);
  assert.equal(out.all.winnerRanks['1'],2);
  assert.equal(out.outerLeaderBreakdown.cases.length,2);
+ assert.equal(out.rankLaneMatrix['1']['5'].races,1);
+ assert.equal(out.rankLaneMatrix['1']['5'].first,0);
+ assert.equal(out.rankLaneMatrix['1']['5'].topTwo,0);
+ assert.equal(out.rankLaneMatrix['1']['6'].races,1);
+ assert.equal(out.rankLaneMatrix['1']['6'].first,1);
+ assert.equal(out.rankLaneMatrix['1']['6'].topTwo,1);
+ assert.equal(out.rankLaneMatrix['1']['6'].outsideTopTwo,0);
+ assert.equal(out.rankLaneMatrix['1']['2'].races,0);
+ assert.equal(out.rankLaneMatrix['1']['2'].topTwoRate,null);
+ assert.equal(Object.values(out.rankLaneMatrix['1']).reduce((sum,x)=>sum+x.races,0),3);
  const duplicate={...input,evidence:[evidence[0],evidence[0]]};
  fs.writeFileSync(inputPath,JSON.stringify(duplicate));
  const fail=spawnSync(process.execPath,[script,inputPath],{cwd:dir,encoding:'utf8'});
