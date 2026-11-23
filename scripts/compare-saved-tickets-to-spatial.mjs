@@ -11,7 +11,7 @@ export function compareSavedTicketsToSpatial(capture,officialResults,snapshots){
  for(const s of Array.isArray(snapshots)?snapshots:[]){const k=key(s);counts.set(k,(counts.get(k)||0)+1);byKey.set(k,s);}
  const saved=new Map((Array.isArray(capture?.records)?capture.records:[]).map(r=>[key(r),r]));
  const officialByKey=new Map((Array.isArray(officialResults)?officialResults:[]).map(r=>[key(r),r]));
- const rows=[],holdReasons={};let mainHits=0,upsetHits=0,anyHits=0,baselineMainHits=0,baselineUpsetHits=0,baselineAnyHits=0;
+ const rows=[],holdReasons={};let mainHits=0,upsetHits=0,anyHits=0,baselineMainHits=0,baselineUpsetHits=0,baselineAnyHits=0,baselineOnlyHits=0,spatialOnlyHits=0,bothHit=0,neitherHit=0,totalTicketOverlap=0;
  for(const r of original.rows){
   if(r.status!=='compared'){rows.push({key:key(r),status:'held',reasons:r.reasons});continue;}
   const k=key(r),s=byKey.get(k),savedRace=saved.get(k),snapshotAt=time(s?.snapshotAt),receivedAt=time(savedRace?.receivedAt),officialCutoffAt=time(officialByKey.get(k)?.officialCutoffAt);
@@ -33,9 +33,15 @@ export function compareSavedTicketsToSpatial(capture,officialResults,snapshots){
   const originalKeys=new Set([...asKeys(originalMain),...asKeys(originalUpset)]);
   const spatialKeys=new Set([...asKeys(spatial.main),...asKeys(spatial.upset)]);
   const overlap=[...originalKeys].filter(t=>spatialKeys.has(t)).length;
+  totalTicketOverlap+=overlap;
+  const baselineAnyHit=r.mainHit||r.upsetHit,spatialAnyHit=mainHit||upsetHit;
+  if(baselineAnyHit&&spatialAnyHit)bothHit++;
+  else if(baselineAnyHit)baselineOnlyHits++;
+  else if(spatialAnyHit)spatialOnlyHits++;
+  else neitherHit++;
   rows.push({key:k,status:'compared',actual,baseline:{mainHit:r.mainHit,upsetHit:r.upsetHit,mainTickets:asKeys(originalMain),upsetTickets:asKeys(originalUpset)},spatial:{mainHit,upsetHit,mainTickets:asKeys(spatial.main),upsetTickets:asKeys(spatial.upset)},ticketOverlap:overlap});
  }
  const compared=rows.filter(x=>x.status==='compared').length;
  const rate=n=>compared?Number((100*n/compared).toFixed(2)):null;
- return {status:compared?'paired_research_comparison':'insufficient_authenticated_paired_races',compared,held:rows.length-compared,holdReasons,baseline:{mainHits:baselineMainHits,upsetHits:baselineUpsetHits,anyHits:baselineAnyHits,mainRatePercent:rate(baselineMainHits),upsetRatePercent:rate(baselineUpsetHits),anyRatePercent:rate(baselineAnyHits)},spatial:{mainHits,upsetHits,anyHits,mainRatePercent:rate(mainHits),upsetRatePercent:rate(upsetHits),anyRatePercent:rate(anyHits)},deltaAnyPercentagePoints:compared?rate(anyHits)-rate(baselineAnyHits):null,rows,warning:'Requires independently verified pre-race spatial snapshots. A caller-supplied flag is not itself provenance proof. Spatial proxy is not a physical 2D simulator.'};
+ return {status:compared?'paired_research_comparison':'insufficient_authenticated_paired_races',compared,held:rows.length-compared,holdReasons,baseline:{mainHits:baselineMainHits,upsetHits:baselineUpsetHits,anyHits:baselineAnyHits,mainRatePercent:rate(baselineMainHits),upsetRatePercent:rate(baselineUpsetHits),anyRatePercent:rate(baselineAnyHits)},spatial:{mainHits,upsetHits,anyHits,mainRatePercent:rate(mainHits),upsetRatePercent:rate(upsetHits),anyRatePercent:rate(anyHits)},deltaAnyPercentagePoints:compared?Number((rate(anyHits)-rate(baselineAnyHits)).toFixed(2)):null,pairedOutcome:{baselineOnlyHits,spatialOnlyHits,bothHit,neitherHit,averageTicketOverlap:compared?Number((totalTicketOverlap/compared).toFixed(2)):null},rows,warning:'Requires independently verified pre-race spatial snapshots. A caller-supplied flag is not itself provenance proof. Spatial proxy is not a physical 2D simulator.'};
 }
