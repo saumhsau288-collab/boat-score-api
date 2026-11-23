@@ -14,6 +14,8 @@ on:
       - 'scripts/test-audit-outer-challenges.mjs'
       - 'scripts/sweep-outer-thresholds.mjs'
       - 'scripts/test-sweep-outer-thresholds.mjs'
+      - 'scripts/validate-historical-provenance.mjs'
+      - 'scripts/test-validate-historical-provenance.mjs'
       - '.github/workflows/research-outer-tie-tests.yml'
   workflow_dispatch:
 permissions:
@@ -38,6 +40,8 @@ jobs:
           node --check scripts/test-audit-outer-challenges.mjs
           node --check scripts/sweep-outer-thresholds.mjs
           node --check scripts/test-sweep-outer-thresholds.mjs
+          node --check scripts/validate-historical-provenance.mjs
+          node --check scripts/test-validate-historical-provenance.mjs
       - name: Two-policy fixture
         run: node scripts/test-compare-outer-tie-historical.mjs
       - name: Three-policy fixture
@@ -48,6 +52,8 @@ jobs:
         run: node scripts/test-audit-outer-challenges.mjs
       - name: Threshold grid fixture
         run: node scripts/test-sweep-outer-thresholds.mjs
+      - name: Provenance gate fixture
+        run: node scripts/test-validate-historical-provenance.mjs
       - name: Test status summary
         if: always()
         run: |
