@@ -28,3 +28,11 @@ The separate experiment branch `experiment-racer-start-course-20261119` contains
 4. Only after authenticated pre-cutoff snapshots and independently verified official results are joined, evaluate each of the 12 methods. Current eligible sample = **0**, so accuracy and recovery rate remain unmeasured.
 
 No change to original Boat Score or public Worker is authorized by this investigation.
+
+## Exact selected-race handler located
+
+The branch `fix-boat-score-2-syntax-20261115` contains `worker.js` with an explicit `/api/predict/selected-race` handler. The separate manual preview deployment workflow on branch `experiment-racer-start-course-20261119` checks out `fix-boat-score-2-syntax-20261115` and deploys its `worker.js` as `boat-score-2-preview`. This identifies the intended deployment source, although the exact revision currently live on Cloudflare still requires deployment provenance verification.
+
+The handler builds `inputs=buildMorningRaceInputs(...)`, computes optional verified exhibition/start adjustments, and returns `rankedScores`, `method`, `missingInputs`, `main`, `upset` and provenance-related flags. **It does not return `scoreInputsByBoat`**. This directly explains why the raw archive's strict `scoreInputsByBoat` inspection reports `six_racers_required` for all 42 ready responses. `rankedScores` is downstream derived scoring data and must never be mislabeled as original source inputs.
+
+Safe implementation target: introduce a separate opt-in research diagnostic output of original six official racer records from `official.statsByBoat` and other authenticated sources, with per-field source/provenance, explicit nulls for unavailable features, and distinct 08:00 versus post-exhibition stages. Keep current endpoint response and deployment unchanged until independently tested and explicitly approved.
