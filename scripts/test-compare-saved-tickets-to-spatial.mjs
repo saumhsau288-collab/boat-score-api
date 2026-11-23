@@ -9,4 +9,6 @@ assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,snapshot
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,independentlyVerifiedPreRace:false}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[snapshot,snapshot]).compared,0);
 assert.equal(compareSavedTicketsToSpatial({...capture,authenticatedBeforeRace:false},results,[snapshot]).compared,0);
+assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,date:'20261119'}]).compared,0);
+assert.equal(compareSavedTicketsToSpatial({authenticatedBeforeRace:true,records:[null]},results,[snapshot]).compared,0);
 console.log('PASS: paired saved-prediction comparison requires authenticated race and pre-race spatial snapshot');
