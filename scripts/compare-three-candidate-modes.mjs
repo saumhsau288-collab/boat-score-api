@@ -6,8 +6,8 @@ export function compareThreeCandidateModes(racers){
  const topBoats=racers.filter(x=>Math.abs(x.score-top)<=1e-9).map(x=>x.boat).sort((a,b)=>a-b);
  const inside=racers.filter(x=>(x.course??x.boat)<=3);
  const topInside=Math.max(...inside.map(x=>x.score));
- const strongInsideBoats=inside.filter(x=>Math.abs(x.score-topInside)<=1e-9).map(x=>x.boat).sort((a,b)=>a-b);
- const rankRelativeFallback=false;
+ const rankRelativeFallback=racers.every(x=>Math.abs(x.score-racers[0].score)<=1e-9);
+ const strongInsideBoats=rankRelativeFallback?[]:inside.filter(x=>Math.abs(x.score-topInside)<=1e-9).map(x=>x.boat).sort((a,b)=>a-b);
  const rows=results.legacy.main.concat(results.legacy.upset).map((baseline,i)=>{
   const tickets=Object.fromEntries(modes.map(mode=>{
    const picks=results[mode].main.concat(results[mode].upset);
@@ -23,5 +23,5 @@ export function compareThreeCandidateModes(racers){
   return [mode,{distinctTickets:results[mode].distinctTickets,firstCounts,sharedMainUpsetFirst:[...m].filter(x=>u.has(x)).sort((a,b)=>a-b),upsetFirstOnTopAbility:results[mode].upset.filter(x=>topBoats.includes(x.ticket[0])).length,
    upsetFirstOnStrongInside:results[mode].upset.filter(x=>strongInsideBoats.includes(x.ticket[0])).length,changedTicketsFromLegacy:rows.filter(x=>x.changedFromLegacy[mode]===true).length}];
  }));
- return {topAbilityBoats:topBoats,strongInsideBoats,rankRelativeFallback,rankRelativeInterpretation:'Rank-relative upset excludes strongest pre-race inside-course boat(s), including ties, from first place; this is not a proven race outcome.',rows,summary,warning:'No race results, payouts or hit-rate evidence; descriptive same-input research only.'};
+ return {topAbilityBoats:topBoats,strongInsideBoats,rankRelativeFallback,rankRelativeInterpretation:rankRelativeFallback?'All six ability scores tied; no high-ability inside boat identified, so no first-place exclusion.':'Rank-relative upset excludes strongest pre-race inside-course boat(s), including ties, from first place; this is not a proven race outcome.',rows,summary,warning:'No race results, payouts or hit-rate evidence; descriptive same-input research only.'};
 }
