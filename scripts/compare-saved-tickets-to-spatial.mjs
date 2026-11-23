@@ -28,7 +28,12 @@ export function compareSavedTicketsToSpatial(capture,officialResults,snapshots){
   const mainHit=hit(spatial.main),upsetHit=hit(spatial.upset);
   mainHits+=Number(mainHit);upsetHits+=Number(upsetHit);anyHits+=Number(mainHit||upsetHit);
   baselineMainHits+=Number(r.mainHit);baselineUpsetHits+=Number(r.upsetHit);baselineAnyHits+=Number(r.mainHit||r.upsetHit);
-  rows.push({key:k,status:'compared',actual,baseline:{mainHit:r.mainHit,upsetHit:r.upsetHit},spatial:{mainHit,upsetHit}});
+  const originalMain=savedRace.response.main,originalUpset=savedRace.response.upset;
+  const asKeys=tickets=>tickets.map(t=>t.join('-'));
+  const originalKeys=new Set([...asKeys(originalMain),...asKeys(originalUpset)]);
+  const spatialKeys=new Set([...asKeys(spatial.main),...asKeys(spatial.upset)]);
+  const overlap=[...originalKeys].filter(t=>spatialKeys.has(t)).length;
+  rows.push({key:k,status:'compared',actual,baseline:{mainHit:r.mainHit,upsetHit:r.upsetHit,mainTickets:asKeys(originalMain),upsetTickets:asKeys(originalUpset)},spatial:{mainHit,upsetHit,mainTickets:asKeys(spatial.main),upsetTickets:asKeys(spatial.upset)},ticketOverlap:overlap});
  }
  const compared=rows.filter(x=>x.status==='compared').length;
  const rate=n=>compared?Number((100*n/compared).toFixed(2)):null;
