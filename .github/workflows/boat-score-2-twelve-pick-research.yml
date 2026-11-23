@@ -8,6 +8,7 @@ on:
       - 'scripts/*candidate-modes.mjs'
       - 'scripts/*candidate-mode-scenario-matrix.mjs'
       - 'scripts/*candidate-mode-group-separation.mjs'
+      - 'scripts/*strategy-first-place-roles.mjs'
       - 'scripts/*capture-from-api-response.mjs'
       - 'scripts/*save-twelve-pick-capture.mjs'
       - 'scripts/*snapshots-from-morning-capture.mjs'
@@ -54,6 +55,9 @@ jobs:
           failures=0
           echo '::group::research first-place candidate mode regression'
           if node scripts/test-predict-twelve-independent-hypotheses.mjs; then echo 'PASS: candidate mode regression'; else echo 'FAIL: candidate mode regression'; failures=$((failures+1)); fi
+          echo '::endgroup::'
+          echo '::group::individual strategy first-place roles'
+          if node scripts/test-audit-strategy-first-place-roles.mjs; then echo 'PASS: strategy first-place roles'; else echo 'FAIL: strategy first-place roles'; failures=$((failures+1)); fi
           echo '::endgroup::'
           echo '::group::favorite/upset group separation'
           if node scripts/test-audit-candidate-mode-group-separation.mjs; then echo 'PASS: favorite/upset group separation'; else echo 'FAIL: favorite/upset group separation'; failures=$((failures+1)); fi
