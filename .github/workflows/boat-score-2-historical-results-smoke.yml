@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/boat-score-2-historical-results-smoke.yml'
       - 'scripts/retry-failed-official-pages.mjs'
+      - 'scripts/test-retry-failed-official-pages.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,6 +20,7 @@ jobs:
       - name: Offline parser tests
         run: |
           node scripts/test-fetch-manual-official-historical-results.mjs
+          node scripts/test-retry-failed-official-pages.mjs
       - name: Fetch historical official result pages read-only
         run: |
           mkdir -p research-historical
