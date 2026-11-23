@@ -20,6 +20,7 @@ on:
       - 'scripts/capture-existing-boat-score-2-predictions.mjs'
       - 'scripts/compare-spatial-hypothesis.mjs'
       - 'scripts/test-compare-spatial-hypothesis.mjs'
+      - 'scripts/test-run-saved-capture-result-comparison.mjs'
       - 'scripts/diagnose-archive-readiness.mjs'
       - 'scripts/test-diagnose-archive-readiness.mjs'
       - 'scripts/research-capture-retry-policies.mjs'
@@ -39,6 +40,7 @@ jobs:
           node scripts/test-inventory-archive-official-matches.mjs
           node scripts/test-diagnose-archive-readiness.mjs
           node scripts/test-compare-spatial-hypothesis.mjs
+          node scripts/test-run-saved-capture-result-comparison.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
