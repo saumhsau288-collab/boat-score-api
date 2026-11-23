@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'scripts/*twelve-pick*.mjs'
+      - 'scripts/*twelve-independent-hypotheses.mjs'
       - 'scripts/*capture-from-api-response.mjs'
       - 'scripts/*save-twelve-pick-capture.mjs'
       - 'scripts/*snapshots-from-morning-capture.mjs'
@@ -48,6 +49,9 @@ jobs:
         shell: bash
         run: |
           failures=0
+          echo '::group::research first-place candidate mode regression'
+          if node scripts/test-predict-twelve-independent-hypotheses.mjs; then echo 'PASS: candidate mode regression'; else echo 'FAIL: candidate mode regression'; failures=$((failures+1)); fi
+          echo '::endgroup::'
           echo "::group::1 node --check scripts/audit-twelve-picks-research.mjs"
           if node --check scripts/audit-twelve-picks-research.mjs; then echo "PASS: node --check scripts/audit-twelve-picks-research.mjs"; else echo "FAIL: node --check scripts/audit-twelve-picks-research.mjs"; failures=$((failures+1)); fi
           echo "::endgroup::"
