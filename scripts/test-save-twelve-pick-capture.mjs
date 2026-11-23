@@ -8,7 +8,9 @@ try {
  const main=['1-2-3','1-3-2','2-1-3','2-3-1','3-1-2','3-2-1'];
  const upset=['4-5-6','4-6-5','5-4-6','5-6-4','6-4-5','6-5-4'];
  const file=path.join(tmp,'api.json');
- const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','');
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+ const today=p.year+p.month+p.day;
  const cutoff=new Date(Date.UTC(Number(today.slice(0,4)),Number(today.slice(4,6))-1,Number(today.slice(6,8)),14,59,59)).toISOString();
  const input={selection:{date:today,venue:'01',race:'1'},
   response:{ready:true,main,upset},cutoffAt:cutoff};
