@@ -46,6 +46,8 @@ on:
       - 'scripts/test-plan-capture-from-reviewed-manifest.mjs'
       - 'scripts/compare-saved-capture-results.mjs'
       - 'scripts/test-compare-saved-capture-results.mjs'
+      - 'scripts/inventory-saved-capture-duplicates.mjs'
+      - 'scripts/test-inventory-saved-capture-duplicates.mjs'
 permissions:
   contents: read
   actions: read
@@ -75,6 +77,7 @@ jobs:
           node scripts/test-plan-verified-venue-capture.mjs
           node scripts/test-plan-capture-from-reviewed-manifest.mjs
           node scripts/test-compare-saved-capture-results.mjs
+          node scripts/test-inventory-saved-capture-duplicates.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
@@ -145,6 +148,7 @@ jobs:
           import {inventoryArchiveOfficialMatches} from './scripts/inventory-archive-official-matches.mjs';
           import {diagnoseArchiveReadiness} from './scripts/diagnose-archive-readiness.mjs';
           import {summarizeCaptureFailureTypes} from './scripts/classify-capture-failures.mjs';
+          import {inventorySavedCaptureDuplicates} from './scripts/inventory-saved-capture-duplicates.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
           });
@@ -158,6 +162,7 @@ jobs:
           const out=inventoryArchiveOfficialMatches(archives,results);
           console.log(JSON.stringify(out,null,2));
           console.log('FAILURE_TYPES '+JSON.stringify(summarizeCaptureFailureTypes(archives),null,2));
+          console.log('SAVED_DUPLICATE_INVENTORY '+JSON.stringify(archives.map(a=>({day:a.date,...inventorySavedCaptureDuplicates(a)})),null,2));
           console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
             '20261118:2:1','20261118:2:2','20261118:2:3',
             '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
