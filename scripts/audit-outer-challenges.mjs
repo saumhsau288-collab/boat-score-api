@@ -5,7 +5,7 @@ import {relativeFeatures} from './relative-features.mjs';
 export function auditOuterChallenges(rows,{minSTGap=0.03,minExhibitionGap=0.05}={}){
  if(!Array.isArray(rows))throw Error('rows_must_be_array');
  if(!Number.isFinite(minSTGap)||minSTGap<0||!Number.isFinite(minExhibitionGap)||minExhibitionGap<0)throw Error('invalid_threshold');
- const report={total:rows.length,eligible:0,rejected:{},comparisons:0,flagged:0,flaggedOuterWon:0,unflagged:0,unflaggedOuterWon:0,missingSignals:0,examples:[]};
+ const report={total:rows.length,eligible:0,rejected:{},comparisons:0,flagged:0,flaggedOuterWon:0,unflagged:0,unflaggedOuterWon:0,missingSignals:0,byScoreRelation:{tie:{flagged:0,flaggedOuterWon:0,unflagged:0,unflaggedOuterWon:0},innerHigher:{flagged:0,flaggedOuterWon:0,unflagged:0,unflaggedOuterWon:0}},examples:[]};
  const reject=k=>report.rejected[k]=(report.rejected[k]||0)+1;
  for(const row of rows){
   if(row?.capturedBeforeCutoff!==true||row?.officialResultVerified!==true){reject('unverified_capture_or_result');continue;}
@@ -22,7 +22,8 @@ export function auditOuterChallenges(rows,{minSTGap=0.03,minExhibitionGap=0.05}=
    report.comparisons++;
    const flagged=outer.startAdvantageVsInner>=minSTGap&&outer.exhibitionAdvantageVsInner>=minExhibitionGap;
    const outerWon=row.actual[0]===outer.boat;
-   if(flagged){report.flagged++;if(outerWon)report.flaggedOuterWon++;}else{report.unflagged++;if(outerWon)report.unflaggedOuterWon++;}
+   const subgroup=report.byScoreRelation[innerScore===outerScore?'tie':'innerHigher'];
+   if(flagged){report.flagged++;subgroup.flagged++;if(outerWon){report.flaggedOuterWon++;subgroup.flaggedOuterWon++;}}else{report.unflagged++;subgroup.unflagged++;if(outerWon){report.unflaggedOuterWon++;subgroup.unflaggedOuterWon++;}}
    if(flagged&&report.examples.length<20)report.examples.push({date:row.date,venue:row.venue,race:row.race,innerBoat:outer.innerBoat,outerBoat:outer.boat,stGap:outer.startAdvantageVsInner,exhibitionGap:outer.exhibitionAdvantageVsInner,outerWon});
   }
  }
