@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {auditStrategyFirstPlaceRoles} from './audit-strategy-first-place-roles.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,score:9-i,avgStart:.12+i*.01}));
+const legacy=auditStrategyFirstPlaceRoles(racers,'legacy');
+const open=auditStrategyFirstPlaceRoles(racers,'unrestricted');
+assert.equal(legacy.rows.length,12);
+assert.equal(open.rows.length,12);
+assert.deepEqual(legacy.sharedFirstBoats,[]);
+assert.equal(new Set(open.rows.map(x=>x.strategyId)).size,12);
+assert.ok(open.sharedFirstStrategies.every(x=>x.mainStrategies.length&&x.upsetStrategies.length));
+assert.deepEqual(auditStrategyFirstPlaceRoles([...racers].reverse(),'unrestricted'),open);
+console.log('STRATEGY_FIRST_PLACE_ROLES '+JSON.stringify({legacyShared:legacy.sharedFirstStrategies,unrestrictedShared:open.sharedFirstStrategies},null,2));
+console.log('PASS: strategy-specific first-place overlap is deterministic');
