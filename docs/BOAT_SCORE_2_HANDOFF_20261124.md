@@ -124,3 +124,9 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - In all 14, the top `rankedScores` boat equals first `main` ticket's first-place boat. All 14 report `predictionMode:base_stats_only`, missing `last50`, `course`, `exhibition`, `start`, `weather`; `startCoursesVerified:false`.
 - In 2/14 races, main and upset have exactly the same set of first-place boat candidates. Ticket count alone cannot establish 12 independent prediction methods.
 - Local per-race descriptive JSON generated: `/mnt/data/boat_score_20261120_ticket_structure_audit.json` (session artifact only). No accuracy or official-result claim, no production changes.
+
+## Structural finding: archived deployed 12 tickets are not 12 independent strategies
+- Inspected `scripts/audit-archived-deployed-tickets.mjs`: it documents exact replay of deployed ticket selector using `strength=score(first)*0.56+score(second)*0.29+score(third)*0.15` over all 120 ordered triples. Main = top six. Upset = highest six unused triples where **first boat number >=4**.
+- This is one score-combination ranking with two selection filters, not 6+6 independently reasoned models. Boat number >=4 is not verified actual outer course; it also fails to capture relatively outer 2-vs-3 or 4-vs-5/6 relationships as general hypotheses.
+- `scripts/audit-twelve-picks-research.mjs` labels ticket slots as methods, but merely enumerating slots does not establish separate generation logic.
+- This is an inspection of archived replay code, not confirmation of currently deployed Worker code version. Do not claim production changed or model accuracy improved. Research branch only.
