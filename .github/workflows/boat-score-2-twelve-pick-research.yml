@@ -31,24 +31,66 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify twelve-pick research code
+      - name: Diagnose each research test separately
+        shell: bash
         run: |
-          node --check scripts/audit-twelve-picks-research.mjs
-          node --check scripts/prepare-twelve-pick-capture.mjs
-          node --check scripts/prepare-capture-from-api-response.mjs
-          node scripts/test-audit-twelve-picks-research.mjs
-          node scripts/test-prepare-twelve-pick-capture.mjs
-          node scripts/test-prepare-capture-from-api-response.mjs
-          node scripts/test-save-twelve-pick-capture.mjs
-          node scripts/test-prepare-snapshots-from-morning-capture.mjs
-          node scripts/test-audit-strategy-provenance.mjs
-          node scripts/test-morning-missing-data.mjs
-          node scripts/test-prestart-missing-data.mjs
-          node scripts/test-diagnose-score-overlap.mjs
-          node scripts/test-explain-racer-score.mjs
-          node scripts/test-assess-course-start.mjs
-          node scripts/test-classify-ability-course-start.mjs
-          node scripts/test-rank-six-ability-course-start.mjs
-          node scripts/test-analyze-six-signal-agreement.mjs
-          node scripts/test-group-six-candidates.mjs
-          node scripts/test-compare-six-signals-to-finish.mjs
+          failures=0
+          echo "::group::1 node --check scripts/audit-twelve-picks-research.mjs"
+          if node --check scripts/audit-twelve-picks-research.mjs; then echo "PASS: node --check scripts/audit-twelve-picks-research.mjs"; else echo "FAIL: node --check scripts/audit-twelve-picks-research.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::2 node --check scripts/prepare-twelve-pick-capture.mjs"
+          if node --check scripts/prepare-twelve-pick-capture.mjs; then echo "PASS: node --check scripts/prepare-twelve-pick-capture.mjs"; else echo "FAIL: node --check scripts/prepare-twelve-pick-capture.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::3 node --check scripts/prepare-capture-from-api-response.mjs"
+          if node --check scripts/prepare-capture-from-api-response.mjs; then echo "PASS: node --check scripts/prepare-capture-from-api-response.mjs"; else echo "FAIL: node --check scripts/prepare-capture-from-api-response.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::4 node scripts/test-audit-twelve-picks-research.mjs"
+          if node scripts/test-audit-twelve-picks-research.mjs; then echo "PASS: node scripts/test-audit-twelve-picks-research.mjs"; else echo "FAIL: node scripts/test-audit-twelve-picks-research.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::5 node scripts/test-prepare-twelve-pick-capture.mjs"
+          if node scripts/test-prepare-twelve-pick-capture.mjs; then echo "PASS: node scripts/test-prepare-twelve-pick-capture.mjs"; else echo "FAIL: node scripts/test-prepare-twelve-pick-capture.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::6 node scripts/test-prepare-capture-from-api-response.mjs"
+          if node scripts/test-prepare-capture-from-api-response.mjs; then echo "PASS: node scripts/test-prepare-capture-from-api-response.mjs"; else echo "FAIL: node scripts/test-prepare-capture-from-api-response.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::7 node scripts/test-save-twelve-pick-capture.mjs"
+          if node scripts/test-save-twelve-pick-capture.mjs; then echo "PASS: node scripts/test-save-twelve-pick-capture.mjs"; else echo "FAIL: node scripts/test-save-twelve-pick-capture.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::8 node scripts/test-prepare-snapshots-from-morning-capture.mjs"
+          if node scripts/test-prepare-snapshots-from-morning-capture.mjs; then echo "PASS: node scripts/test-prepare-snapshots-from-morning-capture.mjs"; else echo "FAIL: node scripts/test-prepare-snapshots-from-morning-capture.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::9 node scripts/test-audit-strategy-provenance.mjs"
+          if node scripts/test-audit-strategy-provenance.mjs; then echo "PASS: node scripts/test-audit-strategy-provenance.mjs"; else echo "FAIL: node scripts/test-audit-strategy-provenance.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::10 node scripts/test-morning-missing-data.mjs"
+          if node scripts/test-morning-missing-data.mjs; then echo "PASS: node scripts/test-morning-missing-data.mjs"; else echo "FAIL: node scripts/test-morning-missing-data.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::11 node scripts/test-prestart-missing-data.mjs"
+          if node scripts/test-prestart-missing-data.mjs; then echo "PASS: node scripts/test-prestart-missing-data.mjs"; else echo "FAIL: node scripts/test-prestart-missing-data.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::12 node scripts/test-diagnose-score-overlap.mjs"
+          if node scripts/test-diagnose-score-overlap.mjs; then echo "PASS: node scripts/test-diagnose-score-overlap.mjs"; else echo "FAIL: node scripts/test-diagnose-score-overlap.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::13 node scripts/test-explain-racer-score.mjs"
+          if node scripts/test-explain-racer-score.mjs; then echo "PASS: node scripts/test-explain-racer-score.mjs"; else echo "FAIL: node scripts/test-explain-racer-score.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::14 node scripts/test-assess-course-start.mjs"
+          if node scripts/test-assess-course-start.mjs; then echo "PASS: node scripts/test-assess-course-start.mjs"; else echo "FAIL: node scripts/test-assess-course-start.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::15 node scripts/test-classify-ability-course-start.mjs"
+          if node scripts/test-classify-ability-course-start.mjs; then echo "PASS: node scripts/test-classify-ability-course-start.mjs"; else echo "FAIL: node scripts/test-classify-ability-course-start.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::16 node scripts/test-rank-six-ability-course-start.mjs"
+          if node scripts/test-rank-six-ability-course-start.mjs; then echo "PASS: node scripts/test-rank-six-ability-course-start.mjs"; else echo "FAIL: node scripts/test-rank-six-ability-course-start.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::17 node scripts/test-analyze-six-signal-agreement.mjs"
+          if node scripts/test-analyze-six-signal-agreement.mjs; then echo "PASS: node scripts/test-analyze-six-signal-agreement.mjs"; else echo "FAIL: node scripts/test-analyze-six-signal-agreement.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::18 node scripts/test-group-six-candidates.mjs"
+          if node scripts/test-group-six-candidates.mjs; then echo "PASS: node scripts/test-group-six-candidates.mjs"; else echo "FAIL: node scripts/test-group-six-candidates.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::19 node scripts/test-compare-six-signals-to-finish.mjs"
+          if node scripts/test-compare-six-signals-to-finish.mjs; then echo "PASS: node scripts/test-compare-six-signals-to-finish.mjs"; else echo "FAIL: node scripts/test-compare-six-signals-to-finish.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "Failed checks: $failures"
+          test "$failures" -eq 0
