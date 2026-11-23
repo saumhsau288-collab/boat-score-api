@@ -1,0 +1,26 @@
+name: Boat Score 2 twelve-pick research checks
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/*twelve-pick*.mjs'
+      - 'scripts/*capture-from-api-response.mjs'
+      - '.github/workflows/boat-score-2-twelve-pick-research.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify twelve-pick research code
+        run: |
+          node --check scripts/audit-twelve-picks-research.mjs
+          node --check scripts/prepare-twelve-pick-capture.mjs
+          node --check scripts/prepare-capture-from-api-response.mjs
+          node scripts/test-audit-twelve-picks-research.mjs
+          node scripts/test-prepare-twelve-pick-capture.mjs
+          node scripts/test-prepare-capture-from-api-response.mjs
