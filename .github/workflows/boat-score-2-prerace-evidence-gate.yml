@@ -32,6 +32,8 @@ jobs:
           node --check scripts/evaluate-saved-independent-methods.test.mjs
           node --check scripts/seal-independent-prediction-draft.mjs
           node --check scripts/seal-independent-prediction-draft.test.mjs
+          node --check scripts/append-independent-research-draft.mjs
+          node --check scripts/append-independent-research-draft.test.mjs
       - name: Test evidence gate offline
         run: |
           node scripts/validate-independent-prerace-evidence.test.mjs
@@ -40,3 +42,4 @@ jobs:
           node scripts/bridge-racer-evidence-to-method-gate.test.mjs
           node scripts/evaluate-saved-independent-methods.test.mjs
           node scripts/seal-independent-prediction-draft.test.mjs
+          node scripts/append-independent-research-draft.test.mjs
