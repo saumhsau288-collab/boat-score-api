@@ -68,3 +68,11 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Added `scripts/unique-historical-races.mjs` to reject invalid YYYYMMDD dates, venues outside 1-24, race numbers outside 1-12, and **all records** sharing a normalized (date,venue,race) key.
 - Integrated as mandatory preprocessing in `scripts/sweep-outer-thresholds.mjs`; report `rejectedByIdentity` separately from `rejectedByProvenance`. Updated threshold synthetic fixture to use distinct race IDs; added duplicate rejection assertions and research CI test step.
 - GitHub writes completed; CI execution and historical predictive value remain unverified. Never claim a rate improvement without authenticated race-level pre-cutoff evidence.
+
+## User-requested checkpoint — preserve development log (2026-11-24)
+- User explicitly requested preserving the development log for later continuation.
+- Keep original Boat Score and public Worker unchanged; all recent changes are on research branch `research-outer-tie-comparison-20261124`.
+- Key logic: compare higher/equal-scored relatively inner boat against relatively outer boat by actual verified course, including 4 vs 5/6; distinguish equal-score ties from inner-higher-score upsets. Do not equate 'inner' with boats 1-3.
+- Research modules: relative ST/exhibition differences, outer challenge descriptive audit, predeclared 25-threshold sweep, provenance gate, normalized race-identity duplicate exclusion. Synthetic tests exist; only previously recorded local execution of relative-features and audit tests confirmed. Newest CI pass and real historical accuracy unverified.
+- Evidence gap: no authenticated pre-cutoff six-boat score dataset demonstrated; never claim improved hit rate or deployed app changes.
+- Next: independently run all synthetic tests, validate source authenticity, obtain unique historical pre-cutoff rows, evaluate held-out race-level results before deciding scoring changes.
