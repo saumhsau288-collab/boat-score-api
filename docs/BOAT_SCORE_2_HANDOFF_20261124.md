@@ -140,3 +140,9 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Added `scripts/audit-twelve-strategy-diversity.mjs` and synthetic fixture; workflow now checks both. Measures distinct first-place boats, each strategy's no-pick rate, same winner and same top-two set across strategy pairs, and generated unique tickets.
 - Critical distinction: 12 different formulas or unique tickets do NOT demonstrate statistical independence. Diversity metrics should be inspected before any empirical accuracy testing.
 - Research-only. New fixture CI/local execution not yet confirmed; no historical accuracy claims, no production deployment.
+
+## Executed local 12-strategy synthetic test (2026-11-24)
+- In local Node 22, executed existing tests: `test-audit-outer-challenges.mjs`, `test-relative-features.mjs`, `test-twelve-independent-strategies.mjs`, `test-unique-historical-races.mjs`; all PASS.
+- Ran the 12-strategy generator on six synthetic verified-course records: 12 unique tickets, but only three distinct first-place boats. Winner selection frequency: boat 1 = 4, boat 4 = 2, boat 6 = 6. The 6 first-place tickets for boat 6 show substantial winner concentration despite unique trifectas.
+- Local result JSON: `/mnt/data/boat_score_12_strategy_synthetic_20261124.json` (session only). Synthetic outcome is not historical accuracy. Newly added `test-audit-twelve-strategy-diversity.mjs` was not included in this local test run; CI unverified.
+- Need test first-place concentration over many diverse input fixtures and distinguish method hypothesis from mere distinct ticket selection before any deployment.
