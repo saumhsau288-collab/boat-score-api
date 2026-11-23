@@ -8,7 +8,7 @@ const category=r=>{
 const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
 export function diagnoseArchiveReadiness(archives,focusKeys=[]){
  const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
- const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const readinessByJstMinute={};const responseLatencyByCategory={};const responseLatencyByDayAndHalf={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
+ const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const readinessByJstMinute={};const responseLatencyByCategory={};const responseLatencyByDayAndHalf={};const unverifiedResponseFieldShapesByLatency={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
  const focus=new Set(focusKeys);
  for(const a of archives){
   const day=String(a?.date??'unknown');
@@ -100,11 +100,14 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
    const fields=Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort();
    const signature=fields.join(',')||'(no diagnostic fields)';
    shapes[signature]=(shapes[signature]||0)+1;
+   const fieldShape=Object.keys(r.response).sort().join(',').slice(0,500)||'(empty)';
+   const shapeKey=durationBucket+':'+fieldShape;
+   unverifiedResponseFieldShapesByLatency[shapeKey]=(unverifiedResponseFieldShapesByLatency[shapeKey]||0)+1;
   }
   if(focus.has(key(r)))focused.push({raceKey:key(r),category:reason,httpStatus:r?.httpStatus??null,
    responseReady:r?.response?.ready===true,diagnosticFieldNames:r?.response&&typeof r.response==='object'?
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
  }
- return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,readinessByJstMinute,responseLatencyByCategory,responseLatencyByDayAndHalf,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+ return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,readinessByJstMinute,responseLatencyByCategory,responseLatencyByDayAndHalf,unverifiedResponseFieldShapesByLatency,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
 }
