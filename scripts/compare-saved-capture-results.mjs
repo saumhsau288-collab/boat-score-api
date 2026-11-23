@@ -64,6 +64,14 @@ export function compareSavedCaptureWithVerifiedResults(capture,officialResults){
   const captured=explicitTimezoneTimestamp(r.receivedAt);
   if(!Number.isFinite(cutoff)||!Number.isFinite(captured)||captured>=cutoff)
    reasons.push('capture_before_official_cutoff_unverified');
+  // If a request timestamp was preserved, verify ordering; never accept a request that began after its response.
+  if(r.requestedAt!==undefined){
+   const requested=explicitTimezoneTimestamp(r.requestedAt);
+   if(!Number.isFinite(requested)||!Number.isFinite(captured)||requested>captured)
+    reasons.push('capture_request_response_order_invalid');
+   if(!Number.isFinite(requested)||!Number.isFinite(cutoff)||requested>=cutoff)
+    reasons.push('capture_request_not_before_official_cutoff');
+  }
   const row={date:r.date,venue:r.venue,race:r.race,status:reasons.length?'held':'compared',reasons,actual:actual||null,mainHit:null,upsetHit:null};
   if(reasons.length){out.held++;for(const reason of reasons)out.holdReasons[reason]=(out.holdReasons[reason]||0)+1;}
   else{
