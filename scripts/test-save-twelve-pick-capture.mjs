@@ -12,23 +12,27 @@ try {
  const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
  const today=p.year+p.month+p.day;
  const cutoff=new Date(Date.UTC(Number(today.slice(0,4)),Number(today.slice(4,6))-1,Number(today.slice(6,8)),14,59,59)).toISOString();
+ // The CLI captures real wall-clock time; skip the success case after JST day-end.
+ const canSave=Date.now()<Date.parse(cutoff);
  const input={selection:{date:today,venue:'01',race:'1'},
   response:{ready:true,main,upset},cutoffAt:cutoff};
  fs.writeFileSync(file,JSON.stringify(input));
  const script=new URL('./save-twelve-pick-capture.mjs',import.meta.url).pathname;
  const run=()=>spawnSync(process.execPath,[script,file,tmp],{encoding:'utf8'});
- const first=run();
- assert.equal(first.status,0,first.stderr);
- const saved=fs.readdirSync(tmp).filter(x=>x.endsWith('.json')&&x!=='api.json');
- assert.equal(saved.length,1);
- const snapshot=JSON.parse(fs.readFileSync(path.join(tmp,saved[0]),'utf8'));
- assert.equal(snapshot.main.length,6);
- assert.equal(snapshot.upset.length,6);
- assert.equal(snapshot.preRacePredictionsSaved,false);
- assert.equal(snapshot.independentlyAuthenticatedCapture,false);
+ if(canSave){
+  const first=run();
+  assert.equal(first.status,0,first.stderr);
+  const saved=fs.readdirSync(tmp).filter(x=>x.endsWith('.json')&&x!=='api.json');
+  assert.equal(saved.length,1);
+  const snapshot=JSON.parse(fs.readFileSync(path.join(tmp,saved[0]),'utf8'));
+  assert.equal(snapshot.main.length,6);
+  assert.equal(snapshot.upset.length,6);
+  assert.equal(snapshot.preRacePredictionsSaved,false);
+  assert.equal(snapshot.independentlyAuthenticatedCapture,false);
+ }
  input.cutoffAt='2000-01-01T00:00:00Z';
  fs.writeFileSync(file,JSON.stringify(input));
  assert.equal(run().status,1);
- assert.equal(fs.readdirSync(tmp).filter(x=>x.endsWith('.json')&&x!=='api.json').length,1);
+ assert.equal(fs.readdirSync(tmp).filter(x=>x.endsWith('.json')&&x!=='api.json').length,canSave?1:0);
  console.log('Capture CLI integration fixture passed (not live capture)');
 } finally {fs.rmSync(tmp,{recursive:true,force:true});}
