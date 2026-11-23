@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {compareSpatialHypothesis} from './compare-spatial-hypothesis.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,score:8-i,avgStart:.12+i*.01}));
+const held=compareSpatialHypothesis([{raceKey:'20261123-01-1',racers,finishOrder:[1,2,3,4,5,6]}]);
+assert.equal(held.eligible,0);
+assert.equal(held.status,'insufficient_authenticated_races');
+const fixture=compareSpatialHypothesis([{raceKey:'20261123-01-1',racers,finishOrder:[1,2,3,4,5,6],independentlyVerifiedPreRace:true,officialResultVerified:true}]);
+assert.equal(fixture.eligible,1);
+for(const method of ['baseline','spatial'])for(const field of ['mainHits','upsetHits','anyHits'])assert.ok(fixture[method][field]>=0&&fixture[method][field]<=1);
+assert.equal(fixture.productionChanged,false);
+console.log('PASS: spatial paired comparison, held unverified data and synthetic example');
