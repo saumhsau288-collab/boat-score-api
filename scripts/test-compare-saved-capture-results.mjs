@@ -96,4 +96,11 @@ assert.equal(mixedRecords.held,1);
 assert.equal(mixedRecords.compared,1);
 assert.equal(mixedRecords.rows[0].reasons.includes('invalid_saved_capture_race_key'),true);
 assert.equal(mixedRecords.rows[1].status,'compared');
+const withRequest={...capture,records:[{...capture.records[0],requestedAt:'2026-11-17T23:59:00Z'}]};
+assert.equal(compare(withRequest,[result]).compared,1);
+for(const requestedAt of ['2026-11-18T00:01:00Z','2026-11-18T00:30:00Z','2026-11-18T00:00:00']){
+ const report=compare({...capture,records:[{...capture.records[0],requestedAt}]},[result]);
+ assert.equal(report.compared,0);
+ assert.ok(report.holdReasons.capture_request_response_order_invalid||report.holdReasons.capture_request_not_before_official_cutoff);
+}
 console.log('Saved capture / official result comparison eligibility tests passed');
