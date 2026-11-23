@@ -16,7 +16,9 @@ const specs=[
  {id:'upset_wall_risk',group:'upset',weights:[.50,.30,.20],inside:-.35,start:.45,wall:.80}
 ];
 const key=t=>t.join('-');
-export function predictTwelveIndependentHypotheses(racers){
+export function predictTwelveIndependentHypotheses(racers,options={}){
+ const candidateMode=options?.candidateMode??'legacy';
+ if(!['legacy','unrestricted'].includes(candidateMode))throw Error('invalid_candidate_mode');
  if(!valid(racers))throw Error('six_valid_pre_race_racers_required');
  if(racers.some(r=>r.course!==undefined)&&(!racers.every(r=>r.course!==undefined)||new Set(racers.map(r=>r.course)).size!==6))throw Error('six_unique_courses_required');
  const byBoat=new Map(racers.map(r=>[r.boat,r]));
@@ -24,7 +26,7 @@ export function predictTwelveIndependentHypotheses(racers){
  for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&a!==c&&b!==c)permutations.push([a,b,c]);
  const used=new Set();
  const picks=specs.map(spec=>{
-  const eligible=permutations.filter(t=>spec.group==='main'?t[0]<=3:t[0]>=4);
+  const eligible=permutations.filter(t=>candidateMode==='unrestricted'||(spec.group==='main'?t[0]<=3:t[0]>=4));
   const score=t=>{
    const [a,b,c]=t.map(n=>byBoat.get(n));
    const weighted=spec.weights[0]*a.score+spec.weights[1]*b.score+spec.weights[2]*c.score;
@@ -39,5 +41,5 @@ export function predictTwelveIndependentHypotheses(racers){
   used.add(key(ticket));
   return {strategyId:spec.id,group:spec.group,ticket,heuristicScore:Number(score(ticket).toFixed(5))};
  });
- return {main:picks.filter(x=>x.group==='main'),upset:picks.filter(x=>x.group==='upset'),distinctStrategies:12,distinctTickets:used.size,warning:'Twelve different parameterized scoring hypotheses, not independently validated predictive methods. The inside/outside first-place restrictions still use boat numbers as research assumptions; course is used for inside advantage when supplied, otherwise boat is a proxy. No accuracy claim.'};
+ return {main:picks.filter(x=>x.group==='main'),upset:picks.filter(x=>x.group==='upset'),candidateMode,distinctStrategies:12,distinctTickets:used.size,warning:'Twelve different parameterized scoring hypotheses, not independently validated predictive methods. Legacy mode restricts first-place boats to 1-3 for main and 4-6 for upset; unrestricted mode removes these gates but retains distinct scoring heuristics. Course is used for inside advantage when supplied, otherwise boat is a proxy. No accuracy claim.'};
 }
