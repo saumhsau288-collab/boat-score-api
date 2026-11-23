@@ -38,6 +38,8 @@ on:
       - 'scripts/diagnose-archive-readiness.mjs'
       - 'scripts/test-diagnose-archive-readiness.mjs'
       - 'scripts/research-capture-retry-policies.mjs'
+      - 'scripts/classify-capture-failures.mjs'
+      - 'scripts/test-classify-capture-failures.mjs'
 permissions:
   contents: read
   actions: read
@@ -63,6 +65,7 @@ jobs:
           node scripts/test-compare-saved-tickets-to-twelve-hypotheses.mjs
           node --check scripts/run-saved-tickets-to-twelve-hypotheses.mjs
           node scripts/test-run-saved-tickets-to-twelve-hypotheses.mjs
+          node scripts/test-classify-capture-failures.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
