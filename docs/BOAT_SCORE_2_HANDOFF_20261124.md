@@ -146,3 +146,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Ran the 12-strategy generator on six synthetic verified-course records: 12 unique tickets, but only three distinct first-place boats. Winner selection frequency: boat 1 = 4, boat 4 = 2, boat 6 = 6. The 6 first-place tickets for boat 6 show substantial winner concentration despite unique trifectas.
 - Local result JSON: `/mnt/data/boat_score_12_strategy_synthetic_20261124.json` (session only). Synthetic outcome is not historical accuracy. Newly added `test-audit-twelve-strategy-diversity.mjs` was not included in this local test run; CI unverified.
 - Need test first-place concentration over many diverse input fixtures and distinguish method hypothesis from mere distinct ticket selection before any deployment.
+
+## Diversity metric correction (2026-11-24)
+- Updated `scripts/audit-twelve-strategy-diversity.mjs`: renamed misleading `uniqueFromOthers` to `soleFirstBoatStrategy` (the measure counts when a method's first-place boat is not selected as first by any other generated ticket in that race, NOT whether the ticket itself is unique).
+- Added `winnerConcentration` per race = maximum number of generated tickets sharing the same first-place boat divided by total generated tickets. Prior synthetic example: 6/12 = 0.5.
+- Extended synthetic test assertions for concentration bounds and renamed field. GitHub commit saved; new CI execution still not confirmed. This measures output diversity, not prediction accuracy.
