@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {explainRacerScore} from './explain-racer-score.mjs';
+import {evaluateRacer} from '../boat-score-2-scoring.js';
+const racer={nationalWinRate:6,localWinRate:0,motorTwoWinRate:40,recent50WinRate:35,exhibitionScore:50};
+const fallback=explainRacerScore(racer);
+assert.equal(fallback.status,'evaluated');
+assert.equal(fallback.score,evaluateRacer(racer).score);
+assert.equal(fallback.components.localWinRate.source,'national_fallback');
+assert.equal(fallback.nationalDerivedPoints,42);
+assert.equal(fallback.stIncluded,false);
+assert.equal(fallback.courseIncluded,false);
+const local=explainRacerScore({...racer,localWinRate:5});
+assert.equal(local.correlatedNationalLocal,false);
+assert.equal(local.components.localWinRate.source,'provided');
+assert.equal(local.score,evaluateRacer({...racer,localWinRate:5}).score);
+assert.equal(explainRacerScore({...racer,exhibitionScore:null}).status,'insufficient_data');
+assert.equal(explainRacerScore(null).status,'insufficient_data');
+console.log('Score attribution fixtures passed; existing weights unchanged');
