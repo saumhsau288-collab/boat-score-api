@@ -22,9 +22,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Syntax validation
+        run: |
+          node --check scripts/compare-outer-tie-historical.mjs
+          node --check scripts/compare-three-tie-policies.mjs
+          node --check scripts/relative-features.mjs
+          node --check scripts/test-compare-outer-tie-historical.mjs
+          node --check scripts/test-compare-three-tie-policies.mjs
+          node --check scripts/test-relative-features.mjs
       - name: Two-policy fixture
         run: node scripts/test-compare-outer-tie-historical.mjs
       - name: Three-policy fixture
         run: node scripts/test-compare-three-tie-policies.mjs
       - name: Adjacent-course relative features
         run: node scripts/test-relative-features.mjs
+      - name: Test status summary
+        if: always()
+        run: |
+          echo '## Boat Score 2 synthetic research tests' >> "$GITHUB_STEP_SUMMARY"
+          echo 'These tests check code behavior only; they are not historical prediction accuracy.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Overall job status: ${{ job.status }}' >> "$GITHUB_STEP_SUMMARY"
