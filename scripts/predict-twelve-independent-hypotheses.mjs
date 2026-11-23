@@ -1,6 +1,6 @@
 // Research only: twelve distinct hypotheses, not twelve proven predictive models.
 // Uses only six pre-race score and average-start inputs. No post-race information.
-const valid=r=>Array.isArray(r)&&r.length===6&&new Set(r.map(x=>x.boat)).size===6&&r.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)&&Number.isFinite(x.avgStart)&&x.avgStart>=0&&x.avgStart<=.4);
+const valid=r=>Array.isArray(r)&&r.length===6&&new Set(r.map(x=>x.boat)).size===6&&r.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)&&Number.isFinite(x.avgStart)&&x.avgStart>=0&&x.avgStart<=.4&&(x.course===undefined||(Number.isInteger(x.course)&&x.course>=1&&x.course<=6)));
 const specs=[
  {id:'main_ability',group:'main',weights:[.64,.24,.12],inside:.10,start:.10},
  {id:'main_start',group:'main',weights:[.45,.35,.20],inside:.10,start:.60},
@@ -18,6 +18,7 @@ const specs=[
 const key=t=>t.join('-');
 export function predictTwelveIndependentHypotheses(racers){
  if(!valid(racers))throw Error('six_valid_pre_race_racers_required');
+ if(racers.some(r=>r.course!==undefined)&&(!racers.every(r=>r.course!==undefined)||new Set(racers.map(r=>r.course)).size!==6))throw Error('six_unique_courses_required');
  const byBoat=new Map(racers.map(r=>[r.boat,r]));
  const permutations=[];
  for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&a!==c&&b!==c)permutations.push([a,b,c]);
@@ -28,7 +29,7 @@ export function predictTwelveIndependentHypotheses(racers){
    const [a,b,c]=t.map(n=>byBoat.get(n));
    const weighted=spec.weights[0]*a.score+spec.weights[1]*b.score+spec.weights[2]*c.score;
    const start=spec.start*((.4-a.avgStart)*3+(.4-b.avgStart)*1.5+(.4-c.avgStart)*.5);
-   const inside=spec.inside*(7-a.boat)/6;
+   const inside=spec.inside*(7-(a.course??a.boat))/6;
    const wall=spec.wall&&a.boat>=4&&byBoat.get(1).avgStart<=a.avgStart+.02&&byBoat.get(2).avgStart<=a.avgStart+.02?spec.wall:0;
    return weighted+start+inside-wall;
   };
@@ -38,5 +39,5 @@ export function predictTwelveIndependentHypotheses(racers){
   used.add(key(ticket));
   return {strategyId:spec.id,group:spec.group,ticket,heuristicScore:Number(score(ticket).toFixed(5))};
  });
- return {main:picks.filter(x=>x.group==='main'),upset:picks.filter(x=>x.group==='upset'),distinctStrategies:12,distinctTickets:used.size,warning:'Twelve different parameterized scoring hypotheses, not independently validated predictive methods. The inside/outside first-place restrictions are research assumptions; no accuracy claim.'};
+ return {main:picks.filter(x=>x.group==='main'),upset:picks.filter(x=>x.group==='upset'),distinctStrategies:12,distinctTickets:used.size,warning:'Twelve different parameterized scoring hypotheses, not independently validated predictive methods. The inside/outside first-place restrictions still use boat numbers as research assumptions; course is used for inside advantage when supplied, otherwise boat is a proxy. No accuracy claim.'};
 }
