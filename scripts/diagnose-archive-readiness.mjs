@@ -130,5 +130,14 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
  }
- return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,readinessByJstMinute,responseLatencyByCategory,responseLatencyByDayAndHalf,unverifiedResponseFieldShapesByLatency,unverifiedVerificationFlagsByLatency,officialFailureByDayAndHalf,official403ByJstMinute,officialFailureTransitionByDay,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+ const officialFailureSummary={
+  http403:Object.entries(officialFailureByDayAndHalf).filter(([k])=>k.endsWith(':official_http_403')).reduce((n,[,v])=>n+v,0),
+  officialTimeout:Object.entries(officialFailureByDayAndHalf).filter(([k])=>k.endsWith(':official_timeout')).reduce((n,[,v])=>n+v,0),
+  unresolvedHttpCaptures:totals.http_non_200,
+  readyResponses:totals.ready,
+  authenticatedPreRacePredictions:0,
+  accuracyEligible:false,
+  remediation:'Investigate authorized official data access, reduce unnecessary requests, retain provenance and cutoff evidence; never treat unverified response as prediction accuracy.'
+ };
+ return {officialFailureSummary,totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,readinessByJstMinute,responseLatencyByCategory,responseLatencyByDayAndHalf,unverifiedResponseFieldShapesByLatency,unverifiedVerificationFlagsByLatency,officialFailureByDayAndHalf,official403ByJstMinute,officialFailureTransitionByDay,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
 }
