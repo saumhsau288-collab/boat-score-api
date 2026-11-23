@@ -196,6 +196,10 @@ jobs:
           if(d.status==='completed'&&completed.size!==venueSet.size)
             throw Error('Completed status conflicts with incomplete venue coverage');
           const seenRaceKeys=new Set();
+          let legacyMissingOrder=0,legacyMissingCapture=0;
+          // The 2026-11-23 KV snapshot was collected before six-boat order
+          // persistence went live. Never reconstruct it from later race pages.
+          const legacySnapshotDate=date==='20261123';
           for(const category of ['main','upset','chaos']){
             const picks=d.categories[category];
             if(!Array.isArray(picks)||picks.length>20)
@@ -213,15 +217,20 @@ jobs:
               // New snapshots must include six unique boats to support future accuracy tests.
               const order=pick.predictedOrder;
               if(date>= '20261123'&&(!Array.isArray(order)||order.length!==6||
-                 new Set(order).size!==6||!order.every(n=>Number.isInteger(n)&&n>=1&&n<=6)))
-                throw Error('Morning ranking missing valid six-boat predictedOrder: '+key);
-              if(date>='20261123'&&(!pick.capturedAt||Number.isNaN(Date.parse(pick.capturedAt))))
-                throw Error('Morning ranking missing capture timestamp: '+key);
+                 new Set(order).size!==6||!order.every(n=>Number.isInteger(n)&&n>=1&&n<=6))){
+                if(legacySnapshotDate)legacyMissingOrder++;
+                else throw Error('Morning ranking missing valid six-boat predictedOrder: '+key);
+              }
+              if(date>='20261123'&&(!pick.capturedAt||Number.isNaN(Date.parse(pick.capturedAt)))){
+                if(legacySnapshotDate)legacyMissingCapture++;
+                else throw Error('Morning ranking missing capture timestamp: '+key);
+              }
             }
           }
           console.log(JSON.stringify({date,httpStatus:status,status:d.status,venues:d.venues.length,
             completedVenues:d.completedVenues.length,eligible,failedVenues:(d.failedVenues||[]).length,
             main:(d.categories.main||[]).length,upset:(d.categories.upset||[]).length,
             chaos:(d.categories.chaos||[]).length,
-            note:'Observed snapshot only; not a historical accuracy test.'}));
+            legacyMissingOrder,legacyMissingCapture,
+            note:legacyMissingOrder||legacyMissingCapture?'Legacy morning snapshot: missing fields were NOT backfilled and must not be used for pre-race accuracy.':'Observed snapshot only; not a historical accuracy test.'}));
           NODE
