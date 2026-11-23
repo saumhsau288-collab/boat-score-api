@@ -61,3 +61,17 @@ jobs:
           node scripts/audit-paired-comparison-fairness.test.mjs
           node scripts/inspect-saved-morning-capture.test.mjs
           node scripts/fetch-readonly-morning-ranking-snapshot.test.mjs
+      - name: Read-only preview morning snapshot probe
+        continue-on-error: true
+        env:
+          TARGET_DATE: '20261123'
+        run: |
+          node scripts/fetch-readonly-morning-ranking-snapshot.mjs "$TARGET_DATE" "morning-snapshot-audit-${TARGET_DATE}.json"
+      - name: Upload read-only snapshot probe artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-morning-snapshot-audit
+          path: morning-snapshot-audit-*.json
+          if-no-files-found: warn
+          retention-days: 14
