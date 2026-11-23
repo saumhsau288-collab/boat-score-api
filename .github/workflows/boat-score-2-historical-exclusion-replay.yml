@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       date:
-        description: "Historical date YYYYMMDD"
+        description: "Historical date YYYYMMDD or up to 4 comma-separated dates"
         required: true
         default: "20261121"
         type: string
@@ -46,11 +46,25 @@ jobs:
           VENUE: ${{ inputs.venue }}
           RACE: ${{ inputs.race }}
         run: |
-          if [ -n "$RACE" ]; then
-            node scripts/collect-retrospective-exclusion-replay.mjs "$DATE" "$VENUE" "$RACE"
-          else
-            node scripts/collect-retrospective-exclusion-replay.mjs "$DATE" "$VENUE"
+          IFS=',' read -r -a dates <<< "$DATE"
+          if [ "${#dates[@]}" -lt 1 ] || [ "${#dates[@]}" -gt 4 ]; then
+            echo "Supply 1 to 4 historical dates" >&2
+            exit 1
           fi
+          for day in "${dates[@]}"; do
+            if ! [[ "$day" =~ ^20[0-9]{6}$ ]]; then
+              echo "Invalid historical date: $day" >&2
+              exit 1
+            fi
+          done
+          for day in "${dates[@]}"; do
+            echo "Collecting retrospective evidence for $day"
+            if [ -n "$RACE" ]; then
+              node scripts/collect-retrospective-exclusion-replay.mjs "$day" "$VENUE" "$RACE"
+            else
+              node scripts/collect-retrospective-exclusion-replay.mjs "$day" "$VENUE"
+            fi
+          done
       - name: Compare historical inner-side score leaders with official finishes
         run: node scripts/report-historical-inner-favorites.mjs retrospective-exclusion-*.json
       - name: Audit ONLY boat 1 highest-score historical races
