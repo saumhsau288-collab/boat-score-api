@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {morningRaceScore,morningShortlists,morningRacerScore} from '../boat-score-2-morning.js';
+const racer=boat=>({boat,nationalWinRate:6,localWinRate:0,motorTwoWinRate:40,recent50WinRate:35});
+const valid=Array.from({length:6},(_,i)=>racer(i+1));
+assert.equal(morningRaceScore(valid).status,'evaluated');
+assert.equal(morningRaceScore([null,...valid.slice(1)]).status,'invalid_race');
+assert.equal(morningRaceScore([undefined,...valid.slice(1)]).status,'invalid_race');
+assert.equal(morningRaceScore([{boat:1},...valid.slice(1)]).status,'insufficient_data');
+assert.equal(morningRacerScore(racer(1)).status,'evaluated');
+assert.equal(morningShortlists([null,{venue:1,date:'20261123',race:1,racers:valid}]).eligible,1);
+console.log('Morning evaluation missing-data regression fixtures passed');
