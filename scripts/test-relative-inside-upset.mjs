@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {predictTwelveIndependentHypotheses} from './predict-twelve-independent-hypotheses.mjs';
 const cases=[
- ['strong_four_loses_to_five',[3,4,5,10,8,6],[.16,.16,.16,.12,.13,.14]],
+ ['strong_four_loses_to_five_and_six',[3,4,5,10,8,6],[.16,.16,.16,.12,.13,.14]],
  ['strong_two_loses_to_three',[4,10,8,6,5,3],[.16,.12,.13,.14,.15,.16]],
  ['strong_six_no_outer',[3,4,5,6,7,10],[.17,.16,.15,.14,.13,.12]],
  ['all_equal',[7,7,7,7,7,7],[.12,.13,.14,.15,.16,.17]]
@@ -16,6 +16,12 @@ for(const [scenario,scores,starts] of cases){
   const winner=racers.find(r=>r.boat===pick.ticket[0]);
   assert.ok(pick.relativeInsideFallback||racers.some(r=>r.boat<winner.boat&&r.score>winner.score),scenario+': '+pick.ticket);
   assert.equal(pick.relativeInsideFallback,tied||scenario==='strong_six_no_outer');
+ }
+ if(scenario==='strong_four_loses_to_five_and_six'){
+  const firstBoats=new Set(result.upset.map(x=>x.ticket[0]));
+  assert.ok(firstBoats.has(5),'course 5 must be considered a possible winner over stronger course 4');
+  assert.ok(firstBoats.has(6),'course 6 must be considered a possible winner over stronger course 4');
+  assert.ok(!firstBoats.has(4),'course 4 is not the outer underdog relative to itself');
  }
  console.log('RELATIVE_INSIDE_UPSET '+JSON.stringify({scenario,upsetFirst:result.upset.map(x=>x.ticket[0])}));
 }
