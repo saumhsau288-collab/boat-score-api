@@ -8,7 +8,7 @@ const category=r=>{
 const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
 export function diagnoseArchiveReadiness(archives,focusKeys=[]){
  const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
- const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const readinessByJstMinute={};const responseLatencyByCategory={};const responseLatencyByDayAndHalf={};const unverifiedResponseFieldShapesByLatency={};const unverifiedVerificationFlagsByLatency={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
+ const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const readinessByJstMinute={};const responseLatencyByCategory={};const responseLatencyByDayAndHalf={};const unverifiedResponseFieldShapesByLatency={};const unverifiedVerificationFlagsByLatency={};const officialFailureByDayAndHalf={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
  const focus=new Set(focusKeys);
  for(const a of archives){
   const day=String(a?.date??'unknown');
@@ -104,6 +104,9 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
    const shapeKey=durationBucket+':'+fieldShape;
    unverifiedResponseFieldShapesByLatency[shapeKey]=(unverifiedResponseFieldShapesByLatency[shapeKey]||0)+1;
    const safeValue=v=>v===null?'null':typeof v==='boolean'?String(v):typeof v==='string'&&v.length<=60?v:Array.isArray(v)?'array:'+v.length:typeof v==='object'?'object':typeof v;
+   const officialFailure=typeof r.response.officialStatsRetry==='string'?r.response.officialStatsRetry:'unknown';
+   const failureKey=String(a?.date??r?.date??'unknown')+':'+latencyHalf+':'+officialFailure;
+   officialFailureByDayAndHalf[failureKey]=(officialFailureByDayAndHalf[failureKey]||0)+1;
    const verificationKey=[durationBucket,'officialVerified='+safeValue(r.response.officialVerified),'statsVerified='+safeValue(r.response.statsVerified),'officialStatsRetry='+safeValue(r.response.officialStatsRetry),'missingInputs='+safeValue(r.response.missingInputs)].join('|');
    unverifiedVerificationFlagsByLatency[verificationKey]=(unverifiedVerificationFlagsByLatency[verificationKey]||0)+1;
   }
@@ -112,5 +115,5 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
  }
- return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,readinessByJstMinute,responseLatencyByCategory,responseLatencyByDayAndHalf,unverifiedResponseFieldShapesByLatency,unverifiedVerificationFlagsByLatency,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+ return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,readinessByJstMinute,responseLatencyByCategory,responseLatencyByDayAndHalf,unverifiedResponseFieldShapesByLatency,unverifiedVerificationFlagsByLatency,officialFailureByDayAndHalf,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
 }
