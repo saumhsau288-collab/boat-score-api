@@ -31,7 +31,7 @@ export function evaluateMorningRankingHistory(snapshot,results){
  for(const category of categories){
   const picks=snapshot.categories[category];
   if(!Array.isArray(picks)||picks.length>20)throw Error('Invalid ranking category');
-  let matched=0,firstHits=0,topTwoExactHits=0,topThreeExactHits=0,missingPredictionOrder=0,missingCaptureTimestamp=0,afterDeadline=0,notEvaluable=0;
+  let matched=0,firstHits=0,topTwoExactHits=0,topThreeExactHits=0,missingPredictionOrder=0,missingCaptureTimestamp=0,afterDeadline=0,missingDeadline=0,notEvaluable=0;
   for(const p of picks){
    if(String(p.date)!==String(snapshot.date)||p.category!==category||
       p.status!=='provisional_not_calibrated'||!Number.isInteger(p.venue)||
@@ -51,15 +51,17 @@ export function evaluateMorningRankingHistory(snapshot,results){
    const noOrder=p.predictedOrder===undefined;
    const noCapture=String(snapshot.date)>='20261123'&&!isCaptureOnMorningDate(p.capturedAt,snapshot.date);
    const deadline=p.deadlineAt;
+   const noDeadline=deadline===undefined||deadline===null;
    const invalidDeadline=deadline!==undefined&&deadline!==null&&
       (!isValidMorningCaptureTimestamp(deadline)||!isValidMorningCaptureTimestamp(p.capturedAt)||
        Date.parse(p.capturedAt)>=Date.parse(deadline));
    if(noOrder)missingPredictionOrder++;
    if(noCapture)missingCaptureTimestamp++;
    if(invalidDeadline)afterDeadline++;
-   if(noOrder||noCapture||invalidDeadline)notEvaluable++;
+   if(noDeadline)missingDeadline++;
+   if(noOrder||noCapture||invalidDeadline||noDeadline)notEvaluable++;
    seen.add(key);
-   if(noOrder||noCapture||invalidDeadline)continue;
+   if(noOrder||noCapture||invalidDeadline||noDeadline)continue;
    const result=byRace.get(key);
    if(!result)continue;
    matched++;
@@ -76,7 +78,7 @@ export function evaluateMorningRankingHistory(snapshot,results){
    if(p.predictedOrder.slice(0,2).every((x,i)=>x===result.officialFinish[i]))topTwoExactHits++;
    if(p.predictedOrder.slice(0,3).every((x,i)=>x===result.officialFinish[i]))topThreeExactHits++;
   }
-  summary.byCategory[category]={saved:picks.length,matched,missingPredictionOrder,missingCaptureTimestamp,afterDeadline,
+  summary.byCategory[category]={saved:picks.length,matched,missingPredictionOrder,missingCaptureTimestamp,afterDeadline,missingDeadline,
    notEvaluable,unmatched:picks.length-matched-notEvaluable,
    firstHits,topTwoExactHits,topThreeExactHits,
    evaluationStatus:matched?'evaluated_verified_official_results':missingPredictionOrder===picks.length&&picks.length?'not_evaluable_missing_saved_prediction_order':missingCaptureTimestamp===picks.length&&picks.length?'not_evaluable_missing_capture_timestamp':'no_verified_official_matches',
@@ -84,7 +86,7 @@ export function evaluateMorningRankingHistory(snapshot,results){
    topTwoExactRate:matched?topTwoExactHits/matched:null,
    topThreeExactRate:matched?topThreeExactHits/matched:null};
  }
- summary.exclusionNote='Research observations only. Deadline comparison is enforced when deadlineAt exists; entries without a verified deadline are not proof of pre-cutoff accuracy. Candidate rules must be selected using earlier dates.';
+ summary.exclusionNote='Research observations only. Missing deadlineAt is excluded from all rates and rank/lane observations. Candidate rules must be selected using strictly earlier dates. No automatic exclusions.';
  return summary;
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
