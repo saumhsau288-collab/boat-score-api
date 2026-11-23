@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {createOfficial403CircuitBreaker} from './official-403-circuit-breaker.mjs';
+const forbidden={response:{officialStatsRetry:'official_http_403'}};
+const timeout={response:{officialStatsRetry:'official_timeout'}};
+const breaker=createOfficial403CircuitBreaker(3);
+assert.equal(breaker.observe(forbidden),false);
+assert.equal(breaker.observe(timeout),false);
+assert.equal(breaker.consecutive,0);
+assert.equal(breaker.observe(forbidden),false);
+assert.equal(breaker.observe(forbidden),false);
+assert.equal(breaker.observe(forbidden),true);
+assert.equal(breaker.stopped,true);
+assert.equal(breaker.observe(timeout),true);
+assert.throws(()=>createOfficial403CircuitBreaker(0),/Invalid threshold/);
+console.log('PASS: research capture 403 circuit breaker');
