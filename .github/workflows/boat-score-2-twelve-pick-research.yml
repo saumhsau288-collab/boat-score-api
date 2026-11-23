@@ -6,6 +6,7 @@ on:
       - 'scripts/*twelve-pick*.mjs'
       - 'scripts/*twelve-independent-hypotheses.mjs'
       - 'scripts/*candidate-modes.mjs'
+      - 'scripts/*candidate-mode-scenario-matrix.mjs'
       - 'scripts/*capture-from-api-response.mjs'
       - 'scripts/*save-twelve-pick-capture.mjs'
       - 'scripts/*snapshots-from-morning-capture.mjs'
@@ -52,6 +53,9 @@ jobs:
           failures=0
           echo '::group::research first-place candidate mode regression'
           if node scripts/test-predict-twelve-independent-hypotheses.mjs; then echo 'PASS: candidate mode regression'; else echo 'FAIL: candidate mode regression'; failures=$((failures+1)); fi
+          echo '::endgroup::'
+          echo '::group::five candidate mode sensitivity scenarios'
+          if node scripts/test-candidate-mode-scenario-matrix.mjs; then echo 'PASS: candidate mode scenario matrix'; else echo 'FAIL: candidate mode scenario matrix'; failures=$((failures+1)); fi
           echo '::endgroup::'
           echo '::group::paired candidate mode comparison'
           if node scripts/test-compare-candidate-modes.mjs; then echo 'PASS: paired candidate mode comparison'; else echo 'FAIL: paired candidate mode comparison'; failures=$((failures+1)); fi
