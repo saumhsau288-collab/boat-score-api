@@ -46,9 +46,10 @@ async function capture({venue,race}) {
     response:payload,rawResponseNonJson:payload===null,source:'existing_deployed_Boat_Score_2_selected_race'};
 }
 const {records:rows,attempted,planned,stoppedForOfficial403}=await runCapturePool(tasks,capture,{concurrency:3,breaker});
+const completedRows=rows.filter(Boolean);
 const summary={date,requestedVenues:venues,requestedMaxRaces:maxRaces,captureStart,captureEnd:new Date().toISOString(),captureJstDate,captureTimeJst,captureDateMatchesJst,scheduledMorningWindow,scheduledTrigger,run,base,attempted,stoppedForOfficial403,official403StopThreshold:breaker.threshold,planned,
-  httpSuccess:rows.filter(x=>x.httpStatus===200).length,ready:rows.filter(x=>x.response?.ready===true).length,
-  records:rows,authenticatedBeforeRace:false,
+  httpSuccess:completedRows.filter(x=>x.httpStatus===200).length,ready:completedRows.filter(x=>x.response?.ready===true).length,
+  records:completedRows,authenticatedBeforeRace:false,
   warning:'Raw server-observed responses only. Workflow trigger, matching JST date and 08:00 capture window are timing checks, not proof of pre-race capture. No verified official start times, model provenance, or independently authenticated pre-race snapshots. Do not calculate prediction accuracy from this file without further validation.'};
 fs.mkdirSync('prediction-captures',{recursive:true});
 const target='prediction-captures/'+date+'-'+(run.workflowRunId||'local')+'.json';
