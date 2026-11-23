@@ -53,13 +53,13 @@ assert.equal(failureDiagnostics.unverifiedVerificationFlagsByLatency['under_1s|o
 assert.equal(failureDiagnostics.unverifiedVerificationFlagsByLatency['from_15_to_30s|officialVerified=false|statsVerified=false|officialStatsRetry=official_timeout|missingInputs=array:0'],1);
 
 
-const stoppedCapture=diagnoseArchiveReadiness([{date:'20261123',planned:12,attempted:3,stoppedForOfficial403:true,records:[
+const stoppedCapture=diagnoseArchiveReadiness([{date:'20261123',planned:12,attempted:3,stoppedForOfficial403:true,stopReason:'consecutive_official_http_403',unattempted:9,records:[
  {date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:false,officialStatsRetry:'official_http_403'}},
  {date:'20261123',venue:2,race:1,httpStatus:200,response:{ready:false,officialStatsRetry:'official_http_403'}},
  {date:'20261123',venue:3,race:1,httpStatus:200,response:{ready:false,officialStatsRetry:'official_http_403'}}
 ]}]);
 assert.deepEqual(stoppedCapture.captureCoverageByDay['20261123'],{
- observed:3,attempted:3,planned:12,unattempted:9,stoppedForOfficial403:true,coverageKnown:true,warning:null
+ observed:3,attempted:3,planned:12,unattempted:9,stoppedForOfficial403:true,stopReason:'consecutive_official_http_403',stopReasonConsistent:true,reportedUnattempted:9,unattemptedConsistent:true,coverageKnown:true,warning:null
 });
 assert.equal(stoppedCapture.totals.http_non_200,0);
 assert.equal(stoppedCapture.totals.http_200_not_ready,3);
