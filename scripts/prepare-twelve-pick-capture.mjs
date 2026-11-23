@@ -17,7 +17,8 @@ const validPick = p => Array.isArray(p) && p.length === 3 &&
   p.every(n => Number.isInteger(n) && n >= 1 && n <= 6) &&
   new Set(p).size === 3;
 export function prepareTwelvePickCapture(input, capturedAt) {
-  const valid = input && validDate(input.date) &&
+  const raceDate = String(input?.date ?? '');
+  const valid = input && validDate(raceDate) &&
     Number.isInteger(input.venue) && input.venue >= 1 && input.venue <= 24 &&
     Number.isInteger(input.race) && input.race >= 1 && input.race <= 12 &&
     ['main','upset'].every(k => Array.isArray(input[k]) && input[k].length === 6 &&
@@ -25,10 +26,10 @@ export function prepareTwelvePickCapture(input, capturedAt) {
     typeof input.cutoffAt === 'string' && Number.isFinite(Date.parse(input.cutoffAt)) &&
     typeof capturedAt === 'string' && Number.isFinite(Date.parse(capturedAt)) &&
     Date.parse(capturedAt) < Date.parse(input.cutoffAt) &&
-    japanDate(capturedAt) === input.date && japanDate(input.cutoffAt) === input.date;
+    japanDate(capturedAt) === raceDate && japanDate(input.cutoffAt) === raceDate;
   if (!valid) return {status:'invalid_or_after_cutoff'};
   return {status:'prepared_not_authenticated',snapshot:{
-    schemaVersion:1,date:input.date,venue:input.venue,race:input.race,
+    schemaVersion:1,date:raceDate,venue:input.venue,race:input.race,
     main:input.main.map(p=>[...p]),upset:input.upset.map(p=>[...p]),
     cutoffAt:input.cutoffAt,predictionCapturedAt:capturedAt,
     preRacePredictionsSaved:false,independentlyAuthenticatedCapture:false,
