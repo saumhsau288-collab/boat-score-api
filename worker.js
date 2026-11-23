@@ -2578,6 +2578,22 @@ async function scanVenueMorning(date,venue,firstOfficial=null) {
   return records;
 }
 
+// Accept a cutoff only when an official race-list label and one unambiguous JST time exist.
+function extractOfficialRaceDeadline(html,date) {
+  if(!/^20[0-9]{6}$/.test(String(date))||typeof html!=='string')return null;
+  const clean=html.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,' ')
+    .replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,' ')
+    .replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ')
+    .replace(/\\s+/g,' ').normalize('NFKC');
+  const matches=[...clean.matchAll(/締切(?:予定)?(?:時刻|時間)?\\s*[:：]?\\s*([01]?\\d|2[0-3]):([0-5]\\d)/g)];
+  const times=[...new Set(matches.map(m=>m[1].padStart(2,'0')+':'+m[2]))];
+  if(times.length!==1)return null;
+  const [hh,mm]=times[0].split(':').map(Number);
+  const utc=Date.UTC(Number(date.slice(0,4)),Number(date.slice(4,6))-1,Number(date.slice(6,8)),hh-9,mm);
+  const iso=new Date(utc).toISOString();
+  return new Date(utc+9*3600000).toISOString().slice(0,10).replace(/-/g,'')===date?iso:null;
+}
+
 function buildMorningRaceInputs(date,venue,race,official) {
   if(!/^20[0-9]{6}$/.test(String(date))||!Number.isInteger(venue)||venue<1||venue>24||
     !Number.isInteger(race)||race<1||race>12||
@@ -2609,7 +2625,7 @@ function buildMorningRaceInputs(date,venue,race,official) {
   const averageRanks=new Map(scoreRows.slice().sort((a,b)=>averageWinRates.get(b.boat)-averageWinRates.get(a.boat)||a.boat-b.boat).map((x,i)=>[x.boat,6-i]));
   const placesVerified=scoreRows.every(x=>Number.isFinite(x.top2)&&x.top2>=0&&x.top2<=100&&Number.isFinite(x.top3)&&x.top3>=x.top2&&x.top3<=100);
   const top2Ranks=placesVerified?ranks('top2'):null,top3Ranks=placesVerified?ranks('top3'):null;
-  return {ready:true,date,venue,race,officialVerified:true,statsVerified:true,
+  return {ready:true,date,venue,race,officialVerified:true,statsVerified:true,deadlineAt:official.deadlineAt||null,
     rankedScores:scoreRows.map(x=>({boat:x.boat,score:(7*averageRanks.get(x.boat)+3*motorRanks.get(x.boat))+(placesVerified?(top2Ranks.get(x.boat)+top3Ranks.get(x.boat))/100:0)})),
     method:localVerified?'average_national_local_winrate70_motor30_unvalidated':'national_winrate70_motor30_screening_unvalidated',placeRateTieBreakVerified:placesVerified,missingInputs:[...(!localVerified?['local']:[]),...(!placesVerified?['placeRates']:[]),'last50','course','exhibition','start','weather']};
 }
@@ -2644,6 +2660,7 @@ function classifyDailyRaceCandidates(races) {
     const innerTopTwoCount=ordered.slice(0,2).filter(x=>x.boat<=3).length;
     const item={date:race.date,venue:race.venue,race:race.race,lead,spread,outerGap:outer-inner,
       capturedAt:race.capturedAt||null,
+      deadlineAt:race.deadlineAt||null,
       rankedScores:ordered.map(x=>({boat:x.boat,score:x.score})),
       innerTopTwoCount,innerTopThreeCount:ordered.slice(0,3).filter(x=>x.boat<=3).length,
       innerTopScore:inner,outerTopScore:outer,
@@ -3079,6 +3096,7 @@ const officialNames = officialRows.racers;
     const result={
       verified: officialRows.verified,
       statsVerified: statsMatch,
+      deadlineAt:extractOfficialRaceDeadline(html,date),
       statsByBoat: statsMatch ? officialStats.rows : [],
       averageSTParseDiagnostics:statsMatch?officialStats.rows.map(x=>({boat:x.boat,rawCell:x.averageSTParseDiagnostic,parsed:x.averageST})):[],
       officialBoatRowCandidates: officialRows.candidateCount,
