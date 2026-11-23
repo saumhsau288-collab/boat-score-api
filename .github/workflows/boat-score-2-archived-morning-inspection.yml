@@ -13,6 +13,7 @@ on:
       - 'scripts/test-inventory-archive-official-matches.mjs'
       - 'scripts/diagnose-archive-readiness.mjs'
       - 'scripts/test-diagnose-archive-readiness.mjs'
+      - 'scripts/research-capture-retry-policies.mjs'
 permissions:
   contents: read
   actions: read
@@ -108,5 +109,16 @@ jobs:
           console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
             '20261118:2:1','20261118:2:2','20261118:2:3',
             '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
+          const retrySummary={attemptRecords:0,firstTimeout:0,secondTimeout:0,firstSuccess:0,secondSuccess:0,missingAttemptHistory:0};
+          for(const a of archives)for(const r of a.records??[]){
+            const attempts=Array.isArray(r.attempts)?r.attempts:[];
+            if(!attempts.length){retrySummary.missingAttemptHistory++;continue;}
+            retrySummary.attemptRecords++;
+            for(const [i,t] of attempts.entries()){
+              if(t.httpStatus===200)retrySummary[i===0?'firstSuccess':'secondSuccess']++;
+              if(typeof t.error==='string'&&/timeout|timed out|abort/i.test(t.error))retrySummary[i===0?'firstTimeout':'secondTimeout']++;
+            }
+          }
+          console.log('RETRY_OBSERVED '+JSON.stringify(retrySummary));
           if(out.eligibleForAccuracy!==0)throw Error('Unverified diagnostic unexpectedly eligible for accuracy');
           NODE
