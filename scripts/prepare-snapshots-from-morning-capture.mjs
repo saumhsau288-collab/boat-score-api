@@ -15,7 +15,8 @@ export function prepareSnapshotsFromMorningCapture(capture, cutoffByRace) {
   if(typeof cutoffAt!=='string'){
    excluded.push({key,reason:'missing_verified_cutoff'});continue;
   }
-  if(!Number.isFinite(Date.parse(row.receivedAt)) ||
+  if(typeof row.receivedAt!=='string' || typeof row.requestedAt!=='string' ||
+     !Number.isFinite(Date.parse(row.receivedAt)) ||
      !Number.isFinite(Date.parse(row.requestedAt)) ||
      Date.parse(row.requestedAt)>Date.parse(row.receivedAt)){
    excluded.push({key,reason:'invalid_capture_interval'});continue;
@@ -23,7 +24,7 @@ export function prepareSnapshotsFromMorningCapture(capture, cutoffByRace) {
   const result=prepareCaptureFromApiResponse({
    selection:{date:row.date,venue:row.venue,race:row.race},
    response:row.response,cutoffAt,capturedAt:row.receivedAt,
-   scoreInputs:row.response.scoreInputsByBoat??null
+   scoreInputs:row.response?.scoreInputsByBoat??null
   });
   if(result.status==='prepared_not_authenticated')
    snapshots.push({...result.snapshot,sourceResponseSha256:row.responseSha256??null,
