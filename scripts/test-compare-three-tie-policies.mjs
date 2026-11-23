@@ -20,7 +20,7 @@ const noTieResult=compareThreeTiePolicies([{...row([2,4,1]),boats:noTie}]);
 assert.equal(noTieResult.changedFromBaseline.winnerOnly,0);
 assert.equal(noTieResult.changedFromBaseline.fullExclusion,0);
 // Boat number and actual entry course may differ: course decides the tie.
-const swapped=boats.map(b=>({...b,course:b.boat===2?5:b.boat===4?2:b.course}));
+const swapped=boats.map(b=>({...b,course:b.boat===2?4:b.boat===4?2:b.course}));
 const swappedResult=compareThreeTiePolicies([{...row([2,4,1]),boats:swapped}]);
 assert.equal(swappedResult.examples[0].leaders.baseline,4);
 assert.equal(swappedResult.examples[0].leaders.winnerOnly,2);
