@@ -20,4 +20,31 @@ const mixed=await runCapturePool([1,2,3,4,5],async(_,i)=>i===0||i===1?forbidden:
 assert.equal(mixed.attempted,2);
 assert.equal(mixed.stoppedForOfficial403,true);
 await assert.rejects(()=>runCapturePool([],async()=>null,{concurrency:0,breaker}),/Invalid concurrency/);
+
+// Batch boundaries: a single 403 in each batch is not a consecutive streak.
+const seen=[];
+const resets=await runCapturePool(Array.from({length:9},(_,i)=>i),async(_,i)=>{
+ seen.push(i);
+ return i===2||i===5||i===8?forbidden:{response:{ready:true}};
+},{concurrency:3,breaker:createOfficial403CircuitBreaker(3)});
+assert.equal(resets.attempted,9);
+assert.equal(resets.stoppedForOfficial403,false);
+assert.deepEqual(seen,[0,1,2,3,4,5,6,7,8]);
+// Even if completion order differs, the next batch must wait for all current requests.
+const deferred=[];
+const pending=runCapturePool([0,1,2,3,4,5],async(_,i)=>new Promise(resolve=>{
+ deferred[i]=resolve;
+}),{concurrency:3,breaker:createOfficial403CircuitBreaker(2)});
+await Promise.resolve();
+assert.equal(deferred.length,3);
+deferred[0](forbidden);
+deferred[1](forbidden);
+await Promise.resolve();
+assert.equal(deferred.length,3);
+deferred[2](forbidden);
+const bounded=await pending;
+assert.equal(bounded.attempted,3);
+assert.equal(bounded.stoppedForOfficial403,true);
+assert.equal(deferred.length,3);
+
 console.log('PASS: concurrent capture pool halts dispatch after upstream 403');
