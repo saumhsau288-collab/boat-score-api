@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {classifyCaptureFailure,summarizeCaptureFailureTypes} from './classify-capture-failures.mjs';
+assert.equal(classifyCaptureFailure({httpStatus:403}),'http_403');
+assert.equal(classifyCaptureFailure({httpStatus:429}),'http_429');
+assert.equal(classifyCaptureFailure({error:'request timed out'}),'timeout_or_abort');
+assert.equal(classifyCaptureFailure({httpStatus:200,response:{ready:false,reason:'not held'}}),'not_ready_unclassified');
+assert.equal(classifyCaptureFailure({httpStatus:200,response:{ready:true}}),'ready');
+assert.equal(classifyCaptureFailure({httpStatus:200,response:null}),'invalid_or_unknown_response');
+const report=summarizeCaptureFailureTypes([{date:'20261118',records:[{httpStatus:403},{error:'timeout'},{httpStatus:200,response:{ready:false}},{httpStatus:200,response:{ready:true}}]}]);
+assert.equal(report.total,4);
+assert.equal(report.byType.http_403,1);
+assert.equal(report.byType.timeout_or_abort,1);
+assert.equal(report.byType.not_ready_unclassified,1);
+assert.equal(report.byDay['20261118'].total,4);
+console.log('PASS: failure classification never treats not-ready as proof of non開催');
