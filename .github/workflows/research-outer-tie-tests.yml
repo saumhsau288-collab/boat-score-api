@@ -1,0 +1,26 @@
+name: Research outer tie regression tests
+on:
+  push:
+    branches:
+      - research-outer-tie-comparison-20261124
+    paths:
+      - 'scripts/compare-outer-tie-historical.mjs'
+      - 'scripts/test-compare-outer-tie-historical.mjs'
+      - 'scripts/compare-three-tie-policies.mjs'
+      - 'scripts/test-compare-three-tie-policies.mjs'
+      - '.github/workflows/research-outer-tie-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Two-policy fixture
+        run: node scripts/test-compare-outer-tie-historical.mjs
+      - name: Three-policy fixture
+        run: node scripts/test-compare-three-tie-policies.mjs
