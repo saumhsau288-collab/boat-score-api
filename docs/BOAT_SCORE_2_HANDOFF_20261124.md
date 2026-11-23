@@ -76,3 +76,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Research modules: relative ST/exhibition differences, outer challenge descriptive audit, predeclared 25-threshold sweep, provenance gate, normalized race-identity duplicate exclusion. Synthetic tests exist; only previously recorded local execution of relative-features and audit tests confirmed. Newest CI pass and real historical accuracy unverified.
 - Evidence gap: no authenticated pre-cutoff six-boat score dataset demonstrated; never claim improved hit rate or deployed app changes.
 - Next: independently run all synthetic tests, validate source authenticity, obtain unique historical pre-cutoff rows, evaluate held-out race-level results before deciding scoring changes.
+
+## Outer challenger finish-position audit update
+- Added `flaggedOuterTopTwo`, `flaggedOuterTopThree`, corresponding unflagged counts and descriptive rates to `scripts/audit-outer-challenges.mjs`. Existing winner metrics retained.
+- Updated `scripts/sweep-outer-thresholds.mjs` to output top-two/top-three rates per threshold combination; updated synthetic assertions. Research-only branch; no actual historical data evaluation or CI run confirmed for this change.
+- IMPORTANT: these are pair-level candidate finish-position frequencies, not trifecta hit rates, and a candidate can appear in multiple comparisons; avoid treating them as independent races.
