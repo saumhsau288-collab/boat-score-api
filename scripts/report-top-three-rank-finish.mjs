@@ -136,9 +136,23 @@ const forwardDayValidation=Object.fromEntries(distinctDates.map(date=>{
  return [date,{trainingRaces:training.length,heldOutRaces:test.length,candidates,
   note:'Only earlier dates are used to select candidates. Post-race recomputed scores still prevent claims of live predictive accuracy.'}];
 }));
+// Aggregate only forward-selected, actually observed held-out candidates.
+// Fold observations can overlap across rules; totals are diagnostic, not independent trials.
+const forwardDaySummary=Object.values(forwardDayValidation).flatMap(day=>day.candidates)
+ .filter(x=>x.heldOutRaces>0)
+ .reduce((groups,x)=>{
+  const key=[x.target,x.rank,x.boat].join(':');
+  const g=groups[key]??={target:x.target,rank:x.rank,boat:x.boat,validatedDays:0,heldOutRaces:0,heldOutHits:0};
+  g.validatedDays++;g.heldOutRaces+=x.heldOutRaces;g.heldOutHits+=x.heldOutHits;
+  groups[key]=g;return groups;
+ },{});
+for(const g of Object.values(forwardDaySummary)){
+ g.heldOutHitRate=g.heldOutHits/g.heldOutRaces;
+ g.heldOutUpper95=wilsonUpper(g.heldOutHits,g.heldOutRaces);
+}
 const venueGroups=Object.fromEntries([...new Set(rows.map(x=>x.venue))].sort((a,b)=>a-b).map(v=>[v,summarize(rows.filter(x=>x.venue===v))]));
 const output={mode:'retrospective_top_three_rank_finish_diagnostic',sourceFiles:paths,
- eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,dateGroups,leaveOneDayOut,forwardDayValidation,outerLeaderBreakdown,rankLaneMatrix,exclusionResearch,details:rows,heldDetails:held,
+ eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,dateGroups,leaveOneDayOut,forwardDayValidation,forwardDaySummary,outerLeaderBreakdown,rankLaneMatrix,exclusionResearch,details:rows,heldDetails:held,
  note:'All scores recomputed after racing. This is not pre-race accuracy. Winner/runner-up ranks are positions in recomputed score order; topThreeTopTwo means both actual first and second were among the three highest-scored racers. No odds, ST, motor or exhibition inputs are present in this evidence. Screening statuses are descriptive only and must never trigger automatic pre-race exclusions.'};
 fs.writeFileSync('historical-top-three-rank-finish-report.json',JSON.stringify(output,null,2)+'\n');
-console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,dateGroups:output.dateGroups,leaveOneDayOut:output.leaveOneDayOut,forwardDayValidation:output.forwardDayValidation,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix,exclusionResearch:output.exclusionResearch},null,2));
+console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,dateGroups:output.dateGroups,leaveOneDayOut:output.leaveOneDayOut,forwardDayValidation:output.forwardDayValidation,forwardDaySummary:output.forwardDaySummary,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix,exclusionResearch:output.exclusionResearch},null,2));
