@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {compareAbilityAndStartCourse as compare} from './compare-ability-start-course-research.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:6,localWinRate:0,motorTwoWinRate:40,recent50WinRate:20,exhibitionScore:50,avgStart:i===5?.08:.18}));
+const out=compare(racers,{abilityWeight:.7,startWeight:.3,courseWeight:0});
+assert.equal(out.status,'compared');
+assert.equal(out.baselineRanking[0],1);
+assert.equal(out.adjustedRanking[0],6);
+assert.equal(out.topRankChanged,true);
+assert.equal(out.topThreeMembershipChanged,true);
+const excluded=compare(racers.map((r,i)=>i===0?{...r,avgStart:null}:r));
+assert.equal(excluded.status,'excluded');
+assert.equal(excluded.newStatus,'insufficient_start_data');
+console.log('PASS: paired score ranking comparison never claims prediction accuracy');
