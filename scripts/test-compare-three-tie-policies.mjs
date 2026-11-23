@@ -28,6 +28,7 @@ assert.equal(swappedResult.examples[0].leaders.winnerOnly,2);
 const allEqual=boats.map(b=>({...b,score:80}));
 const insufficient=compareThreeTiePolicies([{...row([6,5,4]),boats:allEqual}]);
 assert.equal(insufficient.arms.fullExclusion.trifecta,0);
+assert.equal(insufficient.arms.fullExclusion.insufficientTickets,1);
 assert.equal(insufficient.changedFromBaseline.fullExclusion,1);
 const badCourse=boats.map((b,i)=>i===0?{...b,course:2}:b);
 assert.equal(compareThreeTiePolicies([{...row([4,2,1]),boats:badCourse}]).eligible,0);
