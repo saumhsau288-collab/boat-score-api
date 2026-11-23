@@ -25,6 +25,7 @@ on:
       - 'scripts/*capture-with-original-inputs.mjs'
       - 'scripts/*save-original-input-capture.mjs'
       - 'scripts/*inspect-saved-twelve-picks.mjs'
+      - 'scripts/*explain-twelve-pick-archive-rows.mjs'
       - '.github/workflows/boat-score-2-twelve-pick-research.yml'
 jobs:
   verify:
@@ -111,6 +112,9 @@ jobs:
           echo "::endgroup::"
           echo "::group::24 saved capture evidence inventory"
           if node scripts/test-inspect-saved-twelve-picks.mjs; then echo "PASS: saved capture inventory"; else echo "FAIL: saved capture inventory"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::25 per-race archive evidence diagnostics"
+          if node scripts/test-explain-twelve-pick-archive-rows.mjs; then echo "PASS: per-race archive diagnostics"; else echo "FAIL: per-race archive diagnostics"; failures=$((failures+1)); fi
           echo "::endgroup::"
           echo "Failed checks: $failures"
           test "$failures" -eq 0
