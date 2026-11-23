@@ -1,0 +1,55 @@
+name: Research-only archived morning capture inspection
+on:
+  workflow_dispatch:
+  push:
+    branches: [diagnose-twelve-pick-tests-20261123]
+    paths:
+      - '.github/workflows/boat-score-2-archived-morning-inspection.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Download two known retained raw capture artifacts read-only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p archived-captures
+          for run in 44269317007 44639859914; do
+            artifact_id=$(gh api "repos/$GH_REPO/actions/runs/$run/artifacts" --jq '.artifacts[] | select(.expired == false and (.name | startswith("boat-score-2-morning-raw-"))) | .id' | head -n 1)
+            if [ -z "$artifact_id" ]; then echo "Missing retained artifact for run $run"; exit 1; fi
+            gh api "repos/$GH_REPO/actions/artifacts/$artifact_id/zip" > "/tmp/boat-score-$run.zip"
+            mkdir -p "archived-captures/$run"
+            unzip -q "/tmp/boat-score-$run.zip" -d "archived-captures/$run"
+          done
+      - name: Inspect real raw capture structure without inferring hit rates
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import {inspectRawMorningCapture} from './scripts/inspect-raw-morning-capture.mjs';
+          const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
+            const p=path.join(dir,e.name);
+            return e.isDirectory()?walk(p):e.name.endsWith('.json')?[p]:[];
+          });
+          const files=walk('archived-captures');
+          if(files.length!==2)throw Error('Expected exactly two JSON files from two retained artifacts; found '+files.length);
+          const reports=files.map(file=>{
+            const report=inspectRawMorningCapture(JSON.parse(fs.readFileSync(file,'utf8')));
+            if(report.status!=='research_only')throw Error('Unexpected raw capture shape in '+file);
+            return {artifactRun:path.basename(path.dirname(file)),...report};
+          });
+          console.log(JSON.stringify({status:'real_artifact_structure_inspected',reports,
+            actualRaceResultsVerified:0,hitRateMeasured:false},null,2));
+          NODE
