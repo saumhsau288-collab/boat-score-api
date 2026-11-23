@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {assessCourseStart} from './assess-course-start.mjs';
+const base=Array.from({length:6},(_,i)=>({boat:i+1,course:i+1,startTiming:0.15}));
+const similar=assessCourseStart(base);
+assert.equal(similar.status,'evaluated_research_only');
+assert.equal(similar.pairs.length,15);
+assert.equal(similar.pairs[0].interpretation,'inside_course_advantage_when_st_similar');
+assert.equal(similar.scoreAdjustment,0);
+const outsideFast=assessCourseStart(base.map(r=>r.boat===6?{...r,startTiming:0.10}:r));
+assert.equal(outsideFast.pairs.find(p=>p.insideBoat===1&&p.outsideBoat===6).interpretation,'outside_faster_start_possible_counter');
+const shuffled=assessCourseStart(base.map(r=>r.boat===1?{...r,course:2}:r.boat===2?{...r,course:1}:r));
+assert.equal(shuffled.pairs[0].insideBoat,2);
+assert.equal(assessCourseStart(base.map(r=>r.boat===6?{...r,course:5}:r)).status,'missing_or_invalid_verified_course_start');
+assert.equal(assessCourseStart(base.map(r=>r.boat===6?{...r,startTiming:null}:r)).status,'missing_or_invalid_verified_course_start');
+assert.equal(assessCourseStart(null).status,'invalid_input');
+console.log('Course/start interaction research fixtures passed; no score changes');
