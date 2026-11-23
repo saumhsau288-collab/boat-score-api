@@ -21,6 +21,9 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
   const observed=records.filter(Boolean).length;
   const planned=Number.isInteger(a?.planned)&&a.planned>=observed?a.planned:null;
   const attempted=Number.isInteger(a?.attempted)?a.attempted:observed;
+  if(Object.hasOwn(captureCoverageByDay,day))captureIntegrityWarnings.push({day,code:'duplicate_archive_day'});
+  if(a?.planned!==undefined&&(!Number.isInteger(a.planned)||a.planned<observed))captureIntegrityWarnings.push({day,code:'invalid_planned_count'});
+  if(a?.attempted!==undefined&&(!Number.isInteger(a.attempted)||a.attempted<0))captureIntegrityWarnings.push({day,code:'invalid_attempted_count'});
   captureCoverageByDay[day]={
    observed,attempted,planned,unattempted:planned===null?null:planned-observed,
    stoppedForOfficial403:a?.stoppedForOfficial403===true,
