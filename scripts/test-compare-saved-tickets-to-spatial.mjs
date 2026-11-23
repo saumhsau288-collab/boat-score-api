@@ -9,6 +9,10 @@ assert.deepEqual(eligible.rows[0].baseline.mainTickets,picks.map(p=>p.join('-'))
 assert.equal(eligible.rows[0].spatial.mainTickets.length,6);
 assert.equal(eligible.rows[0].spatial.upsetTickets.length,6);
 assert.ok(eligible.rows[0].ticketOverlap>=0&&eligible.rows[0].ticketOverlap<=12);
+assert.equal(eligible.pairedOutcome.bothHit+eligible.pairedOutcome.baselineOnlyHits+eligible.pairedOutcome.spatialOnlyHits+eligible.pairedOutcome.neitherHit,eligible.compared);
+assert.equal(eligible.pairedOutcome.averageTicketOverlap,eligible.rows[0].ticketOverlap);
+assert.equal(eligible.pairedOutcome.baselineOnlyHits+eligible.pairedOutcome.bothHit,eligible.baseline.anyHits);
+assert.equal(eligible.pairedOutcome.spatialOnlyHits+eligible.pairedOutcome.bothHit,eligible.spatial.anyHits);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,snapshotAt:'2026-11-18T00:01:00Z'}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,independentlyVerifiedPreRace:false}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[snapshot,snapshot]).compared,0);
