@@ -58,6 +58,8 @@ jobs:
           node --check scripts/prepare-morning-evidence-from-official-entry.test.mjs
           node --check scripts/import-morning-official-bundle.mjs
           node --check scripts/import-morning-official-bundle.test.mjs
+          node --check scripts/audit-morning-collector-compatibility.mjs
+          node --check scripts/audit-morning-collector-compatibility.test.mjs
       - name: Test evidence gate offline
         run: |
           node scripts/validate-independent-prerace-evidence.test.mjs
@@ -79,6 +81,7 @@ jobs:
           node scripts/import-morning-evidence-snapshot.test.mjs
           node scripts/prepare-morning-evidence-from-official-entry.test.mjs
           node scripts/import-morning-official-bundle.test.mjs
+          node scripts/audit-morning-collector-compatibility.test.mjs
       - name: Read-only preview morning snapshot probe
         continue-on-error: true
         env:
