@@ -11,6 +11,7 @@ on:
       - 'scripts/compare-twelve-methods-with-results.mjs'
       - 'scripts/inventory-archive-official-matches.mjs'
       - 'scripts/test-inventory-archive-official-matches.mjs'
+      - 'scripts/diagnose-archive-readiness.mjs'
 permissions:
   contents: read
   actions: read
@@ -88,6 +89,7 @@ jobs:
           import fs from 'node:fs';
           import path from 'node:path';
           import {inventoryArchiveOfficialMatches} from './scripts/inventory-archive-official-matches.mjs';
+          import {diagnoseArchiveReadiness} from './scripts/diagnose-archive-readiness.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
           });
@@ -100,5 +102,8 @@ jobs:
           });
           const out=inventoryArchiveOfficialMatches(archives,results);
           console.log(JSON.stringify(out,null,2));
+          console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
+            '20261118:2:1','20261118:2:2','20261118:2:3',
+            '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
           if(out.eligibleForAccuracy!==0)throw Error('Unverified diagnostic unexpectedly eligible for accuracy');
           NODE
