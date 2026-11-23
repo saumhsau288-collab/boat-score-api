@@ -16,7 +16,10 @@ async function json(path){
 // Bounded concurrency reduces wall-clock time without flooding the preview API.
 // Every race still gets the same two endpoints, and failed races remain held.
 const tasks=venues.flatMap(venue=>races.map(race=>({venue,race})));
-const CONCURRENCY=6;
+// Configurable for benchmarking; cap at 12 to limit load on the preview service.
+const requestedConcurrency=Number(process.env.REPLAY_CONCURRENCY||10);
+if(!Number.isInteger(requestedConcurrency)||requestedConcurrency<1||requestedConcurrency>12)throw Error('REPLAY_CONCURRENCY must be an integer from 1 to 12');
+const CONCURRENCY=requestedConcurrency;
 let cursor=0;
 const collected=new Array(tasks.length);
 async function worker(){
