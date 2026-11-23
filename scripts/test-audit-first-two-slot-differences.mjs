@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {auditFirstTwoSlotDifferences as audit} from './audit-first-two-slot-differences.mjs';
+const fill=(a,b)=>[a,b,[2,3,4],[3,4,5],[4,5,6],[5,6,1]];
+const rows=[{response:{ready:true,main:fill([1,2,3],[1,3,2]),upset:fill([1,2,3],[1,4,5])}},{response:{ready:true,main:fill([1,2,3],[2,3,4]),upset:fill([1,2,3],[1,2,4])}}];
+const o=audit([{records:rows}]);
+assert.equal(o.groups.main.sameFirst,1);
+assert.equal(o.groups.main.sameFirstSwappedPartners,1);
+assert.equal(o.groups.main.sameFirstDifferentPartners,0);
+assert.equal(o.groups.upset.sameFirst,2);
+assert.equal(o.groups.upset.sameFirstSameSecond,1);
+assert.equal(o.groups.upset.sameFirstDifferentPartners,2);
+console.log('PASS: differentiate swapped and distinct partner candidates in slots 1/2');
