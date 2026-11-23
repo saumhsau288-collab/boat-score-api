@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {classifyPredictionReadiness as classify} from './classify-prediction-readiness.mjs';
+assert.deepEqual(classify(null),{state:'unknown',reason:'response_missing',canScore:false});
+assert.equal(classify({ready:false,officialVerified:false,statsVerified:false,missingInputs:[],officialStatsRetry:'official_timeout'}).reason,'reported_official_timeout');
+assert.equal(classify({ready:false,officialVerified:false,statsVerified:false,missingInputs:[],officialStatsRetry:'official_http_403'}).state,'blocked_unverified_official');
+assert.equal(classify({ready:false,officialVerified:true,statsVerified:true,missingInputs:['motor']}).state,'blocked_missing_inputs');
+assert.equal(classify({ready:false,officialVerified:true,statsVerified:true,missingInputs:[]}).state,'blocked_unknown');
+assert.equal(classify({ready:true,officialVerified:false,statsVerified:true}).state,'ready_unverified');
+assert.equal(classify({ready:true,officialVerified:true,statsVerified:true}).canScore,false);
+console.log('PASS: readiness classification never mistakes empty missingInputs for verified readiness');
