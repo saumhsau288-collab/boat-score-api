@@ -10,16 +10,18 @@ export function compareSavedTicketsToSpatial(capture,officialResults,snapshots){
  const byKey=new Map(),counts=new Map();
  for(const s of Array.isArray(snapshots)?snapshots:[]){const k=key(s);counts.set(k,(counts.get(k)||0)+1);byKey.set(k,s);}
  const saved=new Map((Array.isArray(capture?.records)?capture.records:[]).map(r=>[key(r),r]));
+ const officialByKey=new Map((Array.isArray(officialResults)?officialResults:[]).map(r=>[key(r),r]));
  const rows=[],holdReasons={};let mainHits=0,upsetHits=0,anyHits=0,baselineMainHits=0,baselineUpsetHits=0,baselineAnyHits=0;
  for(const r of original.rows){
   if(r.status!=='compared'){rows.push({key:key(r),status:'held',reasons:r.reasons});continue;}
-  const k=key(r),s=byKey.get(k),savedRace=saved.get(k),snapshotAt=time(s?.snapshotAt),receivedAt=time(savedRace?.receivedAt);
+  const k=key(r),s=byKey.get(k),savedRace=saved.get(k),snapshotAt=time(s?.snapshotAt),receivedAt=time(savedRace?.receivedAt),officialCutoffAt=time(officialByKey.get(k)?.officialCutoffAt);
   const reasons=[];
   if(counts.get(k)!==1)reasons.push('missing_or_duplicate_spatial_snapshot');
   if(!validRacers(s?.racers))reasons.push('invalid_spatial_features');
   if(s?.independentlyVerifiedPreRace!==true)reasons.push('spatial_snapshot_provenance_unverified');
   if(s?.date!==savedRace?.date||Number(s?.venue)!==Number(savedRace?.venue)||Number(s?.race)!==Number(savedRace?.race))reasons.push('spatial_snapshot_race_identity_mismatch');
   if(!Number.isFinite(snapshotAt)||!Number.isFinite(receivedAt)||snapshotAt>receivedAt)reasons.push('spatial_snapshot_not_before_saved_prediction');
+  if(!Number.isFinite(officialCutoffAt)||!Number.isFinite(snapshotAt)||snapshotAt>=officialCutoffAt)reasons.push('spatial_snapshot_not_before_official_cutoff');
   if(reasons.length){for(const reason of reasons)holdReasons[reason]=(holdReasons[reason]||0)+1;rows.push({key:k,status:'held',reasons});continue;}
   const actual=r.actual,spatial=rankTickets(s.racers,true);
   const hit=a=>a.some(t=>t.join('-')===actual);
