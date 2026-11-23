@@ -104,6 +104,9 @@ const repeatedRace=diagnoseArchiveReadiness([
 ]);
 assert.equal(repeatedRace.duplicateRaceKeys[0].raceKey,'20261123:1:1');
 assert.equal(repeatedRace.duplicateRaceKeys[0].occurrences,2);
+assert.equal(repeatedRace.duplicateRaceKeys[0].readinessChanged,true);
+assert.deepEqual(repeatedRace.duplicateRaceKeys[0].readinessCategories,['http_200_not_ready','ready']);
+assert.equal(repeatedRace.duplicateRaceKeys[0].comparisonEligibility,'requires_independent_pre_race_and_result_authentication');
 assert.equal(repeatedRace.duplicateRaceKeys[0].snapshots.length,2);
 assert.equal(repeatedRace.duplicateRaceKeys[0].distinctRequestTimes,0);
 assert.equal(repeatedRace.duplicateRaceKeys[0].missingRequestTimes,2);
@@ -115,6 +118,7 @@ const timestampedDuplicates=diagnoseArchiveReadiness([
  {date:'20261123',records:[{venue:1,race:1,requestedAt:'2026-11-23T00:02:00Z',httpStatus:200,response:{ready:true}}]}
 ]);
 assert.equal(timestampedDuplicates.duplicateRaceKeys[0].distinctRequestTimes,2);
+assert.equal(timestampedDuplicates.duplicateRaceKeys[0].readinessChanged,false);
 
 
 const malformedTimestampDuplicates=diagnoseArchiveReadiness([
