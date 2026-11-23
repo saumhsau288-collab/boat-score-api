@@ -15,6 +15,7 @@ on:
       - 'scripts/*score-overlap.mjs'
       - 'scripts/*explain-racer-score.mjs'
       - 'scripts/*assess-course-start.mjs'
+      - 'scripts/*classify-ability-course-start.mjs'
       - '.github/workflows/boat-score-2-twelve-pick-research.yml'
 jobs:
   verify:
@@ -42,3 +43,4 @@ jobs:
           node scripts/test-diagnose-score-overlap.mjs
           node scripts/test-explain-racer-score.mjs
           node scripts/test-assess-course-start.mjs
+          node scripts/test-classify-ability-course-start.mjs
