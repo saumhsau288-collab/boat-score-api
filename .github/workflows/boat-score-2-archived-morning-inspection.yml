@@ -7,6 +7,7 @@ on:
       - '.github/workflows/boat-score-2-archived-morning-inspection.yml'
       - 'scripts/inspect-raw-morning-capture.mjs'
       - 'scripts/audit-capture-response-shapes.mjs'
+      - 'scripts/compare-archived-twelve-pick-structure.mjs'
 permissions:
   contents: read
   actions: read
@@ -42,6 +43,7 @@ jobs:
           import path from 'node:path';
           import {inspectRawMorningCapture} from './scripts/inspect-raw-morning-capture.mjs';
           import {auditResponseShape} from './scripts/audit-capture-response-shapes.mjs';
+          import {compareArchivedTwelvePicks} from './scripts/compare-archived-twelve-pick-structure.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);
             return e.isDirectory()?walk(p):e.name.endsWith('.json')?[p]:[];
@@ -52,8 +54,9 @@ jobs:
             const raw=JSON.parse(fs.readFileSync(file,'utf8'));
             const report=inspectRawMorningCapture(raw);
             const shapes=auditResponseShape(raw);
+            const ticketComparison=compareArchivedTwelvePicks(raw);
             if(report.status!=='research_only')throw Error('Unexpected raw capture shape in '+file);
-            return {sourceFile:file,...report,responseFieldNames:shapes.possibleScoreInputFieldNames,
+            return {sourceFile:file,...report,ticketComparison,responseFieldNames:shapes.possibleScoreInputFieldNames,
               topLevelResponseFields:Object.keys(shapes.topLevelKeys).sort(),readyResponsesShapeInspected:shapes.readyResponsesInspected};
           });
           console.log(JSON.stringify({status:'real_artifact_structure_inspected',reports,
