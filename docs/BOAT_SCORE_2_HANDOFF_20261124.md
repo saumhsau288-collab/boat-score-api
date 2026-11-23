@@ -111,3 +111,10 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - GitHub connector `fetch_workflow_run_artifacts` confirmed run `44639859914` still lists artifact ID `14586303082`, name `boat-score-2-morning-raw-44639859914`, `expired:false`, size `66177` bytes, created `2026-11-20T00:02:39Z`.
 - This is artifact metadata verification, not inspection of the archive contents. Earlier read-only evidence inventory reported 288 attempts, 203 HTTP 200, 14 ready, zero complete explicit six-racer score input vectors. Do not promote those records to authenticated pre-cutoff accuracy evidence.
 - GitHub API workflow-run list endpoint was not allowed through available fetch tool, so current CI run success remains unverified. Continue with independent capture provenance and real outcome matching, without changing production.
+
+## Direct inspection of saved raw ZIP (2026-11-24)
+- Downloaded GitHub Actions artifact `14586303082` from run `44639859914` and inspected actual `20261120-44639859914.json` inside ZIP in local container.
+- Verified 288 attempted, 203 HTTP 200, 14 ready; **all 14 ready responses contain six `rankedScores` (final score/ranking values)**. This differs from `scoreInputsByBoat`: **0 of 14** have six original scoring input vectors.
+- **0 of 14** have `startCoursesVerified:true`; none applied start or exhibition adjustment. No independent pre-race authentication and no independently verified race outcomes in these responses.
+- Therefore **0 eligible rows** for the all-outer-pairs historical evaluation. Do not confuse final rankedScores with original feature inputs; do not claim verified historical hit rate.
+- Created a local JSON inventory of the 14 ready records with capture timestamps and response hashes for further evidence matching; no production modifications.
