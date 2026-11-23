@@ -3,7 +3,8 @@
 // No prediction is generated and no result is attached here.
 const validDate = value => {
  if(!/^20\d{6}$/.test(String(value)))return false;
- const y=Number(value.slice(0,4)),m=Number(value.slice(4,6)),d=Number(value.slice(6,8));
+ const date=String(value);
+ const y=Number(date.slice(0,4)),m=Number(date.slice(4,6)),d=Number(date.slice(6,8));
  const x=new Date(Date.UTC(y,m-1,d));
  return x.getUTCFullYear()===y&&x.getUTCMonth()===m-1&&x.getUTCDate()===d;
 };
