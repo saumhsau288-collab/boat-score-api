@@ -63,3 +63,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Also manually reproduced `scripts/audit-outer-challenges.mjs` and `scripts/test-audit-outer-challenges.mjs`; test exited successfully.
 - These two checks validate code behavior on synthetic fixtures only, not live GitHub Actions and not historical prediction accuracy. Other CI tests are still unverified.
 - Caveat: provenance validator only checks timestamp ordering, string model version, URL shape and flags. It does not authenticate source URLs or prove that inputs were truly collected pre-cutoff. Repeated synthetic rows sharing the same race identity are not independent historical observations.
+
+## Race identity de-duplication update
+- Added `scripts/unique-historical-races.mjs` to reject invalid YYYYMMDD dates, venues outside 1-24, race numbers outside 1-12, and **all records** sharing a normalized (date,venue,race) key.
+- Integrated as mandatory preprocessing in `scripts/sweep-outer-thresholds.mjs`; report `rejectedByIdentity` separately from `rejectedByProvenance`. Updated threshold synthetic fixture to use distinct race IDs; added duplicate rejection assertions and research CI test step.
+- GitHub writes completed; CI execution and historical predictive value remain unverified. Never claim a rate improvement without authenticated race-level pre-cutoff evidence.
