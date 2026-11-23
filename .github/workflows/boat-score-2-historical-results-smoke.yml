@@ -4,6 +4,7 @@ on:
     branches: [diagnose-twelve-pick-tests-20261123]
     paths:
       - '.github/workflows/boat-score-2-historical-results-smoke.yml'
+      - 'scripts/retry-failed-official-pages.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,6 +24,10 @@ jobs:
           mkdir -p research-historical
           node scripts/fetch-manual-official-historical-results.mjs 20261118 2 1,2,3 research-historical/official-raw.json
           node scripts/fetch-manual-official-historical-results.mjs 20261120 2 1,2,3 research-historical/official-raw-20261120.json
+      - name: Retry failed official requests once and preserve errors
+        run: |
+          node scripts/retry-failed-official-pages.mjs research-historical/official-raw.json
+          node scripts/retry-failed-official-pages.mjs research-historical/official-raw-20261120.json
       - name: Parse saved official result pages offline
         run: |
           node scripts/extract-official-result-racers.mjs research-historical/official-raw.json research-historical/parsed.json
