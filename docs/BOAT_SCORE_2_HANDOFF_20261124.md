@@ -91,3 +91,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Added separate exact-2nd and exact-3rd outcome counts/rates for flagged/unflagged outer challengers, plus race-level flagged 2nd and 3rd rates. Top-two/top-three cumulative metrics retained separately.
 - Updated synthetic assertions and 25-threshold report. This prepares distinct evaluation for 1st vs 2nd vs 3rd candidates, but does not yet implement six independent favorite/upset prediction methods.
 - Research-only GitHub commits saved; tests for this change and actual historical effectiveness not yet independently confirmed. No production deployment.
+
+## Executed local synthetic test checkpoint
+- Independently mirrored `scripts/unique-historical-races.mjs` and its test into local Node 22 runtime and executed `node test-unique-historical-races.mjs`: PASS (`Historical identity dedup synthetic assertions passed.`).
+- This verifies only the duplicate/invalid race-identity fixture, not the complete CI suite, real source provenance, or prediction hit rate.
+- Outstanding scope gap: outer challenge audit currently compares only **adjacent verified courses**, so a 4-vs-6 comparison is not directly represented. Do not claim full relative-outer coverage until implemented and tested.
