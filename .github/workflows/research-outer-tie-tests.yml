@@ -10,6 +10,8 @@ on:
       - 'scripts/test-compare-three-tie-policies.mjs'
       - 'scripts/relative-features.mjs'
       - 'scripts/test-relative-features.mjs'
+      - 'scripts/evaluate-verified-outer-pairs.mjs'
+      - 'scripts/test-evaluate-verified-outer-pairs.mjs'
       - 'scripts/audit-all-outer-pairs.mjs'
       - 'scripts/test-audit-all-outer-pairs.mjs'
       - 'scripts/audit-outer-challenges.mjs'
@@ -40,6 +42,8 @@ jobs:
           node --check scripts/test-compare-outer-tie-historical.mjs
           node --check scripts/test-compare-three-tie-policies.mjs
           node --check scripts/test-relative-features.mjs
+          node --check scripts/evaluate-verified-outer-pairs.mjs
+          node --check scripts/test-evaluate-verified-outer-pairs.mjs
           node --check scripts/audit-all-outer-pairs.mjs
           node --check scripts/test-audit-all-outer-pairs.mjs
           node --check scripts/audit-outer-challenges.mjs
@@ -60,6 +64,8 @@ jobs:
         run: node scripts/test-audit-outer-challenges.mjs
       - name: All relative outer-course pairs fixture
         run: node scripts/test-audit-all-outer-pairs.mjs
+      - name: Verified all-course evaluation fixture
+        run: node scripts/test-evaluate-verified-outer-pairs.mjs
       - name: Threshold grid fixture
         run: node scripts/test-sweep-outer-thresholds.mjs
       - name: Provenance gate fixture
