@@ -8,6 +8,8 @@ const r=evaluateMorningRankingHistory(snapshot,[result(1,order)]);
 assert.equal(r.notTwelveMethods,true);
 assert.equal(r.byCategory.main.matched,1);
 assert.equal(r.byCategory.main.topThreeExactHits,1);
+assert.deepEqual(r.exclusionObservations['1:1'],{rank:1,boat:1,races:1,firstHits:1,topTwoHits:1});
+assert.deepEqual(r.exclusionObservations['6:6'],{rank:6,boat:6,races:1,firstHits:0,topTwoHits:0});
 assert.equal(r.byCategory.upset.matched,0);
 assert.equal(r.byCategory.upset.firstRate,null);
 assert.throws(()=>evaluateMorningRankingHistory(snapshot,[{...result(1,order),resultVerified:false}]),/Unverified/);
@@ -22,6 +24,7 @@ assert.equal(skipped.byCategory.main.saved,1);
 assert.equal(skipped.byCategory.main.missingPredictionOrder,1);
 assert.equal(skipped.byCategory.main.matched,0);
 assert.equal(skipped.byCategory.main.firstRate,null);
+assert.deepEqual(skipped.exclusionObservations,{});
 const mixed={...snapshot,categories:{...snapshot.categories,main:[pick('main',1),((({predictedOrder,...rest})=>({...rest,race:3}))(pick('main',3)))]}};
 const mixedResult=evaluateMorningRankingHistory(mixed,[result(1,order),result(3,order)]);
 assert.equal(mixedResult.byCategory.main.matched,1);
@@ -51,6 +54,7 @@ assert.equal(nextEval.byCategory.main.matched,1);
 assert.equal(nextEval.byCategory.main.missingCaptureTimestamp,1);
 assert.equal(nextEval.byCategory.main.notEvaluable,1);
 assert.equal(nextEval.byCategory.main.firstRate,1);
+assert.equal(nextEval.exclusionObservations['1:1'].races,1);
 const wrongDay={...nextSnapshot,categories:{...nextSnapshot.categories,main:[
  tomorrowPick('main',1,{capturedAt:'2026-11-23T15:00:00.000Z'})
 ]}};
@@ -70,4 +74,5 @@ assert.equal(bothEval.byCategory.main.missingCaptureTimestamp,1);
 assert.equal(bothEval.byCategory.main.missingPredictionOrder,1);
 assert.equal(bothEval.byCategory.main.notEvaluable,1); // do not double-count missing evidence
 assert.equal(bothEval.byCategory.main.unmatched,0);
+assert.deepEqual(bothEval.exclusionObservations,{});
 console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, five invalid-input guards, legacy exclusion and capture-time denominators passed. No real-race accuracy claimed.');
