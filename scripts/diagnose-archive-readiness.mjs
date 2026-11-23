@@ -1,0 +1,26 @@
+// Diagnose response readiness in historical archives without leaking response bodies.
+const category=r=>{
+ if(r?.httpStatus!==200)return 'http_non_200';
+ if(r?.response?.ready===true)return 'ready';
+ if(!r?.response||typeof r.response!=='object')return 'missing_response_object';
+ return 'http_200_not_ready';
+};
+const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
+export function diagnoseArchiveReadiness(archives,focusKeys=[]){
+ const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
+ const statusCodes={};const shapes={};const focused=[];
+ const focus=new Set(focusKeys);
+ for(const a of archives)for(const r of Array.isArray(a?.records)?a.records:[]){
+  const reason=category(r);totals[reason]++;
+  const code=String(r?.httpStatus??'missing');statusCodes[code]=(statusCodes[code]||0)+1;
+  if(reason==='http_200_not_ready'){
+   const fields=Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort();
+   const signature=fields.join(',')||'(no diagnostic fields)';
+   shapes[signature]=(shapes[signature]||0)+1;
+  }
+  if(focus.has(key(r)))focused.push({raceKey:key(r),category:reason,httpStatus:r?.httpStatus??null,
+   responseReady:r?.response?.ready===true,diagnosticFieldNames:r?.response&&typeof r.response==='object'?
+    Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
+ }
+ return {totals,statusCodes,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+}
