@@ -86,3 +86,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - `scripts/audit-outer-challenges.mjs` now tracks flagged candidate boat IDs per row and reports `flaggedRaces`, `flaggedRacesWithWinner`, `flaggedRacesWithTopTwo`, `flaggedRacesWithTopThree` and conditional rates. Pair-level metrics remain separately available.
 - `scripts/sweep-outer-thresholds.mjs` exposes those race-level rates for each of 25 predeclared threshold combinations. Synthetic fixture assertions updated.
 - Important: the rates are conditioned on at least one flagged candidate and do not measure full 3-number ticket hit rate. `sweep-outer-thresholds.mjs` excludes duplicate race identities first; `auditOuterChallenges` itself accepts any input rows. New code saved but CI execution remains unverified.
+
+## Exact second/third finish position update
+- Added separate exact-2nd and exact-3rd outcome counts/rates for flagged/unflagged outer challengers, plus race-level flagged 2nd and 3rd rates. Top-two/top-three cumulative metrics retained separately.
+- Updated synthetic assertions and 25-threshold report. This prepares distinct evaluation for 1st vs 2nd vs 3rd candidates, but does not yet implement six independent favorite/upset prediction methods.
+- Research-only GitHub commits saved; tests for this change and actual historical effectiveness not yet independently confirmed. No production deployment.
