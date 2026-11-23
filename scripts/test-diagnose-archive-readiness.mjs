@@ -82,6 +82,14 @@ const duplicateDays=diagnoseArchiveReadiness([
  {date:'20261123',planned:0,attempted:0,records:[]}
 ]);
 assert.ok(duplicateDays.captureIntegrityWarnings.some(w=>w.code==='duplicate_archive_day'));
+assert.equal(duplicateDays.captureCoverageByArchive.length,2);
+assert.deepEqual(duplicateDays.captureCoverageByArchive.map(x=>x.archiveIndex),[0,1]);
+const distinctDuplicateDays=diagnoseArchiveReadiness([
+ {date:'20261123',planned:2,attempted:1,records:[{date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:true}}]},
+ {date:'20261123',planned:4,attempted:2,records:[{date:'20261123',venue:1,race:2,httpStatus:200,response:{ready:false}},{date:'20261123',venue:1,race:3,httpStatus:200,response:{ready:true}}]}
+]);
+assert.deepEqual(distinctDuplicateDays.captureCoverageByArchive.map(x=>x.unattempted),[1,2]);
+assert.equal(distinctDuplicateDays.captureCoverageByDay['20261123'].planned,2);
 const invalidCounts=diagnoseArchiveReadiness([{date:'20261124',planned:0,attempted:-1,records:[
  {date:'20261124',venue:1,race:1,httpStatus:200,response:{ready:true}}
 ]}]);
