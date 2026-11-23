@@ -23,6 +23,7 @@ on:
       - 'scripts/*twelve-pick-readiness.mjs'
       - 'scripts/*six-racer-source-inputs.mjs'
       - 'scripts/*six-racer-stage.mjs'
+      - 'scripts/*official-six-racer-inputs.mjs'
       - 'scripts/*capture-with-original-inputs.mjs'
       - 'scripts/*save-original-input-capture.mjs'
       - 'scripts/*inspect-saved-twelve-picks.mjs'
@@ -123,6 +124,9 @@ jobs:
           echo "::endgroup::"
           echo "::group::27 stage-aware six-racer inputs"
           if node scripts/test-inspect-six-racer-stage.mjs; then echo "PASS: stage-aware input completeness"; else echo "FAIL: stage-aware input completeness"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::28 official six-racer source extraction"
+          if node scripts/test-extract-official-six-racer-inputs.mjs; then echo "PASS: official six-racer extraction"; else echo "FAIL: official six-racer extraction"; failures=$((failures+1)); fi
           echo "::endgroup::"
           echo "Failed checks: $failures"
           test "$failures" -eq 0
