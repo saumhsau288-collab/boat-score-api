@@ -69,3 +69,36 @@ jobs:
           console.log(JSON.stringify({status:'real_artifact_structure_inspected',reports,
             actualRaceResultsVerified:0,hitRateMeasured:false},null,2));
           NODE
+
+      - name: Download known official parsed results for descriptive race-key join
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p official-join
+          artifact_id=$(gh api "repos/$GH_REPO/actions/runs/45144329175/artifacts" --jq '.artifacts[] | select(.expired == false and (.name | startswith("historical-official-smoke-"))) | .id' | head -n 1)
+          if [ -z "$artifact_id" ]; then echo "Known official artifact missing"; exit 1; fi
+          gh api "repos/$GH_REPO/actions/artifacts/$artifact_id/zip" > /tmp/official-join.zip
+          unzip -q /tmp/official-join.zip -d official-join
+      - name: Join saved predictions to parsed official race identities only
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import {inventoryArchiveOfficialMatches} from './scripts/inventory-archive-official-matches.mjs';
+          const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
+            const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
+          });
+          const archives=walk('archived-captures').filter(f=>/20\d{6}-\d+\.json$/.test(path.basename(f)))
+            .map(f=>JSON.parse(fs.readFileSync(f,'utf8')));
+          const results=['parsed.json','parsed-20261120.json'].map(f=>{
+            const path='official-join/'+f;
+            if(!fs.existsSync(path))throw Error('Missing parsed official report: '+f);
+            return JSON.parse(fs.readFileSync(path,'utf8'));
+          });
+          const out=inventoryArchiveOfficialMatches(archives,results);
+          console.log(JSON.stringify(out,null,2));
+          if(out.eligibleForAccuracy!==0)throw Error('Unverified diagnostic unexpectedly eligible for accuracy');
+          NODE
