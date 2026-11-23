@@ -14,7 +14,7 @@ assert.ok(validatePreRaceEvidence({...row,racers:racers.map((r,i)=>i===5?{...r,e
 assert.ok(validatePreRaceEvidence({...row,racers:racers.map((r,i)=>i===0?{...r,motor2Rate:null}:r)}).errors.includes('missing_six_racer_features'));
 assert.ok(validatePreRaceEvidence({...row,featureSource:''}).errors.includes('missing_feature_source'));
 const batch=evaluateEvidenceBatch([row,{...row}]);
-assert.equal(batch.eligible,1);
-assert.equal(batch.held,1);
+assert.equal(batch.eligibleCount,1);
+assert.equal(batch.heldCount,1);
 assert.ok(batch.held[0].errors.includes('duplicate_race'));
 console.log('Research pre-race evidence gate tests passed');
