@@ -42,6 +42,6 @@ export function evaluateEvidenceBatch(records) {
     seen.add(key);
     (result.errors.length?held:accepted).push({key,...result});
   }
-  return {total:records.length,eligible:accepted.length,held:held.length,accepted,held,
+  return {total:records.length,eligibleCount:accepted.length,heldCount:held.length,accepted,held,
     note:'Provenance flags are assertions; independent source verification is still required. No accuracy estimate.'};
 }
