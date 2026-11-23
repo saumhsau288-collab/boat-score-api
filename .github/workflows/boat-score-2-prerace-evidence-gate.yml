@@ -48,6 +48,8 @@ jobs:
           node --check scripts/fetch-readonly-morning-ranking-snapshot.test.mjs
           node --check scripts/assess-prediction-phase.mjs
           node --check scripts/assess-prediction-phase.test.mjs
+          node --check scripts/seal-morning-evidence-draft.mjs
+          node --check scripts/seal-morning-evidence-draft.test.mjs
       - name: Test evidence gate offline
         run: |
           node scripts/validate-independent-prerace-evidence.test.mjs
@@ -64,6 +66,7 @@ jobs:
           node scripts/inspect-saved-morning-capture.test.mjs
           node scripts/fetch-readonly-morning-ranking-snapshot.test.mjs
           node scripts/assess-prediction-phase.test.mjs
+          node scripts/seal-morning-evidence-draft.test.mjs
       - name: Read-only preview morning snapshot probe
         continue-on-error: true
         env:
