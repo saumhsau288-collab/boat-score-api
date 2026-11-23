@@ -102,6 +102,16 @@ const repeatedRace=diagnoseArchiveReadiness([
  {date:'20261123',planned:1,attempted:1,records:[{date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:true}}]},
  {date:'20261123',planned:1,attempted:1,records:[{date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:false}}]}
 ]);
-assert.deepEqual(repeatedRace.duplicateRaceKeys,[{raceKey:'20261123:1:1',occurrences:2}]);
+assert.equal(repeatedRace.duplicateRaceKeys[0].raceKey,'20261123:1:1');
+assert.equal(repeatedRace.duplicateRaceKeys[0].occurrences,2);
+assert.equal(repeatedRace.duplicateRaceKeys[0].snapshots.length,2);
+assert.equal(repeatedRace.duplicateRaceKeys[0].distinctRequestTimes,0);
+
+
+const timestampedDuplicates=diagnoseArchiveReadiness([
+ {date:'20261123',records:[{venue:1,race:1,requestedAt:'2026-11-23T00:00:00Z',httpStatus:200,response:{ready:true}}]},
+ {date:'20261123',records:[{venue:1,race:1,requestedAt:'2026-11-23T00:02:00Z',httpStatus:200,response:{ready:true}}]}
+]);
+assert.equal(timestampedDuplicates.duplicateRaceKeys[0].distinctRequestTimes,2);
 
 console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
