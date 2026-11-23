@@ -20,6 +20,8 @@ on:
       - 'scripts/test-morning-missing-data.mjs'
       - 'boat-score-2-morning.js'
       - 'boat-score-2-scoring.js'
+      - 'boat-score-2-relative-inside-preview*.js'
+      - 'boat-score-2-relative-inside-preview*.mjs'
       - 'scripts/test-prestart-missing-data.mjs'
       - 'scripts/*score-overlap.mjs'
       - 'scripts/*explain-racer-score.mjs'
@@ -59,6 +61,9 @@ jobs:
           failures=0
           echo '::group::research first-place candidate mode regression'
           if node scripts/test-predict-twelve-independent-hypotheses.mjs; then echo 'PASS: candidate mode regression'; else echo 'FAIL: candidate mode regression'; failures=$((failures+1)); fi
+          echo '::endgroup::'
+          echo '::group::Boat Score 2 relative inside preview integration'
+          if node boat-score-2-relative-inside-preview.test.mjs; then echo 'PASS: preview integration'; else echo 'FAIL: preview integration'; failures=$((failures+1)); fi
           echo '::endgroup::'
           echo '::group::relative inside upset scenario'
           if node scripts/test-relative-inside-upset.mjs; then echo 'PASS: relative inside upset'; else echo 'FAIL: relative inside upset'; failures=$((failures+1)); fi
