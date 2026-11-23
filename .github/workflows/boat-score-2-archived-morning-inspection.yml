@@ -12,6 +12,7 @@ on:
       - 'scripts/inventory-archive-official-matches.mjs'
       - 'scripts/test-inventory-archive-official-matches.mjs'
       - 'scripts/diagnose-archive-readiness.mjs'
+      - 'scripts/test-diagnose-archive-readiness.mjs'
 permissions:
   contents: read
   actions: read
@@ -24,7 +25,9 @@ jobs:
         with:
           node-version: '22'
       - name: Test descriptive race-key joins
-        run: node scripts/test-inventory-archive-official-matches.mjs
+        run: |
+          node scripts/test-inventory-archive-official-matches.mjs
+          node scripts/test-diagnose-archive-readiness.mjs
       - name: Download two known retained raw capture artifacts read-only
         env:
           GH_TOKEN: ${{ github.token }}
