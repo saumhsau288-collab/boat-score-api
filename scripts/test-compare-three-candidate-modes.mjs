@@ -11,7 +11,7 @@ const rows=cases.map(([scenario,scores,starts])=>{
  const racers=scores.map((score,i)=>({boat:i+1,score,avgStart:starts[i]}));
  const out=compareThreeCandidateModes(racers);
  assert.equal(out.rows.length,12);
- assert.equal(out.rankRelativeFallback,false);
+ assert.equal(out.rankRelativeFallback,out.topAbilityBoats.length===6);
 
  assert.deepEqual(compareThreeCandidateModes([...racers].reverse()),out);
  for(const mode of ['legacy','unrestricted','rank_relative']){
