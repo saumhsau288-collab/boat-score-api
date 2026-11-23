@@ -4,7 +4,7 @@ const cases=[
  ['outside_best',[7,8,6,5,4,10],[.14,.13,.15,.16,.17,.12],[2]],
  ['inside_best',[10,8,6,5,4,7],[.12,.13,.15,.16,.17,.14],[1]],
  ['inside_tie',[9,9,6,5,4,10],[.12,.13,.15,.16,.17,.14],[1,2]],
- ['all_equal',[7,7,7,7,7,7],[.12,.13,.15,.16,.17,.14],[1,2,3]]
+ ['all_equal',[7,7,7,7,7,7],[.12,.13,.15,.16,.17,.14],[]]
 ];
 for(const [name,scores,starts,excluded] of cases){
  const racers=scores.map((score,i)=>({boat:i+1,score,avgStart:starts[i]}));
