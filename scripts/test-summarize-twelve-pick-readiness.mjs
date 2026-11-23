@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {summarizeTwelvePickReadiness} from './summarize-twelve-pick-readiness.mjs';
+assert.equal(summarizeTwelvePickReadiness(null).status,'invalid_input');
+const empty=summarizeTwelvePickReadiness([]);
+assert.equal(empty.eligibleRaces,0);
+assert.equal(empty.hitRatesAvailable,false);
+const missing=summarizeTwelvePickReadiness([{main:[],upset:[]}]);
+assert.equal(missing.missingEvidenceCounts.authenticated_capture,1);
+assert.equal(missing.missingEvidenceCounts.twelve_methods,1);
+assert.equal(missing.hitRatesAvailable,false);
+console.log('Twelve-pick readiness fixture passed (no historical accuracy claim)');
