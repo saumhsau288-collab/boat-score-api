@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {evaluateMorningRankingHistory,isValidMorningCaptureTimestamp,isCaptureOnMorningDate} from './evaluate-morning-ranking-history.mjs';
 const order=[1,2,3,4,5,6];
-const pick=(category,race)=>({date:'20261122',venue:1,race,category,status:'provisional_not_calibrated',predictedOrder:order});
+const pick=(category,race)=>({date:'20261122',venue:1,race,category,status:'provisional_not_calibrated',predictedOrder:order,deadlineAt:'2026-11-22T03:05:00.000Z'});
 const snapshot={date:'20261122',categories:{main:[pick('main',1)],upset:[pick('upset',2)],chaos:[]}};
 const result=(race,finish)=>({date:'20261122',venue:1,race,resultVerified:true,officialFinish:finish});
 const r=evaluateMorningRankingHistory(snapshot,[result(1,order)]);
@@ -40,7 +40,7 @@ assert.equal(isCaptureOnMorningDate('2026-11-22T14:59:59.999Z','20261123'),false
 assert.equal(isCaptureOnMorningDate('2026-11-23T14:59:59.999Z','20261123'),true);
 assert.equal(isCaptureOnMorningDate('2026-11-23T15:00:00.000Z','20261123'),false);
 const tomorrowPick=(category,race,additional={})=>({
- ...pick(category,race),date:'20261123',capturedAt:capture,...additional
+ ...pick(category,race),date:'20261123',capturedAt:capture,deadlineAt:'2026-11-22T23:05:00.000Z',...additional
 });
 const nextSnapshot={date:'20261123',categories:{
  main:[tomorrowPick('main',1),tomorrowPick('main',3,{capturedAt:undefined})],
@@ -75,6 +75,13 @@ assert.equal(bothEval.byCategory.main.missingPredictionOrder,1);
 assert.equal(bothEval.byCategory.main.notEvaluable,1); // do not double-count missing evidence
 assert.equal(bothEval.byCategory.main.unmatched,0);
 assert.deepEqual(bothEval.exclusionObservations,{});
+const missingDeadline=evaluateMorningRankingHistory({...nextSnapshot,categories:{
+ main:[tomorrowPick('main',1,{deadlineAt:undefined})],upset:[],chaos:[]
+}},[nextResult(1)]);
+assert.equal(missingDeadline.byCategory.main.matched,0);
+assert.equal(missingDeadline.byCategory.main.missingDeadline,1);
+assert.equal(missingDeadline.byCategory.main.notEvaluable,1);
+assert.deepEqual(missingDeadline.exclusionObservations,{});
 const deadlineOk=evaluateMorningRankingHistory({...nextSnapshot,categories:{
  main:[tomorrowPick('main',1,{deadlineAt:'2026-11-22T23:05:00.000Z'})],upset:[],chaos:[]
 }},[nextResult(1)]);
