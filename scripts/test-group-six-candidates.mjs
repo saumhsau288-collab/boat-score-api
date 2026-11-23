@@ -6,7 +6,8 @@ const groups=groupSixCandidates(base);
 assert.equal(groups.status,'research_only');
 assert.deepEqual(groups.favorites,[6,5,4]);
 assert.deepEqual(groups.counterCandidates,[6]);
-assert.deepEqual(groups.singleSignal,[1,2,3]);
+// Equal signal counts are ordered by ability score, then course and boat.
+assert.deepEqual(groups.singleSignal,[1,3,2]);
 assert.deepEqual(groups.unsupported,[]);
 assert.equal(groups.insideCourseBoat,1);
 assert.equal(groups.calibrated,false);
