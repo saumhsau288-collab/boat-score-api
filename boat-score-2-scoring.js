@@ -30,8 +30,9 @@ export function evaluateRacer(input) {
 }
 export function evaluateRace(racers) {
   if (!Array.isArray(racers) || racers.length !== 6 ||
-      new Set(racers.map(r=>r.boat)).size !== 6 ||
-      racers.some(r=>!Number.isInteger(r.boat)||r.boat<1||r.boat>6)) {
+      racers.some(r=>!r||typeof r!=='object') ||
+      new Set(racers.map(r=>r?.boat)).size !== 6 ||
+      racers.some(r=>!Number.isInteger(r?.boat)||r.boat<1||r.boat>6)) {
     return {status:'invalid_race',racers:[]};
   }
   const results = racers.map(r=>({boat:r.boat,...evaluateRacer(r)}));
