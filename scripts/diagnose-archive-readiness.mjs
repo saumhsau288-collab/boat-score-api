@@ -44,7 +44,7 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
   for(const r of records.filter(Boolean)){
   const raceKey=key({...r,date:String(a?.date??r?.date??'unknown')});
   if(Number.isInteger(Number(r?.venue))&&Number.isInteger(Number(r?.race))&&Number(r?.venue)>=1&&Number(r?.race)>=1){raceOccurrenceCounts[raceKey]=(raceOccurrenceCounts[raceKey]||0)+1;
-   (raceSnapshotTimes[raceKey]??=[]).push({requestedAt:typeof r?.requestedAt==='string'?r.requestedAt:null,receivedAt:typeof r?.receivedAt==='string'?r.receivedAt:null});}
+   (raceSnapshotTimes[raceKey]??=[]).push({requestedAt:typeof r?.requestedAt==='string'?r.requestedAt:null,receivedAt:typeof r?.receivedAt==='string'?r.receivedAt:null,readiness:category(r)});}
   const reason=category(r);totals[reason]++;
   const duration=Date.parse(r?.receivedAt)-Date.parse(r?.requestedAt);
   const durationBucket=!Number.isFinite(duration)||duration<0?'invalid':duration<1000?'under_1s':duration<5000?'from_1_to_5s':duration<15000?'from_5_to_15s':duration<30000?'from_15_to_30s':'over_30s';
@@ -157,7 +157,7 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
  }
- const duplicateRaceKeys=Object.entries(raceOccurrenceCounts).filter(([,n])=>n>1).map(([raceKey,occurrences])=>{const snapshots=raceSnapshotTimes[raceKey];const validTimes=snapshots.map(s=>s.requestedAt).filter(t=>t!==null&&Number.isFinite(Date.parse(t)));return {raceKey,occurrences,snapshots,distinctRequestTimes:new Set(validTimes.map(t=>new Date(t).toISOString())).size,missingRequestTimes:snapshots.filter(s=>s.requestedAt===null).length,invalidRequestTimes:snapshots.filter(s=>s.requestedAt!==null&&!Number.isFinite(Date.parse(s.requestedAt))).length};}).sort((a,b)=>a.raceKey.localeCompare(b.raceKey));
+ const duplicateRaceKeys=Object.entries(raceOccurrenceCounts).filter(([,n])=>n>1).map(([raceKey,occurrences])=>{const snapshots=raceSnapshotTimes[raceKey];const validTimes=snapshots.map(s=>s.requestedAt).filter(t=>t!==null&&Number.isFinite(Date.parse(t)));return {raceKey,occurrences,snapshots,distinctRequestTimes:new Set(validTimes.map(t=>new Date(t).toISOString())).size,missingRequestTimes:snapshots.filter(s=>s.requestedAt===null).length,invalidRequestTimes:snapshots.filter(s=>s.requestedAt!==null&&!Number.isFinite(Date.parse(s.requestedAt))).length,readinessCategories:[...new Set(snapshots.map(s=>s.readiness))].sort(),readinessChanged:new Set(snapshots.map(s=>s.readiness)).size>1,comparisonEligibility:'requires_independent_pre_race_and_result_authentication'};}).sort((a,b)=>a.raceKey.localeCompare(b.raceKey));
  const officialFailureSummary={
   http403:Object.entries(officialFailureByDayAndHalf).filter(([k])=>k.endsWith(':official_http_403')).reduce((n,[,v])=>n+v,0),
   officialTimeout:Object.entries(officialFailureByDayAndHalf).filter(([k])=>k.endsWith(':official_timeout')).reduce((n,[,v])=>n+v,0),
