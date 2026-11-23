@@ -8,7 +8,7 @@ const category=r=>{
 const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
 export function diagnoseArchiveReadiness(archives,focusKeys=[]){
  const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
- const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
+ const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const readinessByJstMinute={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
  const focus=new Set(focusKeys);
  for(const a of archives){
   const day=String(a?.date??'unknown');
@@ -27,6 +27,10 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
   const time=r?.requestedAt;
   const parsed=typeof time==='string'?Date.parse(time):NaN;
   if(Number.isFinite(parsed)){
+   const minute=new Date(parsed+9*60*60*1000).toISOString().slice(0,16).replace('T',' ');
+   if(!readinessByJstMinute[minute])readinessByJstMinute[minute]={total:0,ready:0,http_200_not_ready:0,no_http_200:0};
+   readinessByJstMinute[minute].total++;
+   readinessByJstMinute[minute][reason==='ready'?'ready':reason==='http_200_not_ready'?'http_200_not_ready':'no_http_200']++;
    const t=timingByDayAndHalf[dayHalfKey];t.timestampsPresent++;
    if(t.earliest===null||parsed<Date.parse(t.earliest))t.earliest=new Date(parsed).toISOString();
    if(t.latest===null||parsed>Date.parse(t.latest))t.latest=new Date(parsed).toISOString();
@@ -93,5 +97,5 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
  }
- return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+ return {totals,statusCodes,notReadyByVenue,notReadyByRace,readinessByRace,readinessByDayAndHalf,readinessByDayAndHalfAndVenue,timingByDayAndHalf,captureWindowByDay,readinessByJstMinute,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
 }
