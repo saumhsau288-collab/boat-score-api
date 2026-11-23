@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {evaluateRace,evaluateRacer,SCORE_WEIGHTS} from '../boat-score-2-scoring.js';
+const racer=boat=>({boat,nationalWinRate:6,localWinRate:0,motorTwoWinRate:40,recent50WinRate:35,exhibitionScore:50});
+const valid=Array.from({length:6},(_,i)=>racer(i+1));
+assert.equal(evaluateRace(valid).status,'evaluated');
+assert.equal(evaluateRace([null,...valid.slice(1)]).status,'invalid_race');
+assert.equal(evaluateRace([undefined,...valid.slice(1)]).status,'invalid_race');
+assert.equal(evaluateRace([{boat:1},...valid.slice(1)]).status,'insufficient_data');
+assert.equal(evaluateRacer(racer(1)).status,'evaluated');
+assert.equal(Object.values(SCORE_WEIGHTS).reduce((a,b)=>a+b,0),100);
+console.log('Prestart missing-data regression fixtures passed; weights not calibrated');
