@@ -40,15 +40,23 @@ export function compareSavedTicketsToSpatial(capture,officialResults,snapshots){
   else if(spatialAnyHit)spatialOnlyHits++;
   else neitherHit++;
   const winner=Number(actual.split('-')[0]);
+  const sortedByScore=[...s.racers].sort((a,b)=>b.score-a.score||a.boat-b.boat);
+  const sortedByStart=[...s.racers].sort((a,b)=>a.avgStart-b.avgStart||a.boat-b.boat);
+  const highestScoreBoat=sortedByScore[0].boat,fastestAverageStartBoat=sortedByStart[0].boat;
   const outcome=baselineAnyHit?(spatialAnyHit?'both':'baseline_only'):(spatialAnyHit?'spatial_only':'neither');
-  rows.push({key:k,status:'compared',actual,winner,innerWinner:winner<=3,outcome,baseline:{mainHit:r.mainHit,upsetHit:r.upsetHit,mainTickets:asKeys(originalMain),upsetTickets:asKeys(originalUpset)},spatial:{mainHit,upsetHit,mainTickets:asKeys(spatial.main),upsetTickets:asKeys(spatial.upset)},ticketOverlap:overlap});
+  rows.push({key:k,status:'compared',actual,winner,innerWinner:winner<=3,outcome,highestScoreBoat,fastestAverageStartBoat,highestScoreWon:winner===highestScoreBoat,fastestAverageStartWon:winner===fastestAverageStartBoat,baseline:{mainHit:r.mainHit,upsetHit:r.upsetHit,mainTickets:asKeys(originalMain),upsetTickets:asKeys(originalUpset)},spatial:{mainHit,upsetHit,mainTickets:asKeys(spatial.main),upsetTickets:asKeys(spatial.upset)},ticketOverlap:overlap});
  }
  const compared=rows.filter(x=>x.status==='compared').length;
  const rate=n=>compared?Number((100*n/compared).toFixed(2)):null;
+ const factorBreakdown=Object.fromEntries(['highest_score_won','highest_score_lost','fastest_avg_start_won','fastest_avg_start_lost'].map(group=>{
+  const subset=rows.filter(r=>r.status==='compared'&&(group==='highest_score_won'?r.highestScoreWon:group==='highest_score_lost'?!r.highestScoreWon:group==='fastest_avg_start_won'?r.fastestAverageStartWon:!r.fastestAverageStartWon));
+  const n=subset.length,base=subset.filter(r=>r.baseline.mainHit||r.baseline.upsetHit).length,spat=subset.filter(r=>r.spatial.mainHit||r.spatial.upsetHit).length;
+  return [group,{races:n,baselineAnyHits:base,spatialAnyHits:spat,baselineRatePercent:n?Number((100*base/n).toFixed(2)):null,spatialRatePercent:n?Number((100*spat/n).toFixed(2)):null}];
+ }));
  const breakdown=Object.fromEntries(['inner_1_to_3','outer_4_to_6'].map(group=>{
   const subset=rows.filter(r=>r.status==='compared'&&(group==='inner_1_to_3'?r.innerWinner:!r.innerWinner));
   const n=subset.length,base=subset.filter(r=>r.baseline.mainHit||r.baseline.upsetHit).length,spat=subset.filter(r=>r.spatial.mainHit||r.spatial.upsetHit).length;
   return [group,{races:n,baselineAnyHits:base,spatialAnyHits:spat,baselineRatePercent:n?Number((100*base/n).toFixed(2)):null,spatialRatePercent:n?Number((100*spat/n).toFixed(2)):null}];
  }));
- return {status:compared?'paired_research_comparison':'insufficient_authenticated_paired_races',compared,held:rows.length-compared,holdReasons,baseline:{mainHits:baselineMainHits,upsetHits:baselineUpsetHits,anyHits:baselineAnyHits,mainRatePercent:rate(baselineMainHits),upsetRatePercent:rate(baselineUpsetHits),anyRatePercent:rate(baselineAnyHits)},spatial:{mainHits,upsetHits,anyHits,mainRatePercent:rate(mainHits),upsetRatePercent:rate(upsetHits),anyRatePercent:rate(anyHits)},deltaAnyPercentagePoints:compared?Number((rate(anyHits)-rate(baselineAnyHits)).toFixed(2)):null,pairedOutcome:{baselineOnlyHits,spatialOnlyHits,bothHit,neitherHit,averageTicketOverlap:compared?Number((totalTicketOverlap/compared).toFixed(2)):null},winnerCourseBreakdown:breakdown,rows,warning:'Requires independently verified pre-race spatial snapshots. A caller-supplied flag is not itself provenance proof. Spatial proxy is not a physical 2D simulator.'};
+ return {status:compared?'paired_research_comparison':'insufficient_authenticated_paired_races',compared,held:rows.length-compared,holdReasons,baseline:{mainHits:baselineMainHits,upsetHits:baselineUpsetHits,anyHits:baselineAnyHits,mainRatePercent:rate(baselineMainHits),upsetRatePercent:rate(baselineUpsetHits),anyRatePercent:rate(baselineAnyHits)},spatial:{mainHits,upsetHits,anyHits,mainRatePercent:rate(mainHits),upsetRatePercent:rate(upsetHits),anyRatePercent:rate(anyHits)},deltaAnyPercentagePoints:compared?Number((rate(anyHits)-rate(baselineAnyHits)).toFixed(2)):null,pairedOutcome:{baselineOnlyHits,spatialOnlyHits,bothHit,neitherHit,averageTicketOverlap:compared?Number((totalTicketOverlap/compared).toFixed(2)):null},winnerCourseBreakdown:breakdown,abilityAndStartBreakdown:factorBreakdown,rows,warning:'Requires independently verified pre-race spatial snapshots. A caller-supplied flag is not itself provenance proof. Spatial proxy is not a physical 2D simulator.'};
 }
