@@ -21,4 +21,6 @@ assert.equal(auditTwelvePicks([{...row,main:[[1,1,2],...main.slice(1)]}]).eligib
 assert.equal(auditTwelvePicks([{...row,predictionCapturedAt:row.cutoffAt}]).eligible,0);
 assert.equal(auditTwelvePicks([{...row,upset:[main[0],...upset.slice(1)]}]).uniqueTicketCounts[0].uniqueTickets,11);
 assert.equal(auditTwelvePicks([{...row,main:[main[0],main[0],...main.slice(2)]}]).uniqueTicketCounts[0].uniqueTickets,11);
+assert.equal(auditTwelvePicks([{...row,date:'20261121'}]).eligible,0);
+assert.equal(auditTwelvePicks([{...row,cutoffAt:'2026-11-21T02:00:00Z'}]).eligible,0);
 console.log('12-pick audit fixture tests passed (not historical accuracy evidence)');
