@@ -2,7 +2,7 @@
 // Only accept independently authenticated pre-race input snapshots.
 const validBoats=r=>Array.isArray(r)&&r.length===6&&new Set(r.map(x=>x.boat)).size===6&&r.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)&&Number.isFinite(x.avgStart)&&x.avgStart>=0&&x.avgStart<=0.4);
 const ticketKey=t=>t.join('-');
-const rankTickets=(racers,spatial)=>{
+export const rankTickets=(racers,spatial)=>{
  const byBoat=new Map(racers.map(r=>[r.boat,r]));
  const result=[];
  for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++){
