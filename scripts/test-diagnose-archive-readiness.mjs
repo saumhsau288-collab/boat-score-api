@@ -40,6 +40,10 @@ const failureDiagnostics=diagnoseArchiveReadiness([{date:'20261120',records:[
  {date:'20261120',venue:1,race:1,httpStatus:200,requestedAt:'2026-11-20T00:00:27.745Z',receivedAt:'2026-11-20T00:00:48.000Z',response:{ready:false,reason:'official_six_boat_stats_unverified',officialVerified:false,statsVerified:false,officialStatsRetry:'official_timeout',missingInputs:[]}},
  {date:'20261120',venue:1,race:7,httpStatus:200,requestedAt:'2026-11-20T00:01:44.267Z',receivedAt:'2026-11-20T00:01:44.500Z',response:{ready:false,reason:'official_six_boat_stats_unverified',officialVerified:false,statsVerified:false,officialStatsRetry:'official_http_403',missingInputs:[]}}
 ]}]);
+assert.equal(failureDiagnostics.officialFailureSummary.http403,1);
+assert.equal(failureDiagnostics.officialFailureSummary.officialTimeout,1);
+assert.equal(failureDiagnostics.officialFailureSummary.authenticatedPreRacePredictions,null);
+assert.equal(failureDiagnostics.officialFailureSummary.eligibilityAssessment,'not_assessed_by_this_diagnostic');
 assert.equal(failureDiagnostics.officialFailureByDayAndHalf['20261120:early:official_timeout'],1);
 assert.equal(failureDiagnostics.officialFailureByDayAndHalf['20261120:late:official_http_403'],1);
 assert.equal(failureDiagnostics.official403ByJstMinute['2026-11-20 09:01'],1);
