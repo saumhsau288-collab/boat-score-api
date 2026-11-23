@@ -8,4 +8,6 @@ const missing=summarizeTwelvePickReadiness([{main:[],upset:[]}]);
 assert.equal(missing.missingEvidenceCounts.authenticated_capture,1);
 assert.equal(missing.missingEvidenceCounts.twelve_methods,1);
 assert.equal(missing.hitRatesAvailable,false);
+assert.equal(missing.missingEvidenceCounts.original_six_racer_inputs,1);
+assert.equal(missing.originalInputCompleteRows,0);
 console.log('Twelve-pick readiness fixture passed (no historical accuracy claim)');
