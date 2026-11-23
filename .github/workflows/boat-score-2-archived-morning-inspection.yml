@@ -52,6 +52,8 @@ on:
       - 'scripts/test-triage-research-capture-failures.mjs'
       - 'scripts/audit-not-ready-responses.mjs'
       - 'scripts/test-audit-not-ready-responses.mjs'
+      - 'scripts/audit-not-ready-official-stats.mjs'
+      - 'scripts/test-audit-not-ready-official-stats.mjs'
 permissions:
   contents: read
   actions: read
@@ -84,6 +86,7 @@ jobs:
           node scripts/test-inventory-saved-capture-duplicates.mjs
           node scripts/test-triage-research-capture-failures.mjs
           node scripts/test-audit-not-ready-responses.mjs
+          node scripts/test-audit-not-ready-official-stats.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
@@ -157,6 +160,7 @@ jobs:
           import {inventorySavedCaptureDuplicates} from './scripts/inventory-saved-capture-duplicates.mjs';
           import {triageResearchCaptureFailures} from './scripts/triage-research-capture-failures.mjs';
           import {auditNotReadyResponses} from './scripts/audit-not-ready-responses.mjs';
+          import {auditNotReadyOfficialStats} from './scripts/audit-not-ready-official-stats.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);return e.isDirectory()?walk(p):[p];
           });
@@ -173,6 +177,7 @@ jobs:
           console.log('SAVED_DUPLICATE_INVENTORY '+JSON.stringify(archives.map(a=>({day:a.date,...inventorySavedCaptureDuplicates(a)})),null,2));
           console.log('FAILURE_TRIAGE '+JSON.stringify(triageResearchCaptureFailures(archives),null,2));
           console.log('NOT_READY_AUDIT '+JSON.stringify(auditNotReadyResponses(archives),null,2));
+          console.log('NOT_READY_OFFICIAL_STATS '+JSON.stringify(auditNotReadyOfficialStats(archives),null,2));
           console.log('READINESS_DIAGNOSTIC '+JSON.stringify(diagnoseArchiveReadiness(archives,[
             '20261118:2:1','20261118:2:2','20261118:2:3',
             '20261120:2:1','20261120:2:2','20261120:2:3']),null,2));
