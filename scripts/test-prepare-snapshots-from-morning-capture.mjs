@@ -15,4 +15,6 @@ assert.equal(got.snapshots[0].captureRunId,'fixture');
 assert.equal(prepareSnapshotsFromMorningCapture(capture,{}).snapshots.length,0);
 assert.equal(prepareSnapshotsFromMorningCapture(capture,{'20261123:1:1':'2026-11-23T01:40:00Z'}).snapshots.length,0);
 assert.equal(prepareSnapshotsFromMorningCapture({...capture,records:[{...record,httpStatus:503}]},cutoffs).snapshots.length,0);
+assert.equal(prepareSnapshotsFromMorningCapture({...capture,records:[null]},cutoffs).snapshots.length,0);
+assert.equal(prepareSnapshotsFromMorningCapture({...capture,records:[{...record,receivedAt:null}]},cutoffs).snapshots.length,0);
 console.log('Existing morning capture adapter fixture passed (not authenticated accuracy evidence)');
