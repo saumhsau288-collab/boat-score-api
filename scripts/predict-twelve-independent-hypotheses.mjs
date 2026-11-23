@@ -27,7 +27,8 @@ export function predictTwelveIndependentHypotheses(racers,options={}){
  for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&a!==c&&b!==c)permutations.push([a,b,c]);
  const used=new Set();
  const picks=specs.map(spec=>{
-  const eligible=permutations.filter(t=>candidateMode==='unrestricted'||(candidateMode==='rank_relative'?(spec.group==='main'||allAbilityTied||racers.some(r=>(r.course??r.boat)<(byBoat.get(t[0]).course??t[0])&&r.score>byBoat.get(t[0]).score+1e-9)):(spec.group==='main'?t[0]<=3:t[0]>=4)));
+  const relativeCandidates=permutations.filter(t=>racers.some(r=>(r.course??r.boat)<(byBoat.get(t[0]).course??t[0])&&r.score>byBoat.get(t[0]).score+1e-9));
+  const eligible=permutations.filter(t=>candidateMode==='unrestricted'||(candidateMode==='rank_relative'?(spec.group==='main'||allAbilityTied||relativeCandidates.length===0||relativeCandidates.some(x=>key(x)===key(t))):(spec.group==='main'?t[0]<=3:t[0]>=4)));
   const score=t=>{
    const [a,b,c]=t.map(n=>byBoat.get(n));
    const weighted=spec.weights[0]*a.score+spec.weights[1]*b.score+spec.weights[2]*c.score;
@@ -40,7 +41,7 @@ export function predictTwelveIndependentHypotheses(racers,options={}){
   const ticket=eligible.find(t=>!used.has(key(t)));
   if(!ticket)throw Error('not_enough_unique_tickets');
   used.add(key(ticket));
-  return {strategyId:spec.id,group:spec.group,ticket,heuristicScore:Number(score(ticket).toFixed(5))};
+  return {strategyId:spec.id,group:spec.group,ticket,relativeInsideFallback:candidateMode==='rank_relative'&&spec.group==='upset'&&(allAbilityTied||relativeCandidates.length===0),heuristicScore:Number(score(ticket).toFixed(5))};
  });
- return {main:picks.filter(x=>x.group==='main'),upset:picks.filter(x=>x.group==='upset'),candidateMode,distinctStrategies:12,distinctTickets:used.size,warning:'Twelve different parameterized scoring hypotheses, not independently validated predictive methods. Legacy mode restricts first-place boats to 1-3 for main and 4-6 for upset; unrestricted mode removes these gates. Rank-relative mode permits any first-place boat for main but allows upset first-place candidates only when a higher-scoring boat is positioned further inside (lower course number); if all six scores tie, it falls back to unrestricted eligibility. Course is used for inside advantage when supplied, otherwise boat is a proxy. No accuracy claim.'};
+ return {main:picks.filter(x=>x.group==='main'),upset:picks.filter(x=>x.group==='upset'),candidateMode,distinctStrategies:12,distinctTickets:used.size,warning:'Twelve different parameterized scoring hypotheses, not independently validated predictive methods. Legacy mode restricts first-place boats to 1-3 for main and 4-6 for upset; unrestricted mode removes these gates. Rank-relative mode permits any first-place boat for main but allows upset first-place candidates only when a higher-scoring boat is positioned further inside (lower course number); if all six scores tie or no outer candidate has a higher-scoring inner boat, it falls back to unrestricted eligibility and flags the fallback. Course is used for inside advantage when supplied, otherwise boat is a proxy. No accuracy claim.'};
 }
