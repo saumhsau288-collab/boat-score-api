@@ -10,4 +10,7 @@ assert.equal(result.snapshot.upset.length,6);
 assert.equal(result.snapshot.independentlyAuthenticatedCapture,false);
 assert.equal(prepareTwelvePickCapture(input,input.cutoffAt).status,'invalid_or_after_cutoff');
 assert.equal(prepareTwelvePickCapture({...input,main:[[1,1,2],...main.slice(1)]},'2026-11-23T01:50:00Z').status,'invalid_or_after_cutoff');
+assert.equal(prepareTwelvePickCapture({...input,date:'20260230'},'2026-11-23T01:50:00Z').status,'invalid_or_after_cutoff');
+assert.equal(prepareTwelvePickCapture({...input,date:'20261122'},'2026-11-23T01:50:00Z').status,'invalid_or_after_cutoff');
+assert.equal(prepareTwelvePickCapture({...input,cutoffAt:'2026-11-24T02:00:00Z'},'2026-11-23T01:50:00Z').status,'invalid_or_after_cutoff');
 console.log('Pre-race capture fixture tests passed (not live capture)');
