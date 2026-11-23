@@ -11,6 +11,8 @@ on:
       - 'scripts/compare-twelve-methods-with-results.mjs'
       - 'scripts/inventory-archive-official-matches.mjs'
       - 'scripts/test-inventory-archive-official-matches.mjs'
+      - 'scripts/summarize-research-capture.mjs'
+      - 'scripts/test-summarize-research-capture.mjs'
       - 'scripts/run-research-capture-pool.mjs'
       - 'scripts/test-run-research-capture-pool.mjs'
       - 'scripts/official-403-circuit-breaker.mjs'
@@ -36,6 +38,7 @@ jobs:
           node scripts/test-diagnose-archive-readiness.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
+          node scripts/test-summarize-research-capture.mjs
           node --check scripts/capture-existing-boat-score-2-predictions.mjs
       - name: Download two known retained raw capture artifacts read-only
         env:
