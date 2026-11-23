@@ -26,6 +26,7 @@ on:
       - 'scripts/*official-six-racer-inputs.mjs'
       - 'scripts/*prediction-official-source.mjs'
       - 'scripts/*capture-times.mjs'
+      - 'scripts/*saved-prediction-official-pairs.mjs'
       - 'scripts/*capture-with-original-inputs.mjs'
       - 'scripts/*save-original-input-capture.mjs'
       - 'scripts/*inspect-saved-twelve-picks.mjs'
@@ -135,6 +136,9 @@ jobs:
           echo "::endgroup::"
           echo "::group::30 cutoff timestamp plausibility"
           if node scripts/test-inspect-capture-times.mjs; then echo "PASS: cutoff timestamp plausibility"; else echo "FAIL: cutoff timestamp plausibility"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::31 offline saved prediction/official pair inventory"
+          if node scripts/test-inspect-saved-prediction-official-pairs.mjs; then echo "PASS: offline saved pair inventory"; else echo "FAIL: offline saved pair inventory"; failures=$((failures+1)); fi
           echo "::endgroup::"
           echo "Failed checks: $failures"
           test "$failures" -eq 0
