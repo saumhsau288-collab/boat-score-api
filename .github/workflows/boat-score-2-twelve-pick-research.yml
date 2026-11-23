@@ -20,6 +20,7 @@ on:
       - 'scripts/*analyze-six-signal-agreement.mjs'
       - 'scripts/*group-six-candidates.mjs'
       - 'scripts/*compare-six-signals-to-finish.mjs'
+      - 'scripts/*twelve-pick-readiness.mjs'
       - '.github/workflows/boat-score-2-twelve-pick-research.yml'
 jobs:
   verify:
@@ -91,6 +92,9 @@ jobs:
           echo "::endgroup::"
           echo "::group::19 node scripts/test-compare-six-signals-to-finish.mjs"
           if node scripts/test-compare-six-signals-to-finish.mjs; then echo "PASS: node scripts/test-compare-six-signals-to-finish.mjs"; else echo "FAIL: node scripts/test-compare-six-signals-to-finish.mjs"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::20 readiness evidence diagnostics"
+          if node scripts/test-summarize-twelve-pick-readiness.mjs; then echo "PASS: readiness diagnostics"; else echo "FAIL: readiness diagnostics"; failures=$((failures+1)); fi
           echo "::endgroup::"
           echo "Failed checks: $failures"
           test "$failures" -eq 0
