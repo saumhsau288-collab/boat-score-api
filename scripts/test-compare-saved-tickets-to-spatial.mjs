@@ -8,6 +8,8 @@ const eligible=compareSavedTicketsToSpatial(capture,results,[snapshot]);assert.e
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,snapshotAt:'2026-11-18T00:01:00Z'}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,independentlyVerifiedPreRace:false}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[snapshot,snapshot]).compared,0);
+assert.equal(compareSavedTicketsToSpatial(capture,results,[snapshot],).compared,1);
+assert.equal(compareSavedTicketsToSpatial(capture,[{...results[0],officialCutoffAt:'2026-11-17T23:58:00Z'}],[snapshot]).compared,0);
 assert.equal(compareSavedTicketsToSpatial({...capture,authenticatedBeforeRace:false},results,[snapshot]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,date:'20261119'}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial({authenticatedBeforeRace:true,records:[null]},results,[snapshot]).compared,0);
