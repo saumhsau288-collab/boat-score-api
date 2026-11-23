@@ -15,4 +15,12 @@ const retry=diagnoseArchiveReadiness([{records:[
 ]}]);
 assert.deepEqual(retry.successfulRetryReadiness,{ready:1,not_ready:1,unknown:0});
 assert.equal(retry.attemptByOrdinal['1'],undefined); // failed HTTP captures only; success retries counted separately
-console.log('PASS: archived readiness, missing HTTP metadata, and successful retry classification');
+const timing=diagnoseArchiveReadiness([{date:'20261120',records:[
+ {date:'20261120',venue:1,race:1,requestedAt:'2026-11-20T00:00:05Z',httpStatus:200,response:{ready:true}},
+ {date:'20261120',venue:1,race:6,requestedAt:'2026-11-20T00:00:01Z',httpStatus:200,response:{ready:false}},
+ {date:'20261120',venue:1,race:7,requestedAt:'2026-11-20T00:00:30Z',httpStatus:200,response:{ready:false}},
+ {date:'20261120',venue:1,race:12,requestedAt:'invalid',error:'timeout'}
+]}]);
+assert.deepEqual(timing.timingByDayAndHalf['20261120:early'],{timestampsPresent:2,missingTimestamps:0,earliest:'2026-11-20T00:00:01.000Z',latest:'2026-11-20T00:00:05.000Z'});
+assert.deepEqual(timing.timingByDayAndHalf['20261120:late'],{timestampsPresent:1,missingTimestamps:1,earliest:'2026-11-20T00:00:30.000Z',latest:'2026-11-20T00:00:30.000Z'});
+console.log('PASS: archived readiness, retry classification and capture timing boundaries');
