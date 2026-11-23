@@ -4,6 +4,13 @@ const validOrder = a => Array.isArray(a) && a.length === 3 &&
   a.every(x => Number.isInteger(x) && x >= 1 && x <= 6) &&
   new Set(a).size === 3;
 const key = a => a.join('-');
+const validDate = value => {
+ const s=String(value);
+ if(!/^20\d{6}$/.test(s))return false;
+ const y=Number(s.slice(0,4)),m=Number(s.slice(4,6)),d=Number(s.slice(6,8));
+ const date=new Date(Date.UTC(y,m-1,d));
+ return date.getUTCFullYear()===y&&date.getUTCMonth()===m-1&&date.getUTCDate()===d;
+};
 const jstDate = iso => {
  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(iso));
  const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
@@ -14,7 +21,7 @@ export function auditTwelvePicks(rows) {
   const seen = new Set(), accepted = [], excluded = [];
   for (const row of rows) {
     const raceKey = [row?.date,row?.venue,row?.race].join(':');
-    const validRace = /^20\d{6}$/.test(String(row?.date)) &&
+    const validRace = validDate(row?.date) &&
       Number.isInteger(row?.venue) && row.venue >= 1 && row.venue <= 24 &&
       Number.isInteger(row?.race) && row.race >= 1 && row.race <= 12;
     const validPicks = Array.isArray(row?.main) && row.main.length === 6 &&
