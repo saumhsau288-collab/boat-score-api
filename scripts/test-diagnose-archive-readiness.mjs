@@ -14,5 +14,5 @@ const retry=diagnoseArchiveReadiness([{records:[
  {date:'20261120',venue:2,race:2,httpStatus:200,response:{ready:false,reason:'source_unavailable'},attempts:[{attempt:1,error:'Timeout'},{attempt:2,httpStatus:200}]}
 ]}]);
 assert.deepEqual(retry.successfulRetryReadiness,{ready:1,not_ready:1,unknown:0});
-assert.equal(retry.attemptByOrdinal['1'].count,0); // failed HTTP captures only; success retries counted separately
+assert.equal(retry.attemptByOrdinal['1'],undefined); // failed HTTP captures only; success retries counted separately
 console.log('PASS: archived readiness, missing HTTP metadata, and successful retry classification');
