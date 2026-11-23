@@ -8,7 +8,7 @@ const category=r=>{
 const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
 export function diagnoseArchiveReadiness(archives,focusKeys=[]){
  const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
- const statusCodes={};const shapes={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const dateCategories={};
+ const statusCodes={};const shapes={};const focused=[];const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
  const focus=new Set(focusKeys);
  for(const a of archives)for(const r of Array.isArray(a?.records)?a.records:[]){
   const reason=category(r);totals[reason]++;
@@ -27,6 +27,10 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
    const t=Array.isArray(r?.attempts)?'array':r?.attempts===undefined?'absent':r?.attempts===null?'null':typeof r.attempts;
    attemptValueTypes[t]=(attemptValueTypes[t]||0)+1;
    if(Array.isArray(r?.attempts)){
+    if(r.attempts.some((item,i)=>i>0&&item?.httpStatus===200)){
+     const k=r?.response?.ready===true?'ready':r?.response?.ready===false?'not_ready':'unknown';
+     successfulRetryReadiness[k]++;
+    }
     const n=String(r.attempts.length);attemptArrayLengths[n]=(attemptArrayLengths[n]||0)+1;
     for(const item of r.attempts){
      const shape=item&&typeof item==='object'&&!Array.isArray(item)?Object.keys(item).sort().join(','):'non_object';
@@ -56,5 +60,5 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
    responseReady:r?.response?.ready===true,diagnosticFieldNames:r?.response&&typeof r.response==='object'?
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
- return {totals,statusCodes,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
+ return {totals,statusCodes,nonReadyReasons:notReadyReasons,missingHttpDiagnosticFieldShapes:missingHttpFields,missingHttpErrorCategories,timeoutAttempts,attemptValueTypes,attemptArrayLengths,attemptEntryFieldShapes,attemptErrorCategories,attemptDurationsMs,attemptByOrdinal,successfulRetryReadiness,dateCategories,nonReadyDiagnosticFieldShapes:shapes,focused,warning:'Status and field names only; no cause inferred without evidence. Historical responses are not authenticated pre-race predictions.'};
 }
