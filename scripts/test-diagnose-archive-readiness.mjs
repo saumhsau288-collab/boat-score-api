@@ -76,4 +76,16 @@ assert.deepEqual(corruptCapture.captureIntegrityWarnings,[
  {day:'20261123',code:'attempted_count_mismatch'}
 ]);
 
+
+const duplicateDays=diagnoseArchiveReadiness([
+ {date:'20261123',planned:0,attempted:0,records:[]},
+ {date:'20261123',planned:0,attempted:0,records:[]}
+]);
+assert.ok(duplicateDays.captureIntegrityWarnings.some(w=>w.code==='duplicate_archive_day'));
+const invalidCounts=diagnoseArchiveReadiness([{date:'20261124',planned:0,attempted:-1,records:[
+ {date:'20261124',venue:1,race:1,httpStatus:200,response:{ready:true}}
+]}]);
+assert.ok(invalidCounts.captureIntegrityWarnings.some(w=>w.code==='invalid_planned_count'));
+assert.ok(invalidCounts.captureIntegrityWarnings.some(w=>w.code==='invalid_attempted_count'));
+
 console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
