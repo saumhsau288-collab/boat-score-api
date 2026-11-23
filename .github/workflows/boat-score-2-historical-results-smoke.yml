@@ -47,6 +47,28 @@ jobs:
             }
           }
           NODE
+      - name: Inspect official HTML table shapes for parser failures
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          for(const suffix of ['', '-20261120']){
+            const raw=JSON.parse(fs.readFileSync('research-historical/official-raw'+suffix+'.json','utf8'));
+            const parsed=JSON.parse(fs.readFileSync('research-historical/parsed'+suffix+'.json','utf8'));
+            for(const row of parsed.rows.filter(r=>r.status==='finish_table_not_found'||r.status==='racer_finish_mapping_incomplete')){
+              const page=raw.pages.find(p=>p.date===row.date&&p.venue===row.venue&&p.race===row.race);
+              const html=page?.html??'';
+              const tables=[...html.matchAll(/<table\\b[^>]*>[\\s\\S]*?<\\/table>/gi)];
+              console.log(JSON.stringify({date:row.date,venue:row.venue,race:row.race,status:row.status,
+                htmlBytes:Buffer.byteLength(html),tableCount:tables.length,
+                tables:tables.slice(0,12).map(m=>({hasFinishHeading:/着\\s*<\\/th>/i.test(m[0]),
+                  hasBoatHeading:/枠\\s*<\\/th>/i.test(m[0]),
+                  hasRacerLabel:m[0].includes('ボートレーサー'),
+                  rows:(m[0].match(/<tr\\b/gi)||[]).length,
+                  cells:(m[0].match(/<td\\b/gi)||[]).length})),
+                hasRaceResultLabel:html.includes('レース結果')}));
+            }
+          }
+          NODE
       - name: Upload research evidence
         if: always()
         uses: actions/upload-artifact@v4
