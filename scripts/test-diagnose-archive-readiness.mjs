@@ -63,6 +63,6 @@ assert.deepEqual(stoppedCapture.captureCoverageByDay['20261123'],{
 });
 assert.equal(stoppedCapture.totals.http_non_200,0);
 assert.equal(stoppedCapture.totals.http_200_not_ready,3);
-assert.equal(r.captureCoverageByDay['20261118'].coverageKnown,false);
+assert.equal(windows.captureCoverageByDay['20261118'].coverageKnown,false);
 
 console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
