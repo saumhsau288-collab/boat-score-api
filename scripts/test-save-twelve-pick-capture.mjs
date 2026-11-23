@@ -8,8 +8,10 @@ try {
  const main=['1-2-3','1-3-2','2-1-3','2-3-1','3-1-2','3-2-1'];
  const upset=['4-5-6','4-6-5','5-4-6','5-6-4','6-4-5','6-5-4'];
  const file=path.join(tmp,'api.json');
- const input={selection:{date:'20261123',venue:'01',race:'1'},
-  response:{ready:true,main,upset},cutoffAt:'2099-11-23T02:00:00Z'};
+ const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('-','');
+ const cutoff=new Date(Date.UTC(Number(today.slice(0,4)),Number(today.slice(4,6))-1,Number(today.slice(6,8)),14,59,59)).toISOString();
+ const input={selection:{date:today,venue:'01',race:'1'},
+  response:{ready:true,main,upset},cutoffAt:cutoff};
  fs.writeFileSync(file,JSON.stringify(input));
  const script=new URL('./save-twelve-pick-capture.mjs',import.meta.url).pathname;
  const run=()=>spawnSync(process.execPath,[script,file,tmp],{encoding:'utf8'});
