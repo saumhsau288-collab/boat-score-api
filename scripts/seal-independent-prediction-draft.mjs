@@ -6,7 +6,9 @@ import {bridgeRacerEvidenceToMethodGate} from './bridge-racer-evidence-to-method
 export function sealIndependentPredictionDraft(snapshot) {
  if(snapshot?.ready!==true || !Array.isArray(snapshot.racers) || snapshot.racers.length!==6)
    return {saved:false,reason:'incomplete_racer_snapshot'};
- if(snapshot.scoringReady!==true || snapshot.racers.some(r=>r?.missing?.length || !r?.values))
+ const required=['nationalWinRate','localWinRate','averageST','motorSecondPlaceRate','exhibitionTime','last50Score'];
+ if(snapshot.scoringReady!==true || snapshot.racers.some(r=>r?.missing?.length || !r?.values ||
+   required.some(k=>typeof r.values[k]!=='number'||!Number.isFinite(r.values[k]))))
    return {saved:false,reason:'incomplete_six_racer_features'};
  const courses=snapshot.racers.map(r=>r?.values?.expectedEntryCourse);
  if(courses.some(x=>!Number.isInteger(x)||x<1||x>6)||new Set(courses).size!==6)
