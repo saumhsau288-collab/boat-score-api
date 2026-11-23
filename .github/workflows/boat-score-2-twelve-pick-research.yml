@@ -14,6 +14,7 @@ on:
       - 'scripts/test-prestart-missing-data.mjs'
       - 'scripts/*score-overlap.mjs'
       - 'scripts/*explain-racer-score.mjs'
+      - 'scripts/*assess-course-start.mjs'
       - '.github/workflows/boat-score-2-twelve-pick-research.yml'
 jobs:
   verify:
@@ -40,3 +41,4 @@ jobs:
           node scripts/test-prestart-missing-data.mjs
           node scripts/test-diagnose-score-overlap.mjs
           node scripts/test-explain-racer-score.mjs
+          node scripts/test-assess-course-start.mjs
