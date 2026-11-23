@@ -29,6 +29,8 @@ on:
       - 'scripts/test-audit-paired-comparison-readiness.mjs'
       - 'scripts/run-saved-tickets-to-spatial.mjs'
       - 'scripts/test-run-saved-tickets-to-spatial.mjs'
+      - 'scripts/predict-twelve-independent-hypotheses.mjs'
+      - 'scripts/test-predict-twelve-independent-hypotheses.mjs'
       - 'scripts/diagnose-archive-readiness.mjs'
       - 'scripts/test-diagnose-archive-readiness.mjs'
       - 'scripts/research-capture-retry-policies.mjs'
@@ -53,6 +55,7 @@ jobs:
           node scripts/test-compare-saved-tickets-to-spatial.mjs
           node scripts/test-audit-paired-comparison-readiness.mjs
           node scripts/test-run-saved-tickets-to-spatial.mjs
+          node scripts/test-predict-twelve-independent-hypotheses.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
