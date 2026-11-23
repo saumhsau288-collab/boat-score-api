@@ -96,3 +96,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - Independently mirrored `scripts/unique-historical-races.mjs` and its test into local Node 22 runtime and executed `node test-unique-historical-races.mjs`: PASS (`Historical identity dedup synthetic assertions passed.`).
 - This verifies only the duplicate/invalid race-identity fixture, not the complete CI suite, real source provenance, or prediction hit rate.
 - Outstanding scope gap: outer challenge audit currently compares only **adjacent verified courses**, so a 4-vs-6 comparison is not directly represented. Do not claim full relative-outer coverage until implemented and tested.
+
+## All relatively outer course pairs implemented (research-only)
+- New `scripts/audit-all-outer-pairs.mjs` compares all 15 ordered pairs of verified actual entry courses, filtering to inner score >= outer score. Includes 4-vs-6 and other non-adjacent comparisons, distinct equal-score and inner-higher subgroups, ST/exhibition differences, and exact winner/second/third counts.
+- Each flagged outer boat is deduplicated within a race for race-level rates; pair-level counts remain correlated. Added synthetic test `scripts/test-audit-all-outer-pairs.mjs` with 4-vs-6, exact first/second/third scenarios, and added it to research GitHub Actions workflow.
+- Saved on research branch only; CI pass, authentic pre-cutoff data, and actual accuracy remain unverified. Input must be independently provenance-checked and race-deduplicated upstream.
