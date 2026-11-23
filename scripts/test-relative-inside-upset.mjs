@@ -14,7 +14,8 @@ for(const [scenario,scores,starts] of cases){
  const tied=scores.every(s=>s===scores[0]);
  for(const pick of result.upset){
   const winner=racers.find(r=>r.boat===pick.ticket[0]);
-  assert.ok(tied||racers.some(r=>r.boat<winner.boat&&r.score>winner.score),scenario+': '+pick.ticket);
+  assert.ok(pick.relativeInsideFallback||racers.some(r=>r.boat<winner.boat&&r.score>winner.score),scenario+': '+pick.ticket);
+  assert.equal(pick.relativeInsideFallback,tied||scenario==='strong_six_no_outer');
  }
  console.log('RELATIVE_INSIDE_UPSET '+JSON.stringify({scenario,upsetFirst:result.upset.map(x=>x.ticket[0])}));
 }
