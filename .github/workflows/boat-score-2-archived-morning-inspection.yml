@@ -44,6 +44,8 @@ on:
       - 'scripts/test-plan-verified-venue-capture.mjs'
       - 'scripts/plan-capture-from-reviewed-manifest.mjs'
       - 'scripts/test-plan-capture-from-reviewed-manifest.mjs'
+      - 'scripts/compare-saved-capture-results.mjs'
+      - 'scripts/test-compare-saved-capture-results.mjs'
 permissions:
   contents: read
   actions: read
@@ -72,6 +74,7 @@ jobs:
           node scripts/test-classify-capture-failures.mjs
           node scripts/test-plan-verified-venue-capture.mjs
           node scripts/test-plan-capture-from-reviewed-manifest.mjs
+          node scripts/test-compare-saved-capture-results.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
