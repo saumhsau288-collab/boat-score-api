@@ -15,8 +15,9 @@ export function morningRacerScore(racer){
 }
 export function morningRaceScore(racers){
   if(!Array.isArray(racers)||racers.length!==6||
-    new Set(racers.map(r=>r.boat)).size!==6||
-    racers.some(r=>!Number.isInteger(r.boat)||r.boat<1||r.boat>6))
+    racers.some(r=>!r||typeof r!=='object')||
+    new Set(racers.map(r=>r?.boat)).size!==6||
+    racers.some(r=>!Number.isInteger(r?.boat)||r.boat<1||r.boat>6))
     return {status:'invalid_race',racers:[]};
   const results=racers.map(r=>({boat:r.boat,...morningRacerScore(r)}));
   if(results.some(r=>r.status!=='evaluated'))
@@ -31,7 +32,7 @@ export function morningRaceScore(racers){
 export function morningShortlists(races,limit=20){
   if(!Array.isArray(races)||!Number.isInteger(limit)||limit<1||limit>100)
     return {status:'invalid_input'};
-  const evaluated=races.map(r=>({venue:r.venue,date:r.date,race:r.race,...morningRaceScore(r.racers)}));
+  const evaluated=races.map(r=>({venue:r?.venue,date:r?.date,race:r?.race,...morningRaceScore(r?.racers)}));
   const valid=evaluated.filter(r=>r.status==='evaluated');
   const order=(a,b)=>b.scoreGap-a.scoreGap||String(a.venue).localeCompare(String(b.venue))||Number(a.race)-Number(b.race);
   return {status:'evaluated',total:races.length,eligible:valid.length,excluded:races.length-valid.length,
