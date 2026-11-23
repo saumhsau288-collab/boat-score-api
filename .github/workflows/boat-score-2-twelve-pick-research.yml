@@ -22,6 +22,7 @@ on:
       - 'scripts/*compare-six-signals-to-finish.mjs'
       - 'scripts/*twelve-pick-readiness.mjs'
       - 'scripts/*six-racer-source-inputs.mjs'
+      - 'scripts/*six-racer-stage.mjs'
       - 'scripts/*capture-with-original-inputs.mjs'
       - 'scripts/*save-original-input-capture.mjs'
       - 'scripts/*inspect-saved-twelve-picks.mjs'
@@ -119,6 +120,9 @@ jobs:
           echo "::endgroup::"
           echo "::group::26 raw morning capture structure"
           if node scripts/test-inspect-raw-morning-capture.mjs; then echo "PASS: raw morning capture structure"; else echo "FAIL: raw morning capture structure"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::27 stage-aware six-racer inputs"
+          if node scripts/test-inspect-six-racer-stage.mjs; then echo "PASS: stage-aware input completeness"; else echo "FAIL: stage-aware input completeness"; failures=$((failures+1)); fi
           echo "::endgroup::"
           echo "Failed checks: $failures"
           test "$failures" -eq 0
