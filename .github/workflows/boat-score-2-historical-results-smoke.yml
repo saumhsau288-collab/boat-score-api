@@ -22,9 +22,11 @@ jobs:
         run: |
           mkdir -p research-historical
           node scripts/fetch-manual-official-historical-results.mjs 20261118 2 1,2,3 research-historical/official-raw.json
+          node scripts/fetch-manual-official-historical-results.mjs 20261120 2 1,2,3 research-historical/official-raw-20261120.json
       - name: Parse saved official result pages offline
         run: |
           node scripts/extract-official-result-racers.mjs research-historical/official-raw.json research-historical/parsed.json
+          node scripts/extract-official-result-racers.mjs research-historical/official-raw-20261120.json research-historical/parsed-20261120.json
       - name: Upload research evidence
         if: always()
         uses: actions/upload-artifact@v4
