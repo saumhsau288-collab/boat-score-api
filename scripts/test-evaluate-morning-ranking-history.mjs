@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {evaluateMorningRankingHistory,isValidMorningCaptureTimestamp,isCaptureOnMorningDate} from './evaluate-morning-ranking-history.mjs';
 const order=[1,2,3,4,5,6];
-const pick=(category,race)=>({date:'20261122',venue:1,race,category,status:'provisional_not_calibrated',predictedOrder:order,deadlineAt:'2026-11-22T03:05:00.000Z'});
+const pick=(category,race)=>({date:'20261122',venue:1,race,category,status:'provisional_not_calibrated',predictedOrder:order,capturedAt:'2026-11-22T03:00:00.000Z',deadlineAt:'2026-11-22T03:05:00.000Z'});
 const snapshot={date:'20261122',categories:{main:[pick('main',1)],upset:[pick('upset',2)],chaos:[]}};
 const result=(race,finish)=>({date:'20261122',venue:1,race,resultVerified:true,officialFinish:finish});
 const r=evaluateMorningRankingHistory(snapshot,[result(1,order)]);
