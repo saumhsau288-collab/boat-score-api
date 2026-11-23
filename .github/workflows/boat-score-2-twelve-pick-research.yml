@@ -18,6 +18,7 @@ on:
       - 'scripts/*classify-ability-course-start.mjs'
       - 'scripts/*rank-six-ability-course-start.mjs'
       - 'scripts/*analyze-six-signal-agreement.mjs'
+      - 'scripts/*group-six-candidates.mjs'
       - '.github/workflows/boat-score-2-twelve-pick-research.yml'
 jobs:
   verify:
@@ -48,3 +49,4 @@ jobs:
           node scripts/test-classify-ability-course-start.mjs
           node scripts/test-rank-six-ability-course-start.mjs
           node scripts/test-analyze-six-signal-agreement.mjs
+          node scripts/test-group-six-candidates.mjs
