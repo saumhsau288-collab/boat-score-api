@@ -23,4 +23,16 @@ const timing=diagnoseArchiveReadiness([{date:'20261120',records:[
 ]}]);
 assert.deepEqual(timing.timingByDayAndHalf['20261120:early'],{timestampsPresent:2,missingTimestamps:0,earliest:'2026-11-20T00:00:01.000Z',latest:'2026-11-20T00:00:05.000Z'});
 assert.deepEqual(timing.timingByDayAndHalf['20261120:late'],{timestampsPresent:1,missingTimestamps:1,earliest:'2026-11-20T00:00:30.000Z',latest:'2026-11-20T00:00:30.000Z'});
-console.log('PASS: archived readiness, retry classification and capture timing boundaries');
+const windows=diagnoseArchiveReadiness([
+ {date:'20261118',captureStart:'2026-11-18T08:42:55Z',records:[]},
+ {date:'20261120',captureStart:'2026-11-19T23:42:35Z',records:[]},
+ {date:'20261121',captureStart:'2026-11-20T23:59:00Z',records:[]},
+ {date:'20261122',captureStart:'2026-11-21T23:00:00Z',records:[]}
+]);
+assert.equal(windows.captureWindowByDay['20261118'].jstClock,'17:42');
+assert.equal(windows.captureWindowByDay['20261118'].scheduledMorningWindow,false);
+assert.equal(windows.captureWindowByDay['20261120'].jstClock,'08:42');
+assert.equal(windows.captureWindowByDay['20261120'].scheduledMorningWindow,false);
+assert.equal(windows.captureWindowByDay['20261121'].scheduledMorningWindow,true);
+assert.equal(windows.captureWindowByDay['20261122'].scheduledMorningWindow,true);
+console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
