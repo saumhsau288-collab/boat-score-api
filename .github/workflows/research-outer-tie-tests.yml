@@ -10,6 +10,8 @@ on:
       - 'scripts/test-compare-three-tie-policies.mjs'
       - 'scripts/relative-features.mjs'
       - 'scripts/test-relative-features.mjs'
+      - 'scripts/audit-twelve-strategy-diversity.mjs'
+      - 'scripts/test-audit-twelve-strategy-diversity.mjs'
       - 'scripts/twelve-independent-strategies.mjs'
       - 'scripts/test-twelve-independent-strategies.mjs'
       - 'scripts/evaluate-verified-outer-pairs.mjs'
@@ -44,6 +46,8 @@ jobs:
           node --check scripts/test-compare-outer-tie-historical.mjs
           node --check scripts/test-compare-three-tie-policies.mjs
           node --check scripts/test-relative-features.mjs
+          node --check scripts/audit-twelve-strategy-diversity.mjs
+          node --check scripts/test-audit-twelve-strategy-diversity.mjs
           node --check scripts/twelve-independent-strategies.mjs
           node --check scripts/test-twelve-independent-strategies.mjs
           node --check scripts/evaluate-verified-outer-pairs.mjs
@@ -68,6 +72,8 @@ jobs:
         run: node scripts/test-audit-outer-challenges.mjs
       - name: All relative outer-course pairs fixture
         run: node scripts/test-audit-all-outer-pairs.mjs
+      - name: Twelve strategy diversity fixture
+        run: node scripts/test-audit-twelve-strategy-diversity.mjs
       - name: Twelve independent hypothesis fixture
         run: node scripts/test-twelve-independent-strategies.mjs
       - name: Verified all-course evaluation fixture
