@@ -87,6 +87,13 @@ try{
  assert.equal(forward.heldOutRaces,2);
  assert.equal(forward.candidates.find(x=>x.target==='first'&&x.rank===1&&x.boat===5).heldOutHits,1);
  assert.equal(outHoldout.forwardDayValidation['20261119'].candidates.length,0);
+ const summary=outHoldout.forwardDaySummary['first:1:5'];
+ assert.equal(summary.validatedDays,1);
+ assert.equal(summary.heldOutRaces,2);
+ assert.equal(summary.heldOutHits,1);
+ assert.equal(summary.heldOutHitRate,0.5);
+ assert.ok(summary.heldOutUpper95>0.5);
+ assert.equal(outHoldout.forwardDaySummary['topTwo:1:5'].heldOutHits,1);
  const day=outHoldout.leaveOneDayOut['20261120'];
  assert.equal(day.trainingRaces,30);
  assert.equal(day.heldOutRaces,2);
