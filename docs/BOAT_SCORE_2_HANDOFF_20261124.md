@@ -47,3 +47,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - GitHub commits are verified. **No successful GitHub Actions run has been confirmed** and no authenticated historical comparison has been run. Earlier assistant statement of local test success should NOT be treated as proof unless logs are produced.
 - Production scoring, original Boat Score, and public Worker remain unchanged.
 - Next: verify CI run logs and correct failures; gather authenticated pre-cutoff six-racer scores and actual course data; evaluate additional features on held-out races without future information leakage.
+
+## Later update — test visibility
+- GitHub Actions workflow now runs `node --check` on all six comparison/feature scripts and writes a job summary clearly labeling the results as synthetic tests only. Commit `39cfc33ae461e4a27f42c23e9b78388d66ed4c65`.
+- Research feature test also includes a 4th-vs-5th-course ST/exhibition advantage fixture and missing-data rejection (commit `ef7e31f36c2172465d578def8087e70f3ae7a75f`).
+- CI result still not independently confirmed; commit workflow lookup returned no PR-triggered runs and cannot establish whether branch-push tests executed. Do not claim successful execution.
