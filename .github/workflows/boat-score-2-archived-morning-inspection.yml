@@ -62,6 +62,8 @@ on:
       - 'scripts/test-classify-prediction-readiness.mjs'
       - 'scripts/evaluate-race-start-course-research.mjs'
       - 'scripts/test-evaluate-race-start-course-research.mjs'
+      - 'scripts/compare-ability-start-course-research.mjs'
+      - 'scripts/test-compare-ability-start-course-research.mjs'
 permissions:
   contents: read
   actions: read
@@ -99,6 +101,7 @@ jobs:
           node scripts/test-audit-verification-diagnostic-gaps.mjs
           node scripts/test-classify-prediction-readiness.mjs
           node scripts/test-evaluate-race-start-course-research.mjs
+          node scripts/test-compare-ability-start-course-research.mjs
           node scripts/test-official-403-circuit-breaker.mjs
           node scripts/test-run-research-capture-pool.mjs
           node scripts/test-summarize-research-capture.mjs
