@@ -13,6 +13,10 @@ assert.equal(eligible.pairedOutcome.bothHit+eligible.pairedOutcome.baselineOnlyH
 assert.equal(eligible.pairedOutcome.averageTicketOverlap,eligible.rows[0].ticketOverlap);
 assert.equal(eligible.pairedOutcome.baselineOnlyHits+eligible.pairedOutcome.bothHit,eligible.baseline.anyHits);
 assert.equal(eligible.pairedOutcome.spatialOnlyHits+eligible.pairedOutcome.bothHit,eligible.spatial.anyHits);
+assert.equal(eligible.winnerCourseBreakdown.inner_1_to_3.races,1);
+assert.equal(eligible.winnerCourseBreakdown.outer_4_to_6.races,0);
+assert.equal(eligible.winnerCourseBreakdown.outer_4_to_6.spatialRatePercent,null);
+assert.equal(eligible.winnerCourseBreakdown.inner_1_to_3.baselineAnyHits,1);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,snapshotAt:'2026-11-18T00:01:00Z'}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,independentlyVerifiedPreRace:false}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[snapshot,snapshot]).compared,0);
