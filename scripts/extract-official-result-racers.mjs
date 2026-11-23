@@ -16,7 +16,7 @@ export function extractOfficialResultRacers(report){
    Number(u.searchParams.get('rno'))!==p.race)return {...base,status:'invalid_official_identity',racers:[]};
   const table=p.html.match(/<table\b[^>]*class=["'][^"']*\bis-w495\b[^"']*["'][^>]*>([\s\S]*?)<\/table>/i)?.[1];
   if(!table||!/<th[^>]*>\s*着\s*<\/th>/i.test(table)||!/<th[^>]*>\s*枠\s*<\/th>/i.test(table)||!table.includes('ボートレーサー'))
-   return {...base,status:'finish_table_not_found',racers:[]};
+   return {...base,status:'finish_table_not_found',racers:[],eligibleForScoreChange:false};
   const racers=[];
   for(const match of table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)){
    const cells=[...match[1].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(m=>m[1]);
