@@ -32,6 +32,11 @@ try{
  assert.equal(out.venueGroups['5'].races,1);
  assert.equal(out.all.winnerRanks['1'],2);
  assert.equal(out.outerLeaderBreakdown.cases.length,2);
+ assert.equal(out.exclusionResearch.first.find(x=>x.rank===1&&x.boat===5).screeningStatus,'insufficient_sample');
+ assert.equal(out.exclusionResearch.first.find(x=>x.rank===1&&x.boat===5).hits,0);
+ assert.ok(out.exclusionResearch.first.find(x=>x.rank===1&&x.boat===5).upper95>0);
+ assert.equal(out.exclusionResearch.topTwo.find(x=>x.rank===1&&x.boat===2).upper95,null);
+ assert.equal(out.exclusionResearch.first.length,36);
  assert.equal(out.rankLaneMatrix['1']['5'].races,1);
  assert.equal(out.rankLaneMatrix['1']['5'].first,0);
  assert.equal(out.rankLaneMatrix['1']['5'].topTwo,0);
