@@ -5,6 +5,10 @@ const capture={authenticatedBeforeRace:true,records:[{date:'20261118',venue:1,ra
 const results=[{date:'20261118',venue:1,race:1,verified:true,finishOrder:[1,2,3,4,5,6],sourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261118&jcd=01&rno=1',officialCutoffAt:'2026-11-18T00:30:00Z'}];
 const snapshot={date:'20261118',venue:1,race:1,snapshotAt:'2026-11-17T23:59:00Z',independentlyVerifiedPreRace:true,racers:Array.from({length:6},(_,i)=>({boat:i+1,score:8-i,avgStart:.12+i*.01}))};
 const eligible=compareSavedTicketsToSpatial(capture,results,[snapshot]);assert.equal(eligible.compared,1);assert.equal(eligible.baseline.mainHits,1);assert.equal(eligible.baseline.anyRatePercent,100);
+assert.deepEqual(eligible.rows[0].baseline.mainTickets,picks.map(p=>p.join('-')));
+assert.equal(eligible.rows[0].spatial.mainTickets.length,6);
+assert.equal(eligible.rows[0].spatial.upsetTickets.length,6);
+assert.ok(eligible.rows[0].ticketOverlap>=0&&eligible.rows[0].ticketOverlap<=12);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,snapshotAt:'2026-11-18T00:01:00Z'}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[{...snapshot,independentlyVerifiedPreRace:false}]).compared,0);
 assert.equal(compareSavedTicketsToSpatial(capture,results,[snapshot,snapshot]).compared,0);
