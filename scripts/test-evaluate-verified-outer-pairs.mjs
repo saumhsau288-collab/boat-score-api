@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {evaluateVerifiedOuterPairs} from './evaluate-verified-outer-pairs.mjs';
+const boats=[90,80,70,85,65,60].map((score,i)=>({boat:i+1,course:i+1,courseVerified:true,score,averageST:0.20,exhibitionTime:6.80}));
+boats[5].averageST=0.10;boats[5].exhibitionTime=6.70;
+const base={date:'20261124',venue:1,race:1,capturedBeforeCutoff:true,officialResultVerified:true,capturedAt:'2026-11-24T12:00:00+09:00',cutoffAt:'2026-11-24T12:05:00+09:00',scoreModelVersion:'synthetic-v1',preRaceSourceUrl:'https://example.org/pre',officialResultUrl:'https://example.org/result',boats,actual:[6,2,1]};
+const valid=evaluateVerifiedOuterPairs([base]);
+assert.equal(valid.eligibleForAudit,1);
+assert.equal(valid.audit.flaggedRacesWithWinner,1);
+assert.ok(valid.audit.examples.some(x=>x.innerCourse===4&&x.outerCourse===6));
+const duplicated=evaluateVerifiedOuterPairs([base,{...base,actual:[2,6,1]}]);
+assert.equal(duplicated.eligibleForAudit,0);
+assert.equal(duplicated.identityRejected.duplicateRace,2);
+const late=evaluateVerifiedOuterPairs([{...base,capturedAt:'2026-11-24T12:06:00+09:00'}]);
+assert.equal(late.provenanceRejectedRows,1);
+assert.equal(late.audit.eligible,0);
+const invalid=evaluateVerifiedOuterPairs([{...base,date:'20260230'}]);
+assert.equal(invalid.identityRejected.invalidIdentity,1);
+console.log('Verified all-pair entrypoint synthetic assertions passed (not historical evidence).');
