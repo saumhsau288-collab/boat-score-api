@@ -24,6 +24,10 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
   captureCoverageByDay[day]={
    observed,attempted,planned,unattempted:planned===null?null:planned-observed,
    stoppedForOfficial403:a?.stoppedForOfficial403===true,
+   stopReason:a?.stopReason??null,
+   stopReasonConsistent:a?.stopReason==='consecutive_official_http_403'?a?.stoppedForOfficial403===true:a?.stopReason==null,
+   reportedUnattempted:Number.isInteger(a?.unattempted)?a.unattempted:null,
+   unattemptedConsistent:!Number.isInteger(a?.unattempted)||planned===null?null:a.unattempted===planned-observed,
    coverageKnown:planned!==null,
    warning:planned===null?'Archive lacks planned count; unattempted races cannot be inferred':null
   };
