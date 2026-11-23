@@ -1,0 +1,26 @@
+name: Research pre-race evidence gate tests
+
+on:
+  push:
+    branches:
+      - research/verified-prerace-evidence-gate-20261123
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check evidence gate syntax
+        run: |
+          node --check scripts/validate-independent-prerace-evidence.mjs
+          node --check scripts/validate-independent-prerace-evidence.test.mjs
+      - name: Test evidence gate offline
+        run: node scripts/validate-independent-prerace-evidence.test.mjs
