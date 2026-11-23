@@ -23,6 +23,7 @@ on:
       - 'scripts/*twelve-pick-readiness.mjs'
       - 'scripts/*six-racer-source-inputs.mjs'
       - 'scripts/*capture-with-original-inputs.mjs'
+      - 'scripts/*save-original-input-capture.mjs'
       - '.github/workflows/boat-score-2-twelve-pick-research.yml'
 jobs:
   verify:
@@ -103,6 +104,9 @@ jobs:
           echo "::endgroup::"
           echo "::group::22 archival capture with original inputs"
           if node scripts/test-prepare-capture-with-original-inputs.mjs; then echo "PASS: original input capture bridge"; else echo "FAIL: original input capture bridge"; failures=$((failures+1)); fi
+          echo "::endgroup::"
+          echo "::group::23 strict original-input archival"
+          if node scripts/test-save-original-input-capture.mjs; then echo "PASS: strict original input archival"; else echo "FAIL: strict original input archival"; failures=$((failures+1)); fi
           echo "::endgroup::"
           echo "Failed checks: $failures"
           test "$failures" -eq 0
