@@ -1,7 +1,7 @@
 // Research-only per-slot comparison. Requires already authenticated pre-race captures and independently verified official results.
 import {validTrifectaPicks,verifiedPodium} from './backtest-comparison-eligibility.mjs';
 const raceKey=r=>/^20\d{6}$/.test(String(r?.date??''))&&Number.isInteger(Number(r?.venue))&&Number(r.venue)>=1&&Number(r.venue)<=24&&Number.isInteger(Number(r?.race))&&Number(r.race)>=1&&Number(r.race)<=12?[String(r.date),Number(r.venue),Number(r.race)].join(':'):null;
-const timezoneStamp=s=>typeof s==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
+const timezoneStamp=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(s)&&Number.isFinite(Date.parse(s));
 const validOfficialUrl=(url,record)=>{try{const u=new URL(url);return u.protocol==='https:'&&u.hostname==='www.boatrace.jp'&&u.pathname==='/owpc/pc/race/raceresult'&&u.searchParams.get('hd')===String(record.date)&&Number(u.searchParams.get('jcd'))===Number(record.venue)&&Number(u.searchParams.get('rno'))===Number(record.race);}catch{return false;}};
 export function compareTwelveMethods(capture,results){
  const methods=Array.from({length:12},(_,i)=>({method:i<6?'main':'upset',slot:i%6+1,compared:0,hits:0,hitRate:null}));
