@@ -57,3 +57,9 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - `scripts/audit-outer-challenges.mjs` now separates exact-score ties vs higher-scored inner boats (`byScoreRelation`). Synthetic test added. No empirical validation yet.
 - `scripts/sweep-outer-thresholds.mjs` and `scripts/test-sweep-outer-thresholds.mjs` added. Predeclared grid ST [0, .02, .03, .04, .06] x exhibition [0, .03, .05, .07, .10] seconds. Report raw denominators and missingness; do not claim a winning threshold or select based on held-out test races.
 - CI workflow includes syntax checks and synthetic fixtures for threshold grid (commit `9ae8721ea5e5d9601ef411f30198c17d5ec5a876`). No independently confirmed CI pass; original and production apps untouched.
+
+## Independently executed synthetic checks (2026-11-24)
+- Node.js v22.16.0 in local execution environment: manually reproduced the exact research-branch contents of `scripts/relative-features.mjs` and `scripts/test-relative-features.mjs`; test exited successfully.
+- Also manually reproduced `scripts/audit-outer-challenges.mjs` and `scripts/test-audit-outer-challenges.mjs`; test exited successfully.
+- These two checks validate code behavior on synthetic fixtures only, not live GitHub Actions and not historical prediction accuracy. Other CI tests are still unverified.
+- Caveat: provenance validator only checks timestamp ordering, string model version, URL shape and flags. It does not authenticate source URLs or prove that inputs were truly collected pre-cutoff. Repeated synthetic rows sharing the same race identity are not independent historical observations.
