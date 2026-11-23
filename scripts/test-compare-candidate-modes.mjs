@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {compareCandidateModes} from './compare-candidate-modes.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,score:8-i,avgStart:.12+i*.01}));
+const r=compareCandidateModes(racers);
+assert.equal(r.comparisons.length,12);
+assert.equal(r.summary.main.strategies,6);
+assert.equal(r.summary.upset.strategies,6);
+assert.equal(r.summary.main.changedTickets+r.summary.main.strategies-r.summary.main.changedTickets,6);
+assert.ok(r.legacy.main.every(t=>t[0]<=3));
+assert.ok(r.legacy.upset.every(t=>t[0]>=4));
+assert.deepEqual(compareCandidateModes([...racers].reverse()),r);
+assert.equal(new Set([...r.unrestricted.main,...r.unrestricted.upset].map(t=>t.join('-'))).size,12);
+assert.equal(r.summary.main.changedTickets+r.summary.upset.changedTickets,r.comparisons.filter(x=>!x.sameTicket).length);
+assert.equal(r.summary.main.changedFirst+r.summary.upset.changedFirst,r.comparisons.filter(x=>!x.sameFirst).length);
+console.log('CANDIDATE_MODE_COMPARISON '+JSON.stringify(r.summary));
+console.log('PASS: same-input legacy versus unrestricted twelve-strategy comparison');
