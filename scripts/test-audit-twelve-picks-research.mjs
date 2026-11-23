@@ -5,7 +5,7 @@ const upset=[[4,5,6],[4,6,5],[5,4,6],[5,6,4],[6,4,5],[6,5,4]];
 const row={date:'20261120',venue:1,race:1,actual:[1,2,3],main,upset,
  preRacePredictionsSaved:true,officialResultVerified:true,independentlyAuthenticatedCapture:true,
  predictionSourceUrl:'https://example.org/immutable-capture.json',
- officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult',officialCutoffVerified:true,
+ officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=01&rno=1',officialCutoffVerified:true,
  predictionCapturedAt:'2026-11-20T01:00:00Z',cutoffAt:'2026-11-20T02:00:00Z'};
 const got=auditTwelvePicks([row]);
 assert.equal(got.status,'evaluated');
@@ -24,4 +24,6 @@ assert.equal(auditTwelvePicks([{...row,main:[main[0],main[0],...main.slice(2)]}]
 assert.equal(auditTwelvePicks([{...row,date:'20261121'}]).eligible,0);
 assert.equal(auditTwelvePicks([{...row,cutoffAt:'2026-11-21T02:00:00Z'}]).eligible,0);
 assert.equal(auditTwelvePicks([{...row,date:'20260230'}]).eligible,0);
+assert.equal(auditTwelvePicks([{...row,officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=02&rno=1'}]).eligible,0);
+assert.equal(auditTwelvePicks([{...row,officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult?hd=20261120&jcd=01&rno=2'}]).eligible,0);
 console.log('12-pick audit fixture tests passed (not historical accuracy evidence)');
