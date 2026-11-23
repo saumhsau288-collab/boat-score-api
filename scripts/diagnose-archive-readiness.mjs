@@ -42,7 +42,7 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
   if(coverage.unattemptedConsistent===false)captureIntegrityWarnings.push({day,code:'unattempted_count_mismatch'});
   if(attempted!==observed)captureIntegrityWarnings.push({day,code:'attempted_count_mismatch'});
   for(const r of records.filter(Boolean)){
-  const raceKey=key({...r,date:day});
+  const raceKey=key({...r,date:String(a?.date??r?.date??'unknown')});
   if(Number.isInteger(Number(r?.venue))&&Number.isInteger(Number(r?.race))&&Number(r?.venue)>=1&&Number(r?.race)>=1){raceOccurrenceCounts[raceKey]=(raceOccurrenceCounts[raceKey]||0)+1;}
   const reason=category(r);totals[reason]++;
   const duration=Date.parse(r?.receivedAt)-Date.parse(r?.requestedAt);
