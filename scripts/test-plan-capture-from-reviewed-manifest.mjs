@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {planCaptureFromReviewedManifest} from './plan-capture-from-reviewed-manifest.mjs';
+const manifest={date:'20261123',activeVenues:[2,7],reviewed:true,reviewedAt:'2026-11-22T23:00:00Z',sourceUrl:'https://www.boatrace.jp/'};
+const plan=planCaptureFromReviewedManifest(manifest,{requestedDate:'20261123',maxRaces:2});
+assert.equal(plan.planned,4);
+assert.equal(plan.reviewed,true);
+assert.equal(plan.sourceUrl,manifest.sourceUrl);
+assert.throws(()=>planCaptureFromReviewedManifest({...manifest,reviewed:false},{requestedDate:'20261123'}),/independent_review_required/);
+assert.throws(()=>planCaptureFromReviewedManifest({...manifest,reviewedAt:'invalid'},{requestedDate:'20261123'}),/independent_review_required/);
+assert.throws(()=>planCaptureFromReviewedManifest({...manifest,sourceUrl:'http://example.com'},{requestedDate:'20261123'}),/schedule_source_url_required/);
+assert.throws(()=>planCaptureFromReviewedManifest(manifest,{requestedDate:'20261124'}),/matching_verified_date_required/);
+assert.throws(()=>planCaptureFromReviewedManifest({...manifest,activeVenues:[2,2]},{requestedDate:'20261123'}),/Invalid venues/);
+console.log('PASS: reviewed schedule manifest requires matching date, review timestamp, HTTPS source and valid venues');
