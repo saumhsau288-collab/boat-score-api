@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';
+import {runCapturePool} from './run-research-capture-pool.mjs';
+import {createOfficial403CircuitBreaker} from './official-403-circuit-breaker.mjs';
+const tasks=Array.from({length:12},(_,i)=>i);
+const forbidden={response:{officialStatsRetry:'official_http_403'}};
+let started=0;
+const result=await runCapturePool(tasks,async(_,index)=>{
+ started++;
+ await Promise.resolve();
+ return {...forbidden,index};
+},{concurrency:3,breaker:createOfficial403CircuitBreaker(3)});
+assert.equal(result.stoppedForOfficial403,true);
+assert.equal(result.attempted,3);
+assert.equal(started,3);
+assert.equal(result.planned,12);
+assert.deepEqual(result.records.slice(0,3).map(r=>r.index),[0,1,2]);
+assert.equal(result.records[3],null);
+const breaker=createOfficial403CircuitBreaker(2);
+const mixed=await runCapturePool([1,2,3,4,5],async(_,i)=>i===0||i===1?forbidden:{response:{ready:true}},{concurrency:1,breaker});
+assert.equal(mixed.attempted,2);
+assert.equal(mixed.stoppedForOfficial403,true);
+await assert.rejects(()=>runCapturePool([],async()=>null,{concurrency:0,breaker}),/Invalid concurrency/);
+console.log('PASS: concurrent capture pool halts dispatch after upstream 403');
