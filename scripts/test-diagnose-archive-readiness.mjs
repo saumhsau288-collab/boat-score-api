@@ -65,4 +65,15 @@ assert.equal(stoppedCapture.totals.http_non_200,0);
 assert.equal(stoppedCapture.totals.http_200_not_ready,3);
 assert.equal(windows.captureCoverageByDay['20261118'].coverageKnown,false);
 
+
+assert.deepEqual(stoppedCapture.captureIntegrityWarnings,[]);
+const corruptCapture=diagnoseArchiveReadiness([{date:'20261123',planned:12,attempted:4,unattempted:8,stoppedForOfficial403:false,stopReason:'consecutive_official_http_403',records:[
+ {date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:false}}
+]}]);
+assert.deepEqual(corruptCapture.captureIntegrityWarnings,[
+ {day:'20261123',code:'stop_reason_mismatch'},
+ {day:'20261123',code:'unattempted_count_mismatch'},
+ {day:'20261123',code:'attempted_count_mismatch'}
+]);
+
 console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
