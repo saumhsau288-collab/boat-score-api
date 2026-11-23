@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 export function compareThreeTiePolicies(rows){
  if(!Array.isArray(rows))throw Error('Expected array');
- const report={total:rows.length,eligible:0,changedFromBaseline:{winnerOnly:0,fullExclusion:0},excluded:{},arms:{baseline:{winner:0,topTwoSet:0,trifecta:0},winnerOnly:{winner:0,topTwoSet:0,trifecta:0},fullExclusion:{winner:0,topTwoSet:0,trifecta:0}},examples:[]};
+ const report={total:rows.length,eligible:0,changedFromBaseline:{winnerOnly:0,fullExclusion:0},excluded:{},arms:{baseline:{winner:0,topTwoSet:0,trifecta:0},winnerOnly:{winner:0,topTwoSet:0,trifecta:0},fullExclusion:{winner:0,topTwoSet:0,trifecta:0,insufficientTickets:0}},examples:[]};
  const reject=k=>report.excluded[k]=(report.excluded[k]||0)+1;
  for(const row of rows){
   if(row?.capturedBeforeCutoff!==true||row?.officialResultVerified!==true){reject('unverified_capture_or_result');continue;}
@@ -31,6 +31,7 @@ export function compareThreeTiePolicies(rows){
   };
   const all=bs.map(b=>b.boat);
   const picks={baseline:make(inner,all),winnerOnly:make(outer,all),fullExclusion:make([...survivors].sort((a,b)=>b.score-a.score||b.course-a.course),survivors.map(b=>b.boat))};
+  if(picks.fullExclusion.length<6)report.arms.fullExclusion.insufficientTickets++;
   report.eligible++;
   for(const [name,rank] of [['baseline',inner],['winnerOnly',outer],['fullExclusion',[...survivors].sort((a,b)=>b.score-a.score||b.course-a.course)]]){
    const r=report.arms[name];
@@ -39,7 +40,7 @@ export function compareThreeTiePolicies(rows){
    if(picks[name].some(x=>x.join('-')===actual.join('-')))r.trifecta++;
   }
   for(const name of ['winnerOnly','fullExclusion'])if(JSON.stringify(picks[name])!==JSON.stringify(picks.baseline))report.changedFromBaseline[name]++;
-  if(report.examples.length<20&&JSON.stringify(picks.winnerOnly)!==JSON.stringify(picks.baseline))report.examples.push({date:row.date,venue:row.venue,race:row.race,actual,leaders:{baseline:inner[0].boat,winnerOnly:outer[0].boat,fullExclusion:survivors.sort((a,b)=>b.score-a.score||b.course-a.course)[0]?.boat},tickets:picks});
+  if(report.examples.length<20&&(JSON.stringify(picks.winnerOnly)!==JSON.stringify(picks.baseline)||JSON.stringify(picks.fullExclusion)!==JSON.stringify(picks.baseline)))report.examples.push({date:row.date,venue:row.venue,race:row.race,actual,leaders:{baseline:inner[0].boat,winnerOnly:outer[0].boat,fullExclusion:survivors.sort((a,b)=>b.score-a.score||b.course-a.course)[0]?.boat},tickets:picks});
  }
  return {...report,note:'Research only. No authenticated historical sample implied; six tickets are not six independent strategies. Full exclusion may produce fewer than six tickets.'};
 }
