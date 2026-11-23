@@ -52,4 +52,17 @@ assert.equal(failureDiagnostics.officialFailureTransitionByDay['20261120'].offic
 assert.equal(failureDiagnostics.unverifiedVerificationFlagsByLatency['under_1s|officialVerified=false|statsVerified=false|officialStatsRetry=official_http_403|missingInputs=array:0'],1);
 assert.equal(failureDiagnostics.unverifiedVerificationFlagsByLatency['from_15_to_30s|officialVerified=false|statsVerified=false|officialStatsRetry=official_timeout|missingInputs=array:0'],1);
 
+
+const stoppedCapture=diagnoseArchiveReadiness([{date:'20261123',planned:12,attempted:3,stoppedForOfficial403:true,records:[
+ {date:'20261123',venue:1,race:1,httpStatus:200,response:{ready:false,officialStatsRetry:'official_http_403'}},
+ {date:'20261123',venue:2,race:1,httpStatus:200,response:{ready:false,officialStatsRetry:'official_http_403'}},
+ {date:'20261123',venue:3,race:1,httpStatus:200,response:{ready:false,officialStatsRetry:'official_http_403'}}
+]}]);
+assert.deepEqual(stoppedCapture.captureCoverageByDay['20261123'],{
+ observed:3,attempted:3,planned:12,unattempted:9,stoppedForOfficial403:true,coverageKnown:true,warning:null
+});
+assert.equal(stoppedCapture.totals.http_non_200,0);
+assert.equal(stoppedCapture.totals.http_200_not_ready,3);
+assert.equal(r.captureCoverageByDay['20261118'].coverageKnown,false);
+
 console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
