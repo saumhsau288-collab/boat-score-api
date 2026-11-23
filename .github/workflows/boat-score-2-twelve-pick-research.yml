@@ -51,4 +51,5 @@ jobs:
           node scripts/test-rank-six-ability-course-start.mjs
           node scripts/test-analyze-six-signal-agreement.mjs
           node scripts/test-group-six-candidates.mjs
-          node scripts/test-compare-six-signals-to-finish.mjs
+      - name: Verify six-signal finish comparison separately
+        run: node scripts/test-compare-six-signals-to-finish.mjs
