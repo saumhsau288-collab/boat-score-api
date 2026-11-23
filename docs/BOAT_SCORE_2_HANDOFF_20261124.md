@@ -118,3 +118,9 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - **0 of 14** have `startCoursesVerified:true`; none applied start or exhibition adjustment. No independent pre-race authentication and no independently verified race outcomes in these responses.
 - Therefore **0 eligible rows** for the all-outer-pairs historical evaluation. Do not confuse final rankedScores with original feature inputs; do not claim verified historical hit rate.
 - Created a local JSON inventory of the 14 ready records with capture timestamps and response hashes for further evidence matching; no production modifications.
+
+## Direct ticket structure audit of saved 2026-11-20 ready records
+- Directly parsed artifact `14586303082` ZIP JSON; 14 unique ready races, each exactly six `main` tickets and six `upset` tickets.
+- In all 14, the top `rankedScores` boat equals first `main` ticket's first-place boat. All 14 report `predictionMode:base_stats_only`, missing `last50`, `course`, `exhibition`, `start`, `weather`; `startCoursesVerified:false`.
+- In 2/14 races, main and upset have exactly the same set of first-place boat candidates. Ticket count alone cannot establish 12 independent prediction methods.
+- Local per-race descriptive JSON generated: `/mnt/data/boat_score_20261120_ticket_structure_audit.json` (session artifact only). No accuracy or official-result claim, no production changes.
