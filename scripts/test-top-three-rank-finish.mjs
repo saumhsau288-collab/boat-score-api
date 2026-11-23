@@ -24,6 +24,9 @@ try{
  assert.equal(run.status,0,run.stderr);
  const out=JSON.parse(fs.readFileSync(path.join(dir,'historical-top-three-rank-finish-report.json'),'utf8'));
  assert.equal(out.eligible,3);
+ assert.equal(out.dateGroups['20261120'].races,3);
+ assert.equal(out.dateGroups['20261120'].rankLaneCounts.first.find(x=>x.rank===1&&x.boat===5).hits,0);
+ assert.equal(out.dateGroups['20261120'].rankLaneCounts.topTwo.find(x=>x.rank===1&&x.boat===6).hits,1);
  assert.equal(out.held,1);
  assert.equal(out.outerLeaderBreakdown.all.races,2);
  assert.equal(out.outerLeaderBreakdown.all.leaderFinishes['1'],1);
@@ -56,6 +59,7 @@ try{
  const outThirty=JSON.parse(fs.readFileSync(path.join(dir,'historical-top-three-rank-finish-report.json'),'utf8'));
  const zeroWins=outThirty.exclusionResearch.first.find(x=>x.rank===1&&x.boat===5);
  assert.equal(zeroWins.races,30);
+ assert.equal(outThirty.dateGroups['20261119'].races,30);
  assert.equal(zeroWins.hits,0);
  assert.ok(zeroWins.upper95>0.11&&zeroWins.upper95<0.12);
  assert.equal(zeroWins.screeningStatus,'research_candidate');
