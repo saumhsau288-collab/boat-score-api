@@ -11,7 +11,10 @@ export function summarizeMorningRankingSnapshot(snapshot,date){
  for(const name of ['main','upset','chaos']){
   const rows=snapshot?.categories?.[name];
   if(!Array.isArray(rows)){reasons.push('missing_'+name+'_category');categories[name]=null;continue;}
-  categories[name]={count:rows.length,withPredictedOrder:rows.filter(x=>Array.isArray(x?.predictedOrder)).length,
+  categories[name]={count:rows.length,provisionalCount:rows.filter(x=>x?.status==='provisional_not_calibrated').length,
+   withSixRacerEvidence:rows.filter(x=>Array.isArray(x?.racers)&&x.racers.length===6).length,
+   withTwelveMethodPredictions:rows.filter(x=>x?.prediction?.methods&&Object.keys(x.prediction.methods).length===12).length,
+   withPredictedOrder:rows.filter(x=>Array.isArray(x?.predictedOrder)).length,
    withCaptureTime:rows.filter(x=>typeof x?.capturedAt==='string').length,
    withDeadline:rows.filter(x=>typeof x?.deadlineAt==='string').length};
  }
