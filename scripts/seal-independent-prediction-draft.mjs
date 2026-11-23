@@ -6,6 +6,11 @@ import {bridgeRacerEvidenceToMethodGate} from './bridge-racer-evidence-to-method
 export function sealIndependentPredictionDraft(snapshot) {
  if(snapshot?.ready!==true || !Array.isArray(snapshot.racers) || snapshot.racers.length!==6)
    return {saved:false,reason:'incomplete_racer_snapshot'};
+ if(snapshot.scoringReady!==true || snapshot.racers.some(r=>r?.missing?.length || !r?.values))
+   return {saved:false,reason:'incomplete_six_racer_features'};
+ const courses=snapshot.racers.map(r=>r?.values?.expectedEntryCourse);
+ if(courses.some(x=>!Number.isInteger(x)||x<1||x>6)||new Set(courses).size!==6)
+   return {saved:false,reason:'unverified_entry_courses'};
  const racers=snapshot.racers.map(r=>({
   boat:r.boat,course:r.values?.expectedEntryCourse,
   nationalRate:r.values?.nationalWinRate,localRate:r.values?.localWinRate,
