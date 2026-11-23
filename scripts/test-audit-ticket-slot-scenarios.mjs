@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {auditTicketSlotScenarios as audit} from './audit-ticket-slot-scenarios.mjs';
+const s=Array.from({length:6},(_,i)=>({boat:i+1,score:6-i}));
+const main=[[1,2,3],[2,1,3],[4,1,2],[1,4,5],[3,1,2],[5,2,1]];
+const upset=[[6,1,2],[1,5,2],[1,2,3],[2,3,4],[3,4,5],[1,3,4]];
+const x=audit([{records:[{response:{ready:true,rankedScores:s,main,upset}}]}]);
+assert.equal(x.eligible,1);
+assert.equal(x.groups.main[0].topFirst,1);
+assert.equal(x.groups.main[2].lowerFirst,1);
+assert.equal(x.groups.main[3].topFirstLowerPartner,1);
+assert.equal(x.groups.upset[0].lowerFirst,1);
+for(const g of ['main','upset'])for(const row of x.groups[g])assert.equal(row.total,row.topFirst+row.secondThirdFirst+row.lowerFirst);
+console.log('PASS: six ticket slot scenario coverage is exhaustive');
