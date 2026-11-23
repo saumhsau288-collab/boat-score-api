@@ -8,15 +8,15 @@ const scenarios=[
 ];
 const rows=scenarios.map(({id,scores,starts})=>{
  const racers=scores.map((score,i)=>({boat:i+1,score,avgStart:starts[i]}));
- const topScore=Math.max(...racers.map(r=>r.score));
- const topBoats=racers.filter(r=>Math.abs(r.score-topScore)<=1e-9).map(r=>r.boat);
+ const topScore=Math.max(...racers.filter(r=>r.boat<=3).map(r=>r.score));
+ const topBoats=racers.filter(r=>r.boat<=3&&Math.abs(r.score-topScore)<=1e-9).map(r=>r.boat);
  const top=topBoats.length===1?topBoats[0]:null;
  const p=predictTwelveIndependentHypotheses(racers,{candidateMode:'rank_relative'});
  const unrestricted=predictTwelveIndependentHypotheses(racers,{candidateMode:'unrestricted'});
  assert.equal(p.distinctTickets,12);
  assert.equal(p.main.length,6);
  assert.equal(p.upset.length,6);
- if(topBoats.length<6)assert.ok(p.upset.every(x=>!topBoats.includes(x.ticket[0])));
+ assert.ok(p.upset.every(x=>!topBoats.includes(x.ticket[0])));
  assert.deepEqual(predictTwelveIndependentHypotheses([...racers].reverse(),{candidateMode:'rank_relative'}),p);
  return {scenario:id,topAbilityBoat:top,tiedTopBoats:topBoats,mainFirst:p.main.map(x=>x.ticket[0]),upsetFirst:p.upset.map(x=>x.ticket[0]),changedFromUnrestricted:[...p.main,...p.upset].filter((x,i)=>x.ticket.join('-')!==[...unrestricted.main,...unrestricted.upset][i].ticket.join('-')).length};
 });
