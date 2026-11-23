@@ -106,6 +106,8 @@ assert.equal(repeatedRace.duplicateRaceKeys[0].raceKey,'20261123:1:1');
 assert.equal(repeatedRace.duplicateRaceKeys[0].occurrences,2);
 assert.equal(repeatedRace.duplicateRaceKeys[0].snapshots.length,2);
 assert.equal(repeatedRace.duplicateRaceKeys[0].distinctRequestTimes,0);
+assert.equal(repeatedRace.duplicateRaceKeys[0].missingRequestTimes,2);
+assert.equal(repeatedRace.duplicateRaceKeys[0].invalidRequestTimes,0);
 
 
 const timestampedDuplicates=diagnoseArchiveReadiness([
@@ -113,5 +115,13 @@ const timestampedDuplicates=diagnoseArchiveReadiness([
  {date:'20261123',records:[{venue:1,race:1,requestedAt:'2026-11-23T00:02:00Z',httpStatus:200,response:{ready:true}}]}
 ]);
 assert.equal(timestampedDuplicates.duplicateRaceKeys[0].distinctRequestTimes,2);
+
+
+const malformedTimestampDuplicates=diagnoseArchiveReadiness([
+ {date:'20261123',records:[{venue:1,race:1,requestedAt:'not-a-time',httpStatus:200,response:{ready:true}}]},
+ {date:'20261123',records:[{venue:1,race:1,requestedAt:'2026-11-23T00:00:00Z',httpStatus:200,response:{ready:true}}]}
+]);
+assert.equal(malformedTimestampDuplicates.duplicateRaceKeys[0].distinctRequestTimes,1);
+assert.equal(malformedTimestampDuplicates.duplicateRaceKeys[0].invalidRequestTimes,1);
 
 console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
