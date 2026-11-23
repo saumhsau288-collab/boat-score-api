@@ -75,4 +75,20 @@ assert.equal(bothEval.byCategory.main.missingPredictionOrder,1);
 assert.equal(bothEval.byCategory.main.notEvaluable,1); // do not double-count missing evidence
 assert.equal(bothEval.byCategory.main.unmatched,0);
 assert.deepEqual(bothEval.exclusionObservations,{});
+const deadlineOk=evaluateMorningRankingHistory({...nextSnapshot,categories:{
+ main:[tomorrowPick('main',1,{deadlineAt:'2026-11-22T23:05:00.000Z'})],upset:[],chaos:[]
+}},[nextResult(1)]);
+assert.equal(deadlineOk.byCategory.main.matched,1);
+const deadlineLate=evaluateMorningRankingHistory({...nextSnapshot,categories:{
+ main:[tomorrowPick('main',1,{deadlineAt:capture})],upset:[],chaos:[]
+}},[nextResult(1)]);
+assert.equal(deadlineLate.byCategory.main.matched,0);
+assert.equal(deadlineLate.byCategory.main.afterDeadline,1);
+assert.equal(deadlineLate.byCategory.main.notEvaluable,1);
+assert.deepEqual(deadlineLate.exclusionObservations,{});
+const deadlineInvalid=evaluateMorningRankingHistory({...nextSnapshot,categories:{
+ main:[tomorrowPick('main',1,{deadlineAt:'invalid'})],upset:[],chaos:[]
+}},[nextResult(1)]);
+assert.equal(deadlineInvalid.byCategory.main.afterDeadline,1);
+assert.equal(deadlineInvalid.byCategory.main.matched,0);
 console.log('Morning saved-ranking evaluator: verified match, unmatched abstain, five invalid-input guards, legacy exclusion and capture-time denominators passed. No real-race accuracy claimed.');
