@@ -27,7 +27,7 @@ export function evaluateMorningRankingHistory(snapshot,results){
   if(byRace.has(key))throw Error('Duplicate official result');
   byRace.set(key,r);
  }
- const seen=new Set(),summary={date:snapshot.date,method:'saved_morning_ranked_order_vs_official_result',notTwelveMethods:true,byCategory:{}};
+ const seen=new Set(),summary={date:snapshot.date,method:'saved_morning_ranked_order_vs_official_result',notTwelveMethods:true,byCategory:{},exclusionObservations:{}};
  for(const category of categories){
   const picks=snapshot.categories[category];
   if(!Array.isArray(picks)||picks.length>20)throw Error('Invalid ranking category');
@@ -58,6 +58,15 @@ export function evaluateMorningRankingHistory(snapshot,results){
    const result=byRace.get(key);
    if(!result)continue;
    matched++;
+   // Observations from genuinely saved, dated rankings only. No rule selection or auto-exclusion.
+   for(let rank=1;rank<=6;rank++){
+    const boat=p.predictedOrder[rank-1],key=rank+':'+boat;
+    const cell=summary.exclusionObservations[key]??={rank,boat,races:0,firstHits:0,topTwoHits:0};
+    cell.races++;
+    if(result.officialFinish[0]===boat)cell.firstHits++;
+    if(result.officialFinish.slice(0,2).includes(boat))cell.topTwoHits++;
+    summary.exclusionObservations[key]=cell;
+   }
    if(p.predictedOrder[0]===result.officialFinish[0])firstHits++;
    if(p.predictedOrder.slice(0,2).every((x,i)=>x===result.officialFinish[i]))topTwoExactHits++;
    if(p.predictedOrder.slice(0,3).every((x,i)=>x===result.officialFinish[i]))topThreeExactHits++;
@@ -70,6 +79,7 @@ export function evaluateMorningRankingHistory(snapshot,results){
    topTwoExactRate:matched?topTwoExactHits/matched:null,
    topThreeExactRate:matched?topThreeExactHits/matched:null};
  }
+ summary.exclusionNote='Research observations only; candidate rules must be selected using earlier dates, and snapshots must be verified as captured before the race deadline.';
  return summary;
 }
 if(process.argv[1]&&import.meta.url===new URL('file://'+process.argv[1]).href){
