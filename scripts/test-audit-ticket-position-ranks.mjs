@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {auditTicketPositionRanks as audit} from './audit-ticket-position-ranks.mjs';
+const s=Array.from({length:6},(_,i)=>({boat:i+1,score:6-i}));
+const result=audit([{records:[{response:{ready:true,rankedScores:s,main:Array(6).fill([1,4,5]),upset:Array(6).fill([4,1,2])}},{response:{ready:true,rankedScores:s,main:[],upset:[]}}]}]);
+assert.equal(result.eligible,1);assert.equal(result.excluded,1);
+assert.equal(result.groups.main.topRankFirstWithLowRankPartner,6);
+assert.equal(result.groups.main.lowRankInSecondOrThird,6);
+assert.equal(result.groups.upset.lowRankInSecondOrThird,0);
+assert.equal(result.groups.upset.positionRanks[0][4],6);
+console.log('PASS: ticket position rank analysis distinguishes top-first with lower-rank partners');
