@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {auditTicketSlotOverlap as audit} from './audit-ticket-slot-overlap.mjs';
+const main=[[1,2,3],[1,3,2],[2,1,3],[3,1,2],[4,1,2],[5,1,2]];
+const upset=[[2,3,4],[2,4,3],[3,2,4],[4,2,3],[5,2,3],[6,2,3]];
+const r=audit([{records:[{response:{ready:true,main,upset}}]}]);
+assert.equal(r.eligible,1);assert.equal(r.groups.main.pairs.length,15);
+assert.equal(r.groups.main.pairs[0].sameFirst,1);
+assert.equal(r.groups.main.pairs[0].sameTicket,0);
+assert.equal(r.groups.main.pairs[0].sameFirstTwoSet,0);
+assert.equal(r.groups.main.pairs.find(p=>p.slots.join(',')==='1,3').sameFirstTwoSet,1);
+console.log('PASS: exact ticket and first-place candidate overlap are distinct');
