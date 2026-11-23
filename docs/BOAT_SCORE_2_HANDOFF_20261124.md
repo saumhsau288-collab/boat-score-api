@@ -130,3 +130,8 @@ Explain progress in Japanese, concise and precise. Never claim the code has been
 - This is one score-combination ranking with two selection filters, not 6+6 independently reasoned models. Boat number >=4 is not verified actual outer course; it also fails to capture relatively outer 2-vs-3 or 4-vs-5/6 relationships as general hypotheses.
 - `scripts/audit-twelve-picks-research.mjs` labels ticket slots as methods, but merely enumerating slots does not establish separate generation logic.
 - This is an inspection of archived replay code, not confirmation of currently deployed Worker code version. Do not claim production changed or model accuracy improved. Research branch only.
+
+## 12 research hypotheses implemented (2026-11-24)
+- Added `scripts/twelve-independent-strategies.mjs`: six differently weighted favorite strategies (score, inner course, average ST, exhibition, motor, balanced) and six distinct relative-outer upset hypotheses (score, ST, exhibition, motor, leader second, leader out of top three). One ticket per hypothesis; no duplicate tickets; can return null when qualifier absent.
+- Requires six verified unique entry courses and complete score/ST/exhibition/motor fields. Uses boat ID only for identity; relative outer logic uses verified course. Synthetic Node test ran locally and passed; corresponding GitHub test and workflow added, CI run unverified.
+- WARNING: Different heuristic weighting does not prove statistically independent methods or improved accuracy. Score normalization and threshold values are provisional. Real archived captures lack verified courses and cannot validate this model. No deployment or production code changes.
