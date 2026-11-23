@@ -35,4 +35,17 @@ assert.equal(windows.captureWindowByDay['20261120'].jstClock,'08:42');
 assert.equal(windows.captureWindowByDay['20261120'].scheduledMorningWindow,false);
 assert.equal(windows.captureWindowByDay['20261121'].scheduledMorningWindow,true);
 assert.equal(windows.captureWindowByDay['20261122'].scheduledMorningWindow,true);
+
+const failureDiagnostics=diagnoseArchiveReadiness([{date:'20261120',records:[
+ {date:'20261120',venue:1,race:1,httpStatus:200,requestedAt:'2026-11-20T00:00:27.745Z',receivedAt:'2026-11-20T00:00:48.000Z',response:{ready:false,reason:'official_six_boat_stats_unverified',officialVerified:false,statsVerified:false,officialStatsRetry:'official_timeout',missingInputs:[]}},
+ {date:'20261120',venue:1,race:7,httpStatus:200,requestedAt:'2026-11-20T00:01:44.267Z',receivedAt:'2026-11-20T00:01:44.500Z',response:{ready:false,reason:'official_six_boat_stats_unverified',officialVerified:false,statsVerified:false,officialStatsRetry:'official_http_403',missingInputs:[]}}
+]}]);
+assert.equal(failureDiagnostics.officialFailureByDayAndHalf['20261120:early:official_timeout'],1);
+assert.equal(failureDiagnostics.officialFailureByDayAndHalf['20261120:late:official_http_403'],1);
+assert.equal(failureDiagnostics.official403ByJstMinute['2026-11-20 09:01'],1);
+assert.equal(failureDiagnostics.officialFailureTransitionByDay['20261120'].official_timeout_lastRequestedAt,'2026-11-20T00:00:27.745Z');
+assert.equal(failureDiagnostics.officialFailureTransitionByDay['20261120'].official_http_403_firstRequestedAt,'2026-11-20T00:01:44.267Z');
+assert.equal(failureDiagnostics.unverifiedVerificationFlagsByLatency['under_1s|officialVerified=false|statsVerified=false|officialStatsRetry=official_http_403|missingInputs=array:0'],1);
+assert.equal(failureDiagnostics.unverifiedVerificationFlagsByLatency['from_15_to_30s|officialVerified=false|statsVerified=false|officialStatsRetry=official_timeout|missingInputs=array:0'],1);
+
 console.log('PASS: archived readiness, retry classification, capture timing and JST morning-window checks');
