@@ -72,9 +72,23 @@ const rankLaneMatrix=Object.fromEntries([1,2,3,4,5,6].map(rank=>[String(rank),
    topTwoRate:subset.length?topTwo/subset.length:null,
    firstRate:subset.length?first/subset.length:null}];
  }))]));
+// Conservative descriptive screening only. A low observed rate is not a validated exclusion.
+// Wilson upper 95% bound prevents treating a zero-hit small sample as zero probability.
+function wilsonUpper(successes,n){
+ if(!n)return null;
+ const z=1.959963984540054,p=successes/n,z2=z*z;
+ return (p+z2/(2*n)+z*Math.sqrt(p*(1-p)/n+z2/(4*n*n)))/(1+z2/n);
+}
+const exclusionResearch=Object.fromEntries(['first','topTwo'].map(target=>[target,
+ Object.entries(rankLaneMatrix).flatMap(([rank,lanes])=>Object.entries(lanes).map(([boat,cell])=>{
+  const hits=cell[target],n=cell.races,upper95=wilsonUpper(hits,n);
+  return {rank:Number(rank),boat:Number(boat),races:n,hits,observedRate:n?hits/n:null,upper95,
+   screeningStatus:n<30?'insufficient_sample':upper95<=0.15?'research_candidate':'not_supported'};
+ })).sort((a,b)=>a.rank-b.rank||a.boat-b.boat)
+]));
 const venueGroups=Object.fromEntries([...new Set(rows.map(x=>x.venue))].sort((a,b)=>a-b).map(v=>[v,summarize(rows.filter(x=>x.venue===v))]));
 const output={mode:'retrospective_top_three_rank_finish_diagnostic',sourceFiles:paths,
- eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,outerLeaderBreakdown,rankLaneMatrix,details:rows,heldDetails:held,
- note:'All scores recomputed after racing. This is not pre-race accuracy. Winner/runner-up ranks are positions in recomputed score order; topThreeTopTwo means both actual first and second were among the three highest-scored racers. No odds, ST, motor or exhibition inputs are present in this evidence.'};
+ eligible:rows.length,held:held.length,all:summarize(rows),leaderGroups,gapBands,venueGroups,outerLeaderBreakdown,rankLaneMatrix,exclusionResearch,details:rows,heldDetails:held,
+ note:'All scores recomputed after racing. This is not pre-race accuracy. Winner/runner-up ranks are positions in recomputed score order; topThreeTopTwo means both actual first and second were among the three highest-scored racers. No odds, ST, motor or exhibition inputs are present in this evidence. Screening statuses are descriptive only and must never trigger automatic pre-race exclusions.'};
 fs.writeFileSync('historical-top-three-rank-finish-report.json',JSON.stringify(output,null,2)+'\n');
-console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix},null,2));
+console.log(JSON.stringify({file:'historical-top-three-rank-finish-report.json',eligible:output.eligible,held:output.held,all:output.all,leaderGroups:output.leaderGroups,gapBands:output.gapBands,venueGroups:output.venueGroups,outerLeaderBreakdown:output.outerLeaderBreakdown,rankLaneMatrix:output.rankLaneMatrix,exclusionResearch:output.exclusionResearch},null,2));
