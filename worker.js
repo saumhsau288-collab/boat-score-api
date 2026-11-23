@@ -2581,11 +2581,11 @@ async function scanVenueMorning(date,venue,firstOfficial=null) {
 // Accept a cutoff only when an official race-list label and one unambiguous JST time exist.
 function extractOfficialRaceDeadline(html,date) {
   if(!/^20[0-9]{6}$/.test(String(date))||typeof html!=='string')return null;
-  const clean=html.replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi,' ')
-    .replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi,' ')
+  const clean=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ')
     .replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ')
-    .replace(/\\s+/g,' ').normalize('NFKC');
-  const matches=[...clean.matchAll(/締切(?:予定)?(?:時刻|時間)?\\s*[:：]?\\s*([01]?\\d|2[0-3]):([0-5]\\d)/g)];
+    .replace(/\s+/g,' ').normalize('NFKC');
+  const matches=[...clean.matchAll(/締切(?:予定)?(?:時刻|時間)?\s*[:：]?\s*([01]?\d|2[0-3]):([0-5]\d)/g)];
   const times=[...new Set(matches.map(m=>m[1].padStart(2,'0')+':'+m[2]))];
   if(times.length!==1)return null;
   const [hh,mm]=times[0].split(':').map(Number);
