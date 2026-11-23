@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {prepareCaptureWithOriginalInputs as prepare} from './prepare-capture-with-original-inputs.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,course:i+1,racerId:4000+i,nationalWinRate:5,localWinRate:5,motorTwoWinRate:40,recent50WinRate:30,exhibitionScore:50,startTiming:.15}));
+const main=['1-2-3','1-3-2','2-1-3','2-3-1','3-1-2','3-2-1'];
+const upset=['4-5-6','4-6-5','5-4-6','5-6-4','6-4-5','6-5-4'];
+const input={selection:{date:'20261123',venue:'01',race:'1'},response:{ready:true,main,upset},cutoffAt:'2026-11-23T02:00:00Z',capturedAt:'2026-11-23T01:50:00Z',scoreInputs:racers};
+const ok=prepare(input);
+assert.equal(ok.status,'prepared_not_authenticated');
+assert.equal(ok.snapshot.scoreInputs.length,6);
+assert.equal(ok.snapshot.originalInputsAuthenticated,false);
+assert.equal(ok.snapshot.preRacePredictionsSaved,false);
+assert.equal(prepare({...input,scoreInputs:null}).status,'original_inputs_incomplete');
+assert.equal(prepare({...input,scoreInputs:racers.map((r,i)=>i===0?{...r,course:2}:r)}).status,'original_inputs_incomplete');
+assert.equal(prepare({...input,capturedAt:input.cutoffAt}).status,'invalid_or_after_cutoff');
+console.log('Research capture original-input bridge fixture passed; no live capture');
