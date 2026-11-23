@@ -8,6 +8,7 @@ on:
       - 'scripts/inspect-raw-morning-capture.mjs'
       - 'scripts/audit-capture-response-shapes.mjs'
       - 'scripts/compare-archived-twelve-pick-structure.mjs'
+      - 'scripts/compare-twelve-methods-with-results.mjs'
 permissions:
   contents: read
   actions: read
@@ -44,6 +45,7 @@ jobs:
           import {inspectRawMorningCapture} from './scripts/inspect-raw-morning-capture.mjs';
           import {auditResponseShape} from './scripts/audit-capture-response-shapes.mjs';
           import {compareArchivedTwelvePicks} from './scripts/compare-archived-twelve-pick-structure.mjs';
+          import {compareTwelveMethods} from './scripts/compare-twelve-methods-with-results.mjs';
           const walk=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>{
             const p=path.join(dir,e.name);
             return e.isDirectory()?walk(p):e.name.endsWith('.json')?[p]:[];
@@ -55,8 +57,9 @@ jobs:
             const report=inspectRawMorningCapture(raw);
             const shapes=auditResponseShape(raw);
             const ticketComparison=compareArchivedTwelvePicks(raw);
+            const twelveMethodAudit=compareTwelveMethods(raw,[]);
             if(report.status!=='research_only')throw Error('Unexpected raw capture shape in '+file);
-            return {sourceFile:file,...report,ticketComparison,responseFieldNames:shapes.possibleScoreInputFieldNames,
+            return {sourceFile:file,...report,ticketComparison,twelveMethodAudit:{compared:twelveMethodAudit.compared,held:twelveMethodAudit.held,holdReasons:twelveMethodAudit.holdReasons,methods:twelveMethodAudit.methods},responseFieldNames:shapes.possibleScoreInputFieldNames,
               topLevelResponseFields:Object.keys(shapes.topLevelKeys).sort(),readyResponsesShapeInspected:shapes.readyResponsesInspected};
           });
           console.log(JSON.stringify({status:'real_artifact_structure_inspected',reports,
