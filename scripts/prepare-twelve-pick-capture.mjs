@@ -21,7 +21,8 @@ export function prepareTwelvePickCapture(input, capturedAt) {
     Number.isInteger(input.venue) && input.venue >= 1 && input.venue <= 24 &&
     Number.isInteger(input.race) && input.race >= 1 && input.race <= 12 &&
     ['main','upset'].every(k => Array.isArray(input[k]) && input[k].length === 6 &&
-      input[k].every(validPick)) &&
+      input[k].every(validPick) && new Set(input[k].map(p=>p.join('-'))).size===6) &&
+    new Set([...input.main,...input.upset].map(p=>p.join('-'))).size===12 &&
     typeof input.cutoffAt === 'string' && Number.isFinite(Date.parse(input.cutoffAt)) &&
     typeof capturedAt === 'string' && Number.isFinite(Date.parse(capturedAt)) &&
     Date.parse(capturedAt) < Date.parse(input.cutoffAt) &&
