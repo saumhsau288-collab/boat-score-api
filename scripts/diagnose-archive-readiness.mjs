@@ -8,7 +8,7 @@ const category=r=>{
 const key=r=>[String(r?.date??''),Number(r?.venue),Number(r?.race)].join(':');
 export function diagnoseArchiveReadiness(archives,focusKeys=[]){
  const totals={ready:0,http_non_200:0,missing_response_object:0,http_200_not_ready:0};
- const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const readinessByJstMinute={};const responseLatencyByCategory={};const responseLatencyByDayAndHalf={};const unverifiedResponseFieldShapesByLatency={};const unverifiedVerificationFlagsByLatency={};const officialFailureByDayAndHalf={};const official403ByJstMinute={};const officialFailureTransitionByDay={};const focused=[];const captureCoverageByDay={};const captureIntegrityWarnings=[];const captureCoverageByArchive=[];const archiveCountByDay={};const raceOccurrenceCounts={};const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
+ const statusCodes={};const shapes={};const notReadyByVenue={};const notReadyByRace={};const readinessByRace={};const readinessByDayAndHalf={};const readinessByDayAndHalfAndVenue={};const timingByDayAndHalf={};const captureWindowByDay={};const readinessByJstMinute={};const responseLatencyByCategory={};const responseLatencyByDayAndHalf={};const unverifiedResponseFieldShapesByLatency={};const unverifiedVerificationFlagsByLatency={};const officialFailureByDayAndHalf={};const official403ByJstMinute={};const officialFailureTransitionByDay={};const focused=[];const captureCoverageByDay={};const captureIntegrityWarnings=[];const captureCoverageByArchive=[];const archiveCountByDay={};const raceOccurrenceCounts={};const raceSnapshotTimes={};const notReadyReasons={};const missingHttpFields={};const missingHttpErrorCategories={};const timeoutAttempts={};const attemptValueTypes={};const attemptArrayLengths={};const attemptEntryFieldShapes={};const attemptErrorCategories={};const attemptDurationsMs={under_5s:0,from_5_to_15s:0,from_15_to_30s:0,over_30s:0,invalid:0};const attemptByOrdinal={};const successfulRetryReadiness={ready:0,not_ready:0,unknown:0};const dateCategories={};
  const focus=new Set(focusKeys);
  for(const a of archives){
   const day=String(a?.date??'unknown');
@@ -43,7 +43,8 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
   if(attempted!==observed)captureIntegrityWarnings.push({day,code:'attempted_count_mismatch'});
   for(const r of records.filter(Boolean)){
   const raceKey=key({...r,date:String(a?.date??r?.date??'unknown')});
-  if(Number.isInteger(Number(r?.venue))&&Number.isInteger(Number(r?.race))&&Number(r?.venue)>=1&&Number(r?.race)>=1){raceOccurrenceCounts[raceKey]=(raceOccurrenceCounts[raceKey]||0)+1;}
+  if(Number.isInteger(Number(r?.venue))&&Number.isInteger(Number(r?.race))&&Number(r?.venue)>=1&&Number(r?.race)>=1){raceOccurrenceCounts[raceKey]=(raceOccurrenceCounts[raceKey]||0)+1;
+   (raceSnapshotTimes[raceKey]??=[]).push({requestedAt:typeof r?.requestedAt==='string'?r.requestedAt:null,receivedAt:typeof r?.receivedAt==='string'?r.receivedAt:null});}
   const reason=category(r);totals[reason]++;
   const duration=Date.parse(r?.receivedAt)-Date.parse(r?.requestedAt);
   const durationBucket=!Number.isFinite(duration)||duration<0?'invalid':duration<1000?'under_1s':duration<5000?'from_1_to_5s':duration<15000?'from_5_to_15s':duration<30000?'from_15_to_30s':'over_30s';
@@ -156,7 +157,7 @@ export function diagnoseArchiveReadiness(archives,focusKeys=[]){
     Object.keys(r.response).filter(k=>/^(ready|error|status|reason|message|missing|source|code|detail|diagnostic|stage)$/i.test(k)).sort():[]});
  }
  }
- const duplicateRaceKeys=Object.entries(raceOccurrenceCounts).filter(([,n])=>n>1).map(([raceKey,occurrences])=>({raceKey,occurrences})).sort((a,b)=>a.raceKey.localeCompare(b.raceKey));
+ const duplicateRaceKeys=Object.entries(raceOccurrenceCounts).filter(([,n])=>n>1).map(([raceKey,occurrences])=>({raceKey,occurrences,snapshots:raceSnapshotTimes[raceKey],distinctRequestTimes:new Set(raceSnapshotTimes[raceKey].map(s=>s.requestedAt).filter(Boolean)).size})).sort((a,b)=>a.raceKey.localeCompare(b.raceKey));
  const officialFailureSummary={
   http403:Object.entries(officialFailureByDayAndHalf).filter(([k])=>k.endsWith(':official_http_403')).reduce((n,[,v])=>n+v,0),
   officialTimeout:Object.entries(officialFailureByDayAndHalf).filter(([k])=>k.endsWith(':official_timeout')).reduce((n,[,v])=>n+v,0),
