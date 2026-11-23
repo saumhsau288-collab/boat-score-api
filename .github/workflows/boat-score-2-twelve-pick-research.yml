@@ -8,6 +8,8 @@ on:
       - 'scripts/*save-twelve-pick-capture.mjs'
       - 'scripts/*snapshots-from-morning-capture.mjs'
       - 'scripts/*strategy-provenance.mjs'
+      - 'scripts/test-morning-missing-data.mjs'
+      - 'boat-score-2-morning.js'
       - '.github/workflows/boat-score-2-twelve-pick-research.yml'
 jobs:
   verify:
@@ -30,3 +32,4 @@ jobs:
           node scripts/test-save-twelve-pick-capture.mjs
           node scripts/test-prepare-snapshots-from-morning-capture.mjs
           node scripts/test-audit-strategy-provenance.mjs
+          node scripts/test-morning-missing-data.mjs
