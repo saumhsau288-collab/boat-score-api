@@ -3,7 +3,9 @@ import {auditTwelvePicks} from './audit-twelve-picks-research.mjs';
 const main=[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]];
 const upset=[[4,5,6],[4,6,5],[5,4,6],[5,6,4],[6,4,5],[6,5,4]];
 const row={date:'20261120',venue:1,race:1,actual:[1,2,3],main,upset,
- preRacePredictionsSaved:true,officialResultVerified:true,independentlyAuthenticatedCapture:true,\n predictionSourceUrl:'https://example.org/immutable-capture.json',\n officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult',officialCutoffVerified:true,
+ preRacePredictionsSaved:true,officialResultVerified:true,independentlyAuthenticatedCapture:true,
+ predictionSourceUrl:'https://example.org/immutable-capture.json',
+ officialResultSourceUrl:'https://www.boatrace.jp/owpc/pc/race/raceresult',officialCutoffVerified:true,
  predictionCapturedAt:'2026-11-20T01:00:00Z',cutoffAt:'2026-11-20T02:00:00Z'};
 const got=auditTwelvePicks([row]);
 assert.equal(got.status,'evaluated');
