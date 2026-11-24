@@ -2280,6 +2280,7 @@ last50ByBoat: last50MatchesOfficial ? parsedLast50.rows : [],
 last50Verified: last50MatchesOfficial,
 last50Status: last50MatchesOfficial ? 'officially_matched' : 'not_verified',
 last50ParseReason: !officialRacers.verified ? 'official_six_boats_not_verified' : parsedLast50.verified ? 'last50_official_identity_mismatch' : parsedLast50.reason,
+last50ParseDiagnostics: parsedLast50.diagnostics??null,
 last50Reason: last50MatchesOfficial ? null : !officialRacers.verified ? '公式6艇の照合に失敗' : !parsedLast50.verified ? 'まくらぼ50走表の解析に失敗' : '公式6艇とまくらぼの選手・艇番が不一致',
 
 
@@ -2833,7 +2834,7 @@ function parseLast50Heatmap(html) {
   }).filter(Boolean);
   const verified = rows.length===6 && new Set(rows.map(r=>r.boat)).size===6 &&
     new Set(rows.map(r=>normalizeLast50RacerName(r.name))).size===6;
-  return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table',diagnostics:{tableRowCount:[...table[0].matchAll(/<tr\\b/gi)].length,validRowCount:rows.length,boatsFound:rows.map(r=>r.boat),nameLengths:rows.map(r=>normalizeLast50RacerName(r.name).length)}};
+  return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table',diagnostics:{tableRowCount:[...table[0].matchAll(/<tr\b/gi)].length,validRowCount:rows.length,boatsFound:rows.map(r=>r.boat),nameLengths:rows.map(r=>normalizeLast50RacerName(r.name).length)}};
 }
 
 function verifyHeatmapBoats(html, officialRacers) {
