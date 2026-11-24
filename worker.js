@@ -411,25 +411,33 @@ const officialText = html
   .trim();
 
 
-const officialNames = [...html.matchAll(
-  /<a\b[^>]*href=["'][^"']*racersearch\/profile\?toban=(\d+)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi
-)].map(m => ({
-  racerId: m[1],
-  name: m[2].replace(/<[^>]*>/g, "").trim()
-})).filter(r => r.name).slice(0, 6)
-  .map((r, i) => ({
-    boat: i + 1,
-    racerId: r.racerId,
-    name: r.name
-  }));
+// Match racers to explicit boat-number cells, never by link order.
+const officialNames = [];
+for (const match of html.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)) {
+  const row = match[1];
+  const cells = [...row.matchAll(/<td\\b[^>]*>([\\s\\S]*?)<\\/td>/gi)].map(m => m[1]);
+  if (cells.length < 2) continue;
+  const boatText = cells[0].replace(/<[^>]*>/g, '').replace(/&nbsp;|&#160;/gi, ' ').trim();
+  if (!/^[1-6]$/.test(boatText)) continue;
+  const links = [...row.matchAll(/<a\\b[^>]*href=["']([^"']*racersearch\\/profile\\?[^"']*)["'][^>]*>([\\s\\S]*?)<\\/a>/gi)];
+  if (links.length !== 1) continue;
+  let racerId;
+  try { racerId = new URL(links[0][1], 'https://www.boatrace.jp').searchParams.get('toban'); }
+  catch { continue; }
+  if (!/^\\d{4}$/.test(racerId || '')) continue;
+  const name = links[0][2].replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim();
+  if (name) officialNames.push({boat: Number(boatText), racerId, name});
+}
+const verifiedOfficialNames = officialNames.length === 6 &&
+  new Set(officialNames.map(r => r.boat)).size === 6 &&
+  new Set(officialNames.map(r => r.racerId)).size === 6;
+if (verifiedOfficialNames) officialNames.sort((a,b) => a.boat - b.boat);
   
 
 
     return {
-      verified: officialNames.length === 6 &&
-  new Set(officialNames.map(r => r.boat)).size === 6 &&
-  officialNames.every(r => r.boat >= 1 && r.boat <= 6 && r.racerId && r.name),
-      racers: officialNames,
+      verified: verifiedOfficialNames,
+      racers: verifiedOfficialNames ? officialNames : [],
 htmlLength: html.length,
 officialTextSample: officialText.slice(0, 1500),
 racerLinkCount: racerLinks.length,
