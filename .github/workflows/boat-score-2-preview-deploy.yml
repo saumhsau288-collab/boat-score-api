@@ -105,7 +105,7 @@ jobs:
           compatibility_date = "2026-11-01"
           workers_dev = true
           [triggers]
-          crons = ["*/5 23 * * *", "*/5 15-22 * * *"]
+          crons = ["*/5 23 * * *", "*/5 15-22 * * *", "*/5 0-14 * * *"]
           TOML
           printf '\n[[kv_namespaces]]\nbinding = "MORNING_KV"\nid = "%s"\n' "$KV_NAMESPACE_ID" >> wrangler.toml
       - name: Deploy isolated preview Worker
