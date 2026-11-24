@@ -793,8 +793,9 @@ document.getElementById('predictSelected').onclick=async function(){
  const base=d.basePrediction;
  const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
  out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命 6点】\n'+fmt(d.main)+'\n\n【穴 6点】\n'+fmt(d.upset)+'\n\n【取得状況】\n展示タイム：'+(d.exhibitionAdjustmentApplied===true?'反映済み':'未反映')+' ／ 展示ST：'+(d.startAdjustmentApplied===true?'反映済み':'未反映')+'\nまくらぼ50走：'+(recent50?'6艇照合済み（右側で別試算）':'未取得')+'\n※暫定予想。未確認情報を補完していません。';
+ const previousTrial=document.getElementById('experimental100PointPrediction');if(previousTrial)previousTrial.remove();
  if(d.experimental?.ready===true&&validPicks(d.experimental.main)&&validPicks(d.experimental.upset)){
-  const trial=document.createElement('details');trial.open=true;
+  const trial=document.createElement('details');trial.id='experimental100PointPrediction';trial.open=true;
   const head=document.createElement('summary');head.textContent='新100点評価・試験予想（従来予想は変更なし）';
   const pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';
   const componentNames={ability:'選手能力',course:'進入',averageST:'平均ST',motor:'モーター',exhibition:'展示',last50:'50走'};
