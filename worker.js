@@ -181,6 +181,28 @@ async function runScheduledMorning(env,scheduledTime) {
   }
 }
 // Separate, bounded official result archive. Never overwrite a verified result with a failed fetch.
+// Daily research audit: use only archived pre-deadline scores and verified official results.
+function summarizeArchivedRanks(date,morning,archive){
+ const summary={date,version:1,matched:0,missingResult:0,excluded:0,firstRankWins:0,rankByFinish:Array.from({length:6},()=>Array(6).fill(0)),excludedReasons:{},records:[]};
+ const seen=new Set();
+ const exclude=reason=>{summary.excluded++;summary.excludedReasons[reason]=(summary.excludedReasons[reason]||0)+1;};
+ for(const row of (Array.isArray(morning?.records)?morning.records:[])){
+  const id=row.venue+':'+row.race;
+  if(row.date!==date||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||seen.has(id)){exclude('invalid_or_duplicate_race');continue;}seen.add(id);
+  const capture=Date.parse(row.capturedAt||''),deadline=Date.parse(row.deadlineAt||'');
+  if(!Number.isFinite(capture)||!Number.isFinite(deadline)||capture>=deadline){exclude('missing_or_late_timestamp');continue;}
+  const scores=row.rankedScores;
+  if(row.ready!==true||row.officialVerified!==true||row.statsVerified!==true||!Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x.boat)).size!==6||!scores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score))){exclude('invalid_scores');continue;}
+  const result=archive?.records?.[id],order=result?.finishOrder;
+  if(result?.verified!==true||result.date!==date||result.venue!==row.venue||result.race!==row.race||!Array.isArray(order)||order.length!==6||new Set(order).size!==6||!order.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){summary.missingResult++;continue;}
+  const ranked=scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat);
+  summary.matched++;if(ranked[0]===order[0])summary.firstRankWins++;
+  ranked.forEach((boat,i)=>summary.rankByFinish[i][order.indexOf(boat)]++);
+  summary.records.push({venue:row.venue,race:row.race,ranked,finishOrder:order,capturedAt:row.capturedAt,deadlineAt:row.deadlineAt,model:row.method||null});
+ }
+ summary.firstRankWinRate=summary.matched?summary.firstRankWins/summary.matched:null;
+ return summary;
+}
 async function runScheduledResultArchive(env,scheduledTime){
  if(!env?.MORNING_KV)throw Error('MORNING_KV binding is required');
  const date=jstDateFromUtc(new Date(scheduledTime-86400000));
@@ -210,6 +232,7 @@ async function runScheduledResultArchive(env,scheduledTime){
  state.verifiedCount=Object.keys(state.records).length;
  state.status=state.verifiedCount===targets.length?'completed':targets.every(({venue,race})=>state.records[venue+':'+race]||(state.attempts[venue+':'+race]||0)>=3)?'incomplete':'partial';
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
+ const audit=summarizeArchivedRanks(date,morning,state);await env.MORNING_KV.put('rank-audit:v1:'+date,JSON.stringify(audit),{expirationTtl:31536000});
 }
 export default {
   async scheduled(event,env,ctx) {
@@ -220,6 +243,15 @@ export default {
     const u = new URL(request.url);
     if (request.method === 'OPTIONS') return new Response(null, {status:204,headers:{...cors(request),'Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600'}});
     
+if(u.pathname==='/api/research/rank-audit'){
+ if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+ const date=u.searchParams.get('date')||'';
+ if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid date'},400);
+ if(!env?.MORNING_KV)return reply(request,{date,status:'not_configured'},503);
+ const raw=await env.MORNING_KV.get('rank-audit:v1:'+date);
+ if(!raw)return reply(request,{date,status:'not_available'},404);
+ return reply(request,JSON.parse(raw));
+}
 if(u.pathname==='/api/research/result-archive'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
  const date=u.searchParams.get('date')||'';
@@ -293,7 +325,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-result-archive',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-rank-audit',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -303,7 +335,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <section id="makulaboPanel" hidden><h2>まくらぼ画像取り込み</h2><p id="makulaboFrameStatus" role="status">レースを選択してから画像取り込みを開いてください。</p><button type="button" id="loadMakulaboFrame">選択レースの取り込み画面を開く</button><iframe id="makulaboFrame" title="まくらぼ画像取り込み" style="width:100%;height:75vh;border:0" hidden></iframe></section><section id="historyPanel" hidden><h2>過去レースの予想・確定結果比較</h2><p>上で開催日・競艇場・レースを選択してください。Boat Score 2と同じ予想APIで再計算し、公式の確定着順と照合します。</p><button id="compareHistorical">選択した過去レースを予想・結果照合</button><pre id="compareHistoricalOutput">未実行</pre><small>過去時点の保存済み予想ではありません。取得できる現在の公式成績で再計算する場合があり、朝8時の的中実績とは区別します。まくらぼと直前情報が未取得なら比較に含みません。</small></section>
 
 <section id="morningRankingSection" hidden><h2>朝8時の全国レース予想ランキング</h2><p>当日の開催場を一斉評価した暫定ランキングです。各20レースを上限に表示し、候補が不足する場合は確認できた件数だけ表示します。</p><p id="morningRankingStatus" role="status">朝8時の保存予想を確認しています…</p><div id="morningLinks" aria-label="朝8時の全国ランキングからレースを選択"></div><small>公式6艇と基礎成績による朝の暫定評価です。直前展示・風・進入・まくらぼ50走を加味した確定予想ではありません。的中率は未検証です。</small></section>
-<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261124-result-archive · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
+<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261124-rank-audit · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
 <h2 style="margin:0 0 8px;font-size:18px">1着・2着除外の研究状況（2026/11/23確認）</h2>
 <p style="margin:4px 0 10px">過去3日分のうち検証可能な275レースを分析。レース後に再計算した評価点による研究結果です。</p>
 <table style="width:100%;border-collapse:collapse;font-size:13px"><caption style="text-align:left;margin-bottom:5px">11/19・11/21で候補を選び、11/22の結果で照合</caption>
