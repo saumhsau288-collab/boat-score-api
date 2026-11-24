@@ -379,7 +379,7 @@ if(u.pathname==='/api/research/before-archive'){
  const raw=await env.MORNING_KV.get('before-archive:v1:'+date);
  if(!raw)return reply(request,{date,status:'not_available'},404);
  const state=JSON.parse(raw);
- return reply(request,{date,status:'recorded',updatedAt:state.updatedAt,verifiedCount:Object.keys(state.records||{}).length,attemptedCount:Object.keys(state.attempts||{}).length,failures:state.failures||{}});
+ return reply(request,{date,status:'recorded',updatedAt:state.updatedAt,verifiedCount:Object.keys(state.records||{}).length,attemptedCount:Object.keys(state.attempts||{}).length,discoveredDeadlineCount:Object.keys(state.deadlines||{}).length,failures:state.failures||{}});
 }
 if(u.pathname==='/api/research/before-audit'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -463,7 +463,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-independent-result-archive',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-collection-dashboard',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -473,7 +473,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <section id="makulaboPanel" hidden><h2>まくらぼ画像取り込み</h2><p id="makulaboFrameStatus" role="status">レースを選択してから画像取り込みを開いてください。</p><button type="button" id="loadMakulaboFrame">選択レースの取り込み画面を開く</button><iframe id="makulaboFrame" title="まくらぼ画像取り込み" style="width:100%;height:75vh;border:0" hidden></iframe></section><section id="historyPanel" hidden><h2>過去レースの予想・確定結果比較</h2><p>上で開催日・競艇場・レースを選択してください。Boat Score 2と同じ予想APIで再計算し、公式の確定着順と照合します。</p><button id="compareHistorical">選択した過去レースを予想・結果照合</button><pre id="compareHistoricalOutput">未実行</pre><small>過去時点の保存済み予想ではありません。取得できる現在の公式成績で再計算する場合があり、朝8時の的中実績とは区別します。まくらぼと直前情報が未取得なら比較に含みません。</small></section>
 
 <section id="morningRankingSection" hidden><h2>朝8時の全国レース予想ランキング</h2><p>当日の開催場を一斉評価した暫定ランキングです。各20レースを上限に表示し、候補が不足する場合は確認できた件数だけ表示します。</p><p id="morningRankingStatus" role="status">朝8時の保存予想を確認しています…</p><div id="morningLinks" aria-label="朝8時の全国ランキングからレースを選択"></div><small>公式6艇と基礎成績による朝の暫定評価です。直前展示・風・進入・まくらぼ50走を加味した確定予想ではありません。的中率は未検証です。</small></section>
-<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261124-independent-result-archive · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
+<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261124-collection-dashboard · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
 <h2 style="margin:0 0 8px;font-size:18px">1着・2着除外の研究状況（2026/11/23確認）</h2>
 <p style="margin:4px 0 10px">過去3日分のうち検証可能な275レースを分析。レース後に再計算した評価点による研究結果です。</p>
 <table style="width:100%;border-collapse:collapse;font-size:13px"><caption style="text-align:left;margin-bottom:5px">11/19・11/21で候補を選び、11/22の結果で照合</caption>
@@ -567,8 +567,12 @@ const today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);day.value=t
 date.addEventListener('change',()=>{seq++;if(controller)controller.abort();button.disabled=false;notice.textContent='日付を変更しました。';out.textContent='未取得';});
 button.addEventListener('click',async()=>{if(!date.value)return;const key=date.value.replace(/-/g,''),token=++seq;if(controller)controller.abort();controller=new AbortController();const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(20000)]);button.disabled=true;notice.textContent='保存データを確認中…';out.textContent='';
 const get=async path=>{try{const r=await fetch(path+'?date='+key,{signal});if(r.status===404)return {missing:true};if(!r.ok)throw Error('HTTP '+r.status);return await r.json();}catch(e){return {error:String(e.message||e)};}};
-try{const [archive,audit,periods]=await Promise.all(['/api/research/result-archive','/api/research/rank-audit','/api/research/rank-audit-windows'].map(get));if(token!==seq)return;
+try{const [archive,audit,periods,morning,before]=await Promise.all(['/api/research/result-archive','/api/research/rank-audit','/api/research/rank-audit-windows','/api/morning/snapshot','/api/research/before-archive'].map(get));if(token!==seq)return;
 const lines=['対象日：'+key,'【公式確定着順の保存】',archive.error?'取得失敗：'+archive.error:archive.missing?'保存記録なし':'保存済み '+archive.verifiedCount+' / '+archive.targetCount+'R（'+archive.status+'）','【評価順位と着順の照合】',audit.error?'取得失敗：'+audit.error:audit.missing?'保存記録なし':'照合 '+audit.matched+'R / 結果未取得 '+audit.missingResult+'R / 除外 '+audit.excluded+'件'];
+const unavailable=x=>x.error?'取得失敗：'+x.error:x.missing?'保存記録なし':null;
+lines.splice(1,0,'【朝の情報収集】',unavailable(morning)||('確認済み '+Object.values(morning.verifiedRacesByVenue||{}).reduce((a,b)=>a+b,0)+'R / 開催場 '+(morning.venues||[]).length+'場（'+morning.status+'）'),'【直前情報の収集】',unavailable(before)||('保存済み '+before.verifiedCount+'R / 試行 '+before.attemptedCount+'R'));
+if(!unavailable(before)){lines.push('締切時刻の独立確認：'+(before.discoveredDeadlineCount||0)+'R');for(const [id,failure] of Object.entries(before.failures||{}))lines.push('直前未確認 '+id+'：'+(failure.reason||'unknown'));}
+if(!unavailable(archive))for(const [id,reason] of Object.entries(archive.failures||{}))lines.push('着順未確認 '+id+'：'+reason);
 const rate=x=>Number.isFinite(x)?(x*100).toFixed(1)+'%':'未集計';
 if(!audit.error&&!audit.missing)lines.push('評価1位の1着率：'+rate(audit.firstRankWinRate));
 lines.push('【期間集計】');if(periods.error)lines.push('取得失敗：'+periods.error);else for(const w of periods.windows||[]){lines.push(w.days+'日：保存 '+w.availableDays+'/'+w.days+'日、照合 '+w.matched+'R、評価1位の1着率 '+rate(w.firstRankWinRate));if(w.days===30&&w.matched>0){lines.push('30日・競艇場別照合件数');for(const [v,item] of Object.entries(w.byVenue||{}))lines.push((names[Number(v)-1]||v+'場')+'：'+item.matched+'R');}}
