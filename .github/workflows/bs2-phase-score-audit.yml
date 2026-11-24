@@ -18,3 +18,4 @@ jobs:
       - run: node --experimental-default-type=module scripts/test-phase-comparison.mjs
       - run: node scripts/test-relative-outcomes.mjs
       - run: node scripts/test-capture-integrity.mjs
+      - run: node scripts/test-capture-provenance.mjs
