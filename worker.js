@@ -554,7 +554,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
   const data=await response.json();
   if(token!==makulaboSearchToken||date!==dateCode()||v!==venue.value||r!==race.value)return;
   if(!response.ok||data.last50Verified!==true||!Array.isArray(data.last50ByBoat)||data.last50ByBoat.length!==6){
-   const comparison=data.last50IdentityComparison; const mismatches=Array.isArray(comparison?.mismatches)?comparison.mismatches:[]; const detail=mismatches.length?' 不一致: '+mismatches.map(x=>x.boat+'号艇 公式「'+x.officialName+'」／まくらぼ「'+(x.parsedName??'該当なし')+'」').join('、'):''; status.textContent='自動取得・6艇照合は未完了（'+(data.last50ParseReason||data.reason||data.last50Reason||'データ不足')+'）。'+detail+' 未取得の項目は画面上で未確認と表示し、評価への加点は0点です。実際の50走成績を0回とみなすものではありません。';return;
+   const diagnostic=data.last50ParseDiagnostics; const parseDetail=diagnostic?' 表の診断: 全行'+diagnostic.tableRowCount+'・有効行'+diagnostic.validRowCount+'・艇番['+(diagnostic.boatsFound||[]).join(',')+']・名前文字数['+(diagnostic.nameLengths||[]).join(',')+']。':''; const comparison=data.last50IdentityComparison; const mismatches=Array.isArray(comparison?.mismatches)?comparison.mismatches:[]; const detail=mismatches.length?' 不一致: '+mismatches.map(x=>x.boat+'号艇 公式「'+x.officialName+'」／まくらぼ「'+(x.parsedName??'該当なし')+'」').join('、'):''; status.textContent='自動取得・6艇照合は未完了（'+(data.last50ParseReason||data.reason||data.last50Reason||'データ不足')+'）。'+parseDetail+detail+' 未取得の項目は画面上で未確認と表示し、評価への加点は0点です。実際の50走成績を0回とみなすものではありません。';return;
   }
   const table=document.createElement('table'),head=document.createElement('tr');
   ['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.appendChild(th);});table.appendChild(head);
