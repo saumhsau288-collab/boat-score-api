@@ -413,19 +413,19 @@ const officialText = html
 
 // Match racers to explicit boat-number cells, never by link order.
 const officialNames = [];
-for (const match of html.matchAll(/<tr\\b[^>]*>([\\s\\S]*?)<\\/tr>/gi)) {
+for (const match of html.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)) {
   const row = match[1];
-  const cells = [...row.matchAll(/<td\\b[^>]*>([\\s\\S]*?)<\\/td>/gi)].map(m => m[1]);
+  const cells = [...row.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map(m => m[1]);
   if (cells.length < 2) continue;
   const boatText = cells[0].replace(/<[^>]*>/g, '').replace(/&nbsp;|&#160;/gi, ' ').trim();
   if (!/^[1-6]$/.test(boatText)) continue;
-  const links = [...row.matchAll(/<a\\b[^>]*href=["']([^"']*racersearch\\/profile\\?[^"']*)["'][^>]*>([\\s\\S]*?)<\\/a>/gi)];
+  const links = [...row.matchAll(/<a\b[^>]*href=["']([^"']*racersearch\/profile\?[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi)];
   if (links.length !== 1) continue;
   let racerId;
   try { racerId = new URL(links[0][1], 'https://www.boatrace.jp').searchParams.get('toban'); }
   catch { continue; }
-  if (!/^\\d{4}$/.test(racerId || '')) continue;
-  const name = links[0][2].replace(/<[^>]*>/g, '').replace(/\\s+/g, ' ').trim();
+  if (!/^\d{4}$/.test(racerId || '')) continue;
+  const name = links[0][2].replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
   if (name) officialNames.push({boat: Number(boatText), racerId, name});
 }
 const verifiedOfficialNames = officialNames.length === 6 &&
