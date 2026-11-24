@@ -1,0 +1,5 @@
+name = "boat-score-2-info"
+compatibility_date = "2026-11-01"
+workers_dev = true
+[assets]
+directory = "./site"
