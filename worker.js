@@ -799,9 +799,9 @@ document.getElementById('load').onclick=async function(){const notice=document.g
 // Keep verified Makulabo cells and never turn a missing measurement into a real zero.
 (async()=>{
  const status=document.getElementById('beforeinfoStatus');
- status.textContent='公式直前情報を別経路で再確認中…';
+ status.textContent='公式直前情報を再確認中（通信不安定時は最大約30秒かかります）…';
  try{
-  const response=await fetch('/api/official/beforeinfo?date='+encodeURIComponent(selectedDate)+'&venue='+encodeURIComponent(selectedVenue)+'&race='+encodeURIComponent(selectedRace),{signal:AbortSignal.timeout(18000)});
+  const response=await fetch('/api/official/beforeinfo?date='+encodeURIComponent(selectedDate)+'&venue='+encodeURIComponent(selectedVenue)+'&race='+encodeURIComponent(selectedRace),{signal:AbortSignal.timeout(32000)});
   if(!response.ok){let detail='';try{const failure=await response.json();detail=failure.reason||failure.error||failure.diagnostics?.name||'';}catch{}throw Error('HTTP '+response.status+(detail?' / '+detail:''));}
   const fresh=await response.json();
   if(token!==raceDataRequest||selectedDate!==dateCode()||selectedVenue!==venue.value||selectedRace!==race.value)return;
