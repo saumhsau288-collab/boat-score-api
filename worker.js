@@ -290,11 +290,15 @@ const text = html
 
   return names.map(name => {
 
-const row = parsedTableRows.find(cells =>
-  cells.some(cell =>
-    typeof cell === "string" && cell.replace(/\s/g, "") === name.replace(/\s/g, "")
-  )
+const matchingRows = parsedTableRows.filter(cells =>
+  typeof cells[1] === "string" &&
+  cells[1].replace(/\s/g, "") === name.replace(/\s/g, "") &&
+  /^[1-6]$/.test(String(cells[0] ?? ""))
 );
+if (matchingRows.length !== 1) {
+  return { name, counts: null, verified: false, reason: matchingRows.length > 1 ? "duplicate_rows" : "missing_row" };
+}
+const row = matchingRows[0];
 
 const boat = row ? Number(row[0]) : null;
 const tableCounts = row
@@ -361,8 +365,7 @@ function verifyHeatmapBoats(html, officialRacers) {
       verified: !!row &&
 row.boat === racer.boat &&
         Array.isArray(row.counts) &&
-        row.counts.length >= 1 &&
-row.counts.length <= 6 &&
+        row.counts.length === 6 &&
 row.counts.every(n => Number.isInteger(n) && n >= 0) &&
 row.counts.reduce((sum, n) => sum + n, 0) === row.runs
     };
