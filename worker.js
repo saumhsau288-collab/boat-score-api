@@ -40,7 +40,7 @@ async function readSharedVerifiedBeforeinfo(env,date,venue,race){
     const valid=x=>x?.verified===true&&Array.isArray(x.rows)&&x.rows.length===6&&
       new Set(x.rows.map(r=>r.boat)).size===6&&x.rows.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6);
     if(!valid(item.exhibition)&&!valid(item.start))return null;
-    return {exhibition:valid(item.exhibition)?item.exhibition:{verified:false,rows:[]},
+    return {savedAt:item.savedAt,exhibition:valid(item.exhibition)?item.exhibition:{verified:false,rows:[]},
       start:valid(item.start)?item.start:{verified:false,rows:[]},weather:item.weather?.verified===true?item.weather:null};
   }catch{return null;}
 }
@@ -874,6 +874,10 @@ document.getElementById('load').onclick=async function(){const notice=document.g
    if(st){tr.cells[14].textContent=fmtBefore(st.startTiming);tr.cells[15].textContent=fmtBefore(st.course);updated++;}
   }
   const summary=['公式直前情報を再照合：展示 '+exRows.length+'/6艇、展示ST・進入 '+stRows.length+'/6艇','比較表に反映したデータ：'+updated+'項目（艇単位）','予想点への直前情報反映：未確認（比較表への表示更新は予想の再計算ではありません）','取得元：'+(fresh.source==='verified_recent_cache'?'公式照合済みキャッシュ':'BOAT RACE公式直前情報')];
+  const weather=fresh.weather||{};
+  const captured=fresh.capturedAt?new Date(fresh.capturedAt):null;
+  summary.push('取得日時：'+(captured&&Number.isFinite(captured.getTime())?captured.toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'})+' JST':'未確認'));
+  summary.push('風向：'+(fresh.windDirectionVerified===true?fmtBefore(weather.windDirection):'未確認')+' / 風速：'+(fresh.weatherVerified===true&&Number.isFinite(weather.windSpeed)?weather.windSpeed+'m/s':'未確認')+' / 波高：'+(fresh.weatherVerified===true&&Number.isFinite(weather.waveHeight)?weather.waveHeight+'cm':'未確認'));
   if(exRows.length!==6||stRows.length!==6)summary.push('不足分は未確認として表示します。0は実測値として補いません。');
   if(fresh.diagnostics?.beforeinfoReason)summary.push('取得診断：'+fresh.diagnostics.beforeinfoReason);
   status.textContent=summary.join('\\n');
@@ -2290,7 +2294,7 @@ if (u.pathname === '/api/official/beforeinfo') {
   // Reuse only complete weather and six-boat data; otherwise fetch again.
   const cached=getVerifiedBeforeinfo(date,venue,race)||await readSharedVerifiedBeforeinfo(env,date,venue,race);
   if(cached?.exhibition?.verified===true&&cached?.start?.verified===true&&cached?.weather?.verified===true&&cached?.weather?.windDirectionVerified===true){
-    return reply(request,{status:'verified',source:'verified_recent_cache',
+    return reply(request,{status:'verified',source:'verified_recent_cache',capturedAt:new Date(cached.savedAt).toISOString(),
       exhibitionVerified:cached.exhibition.verified===true,startVerified:cached.start.verified===true,weatherVerified:true,windDirectionVerified:true,
       exhibitionByBoat:cached.exhibition.rows,startByCourse:cached.start.rows,
       weather:cached.weather,dataReadyForPrediction:false});
@@ -2314,6 +2318,7 @@ if (u.pathname === '/api/official/beforeinfo') {
     if(!res.ok)return reply(request,{status:'unavailable',reason:'upstream_http_'+res.status,dataReadyForPrediction:false},502);
     const html=await res.text();
     if(html.length>1000000)return reply(request,{status:'unavailable',reason:'response_too_large',dataReadyForPrediction:false},502);
+    const capturedAt=new Date().toISOString();
     const exhibition=extractOfficialExhibition(html);
     const start=extractOfficialStartExhibition(html);
     const weather=extractOfficialWeather(html);
@@ -2321,6 +2326,7 @@ if (u.pathname === '/api/official/beforeinfo') {
     await writeSharedVerifiedBeforeinfo(env,date,venue,race,exhibition,start,weather);
     return reply(request,{
       status:exhibition.verified&&start.verified?'verified':'partial',
+      source:'official_beforeinfo',capturedAt,
       exhibitionVerified:exhibition.verified,startVerified:start.verified,
       weatherVerified:weather.verified===true,windDirectionVerified:weather.windDirectionVerified===true,
       exhibitionByBoat:exhibition.rows,startByCourse:start.rows,
