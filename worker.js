@@ -325,7 +325,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
   const id=row.venue+':'+row.race,deadline=Date.parse(row.deadlineAt||'');
   return row.date===date&&Number.isInteger(row.venue)&&row.venue>=1&&row.venue<=24&&Number.isInteger(row.race)&&row.race>=1&&row.race<=12&&Number.isFinite(deadline)&&deadline-Date.now()<=600000&&deadline-Date.now()>=30000&&!state.records[id]&&(state.attempts[id]||0)<2;
  }).sort((a,b)=>Date.parse(a.deadlineAt)-Date.parse(b.deadlineAt)).slice(0,12);
- if(!pending.length&&!missing.length)return;
+ if(!pending.length&&!missing.length){state.updatedAt=new Date().toISOString();await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});return;}
  state.failures=state.failures||{};
  const rows=await mapOfficialLimited(pending,3,async row=>{
   const id=row.venue+':'+row.race;let deadline=Date.parse(row.deadlineAt);
