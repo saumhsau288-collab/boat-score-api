@@ -2277,6 +2277,8 @@ last50IdentityComparison: {
 },
 last50Inspection: inspectLast50(html),
 last50ByBoat: last50MatchesOfficial ? parsedLast50.rows : [],
+last50PartialRows: officialRacers.verified ? parsedLast50.rows.filter(row=>officialRacers.racers.some(r=>r.boat===row.boat&&last50RacerNamesMatch(r.name,row.name))).map(row=>({...row,verified:true})):[],
+last50MissingBoats: officialRacers.verified ? officialRacers.racers.filter(r=>!parsedLast50.rows.some(row=>row.boat===r.boat&&last50RacerNamesMatch(r.name,row.name))).map(r=>({boat:r.boat,name:r.name,status:'unpublished_or_unverified'})):[],
 last50Verified: last50MatchesOfficial,
 last50Status: last50MatchesOfficial ? 'officially_matched' : 'not_verified',
 last50ParseReason: !officialRacers.verified ? 'official_six_boats_not_verified' : parsedLast50.verified ? 'last50_official_identity_mismatch' : parsedLast50.reason,
@@ -2835,7 +2837,7 @@ function parseLast50Heatmap(html) {
   }).filter(Boolean);
   const verified = rows.length===6 && new Set(rows.map(r=>r.boat)).size===6 &&
     new Set(rows.map(r=>normalizeLast50RacerName(r.name))).size===6;
-  return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table',diagnostics:{tableRowCount:[...table[0].matchAll(/<tr\b/gi)].length,validRowCount:rows.length,boatsFound:rows.map(r=>r.boat),nameLengths:rows.map(r=>normalizeLast50RacerName(r.name).length),rejectedRows}};
+  return {verified,rows,reason:verified?null:'incomplete_or_inconsistent_table',diagnostics:{tableRowCount:[...table[0].matchAll(/<tr\b/gi)].length,validRowCount:rows.length,boatsFound:rows.map(r=>r.boat),nameLengths:rows.map(r=>normalizeLast50RacerName(r.name).length),rejectedRows}};
 }
 
 function verifyHeatmapBoats(html, officialRacers) {
