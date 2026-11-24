@@ -554,7 +554,24 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
   const data=await response.json();
   if(token!==makulaboSearchToken||date!==dateCode()||v!==venue.value||r!==race.value)return;
   if(!response.ok||data.last50Verified!==true||!Array.isArray(data.last50ByBoat)||data.last50ByBoat.length!==6){
-   const diagnostic=data.last50ParseDiagnostics; const parseDetail=diagnostic?' 表の診断: 全行'+diagnostic.tableRowCount+'・有効行'+diagnostic.validRowCount+'・艇番['+(diagnostic.boatsFound||[]).join(',')+']・名前文字数['+(diagnostic.nameLengths||[]).join(',')+']・除外行['+(diagnostic.rejectedRows||[]).map(x=>x.boat+'号艇 '+x.reason+' 走数原文:'+x.rawRuns+' 平均原文:'+x.rawAverage+' 異常値:'+(x.invalidCountCells||[]).map(y=>y.finish+'着='+y.value).join('/')+' 走数:'+x.runs+' 着順合計:'+x.countSum+' 平均:'+x.average+' 計算:'+x.calculatedAverage).join('、')+']。':''; const comparison=data.last50IdentityComparison; const mismatches=Array.isArray(comparison?.mismatches)?comparison.mismatches:[]; const detail=mismatches.length?' 不一致: '+mismatches.map(x=>x.boat+'号艇 公式「'+x.officialName+'」／まくらぼ「'+(x.parsedName??'該当なし')+'」').join('、'):''; status.textContent='自動取得・6艇照合は未完了（'+(data.last50ParseReason||data.reason||data.last50Reason||'データ不足')+'）。'+parseDetail+detail+' 未取得の項目は画面上で未確認と表示し、評価への加点は0点です。実際の50走成績を0回とみなすものではありません。';return;
+   const diagnostic=data.last50ParseDiagnostics; const parseDetail=diagnostic?' 表の診断: 全行'+diagnostic.tableRowCount+'・有効行'+diagnostic.validRowCount+'・艇番['+(diagnostic.boatsFound||[]).join(',')+']・名前文字数['+(diagnostic.nameLengths||[]).join(',')+']・除外行['+(diagnostic.rejectedRows||[]).map(x=>x.boat+'号艇 '+x.reason+' 走数原文:'+x.rawRuns+' 平均原文:'+x.rawAverage+' 異常値:'+(x.invalidCountCells||[]).map(y=>y.finish+'着='+y.value).join('/')+' 走数:'+x.runs+' 着順合計:'+x.countSum+' 平均:'+x.average+' 計算:'+x.calculatedAverage).join('、')+']。':''; const comparison=data.last50IdentityComparison; const mismatches=Array.isArray(comparison?.mismatches)?comparison.mismatches:[]; const detail=mismatches.length?' 不一致: '+mismatches.map(x=>x.boat+'号艇 公式「'+x.officialName+'」／まくらぼ「'+(x.parsedName??'該当なし')+'」').join('、'):''; status.textContent='自動取得・6艇照合は未完了（'+(data.last50ParseReason||data.reason||data.last50Reason||'データ不足')+'）。'+parseDetail+detail+' 未取得の項目は画面上で未確認と表示し、評価への加点は0点です。実際の50走成績を0回とみなすものではありません。';
+   // Show independently verified source rows without promoting partial data to prediction inputs.
+   const partial=Array.isArray(data.last50PartialRows)?data.last50PartialRows.filter(row=>row.verified===true&&Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isInteger(row.runs)&&row.runs>0&&Array.isArray(row.counts)&&row.counts.length===6&&row.counts.every(n=>Number.isInteger(n)&&n>=0)&&row.counts.reduce((sum,n)=>sum+n,0)===row.runs):[];
+   if(partial.length){
+    const title=document.createElement('h3');title.textContent='まくらぼ取得済みの艇（部分表示・予想未反映）';result.appendChild(title);
+    const note=document.createElement('p');note.textContent='公式選手名と艇番が一致した行のみ表示します。未掲載の艇は未確認です。6艇すべての照合が完了するまで、50走データは予想点に加算しません。';result.appendChild(note);
+    const table=document.createElement('table'),head=document.createElement('tr');
+    ['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均'].forEach(label=>{const th=document.createElement('th');th.textContent=label;head.appendChild(th);});table.appendChild(head);
+    const byBoat=new Map(partial.map(row=>[row.boat,row]));
+    const official=Array.isArray(data.last50IdentityComparison?.official)?data.last50IdentityComparison.official:[];
+    for(let boat=1;boat<=6;boat++){
+     const row=byBoat.get(boat),tr=document.createElement('tr');
+     const values=row?[boat,row.name,...row.counts,row.runs,row.average]:[boat,official.find(x=>x.boat===boat)?.name||'未確認',...Array(8).fill('未確認')];
+     values.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);tr.appendChild(td);});table.appendChild(tr);
+    }
+    result.appendChild(table);
+   }
+   return;
   }
   const table=document.createElement('table'),head=document.createElement('tr');
   ['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.appendChild(th);});table.appendChild(head);
