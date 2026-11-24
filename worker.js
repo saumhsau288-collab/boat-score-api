@@ -250,7 +250,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-integrated-import',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-import-bridge',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -260,7 +260,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <section id="makulaboPanel" hidden><h2>まくらぼ画像取り込み</h2><p id="makulaboFrameStatus" role="status">レースを選択してから画像取り込みを開いてください。</p><button type="button" id="loadMakulaboFrame">選択レースの取り込み画面を開く・更新</button><iframe id="makulaboFrame" title="まくらぼ画像取り込み" style="width:100%;height:75vh;border:0" hidden></iframe></section><section id="historyPanel" hidden><h2>過去レースの予想・確定結果比較</h2><p>上で開催日・競艇場・レースを選択してください。Boat Score 2と同じ予想APIで再計算し、公式の確定着順と照合します。</p><button id="compareHistorical">選択した過去レースを予想・結果照合</button><pre id="compareHistoricalOutput">未実行</pre><small>過去時点の保存済み予想ではありません。取得できる現在の公式成績で再計算する場合があり、朝8時の的中実績とは区別します。まくらぼと直前情報が未取得なら比較に含みません。</small></section>
 
 <section id="morningRankingSection" hidden><h2>朝8時の全国レース予想ランキング</h2><p>当日の開催場を一斉評価した暫定ランキングです。各20レースを上限に表示し、候補が不足する場合は確認できた件数だけ表示します。</p><p id="morningRankingStatus" role="status">朝8時の保存予想を確認しています…</p><div id="morningLinks" aria-label="朝8時の全国ランキングからレースを選択"></div><small>公式6艇と基礎成績による朝の暫定評価です。直前展示・風・進入・まくらぼ50走を加味した確定予想ではありません。的中率は未検証です。</small></section>
-<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261124-integrated-import · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
+<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261124-import-bridge · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
 <h2 style="margin:0 0 8px;font-size:18px">1着・2着除外の研究状況（2026/11/23確認）</h2>
 <p style="margin:4px 0 10px">過去3日分のうち検証可能な275レースを分析。レース後に再計算した評価点による研究結果です。</p>
 <table style="width:100%;border-collapse:collapse;font-size:13px"><caption style="text-align:left;margin-bottom:5px">11/19・11/21で候補を選び、11/22の結果で照合</caption>
@@ -357,8 +357,9 @@ function syncMakulaboLink(){const params=new URLSearchParams();if(/^20[0-9]{2}-[
 for(const el of [day,venue,race])el.addEventListener('change',syncMakulaboLink);
 syncMakulaboLink();
 // Keep screenshot input and selected race intact when switching panels. Reload only on explicit action.
-(function(){const frame=document.getElementById("makulaboFrame"),status=document.getElementById("makulaboFrameStatus"),button=document.getElementById("loadMakulaboFrame");let loadedKey="";const key=()=>day.value&&venue.value&&race.value?dateCode()+":"+venue.value+":"+race.value:"";function openFrame(){const next=key();if(!next){status.textContent="開催日・競艇場・レースを選択してください。";return;}if(loadedKey!==next){frame.src=makulaboLink.href;loadedKey=next;}frame.hidden=false;status.textContent="選択レース："+next+"。画像取り込み結果はこの画面内で確認してください。比較表への自動転送は未対応です。";}button.addEventListener("click",openFrame);makulaboLink.addEventListener("click",event=>{event.preventDefault();document.querySelector("#previewTabs button[data-panel=makulaboPanel]").click();openFrame();});for(const el of [day,venue,race])el.addEventListener("change",()=>{if(loadedKey!==key()){frame.hidden=true;status.textContent="レースが変わりました。取り込み画面を開き直してください。";}});})();
-let makulaboSearchToken=0,verifiedMakulabo=null;
+(function(){const frame=document.getElementById("makulaboFrame"),status=document.getElementById("makulaboFrameStatus"),button=document.getElementById("loadMakulaboFrame");let loadedKey="";const key=()=>day.value&&venue.value&&race.value?dateCode()+":"+venue.value+":"+race.value:"";function openFrame(){const next=key();if(!next){status.textContent="開催日・競艇場・レースを選択してください。";return;}if(loadedKey!==next){frame.src=makulaboLink.href;loadedKey=next;}frame.hidden=false;status.textContent="選択レース："+next+"。画像取り込み結果はこの画面内で確認してください。公式選手番号の照合後、手入力集計を比較表へ参考表示します。";}button.addEventListener("click",openFrame);makulaboLink.addEventListener("click",event=>{event.preventDefault();document.querySelector("#previewTabs button[data-panel=makulaboPanel]").click();openFrame();});for(const el of [day,venue,race])el.addEventListener("change",()=>{if(loadedKey!==key()){frame.hidden=true;status.textContent="レースが変わりました。取り込み画面を開き直してください。";}});})();
+let makulaboSearchToken=0,verifiedMakulabo=null,manualMakulabo=null;
+window.addEventListener('message',event=>{const frame=document.getElementById('makulaboFrame'),m=event.data;if(event.origin!==location.origin||event.source!==frame.contentWindow||m?.type!=='boat-score-manual-review'||m.key!==dateCode()+':'+venue.value+':'+race.value)return;const rows=m.rows;if(!Array.isArray(rows)||rows.length!==6||new Set(rows.map(x=>x.boat)).size!==6||!rows.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isInteger(x.sampleSize)&&x.sampleSize>=1&&x.sampleSize<=50&&Array.isArray(x.finishCounts)&&x.finishCounts.length===6&&x.finishCounts.every(n=>Number.isInteger(n)&&n>=0)&&x.finishCounts.reduce((a,b)=>a+b,0)===x.sampleSize))return;manualMakulabo={key:m.key,rows};const n=syncVerifiedMakulaboComparison();document.getElementById('makulaboFrameStatus').textContent='公式選手番号照合済み・手入力集計を受信。比較表 '+n+'/6艇（自動取得優先、予想には未反映）。';});
 let lastComparisonPrediction=null;
 let trialConditions={key:null,wind:'',speed:null,entry:null};
 function resetTrialConditions(){
@@ -582,17 +583,17 @@ function recent50SupplementForSelection(){
 }
 function syncVerifiedMakulaboComparison(){
  const tbody=document.getElementById('comparisonBody');
- if(!verifiedMakulabo||verifiedMakulabo.key!==dateCode()+':'+venue.value+':'+race.value)return 0;
+ const key=dateCode()+':'+venue.value+':'+race.value;const automatic=verifiedMakulabo?.key===key?verifiedMakulabo.rows:[];const manual=manualMakulabo?.key===key?manualMakulabo.rows:[];
  let updated=0;
  const trs=Array.from(tbody.querySelectorAll('tr'));
  for(const tr of trs){
   const boat=Number((tr.cells[0]?.textContent||'').match(/^[1-6]/)?.[0]);
-  const row=verifiedMakulabo.rows.find(x=>Number(x.boat)===boat);
+  const auto=automatic.find(x=>Number(x.boat)===boat);const input=manual.find(x=>x.boat===boat);const row=auto||(input?{runs:input.sampleSize,counts:input.finishCounts}:null);
   if(!row||tr.cells.length!==18||row.verified===false)continue;
   // The API has already checked all six official racer identities. Match by boat here;
   // presentation names can contain different spacing and glyph variants.
   if(!Number.isFinite(row.runs)||row.runs<1||!Array.isArray(row.counts)||row.counts.length!==6)continue;
-  tr.cells[17].textContent=row.runs+'走 / 1着 '+(row.counts[0]/row.runs*100).toFixed(1)+'% / 2連 '+((row.counts[0]+row.counts[1])/row.runs*100).toFixed(1)+'% / 3連 '+((row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100).toFixed(1)+'%';
+  tr.cells[17].textContent=(auto?'':'手入力参考 / ')+row.runs+'走 / 1着 '+(row.counts[0]/row.runs*100).toFixed(1)+'% / 2連 '+((row.counts[0]+row.counts[1])/row.runs*100).toFixed(1)+'% / 3連 '+((row.counts[0]+row.counts[1]+row.counts[2])/row.runs*100).toFixed(1)+'%';
   updated++;
  }
  return updated;
@@ -656,7 +657,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
  }catch(e){if(token===makulaboSearchToken)status.textContent='自動検索に失敗しました：'+(e.name==='TimeoutError'?'65秒以内に取得・公式照合が完了しませんでした':'通信エラー（'+String(e.message||e).slice(0,80)+'）');}
  finally{if(token===makulaboSearchToken)this.disabled=false;}
 };
-for(const el of [day,venue,race])el.addEventListener('change',()=>{makulaboSearchToken++;verifiedMakulabo=null;document.getElementById('makulaboSearchResult').replaceChildren();document.getElementById('makulaboSearchStatus').textContent='';document.getElementById('searchMakulaboInBoatScore').disabled=false;updateCombinedPredictionPanel();});
+for(const el of [day,venue,race])el.addEventListener('change',()=>{makulaboSearchToken++;verifiedMakulabo=null;manualMakulabo=null;document.getElementById('makulaboSearchResult').replaceChildren();document.getElementById('makulaboSearchStatus').textContent='';document.getElementById('searchMakulaboInBoatScore').disabled=false;updateCombinedPredictionPanel();});
 
 let scheduleRequest=0,raceListRequest=0,scheduleController=null,raceListController=null;
 async function refreshRunningVenues(){
@@ -2119,6 +2120,7 @@ document.getElementById('check').addEventListener('click',async()=>{
  const result=await response.json();
  if(currentReview!==screenshotReviewVersion||date!==document.getElementById('date').value.trim()||venue!==Number(document.getElementById('venue').value)||race!==Number(document.getElementById('race').value))return;
  if(result.identityVerified===true&&Array.isArray(result.rows)&&result.rows.length===6){
+  if(window.parent!==window)window.parent.postMessage({type:'boat-score-manual-review',key:date+':'+venue+':'+race,rows:result.rows},location.origin);
   const complete50=result.rows.filter(row=>row.sampleSize===50).length;
   const firstOrder=result.rows.slice().sort((a,b)=>(b.finishCounts[0]/b.sampleSize)-(a.finishCounts[0]/a.sampleSize)).map(row=>row.boat+'号艇').join(' → ');
   const rates=result.rows.map(row=>row.finishCounts[0]/row.sampleSize*100);
