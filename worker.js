@@ -412,6 +412,44 @@ for(const id of ['predictOutput','combinedPredictionOutput']){
  const el=document.getElementById(id);
  if(el)new MutationObserver(updateCompactPredictions).observe(el,{childList:true,characterData:true,subtree:true});
 }
+function renderExperimental100PointPrediction(){
+ const previous=document.getElementById('experimental100PointPrediction');if(previous)previous.remove();
+ const current=lastComparisonPrediction,key=dateCode()+':'+venue.value+':'+race.value;
+ if(!current||current.key!==key)return;
+ const d=current.data,model=d.experimental;
+ if(!model?.ready||!Array.isArray(model.rows)||model.rows.length!==6)return;
+ const valid=rows=>Array.isArray(rows)&&rows.length===6&&rows.every(x=>Array.isArray(x)&&x.length===3&&new Set(x).size===3&&x.every(n=>Number.isInteger(n)&&n>=1&&n<=6));
+ if(!valid(model.main)||!valid(model.upset))return;
+ const source=verifiedMakulabo?.key===key?verifiedMakulabo.rows:[];
+ const matched=Array.isArray(source)?source.filter(x=>x.verified!==false&&Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isInteger(x.runs)&&x.runs>0&&x.runs<=50&&Array.isArray(x.counts)&&x.counts.length===6&&x.counts.every(n=>Number.isInteger(n)&&n>=0)&&x.counts.reduce((a,b)=>a+b,0)===x.runs):[];
+ const unique=new Map(matched.map(x=>[x.boat,x]));
+ const complete=unique.size===6&&verifiedMakulabo?.partial!==true;
+ // Partial source is shown as reference only. No one-sided scoring advantage.
+ const bonus=new Map();
+ if(complete){
+  for(const x of unique.values())bonus.set(x.boat,5*(x.counts[0]+.5*x.counts[1]+.25*x.counts[2])/x.runs);
+ }
+ const rows=model.rows.map(x=>({...x,score:x.score+(bonus.get(x.boat)||0),components:{...x.components,last50:Number((bonus.get(x.boat)||0).toFixed(2))}}));
+ const map=new Map(rows.map(x=>[x.boat,x]));
+ const combinations=[];
+ for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let z=1;z<=6;z++){
+  if(a===b||a===z||b===z)continue;
+  const first=map.get(a),second=map.get(b),third=map.get(z);
+  combinations.push({boats:[a,b,z],strength:first.score*.54+second.score*.28+third.score*.18+(second.top2===null?0:second.top2*.035)+(third.top3===null?0:third.top3*.025)});
+ }
+ combinations.sort((a,b)=>b.strength-a.strength||a.boats.join('').localeCompare(b.boats.join('')));
+ const main=combinations.slice(0,6).map(x=>x.boats),used=new Set(main.map(x=>x.join('-')));
+ const upset=combinations.filter(x=>x.boats[0]>=4&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
+ const fmt=items=>items.map((x,i)=>(i+1)+'. '+x.join('-')).join('\\n');
+ const components={ability:'選手能力',course:'進入',averageST:'平均ST',motor:'モーター',exhibition:'展示',last50:'50走'};
+ const trial=document.createElement('details');trial.id='experimental100PointPrediction';trial.open=true;
+ const head=document.createElement('summary');head.textContent='新100点評価・直前情報＋まくらぼ（試験予想）';
+ const pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';
+ pre.textContent='【本命6点】\\n'+fmt(main)+'\\n\\n【穴6点】\\n'+fmt(upset)+'\\n\\n【艇別評価と反映内訳】\\n'+rows.map(x=>x.boat+'号艇 '+x.score.toFixed(1)+'点（'+Object.entries(x.components).map(([k,v])=>(components[k]||k)+':'+Number(v).toFixed(1)).join(' / ')+'）').join('\\n')+
+ '\\n\\n【取得・反映状況】\\n展示・展示ST：'+(model.missingInputs.includes('exhibitionTime')?'展示タイム未反映':'展示タイム反映')+' / '+(model.missingInputs.includes('exhibitionST')?'展示ST未反映':'展示ST反映')+'\\n進入：'+(model.missingInputs.includes('course')?'未確認・未反映':'公式6艇の進入を反映')+'\\nまくらぼ50走：'+(complete?'6艇照合済み・最大5点を反映':unique.size+'艇確認・6艇未完了のため予想点には未反映')+
+ '\\n未反映：'+model.missingInputs.filter(x=>x!=='last50').join('、')+'\\n※仮配点・的中率未検証。50走はコース別ではない着順実績です。欠損を実測0とはみなしません。従来予想は変更しません。';
+ trial.append(head,pre);document.getElementById('selectedPredictionOutput')?.parentElement?.appendChild(trial);
+}
 function updateCombinedPredictionPanel(){
  const out=document.getElementById('combinedPredictionOutput');
  if(!out)return;
@@ -564,7 +602,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
    const partial=Array.isArray(data.last50PartialRows)?data.last50PartialRows.filter(row=>row.verified===true&&Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isInteger(row.runs)&&row.runs>0&&Array.isArray(row.counts)&&row.counts.length===6&&row.counts.every(n=>Number.isInteger(n)&&n>=0)&&row.counts.reduce((sum,n)=>sum+n,0)===row.runs):[];
    if(partial.length){
     verifiedMakulabo={key:date+':'+v+':'+r,rows:partial,partial:true};
-    const reflected=syncVerifiedMakulaboComparison();
+    const reflected=syncVerifiedMakulaboComparison();renderExperimental100PointPrediction();
     const partialStatus=document.createElement('p');partialStatus.textContent='選手比較表へ反映：'+reflected+'/'+partial.length+'艇（確認済み行のみ）。6艇照合未完了のため予想点には反映しません。';result.appendChild(partialStatus);
     const title=document.createElement('h3');title.textContent='まくらぼ取得済みの艇（部分表示・予想未反映）';result.appendChild(title);
     const note=document.createElement('p');note.textContent='公式選手名と艇番が一致した行のみ表示します。未掲載の艇は未確認です。6艇すべての照合が完了するまで、50走データは予想点に加算しません。';result.appendChild(note);
@@ -598,7 +636,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
   verifiedMakulabo={key:date+':'+v+':'+r,rows:data.last50ByBoat};
    updateRecent50Compare();
   updatePositionHeatmap();
-  const updated=syncVerifiedMakulaboComparison();
+  const updated=syncVerifiedMakulaboComparison();renderExperimental100PointPrediction();
   status.textContent='まくらぼ6艇の取得・照合成功。選手比較表への反映：'+updated+'/6艇。'+(lastComparisonPrediction?.key===date+':'+v+':'+r?'右側の「まくらぼ＋直前情報の予想」を再計算しました。公式直前情報が不足する場合は保留を表示します。':'続けて「このレースを予想」を押すと、取得済みの公式直前情報と組み合わせて右側に試算します。')+(updated===0?'比較表の行数：'+document.getElementById('comparisonBody').querySelectorAll('tr').length+'。表示中の艇番と取得データの照合を確認してください。':'');
  }catch(e){if(token===makulaboSearchToken)status.textContent='自動検索に失敗しました：'+(e.name==='TimeoutError'?'65秒以内に取得・公式照合が完了しませんでした':'通信エラー（'+String(e.message||e).slice(0,80)+'）');}
  finally{if(token===makulaboSearchToken)this.disabled=false;}
@@ -793,15 +831,7 @@ document.getElementById('predictSelected').onclick=async function(){
  const base=d.basePrediction;
  const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
  out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命 6点】\n'+fmt(d.main)+'\n\n【穴 6点】\n'+fmt(d.upset)+'\n\n【取得状況】\n展示タイム：'+(d.exhibitionAdjustmentApplied===true?'反映済み':'未反映')+' ／ 展示ST：'+(d.startAdjustmentApplied===true?'反映済み':'未反映')+'\nまくらぼ50走：'+(recent50?'6艇照合済み（右側で別試算）':'未取得')+'\n※暫定予想。未確認情報を補完していません。';
- const previousTrial=document.getElementById('experimental100PointPrediction');if(previousTrial)previousTrial.remove();
- if(d.experimental?.ready===true&&validPicks(d.experimental.main)&&validPicks(d.experimental.upset)){
-  const trial=document.createElement('details');trial.id='experimental100PointPrediction';trial.open=true;
-  const head=document.createElement('summary');head.textContent='新100点評価・試験予想（従来予想は変更なし）';
-  const pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';
-  const componentNames={ability:'選手能力',course:'進入',averageST:'平均ST',motor:'モーター',exhibition:'展示',last50:'50走'};
-  pre.textContent='【新モデル 本命6点】\n'+fmt(d.experimental.main)+'\n\n【新モデル 穴6点】\n'+fmt(d.experimental.upset)+'\n\n【艇別評価・内訳】\n'+d.experimental.rows.map(row=>row.boat+'号艇 '+row.score.toFixed(1)+'点（'+Object.entries(row.components).map(([key,val])=>(componentNames[key]||key)+val.toFixed(1)).join(' / ')+'）').join('\n')+'\n\n未反映：'+d.experimental.missingInputs.join('、')+'\n※仮配点で的中率未検証。欠損を実測0とは扱いません。従来予想への置換は行いません。';
-  trial.append(head,pre);out.parentElement.appendChild(trial);
- }
+ renderExperimental100PointPrediction();
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
