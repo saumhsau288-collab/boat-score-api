@@ -2824,7 +2824,7 @@ function parseLast50Heatmap(html) {
     const cells = [...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
       .map(c => c[1].replace(/<[^>]*>/g,'').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').normalize('NFKC').trim());
     if (cells.length < 10 || !/^[1-6]$/.test(cells[0])) return null;
-    const counts = cells.slice(2,8).map(v => v === '' ? 0 : (/^\d+$/.test(v) ? Number(v) : NaN));
+    const counts = cells.slice(2,8).map(v => (v === '' || /^[—–－−-]$/.test(v)) ? 0 : (/^\d+$/.test(v) ? Number(v) : NaN));
     const runs = /^\d+$/.test(cells[8]) ? Number(cells[8]) : NaN;
     const avg = Number(cells[9]);
     const weighted = counts.reduce((sum,n,i) => sum + n*(i+1),0);
