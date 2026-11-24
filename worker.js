@@ -1708,7 +1708,24 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
    wrap.appendChild(table);comparison.appendChild(wrap);
    const note=document.createElement('p');note.textContent='確認済みの公式データのみ表示。展示STは本番のSTではありません。未確認項目は予想に利用しません。';comparison.appendChild(note);
   }
-  if(makulabo?.last50Verified!==true){const warning=document.createElement('p');warning.textContent='まくらぼ直近50走が未確認のため、50走比較と30点評価は表示できません。';comparison.appendChild(warning)}
+  if(makulabo?.last50Verified!==true){
+   const partial=Array.isArray(makulabo?.last50PartialRows)?makulabo.last50PartialRows.filter(row=>row.verified===true&&Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isInteger(row.runs)&&row.runs>0&&Array.isArray(row.counts)&&row.counts.length===6&&row.counts.every(n=>Number.isInteger(n)&&n>=0)&&row.counts.reduce((sum,n)=>sum+n,0)===row.runs):[];
+   const warning=document.createElement('p');warning.textContent=partial.length?'まくらぼ50走：'+partial.length+'艇の公式選手名照合済みデータを参考比較として表示します。未掲載の艇は未確認。6艇照合未完了のため30点評価・予想点には反映しません。':'まくらぼ直近50走が未確認のため、50走比較と30点評価は表示できません。';comparison.appendChild(warning);
+   if(partial.length){
+    const heading=document.createElement('h3');heading.textContent='まくらぼ直近50走・取得済み艇の参考比較';comparison.appendChild(heading);
+    const wrap=document.createElement('div');wrap.style.cssText='max-width:100%;overflow-x:auto';
+    const table=document.createElement('table');table.style.cssText='border-collapse:collapse;font-size:13px;white-space:nowrap';
+    const head=document.createElement('tr');['艇','選手','走数','1着率','3連対率','平均着順','確認'].forEach(label=>{const th=document.createElement('th');th.textContent=label;th.style.cssText='border:1px solid #cbd5e1;padding:5px';head.appendChild(th)});table.appendChild(head);
+    const byBoat=new Map(partial.map(row=>[row.boat,row]));
+    const official=Array.isArray(makulabo?.last50IdentityComparison?.official)?makulabo.last50IdentityComparison.official:[];
+    for(let boat=1;boat<=6;boat++){
+     const row=byBoat.get(boat),tr=document.createElement('tr');
+     const values=row?[boat,row.name,row.runs,(100*row.counts[0]/row.runs).toFixed(1)+'%',(100*(row.counts[0]+row.counts[1]+row.counts[2])/row.runs).toFixed(1)+'%',Number.isFinite(row.average)?row.average.toFixed(2):'未確認','公式名照合済']: [boat,official.find(r=>r.boat===boat)?.name||'未確認','未確認','未確認','未確認','未確認','未掲載'];
+     values.forEach(value=>{const td=document.createElement('td');td.style.cssText='border:1px solid #cbd5e1;padding:5px';td.textContent=String(value);tr.appendChild(td)});table.appendChild(tr);
+    }
+    wrap.appendChild(table);comparison.appendChild(wrap);
+   }
+  }
   if(makulabo?.last50Verified===true&&!(makulabo?.last50Verified===true&&Array.isArray(makulabo.last50ByBoat)&&makulabo.last50ByBoat.length===6&&makulabo.last50ByBoat.every(row=>Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isInteger(row.runs)&&row.runs>0&&Array.isArray(row.counts)&&row.counts.length===6&&row.counts.every(n=>Number.isInteger(n)&&n>=0)&&row.counts.reduce((sum,n)=>sum+n,0)===row.runs)&&new Set(makulabo.last50ByBoat.map(row=>row.boat)).size===6)){const warning=document.createElement('p');warning.textContent='まくらぼ直近50走の集計が不整合です。艇番・走数・着順合計を再確認してください。比較点は表示しません。';comparison.appendChild(warning)}
   if(makulabo?.last50Verified===true&&Array.isArray(makulabo.last50ByBoat)&&makulabo.last50ByBoat.length===6&&makulabo.last50ByBoat.every(row=>Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isInteger(row.runs)&&row.runs>0&&Array.isArray(row.counts)&&row.counts.length===6&&row.counts.every(n=>Number.isInteger(n)&&n>=0)&&row.counts.reduce((sum,n)=>sum+n,0)===row.runs)&&new Set(makulabo.last50ByBoat.map(row=>row.boat)).size===6){
    const heading=document.createElement('h3');heading.textContent='まくらぼ直近50走・枠別比較';comparison.appendChild(heading);
