@@ -28,5 +28,12 @@ jobs:
         run: npx --yes wrangler@4 deploy --config wrangler.toml
       - name: Check public page
         run: |
-          curl --fail --retry 4 --retry-delay 5 --max-time 30 https://boat-score-2-info.saumh-sau-288.workers.dev/ -o /tmp/bs2.html
-          grep -F '公式出走表を開く' /tmp/bs2.html
+          for attempt in $(seq 1 12); do
+            if curl --fail --silent --show-error --max-time 15 https://boat-score-2-info.saumh-sau-288.workers.dev/ -o /tmp/bs2.html && grep -qF '公式出走表を開く' /tmp/bs2.html; then
+              echo 'Verified public information page'
+              exit 0
+            fi
+            sleep 10
+          done
+          echo 'Public page verification failed'
+          exit 1
