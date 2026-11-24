@@ -1,0 +1,32 @@
+name: Deploy Boat Score 2 information site
+on:
+  push:
+    branches: [bs2-phase-score-audit-20261124]
+    paths: ['boat-score-2-public/**', '.github/workflows/bs2-info-deploy.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare isolated static assets
+        working-directory: boat-score-2-public
+        run: |
+          grep -Fx 'name = "boat-score-2-info"' wrangler.toml
+          mkdir -p site
+          cp index.html site/index.html
+      - name: Deploy information site only
+        working-directory: boat-score-2-public
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@4 deploy --config wrangler.toml
+      - name: Check public page
+        run: |
+          curl --fail --retry 4 --retry-delay 5 --max-time 30 https://boat-score-2-info.saumh-sau-288.workers.dev/ -o /tmp/bs2.html
+          grep -F '公式出走表を開く' /tmp/bs2.html
