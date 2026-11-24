@@ -5,7 +5,7 @@ const endpoint='/api/official/race-data';
 const selection={date:'20261124',venue:7,race:1};
 test('deduplicates concurrent requests and expires cache',async()=>{
  let calls=0,time=0;
- const client=createRaceDataClient({now:()=>time,fetcher:async()=>{calls++;return {ok:true,json:async()=>({...selection,verified:true})}}});
+ const client=createRaceDataClient({now:()=>time,fetcher:async()=>{calls++;return {ok:true,json:async()=>({...selection,racersVerified:true,statsVerified:true,racersByBoat:Array.from({length:6},(_,i)=>({boat:i+1})),statsByBoat:Array.from({length:6},(_,i)=>({boat:i+1}))})}}});
  await Promise.all([client.get(endpoint,selection),client.get(endpoint,selection)]);
  assert.equal(calls,1);
  await client.get(endpoint,selection);assert.equal(calls,1);
