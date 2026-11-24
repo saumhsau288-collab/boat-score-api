@@ -1,0 +1,17 @@
+import {readFileSync} from 'node:fs';
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+const source=readFileSync(new URL('./worker.js',import.meta.url),'utf8');
+const a=source.indexOf('function extractOfficialWeather(');
+const b=source.indexOf('function extractOfficialStartExhibition(',a);
+assert.ok(a>=0&&b>a);
+const parse=vm.runInNewContext(source.slice(a,b)+'\nextractOfficialWeather');
+const page=(body)=>'<section>水面気象情報 '+body+'</section>';
+test('explicit text direction',()=>assert.equal(parse(page('風向 北東 風速 3m 波高 2cm')).windDirection,'北東'));
+test('image alt direction',()=>assert.equal(parse(page('<img alt="北東"> 風速 3m 波高 2cm')).windDirection,'北東'));
+test('zero is valid',()=>{const r=parse(page('風速 0m 波高 0cm'));assert.equal(r.verified,true);assert.equal(r.windSpeed,0);assert.equal(r.waveHeight,0);});
+test('missing speed is not zero',()=>assert.equal(parse(page('波高 0cm')).verified,false));
+test('icon alone does not identify direction',()=>assert.equal(parse(page('<img src="north.png"> 風速 3m 波高 2cm')).windDirection,null));
+test('conflicting image directions are rejected',()=>assert.equal(parse(page('<img alt="北"><img alt="南"> 風速 3m 波高 2cm')).windDirection,null));
+test('out of range speed rejected',()=>assert.equal(parse(page('風速 99m 波高 2cm')).verified,false));
