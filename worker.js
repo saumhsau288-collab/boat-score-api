@@ -793,6 +793,14 @@ document.getElementById('predictSelected').onclick=async function(){
  const base=d.basePrediction;
  const comparison=base&&validPicks(base.main)&&validPicks(base.upset)?'【同じ時点の基礎予想との比較】\n本命6点：'+(JSON.stringify(base.main)===JSON.stringify(d.main)?'変化なし':'変化あり')+'\n穴6点：'+(JSON.stringify(base.upset)===JSON.stringify(d.upset)?'変化なし':'変化あり')+'\n※朝8時保存分との比較ではありません。':'基礎予想との比較は未確認です。';
  out.textContent=names[Number(v)-1]+' '+r+'R（'+date+'）\n\n【本命 6点】\n'+fmt(d.main)+'\n\n【穴 6点】\n'+fmt(d.upset)+'\n\n【取得状況】\n展示タイム：'+(d.exhibitionAdjustmentApplied===true?'反映済み':'未反映')+' ／ 展示ST：'+(d.startAdjustmentApplied===true?'反映済み':'未反映')+'\nまくらぼ50走：'+(recent50?'6艇照合済み（右側で別試算）':'未取得')+'\n※暫定予想。未確認情報を補完していません。';
+ if(d.experimental?.ready===true&&validPicks(d.experimental.main)&&validPicks(d.experimental.upset)){
+  const trial=document.createElement('details');trial.open=true;
+  const head=document.createElement('summary');head.textContent='新100点評価・試験予想（従来予想は変更なし）';
+  const pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';
+  const componentNames={ability:'選手能力',course:'進入',averageST:'平均ST',motor:'モーター',exhibition:'展示',last50:'50走'};
+  pre.textContent='【新モデル 本命6点】\n'+fmt(d.experimental.main)+'\n\n【新モデル 穴6点】\n'+fmt(d.experimental.upset)+'\n\n【艇別評価・内訳】\n'+d.experimental.rows.map(row=>row.boat+'号艇 '+row.score.toFixed(1)+'点（'+Object.entries(row.components).map(([key,val])=>(componentNames[key]||key)+val.toFixed(1)).join(' / ')+'）').join('\n')+'\n\n未反映：'+d.experimental.missingInputs.join('、')+'\n※仮配点で的中率未検証。欠損を実測0とは扱いません。従来予想への置換は行いません。';
+  trial.append(head,pre);out.parentElement.appendChild(trial);
+ }
  st.textContent='選択レースの暫定予想を表示しました（的中保証なし）';
  }catch(e){if(!controller.signal.aborted)st.textContent='予想を取得できません: '+e.message;}
  finally{if(selectedPredictionController===controller){selectedPredictionController=null;this.disabled=false;}}
@@ -1031,12 +1039,51 @@ if (u.pathname === '/api/predict/selected-race') {
     {applied:false,rankedScores:inputs.rankedScores};
   const startAdjustment=useBeforeinfo?applyVerifiedStartAdjustment(adjustment.rankedScores,startExhibition,official.statsVerified===true?official.statsByBoat:[]):
     {applied:false,rankedScores:adjustment.rankedScores,reason:'not_requested'};
+  // Experimental 100-point model, separate from the existing production picks.
+  // No guessed values: unavailable inputs receive no points and are reported.
+  const experimental=(()=>{
+    const stats=official.statsByBoat;
+    const exMap=new Map((exhibition.verified===true?exhibition.rows:[]).map(x=>[x.boat,x]));
+    const stMap=new Map((startExhibition.verified===true?startExhibition.rows:[]).map(x=>[x.boat,x]));
+    const metric=(value,min,max)=>{const n=value===null||value===undefined||String(value).trim()===''?NaN:Number(value);return Number.isFinite(n)&&n>=min&&n<=max?n:null};
+    const values=stats.map(x=>({boat:x.boat,win:metric(x.nationwide?.winRate,0,10),local:metric(x.local?.winRate,0,10),avgST:metric(x.averageST,0,0.5),motor:metric(x.motor?.secondPlaceRate,0,100),top2:metric(x.nationwide?.secondPlaceRate,0,100),top3:metric(x.nationwide?.thirdPlaceRate,0,100),course:stMap.get(x.boat)?.course,exTime:exMap.get(x.boat)?.exhibitionTime,exST:stMap.get(x.boat)?.startTiming}));
+    const rank=(key,ascending=false)=>{const rows=values.filter(x=>typeof x[key]==='number'&&Number.isFinite(x[key])).sort((a,b)=>(ascending?a[key]-b[key]:b[key]-a[key])||a.boat-b.boat);return rows.length===6?new Map(rows.map((x,i)=>[x.boat,(6-i)/6])):null};
+    const win=rank('win'),motor=rank('motor'),avgST=rank('avgST',true),exTime=rank('exTime',true),exST=rank('exST',true);
+    const courses=startExhibition.verified===true&&new Set(values.map(x=>x.course)).size===6&&values.every(x=>Number.isInteger(x.course)&&x.course>=1&&x.course<=6);
+    const courseWeights=[1,.72,.52,.39,.27,.18]; // heuristic, not calibrated probabilities
+    const rows=values.map(x=>{
+      const winBase=x.win===null?0:25*(win?.get(x.boat)||0);
+      const localBonus=x.local===null||x.local===0?0:Math.min(2.5,x.local/10*2.5);
+      const ability=Math.min(25,winBase+localBonus);
+      const course=courses?25*courseWeights[x.course-1]:0;
+      const st=avgST?20*avgST.get(x.boat):0;
+      const motorScore=motor?15*motor.get(x.boat):0;
+      const exhibition=(exTime?7*exTime.get(x.boat):0)+(exST?3*exST.get(x.boat):0);
+      const score=ability+course+st+motorScore+exhibition;
+      return {boat:x.boat,score:Number(score.toFixed(3)),top2:x.top2,top3:x.top3,components:{ability:Number(ability.toFixed(2)),course:Number(course.toFixed(2)),averageST:Number(st.toFixed(2)),motor:Number(motorScore.toFixed(2)),exhibition:Number(exhibition.toFixed(2)),last50:0}};
+    });
+    const map=new Map(rows.map(x=>[x.boat,x]));
+    const combinations=[];
+    for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let d=1;d<=6;d++){
+      if(a===b||a===d||b===d)continue;
+      const first=map.get(a),second=map.get(b),third=map.get(d);
+      const strength=first.score*.54+second.score*.28+third.score*.18+
+        (second.top2===null?0:second.top2*.035)+(third.top3===null?0:third.top3*.025);
+      combinations.push({boats:[a,b,d],strength});
+    }
+    combinations.sort((a,b)=>b.strength-a.strength||a.boats.join('').localeCompare(b.boats.join('')));
+    const main=combinations.slice(0,6).map(x=>x.boats);
+    const used=new Set(main.map(x=>x.join('-')));
+    const upset=combinations.filter(x=>x.boats[0]>=4&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
+    const missing=[...(!courses?['course']:[]),...(!avgST?['averageST']:[]),...(!exTime?['exhibitionTime']:[]),...(!exST?['exhibitionST']:[]),'last50','currentMeet','wind'];
+    return {ready:true,main,upset,rows,missingInputs:missing,model:'experimental_100_point_v1_not_backtested',note:'仮配点。コース別選手実績・今節成績・風・50走は未反映。欠損項目は0点であり能力0を意味しません。的中率未検証。'};
+  })();
   const basePicks=rankTrifectaCandidates(inputs.rankedScores);
   const picks=rankTrifectaCandidates(startAdjustment.rankedScores);
   const missingInputs=inputs.missingInputs.filter(x=>
     !(x==='exhibition'&&adjustment.applied)&&!(x==='start'&&startAdjustment.applied));
   return reply(request,{date,venue,race,ready:picks.ready,main:picks.main,upset:picks.upset,
-    rankedScores:startAdjustment.rankedScores,method:inputs.method,combinationMethod:picks.method,officialStatsRetry,
+    rankedScores:startAdjustment.rankedScores,experimental,method:inputs.method,combinationMethod:picks.method,officialStatsRetry,
     basePrediction:{main:basePicks.main,upset:basePicks.upset},
     predictionChanged:JSON.stringify(basePicks.main)!==JSON.stringify(picks.main)||JSON.stringify(basePicks.upset)!==JSON.stringify(picks.upset),
     predictionMode:startAdjustment.applied?'verified_start_adjusted':(adjustment.applied?'verified_exhibition_adjusted':'base_stats_only'),
