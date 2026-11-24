@@ -273,12 +273,11 @@ const parsedTableRows = heatmapTableRows.map(row => {
   .replace(/\u00a0/g, "")
   .trim()
 );
-  return cells.map(cell => cell === "" || /^(?:&nbsp;|&#160;)+$/.test(cell) ? "0" : cell);
+  return cells.map(cell => cell === "" || /^(?:&nbsp;|&#160;)+$/.test(cell) ? null : cell);
 });
 const text = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
-.replace(/<td\b[^>]*>\s*(?:&nbsp;|&#160;|\u00a0|\s)*<\/td>/gi, "<td>0</td>")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ");
 
@@ -293,13 +292,13 @@ const text = html
 
 const row = parsedTableRows.find(cells =>
   cells.some(cell =>
-    cell.replace(/\s/g, "") === name.replace(/\s/g, "")
+    typeof cell === "string" && cell.replace(/\s/g, "") === name.replace(/\s/g, "")
   )
 );
 
 const boat = row ? Number(row[0]) : null;
 const tableCounts = row
-  ? row.slice(2, 8).map(v => v === "" ? 0 : Number(v))
+  ? row.slice(2, 8).map(v => typeof v === "string" && /^\d+$/.test(v) ? Number(v) : null)
   : null;
 
 const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null;
@@ -327,7 +326,7 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 );
     const runs = counts ? counts.reduce((a, b) => a + b, 0) : 0;
 
-    if (!counts || counts.length !== 6 || counts.some(n => !Number.isFinite(n) || n < 0)) {
+    if (!counts || counts.length !== 6 || counts.some(n => !Number.isInteger(n) || n < 0)) {
       return { name, counts: null, verified: false };
     }
 
