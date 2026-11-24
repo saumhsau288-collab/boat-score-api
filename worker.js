@@ -301,20 +301,21 @@ async function runScheduledBeforeArchive(env,scheduledTime){
   return row.date===date&&row.ready===true&&Number.isInteger(row.venue)&&row.venue>=1&&row.venue<=24&&Number.isInteger(row.race)&&row.race>=1&&row.race<=12&&Number.isFinite(deadline)&&deadline-now<=600000&&deadline-now>=30000&&!state.records[id]&&(state.attempts[id]||0)<2;
  }).sort((a,b)=>Date.parse(a.deadlineAt)-Date.parse(b.deadlineAt)).slice(0,12);
  if(!pending.length)return;
+ state.failures=state.failures||{};
  const rows=await mapOfficialLimited(pending,3,async row=>{
   const id=row.venue+':'+row.race,deadline=Date.parse(row.deadlineAt);
   const source='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date;
   try{
-   const budget=Math.min(12000,deadline-Date.now()-1000);if(budget<1000)return {id};
+   const budget=Math.min(12000,deadline-Date.now()-1000);if(budget<1000)return {id,reason:'deadline_near'};
    const res=await fetch(source,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(budget)});
-   if(!res.ok)return {id};const html=await res.text();if(html.length>1000000)return {id};
-   const capturedAt=new Date().toISOString();if(Date.parse(capturedAt)>=deadline)return {id};
+   if(!res.ok)return {id,reason:'http_'+res.status};const html=await res.text();if(html.length>1000000)return {id,reason:'response_too_large'};
+   const capturedAt=new Date().toISOString();if(Date.parse(capturedAt)>=deadline)return {id,reason:'deadline_passed'};
    const exhibition=extractOfficialExhibition(html),start=extractOfficialStartExhibition(html),weather=extractOfficialWeather(html);
-   if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id};
+   if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id,reason:'exhibition_or_start_unverified'};
    return {id,record:{date,venue:row.venue,race:row.race,deadlineAt:row.deadlineAt,capturedAt,source,exhibition,start,weather,model:'observation-only-v1'}};
-  }catch{return {id};}
+  }catch{return {id,reason:'fetch_or_parse_failed'};}
  });
- for(const row of rows){state.attempts[row.id]=(state.attempts[row.id]||0)+1;if(row.record&&!state.records[row.id])state.records[row.id]=row.record;}
+ for(const row of rows){state.attempts[row.id]=(state.attempts[row.id]||0)+1;if(row.record&&!state.records[row.id]){state.records[row.id]=row.record;delete state.failures[row.id];}else if(!row.record){state.failures[row.id]={reason:row.reason||'unknown',at:new Date().toISOString()};}}
  state.updatedAt=new Date().toISOString();
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
 }
@@ -344,6 +345,16 @@ if(u.pathname==='/api/research/rank-audit'){
  const raw=await env.MORNING_KV.get('rank-audit:v1:'+date);
  if(!raw)return reply(request,{date,status:'not_available'},404);
  return reply(request,JSON.parse(raw));
+}
+if(u.pathname==='/api/research/before-archive'){
+ if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+ const date=u.searchParams.get('date')||'';
+ if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid date'},400);
+ if(!env?.MORNING_KV)return reply(request,{date,status:'not_configured'},503);
+ const raw=await env.MORNING_KV.get('before-archive:v1:'+date);
+ if(!raw)return reply(request,{date,status:'not_available'},404);
+ const state=JSON.parse(raw);
+ return reply(request,{date,status:'recorded',updatedAt:state.updatedAt,verifiedCount:Object.keys(state.records||{}).length,attemptedCount:Object.keys(state.attempts||{}).length,failures:state.failures||{}});
 }
 if(u.pathname==='/api/research/before-audit'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -427,7 +438,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-before-audit',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-before-collection-status',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -437,7 +448,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <section id="makulaboPanel" hidden><h2>まくらぼ画像取り込み</h2><p id="makulaboFrameStatus" role="status">レースを選択してから画像取り込みを開いてください。</p><button type="button" id="loadMakulaboFrame">選択レースの取り込み画面を開く</button><iframe id="makulaboFrame" title="まくらぼ画像取り込み" style="width:100%;height:75vh;border:0" hidden></iframe></section><section id="historyPanel" hidden><h2>過去レースの予想・確定結果比較</h2><p>上で開催日・競艇場・レースを選択してください。Boat Score 2と同じ予想APIで再計算し、公式の確定着順と照合します。</p><button id="compareHistorical">選択した過去レースを予想・結果照合</button><pre id="compareHistoricalOutput">未実行</pre><small>過去時点の保存済み予想ではありません。取得できる現在の公式成績で再計算する場合があり、朝8時の的中実績とは区別します。まくらぼと直前情報が未取得なら比較に含みません。</small></section>
 
 <section id="morningRankingSection" hidden><h2>朝8時の全国レース予想ランキング</h2><p>当日の開催場を一斉評価した暫定ランキングです。各20レースを上限に表示し、候補が不足する場合は確認できた件数だけ表示します。</p><p id="morningRankingStatus" role="status">朝8時の保存予想を確認しています…</p><div id="morningLinks" aria-label="朝8時の全国ランキングからレースを選択"></div><small>公式6艇と基礎成績による朝の暫定評価です。直前展示・風・進入・まくらぼ50走を加味した確定予想ではありません。的中率は未検証です。</small></section>
-<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261124-before-audit · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
+<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261124-before-collection-status · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
 <h2 style="margin:0 0 8px;font-size:18px">1着・2着除外の研究状況（2026/11/23確認）</h2>
 <p style="margin:4px 0 10px">過去3日分のうち検証可能な275レースを分析。レース後に再計算した評価点による研究結果です。</p>
 <table style="width:100%;border-collapse:collapse;font-size:13px"><caption style="text-align:left;margin-bottom:5px">11/19・11/21で候補を選び、11/22の結果で照合</caption>
