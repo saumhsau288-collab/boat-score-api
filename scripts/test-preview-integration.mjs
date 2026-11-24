@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+const source=fs.readFileSync('worker.js','utf8');
+const start=source.indexOf('<body><main><h1>Boat Score 2</h1>');
+const end=source.indexOf('</script></body></html>'+String.fromCharCode(96),start);
+assert.ok(start>=0&&end>start);
+const home=source.slice(start,end+9);
+const ids=[...home.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+assert.equal(new Set(ids).size,ids.length);
+const panels=[...home.matchAll(/data-panel="([^"]+)"/g)].map(m=>m[1]);
+assert.deepEqual(panels,['racePanel','makulaboPanel','historyPanel','morningRankingSection','researchPanel']);
+for(const id of panels)assert.ok(ids.includes(id));
+for(const m of source.matchAll(/<script>([\s\S]*?)<\/script>/g))new vm.Script(m[1]);
+const code=home.match(/\/\/ Switch existing DOM panels[^\n]*\n([^\n]+)/)[1];
+const nodes=Object.fromEntries(panels.map((id,i)=>[id,{hidden:i!==0}]));
+const buttons=panels.map(panel=>({dataset:{panel},style:{},setAttribute(k,v){this[k]=v}}));
+let handler;
+const tabs={querySelectorAll:()=>buttons,addEventListener:(name,fn)=>{assert.equal(name,'click');handler=fn}};
+vm.runInNewContext(code,{document:{getElementById:id=>id==='previewTabs'?tabs:nodes[id]}});
+for(const button of buttons){handler({target:{closest:()=>button}});for(const id of panels)assert.equal(nodes[id].hidden,id!==button.dataset.panel);assert.equal(button['aria-pressed'],'true')}
+assert.equal(nodes.researchPanel.open,true);
+assert.ok(home.includes('const completeBefore='));
+assert.ok(home.includes('boat-score-manual-review'));
+console.log('Preview integration: HTML IDs, script syntax, tab behavior and wiring passed');
