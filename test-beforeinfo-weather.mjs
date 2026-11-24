@@ -15,3 +15,31 @@ test('missing speed is not zero',()=>assert.equal(parse(page('波高 0cm')).veri
 test('icon alone does not identify direction',()=>assert.equal(parse(page('<img src="north.png"> 風速 3m 波高 2cm')).windDirection,null));
 test('conflicting image directions are rejected',()=>assert.equal(parse(page('<img alt="北"><img alt="南"> 風速 3m 波高 2cm')).windDirection,null));
 test('out of range speed rejected',()=>assert.equal(parse(page('風速 99m 波高 2cm')).verified,false));
+
+const cacheStart=source.indexOf('const verifiedBeforeinfoCache=');
+const cacheEnd=source.indexOf('// Short-lived per-isolate deduplication',cacheStart);
+assert.ok(cacheStart>=0&&cacheEnd>cacheStart);
+const cache=vm.runInNewContext(source.slice(cacheStart,cacheEnd)+'\n({saveVerifiedBeforeinfo,getVerifiedBeforeinfo,readSharedVerifiedBeforeinfo,writeSharedVerifiedBeforeinfo})');
+const six={verified:true,rows:Array.from({length:6},(_,i)=>({boat:i+1}))};
+const weather={verified:true,windDirectionVerified:true,windDirection:'北東',windSpeed:0,waveHeight:0};
+test('memory cache preserves verified weather and exact race',()=>{
+ cache.saveVerifiedBeforeinfo('20261124',7,1,six,six,weather);
+ assert.equal(cache.getVerifiedBeforeinfo('20261124',7,1).weather.windSpeed,0);
+ assert.equal(cache.getVerifiedBeforeinfo('20261124',7,2),null);
+ assert.equal(cache.getVerifiedBeforeinfo('20261124',8,1),null);
+});
+test('unverified weather is not cached',()=>{
+ cache.saveVerifiedBeforeinfo('20261124',7,3,six,six,{verified:false});
+ assert.equal(cache.getVerifiedBeforeinfo('20261124',7,3).weather,null);
+});
+test('shared cache preserves weather and rejects expired records',async()=>{
+ const store=new Map();
+ const env={MORNING_KV:{put:async(k,v)=>store.set(k,v),get:async(k)=>store.get(k)}};
+ await cache.writeSharedVerifiedBeforeinfo(env,'20261124',7,1,six,six,weather);
+ const item=await cache.readSharedVerifiedBeforeinfo(env,'20261124',7,1);
+ assert.equal(item.weather.windDirection,'北東');
+ assert.equal(item.weather.waveHeight,0);
+ const key=[...store.keys()][0], old=JSON.parse(store.get(key));
+ old.savedAt-=121000;store.set(key,JSON.stringify(old));
+ assert.equal(await cache.readSharedVerifiedBeforeinfo(env,'20261124',7,1),null);
+});
