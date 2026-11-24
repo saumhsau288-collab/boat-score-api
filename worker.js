@@ -448,7 +448,7 @@ function renderExperimental100PointPrediction(){
  pre.textContent='【本命6点】\\n'+fmt(main)+'\\n\\n【穴6点】\\n'+fmt(upset)+'\\n\\n【艇別評価と反映内訳】\\n'+rows.map(x=>x.boat+'号艇 '+x.score.toFixed(1)+'点（'+Object.entries(x.components).map(([k,v])=>(components[k]||k)+':'+Number(v).toFixed(1)).join(' / ')+'）').join('\\n')+
  '\\n\\n【取得・反映状況】\\n展示・展示ST：'+(model.missingInputs.includes('exhibitionTime')?'展示タイム未反映':'展示タイム反映')+' / '+(model.missingInputs.includes('exhibitionST')?'展示ST未反映':'展示ST反映')+'\\n進入：'+(model.missingInputs.includes('course')?'未確認・未反映':'公式6艇の進入を反映')+'\\nまくらぼ50走：'+(complete?'6艇照合済み・最大5点を反映':unique.size+'艇確認・6艇未完了のため予想点には未反映')+
  '\\n未反映：'+model.missingInputs.filter(x=>x!=='last50').join('、')+'\\n※仮配点・的中率未検証。50走はコース別ではない着順実績です。欠損を実測0とはみなしません。従来予想は変更しません。';
- trial.append(head,pre);document.getElementById('selectedPredictionOutput')?.parentElement?.appendChild(trial);
+ trial.append(head,pre);document.getElementById('predictOutput')?.parentElement?.appendChild(trial);
 }
 function updateCombinedPredictionPanel(){
  const out=document.getElementById('combinedPredictionOutput');
