@@ -517,7 +517,7 @@ function updatePositionHeatmap(){
 function recent50SupplementForSelection(){
  if(!verifiedMakulabo||verifiedMakulabo.key!==dateCode()+':'+venue.value+':'+race.value)return null;
  const rows=verifiedMakulabo.rows;
- if(!Array.isArray(rows)||rows.length!==6||new Set(rows.map(x=>Number(x.boat))).size!==6)return null;
+ if(verifiedMakulabo.partial===true||!Array.isArray(rows)||rows.length!==6||new Set(rows.map(x=>Number(x.boat))).size!==6)return null;
  const values=rows.map(row=>{
   const counts=Array.isArray(row.counts)?row.counts.map(Number):null,runs=Number(row.runs);
   if(!Number.isInteger(Number(row.boat))||Number(row.boat)<1||Number(row.boat)>6||
@@ -535,7 +535,7 @@ function syncVerifiedMakulaboComparison(){
  for(const tr of trs){
   const boat=Number((tr.cells[0]?.textContent||'').match(/^[1-6]/)?.[0]);
   const row=verifiedMakulabo.rows.find(x=>Number(x.boat)===boat);
-  if(!row||tr.cells.length!==18)continue;
+  if(!row||tr.cells.length!==18||row.verified===false)continue;
   // The API has already checked all six official racer identities. Match by boat here;
   // presentation names can contain different spacing and glyph variants.
   if(!Number.isFinite(row.runs)||row.runs<1||!Array.isArray(row.counts)||row.counts.length!==6)continue;
@@ -558,6 +558,9 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
    // Show independently verified source rows without promoting partial data to prediction inputs.
    const partial=Array.isArray(data.last50PartialRows)?data.last50PartialRows.filter(row=>row.verified===true&&Number.isInteger(row.boat)&&row.boat>=1&&row.boat<=6&&Number.isInteger(row.runs)&&row.runs>0&&Array.isArray(row.counts)&&row.counts.length===6&&row.counts.every(n=>Number.isInteger(n)&&n>=0)&&row.counts.reduce((sum,n)=>sum+n,0)===row.runs):[];
    if(partial.length){
+    verifiedMakulabo={key:date+':'+v+':'+r,rows:partial,partial:true};
+    const reflected=syncVerifiedMakulaboComparison();
+    const partialStatus=document.createElement('p');partialStatus.textContent='選手比較表へ反映：'+reflected+'/'+partial.length+'艇（確認済み行のみ）。6艇照合未完了のため予想点には反映しません。';result.appendChild(partialStatus);
     const title=document.createElement('h3');title.textContent='まくらぼ取得済みの艇（部分表示・予想未反映）';result.appendChild(title);
     const note=document.createElement('p');note.textContent='公式選手名と艇番が一致した行のみ表示します。未掲載の艇は未確認です。6艇すべての照合が完了するまで、50走データは予想点に加算しません。';result.appendChild(note);
     const table=document.createElement('table'),head=document.createElement('tr');
