@@ -2819,6 +2819,7 @@ function parseLast50Heatmap(html) {
   if (!section) return {verified:false,rows:[],reason:'heading_missing'};
   const table = section.match(/<table\b[^>]*>[\s\S]*?<\/table>/i);
   if (!table) return {verified:false,rows:[],reason:'table_missing'};
+  const rejectedRows = [];
   const rows = [...table[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m => {
     const cells = [...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
       .map(c => c[1].replace(/<[^>]*>/g,'').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').trim());
@@ -2827,14 +2828,14 @@ function parseLast50Heatmap(html) {
     const runs = /^\d+$/.test(cells[8]) ? Number(cells[8]) : NaN;
     const avg = Number(cells[9]);
     const weighted = counts.reduce((sum,n,i) => sum + n*(i+1),0);
-    if (!cells[1] || !counts.every(Number.isInteger) || !Number.isInteger(runs) || runs < 1 || runs > 50 ||
-        counts.reduce((a,b)=>a+b,0)!==runs || !Number.isFinite(avg) ||
-        Math.abs(weighted/runs-avg)>0.011) return null;
+    const countSum=counts.reduce((a,b)=>a+b,0);
+    const reason=!cells[1]?'missing_name':!counts.every(Number.isInteger)?'invalid_finish_counts':!Number.isInteger(runs)||runs<1||runs>50?'invalid_run_count':countSum!==runs?'run_count_mismatch':!Number.isFinite(avg)?'invalid_average':Math.abs(weighted/runs-avg)>0.011?'average_mismatch':null;
+    if(reason){rejectedRows.push({boat:Number(cells[0]),reason,runs:Number.isFinite(runs)?runs:null,countSum:Number.isFinite(countSum)?countSum:null,average:Number.isFinite(avg)?avg:null,calculatedAverage:runs>0&&Number.isFinite(weighted)?Number((weighted/runs).toFixed(3)):null});return null;}
     return {boat:Number(cells[0]),name:cells[1],counts,runs,average:avg};
   }).filter(Boolean);
   const verified = rows.length===6 && new Set(rows.map(r=>r.boat)).size===6 &&
     new Set(rows.map(r=>normalizeLast50RacerName(r.name))).size===6;
-  return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table',diagnostics:{tableRowCount:[...table[0].matchAll(/<tr\b/gi)].length,validRowCount:rows.length,boatsFound:rows.map(r=>r.boat),nameLengths:rows.map(r=>normalizeLast50RacerName(r.name).length)}};
+  return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table',diagnostics:{tableRowCount:[...table[0].matchAll(/<tr\b/gi)].length,validRowCount:rows.length,boatsFound:rows.map(r=>r.boat),nameLengths:rows.map(r=>normalizeLast50RacerName(r.name).length),rejectedRows}};
 }
 
 function verifyHeatmapBoats(html, officialRacers) {
