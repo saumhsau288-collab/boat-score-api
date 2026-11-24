@@ -67,3 +67,15 @@ test('explicit flying start remains distinct from normal ST',()=>{
  assert.equal(r.verified,true);
  assert.equal(r.rows[0].startTiming,'F.01');
 });
+
+const exA=source.indexOf('function extractOfficialExhibition(');
+const exB=source.indexOf('function extractOfficialBoatStats(',exA);
+assert.ok(exA>=0&&exB>exA);
+const parseEx=vm.runInNewContext(source.slice(exA,exB)+'\nextractOfficialExhibition');
+const exPage=(boats,times,tilts)=>'<table><tr><th>展示タイム</th><th>チルト</th></tr>'+boats.map((boat,i)=>'<tr>'+[boat,'','選手'+boat,'',times[i],tilts[i]].map(v=>'<td>'+v+'</td>').join('')+'</tr>').join('')+'</table>';
+const boats=[1,2,3,4,5,6], times=['6.71','6.82','6.73','6.74','6.75','6.76'],tilts=['-0.5','0','0.5','0','-0.5','1'];
+test('six exhibition rows preserve time and signed tilt',()=>{const r=parseEx(exPage(boats,times,tilts));assert.equal(r.verified,true);assert.equal(r.rows[0].exhibitionTime,6.71);assert.equal(r.rows[0].tilt,-0.5);assert.equal(r.rows[1].tilt,0);});
+test('missing exhibition time rejects incomplete table',()=>assert.equal(parseEx(exPage(boats,['',...times.slice(1)],tilts)).verified,false));
+test('missing tilt is not zero',()=>assert.equal(parseEx(exPage(boats,times,['',...tilts.slice(1)])).verified,false));
+test('duplicate exhibition boat rejected',()=>assert.equal(parseEx(exPage([1,2,3,4,5,5],times,tilts)).verified,false));
+test('out of range exhibition time rejected',()=>assert.equal(parseEx(exPage(boats,['9.99',...times.slice(1)],tilts)).verified,false));
