@@ -1,0 +1,16 @@
+name: Unified sandbox cache test
+on:
+  push:
+    branches: [boat-score-2-unified-sandbox-20261124]
+    paths: ['unified/**', '.github/workflows/unified-cache-test.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test unified/race-data-client.test.mjs
