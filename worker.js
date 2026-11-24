@@ -20,14 +20,14 @@ function getVerifiedBeforeinfo(date,venue,race){
   if(Date.now()-item.savedAt>120000){verifiedBeforeinfoCache.delete(key);return null;}
   return item;
 }
-function saveVerifiedBeforeinfo(date,venue,race,exhibition,start){
+function saveVerifiedBeforeinfo(date,venue,race,exhibition,start,weather=null){
   const exhibitionOK=exhibition?.verified===true&&exhibition.rows?.length===6;
   const startOK=start?.verified===true&&start.rows?.length===6;
   if(!exhibitionOK&&!startOK)return;
   if(verifiedBeforeinfoCache.size>=30)verifiedBeforeinfoCache.delete(verifiedBeforeinfoCache.keys().next().value);
   verifiedBeforeinfoCache.set(beforeinfoCacheKey(date,venue,race),{savedAt:Date.now(),
     exhibition:exhibitionOK?exhibition:{verified:false,rows:[]},
-    start:startOK?start:{verified:false,rows:[]}});
+    start:startOK?start:{verified:false,rows:[]},weather:weather?.verified===true?weather:null});
 }
 // Cross-isolate reuse where the existing MORNING_KV binding is available.
 // Never trust a KV entry without the exact race key, freshness and six-row checks.
@@ -41,17 +41,17 @@ async function readSharedVerifiedBeforeinfo(env,date,venue,race){
       new Set(x.rows.map(r=>r.boat)).size===6&&x.rows.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6);
     if(!valid(item.exhibition)&&!valid(item.start))return null;
     return {exhibition:valid(item.exhibition)?item.exhibition:{verified:false,rows:[]},
-      start:valid(item.start)?item.start:{verified:false,rows:[]}};
+      start:valid(item.start)?item.start:{verified:false,rows:[]},weather:item.weather?.verified===true?item.weather:null};
   }catch{return null;}
 }
-async function writeSharedVerifiedBeforeinfo(env,date,venue,race,exhibition,start){
+async function writeSharedVerifiedBeforeinfo(env,date,venue,race,exhibition,start,weather=null){
   if(!env?.MORNING_KV)return;
   const valid=x=>x?.verified===true&&Array.isArray(x.rows)&&x.rows.length===6&&
     new Set(x.rows.map(r=>r.boat)).size===6&&x.rows.every(r=>Number.isInteger(r.boat)&&r.boat>=1&&r.boat<=6);
   if(!valid(exhibition)&&!valid(start))return;
   try{await env.MORNING_KV.put('verified-beforeinfo:'+beforeinfoCacheKey(date,venue,race),
     JSON.stringify({date,venue:Number(venue),race:Number(race),savedAt:Date.now(),
-      exhibition:valid(exhibition)?exhibition:null,start:valid(start)?start:null}),{expirationTtl:180});}catch{}
+      exhibition:valid(exhibition)?exhibition:null,start:valid(start)?start:null,weather:weather?.verified===true?weather:null}),{expirationTtl:180});}catch{}
 }
 // Short-lived per-isolate deduplication reduces repeated official-site traffic.
 // Failures and unverified data are never persisted across requests.
@@ -2287,13 +2287,13 @@ if (u.pathname === '/api/official/beforeinfo') {
      Number(venue)<1||Number(venue)>24||Number(race)<1||Number(race)>12)
     return reply(request,{error:'Invalid parameters'},400);
   // Reuse the same race's recently verified exhibition and start data.
-  // Weather is not cached, so it remains unverified in this fast response.
+  // Reuse only complete weather and six-boat data; otherwise fetch again.
   const cached=getVerifiedBeforeinfo(date,venue,race)||await readSharedVerifiedBeforeinfo(env,date,venue,race);
-  if(cached?.exhibition?.verified===true||cached?.start?.verified===true){
+  if(cached?.exhibition?.verified===true&&cached?.start?.verified===true&&cached?.weather?.verified===true&&cached?.weather?.windDirectionVerified===true){
     return reply(request,{status:'verified',source:'verified_recent_cache',
-      exhibitionVerified:cached.exhibition.verified===true,startVerified:cached.start.verified===true,weatherVerified:false,windDirectionVerified:false,
+      exhibitionVerified:cached.exhibition.verified===true,startVerified:cached.start.verified===true,weatherVerified:true,windDirectionVerified:true,
       exhibitionByBoat:cached.exhibition.rows,startByCourse:cached.start.rows,
-      weather:{verified:false},dataReadyForPrediction:false});
+      weather:cached.weather,dataReadyForPrediction:false});
   }
   const url=new URL('https://www.boatrace.jp/owpc/pc/race/beforeinfo');
   url.searchParams.set('rno',String(Number(race)));
@@ -2317,8 +2317,8 @@ if (u.pathname === '/api/official/beforeinfo') {
     const exhibition=extractOfficialExhibition(html);
     const start=extractOfficialStartExhibition(html);
     const weather=extractOfficialWeather(html);
-    saveVerifiedBeforeinfo(date,venue,race,exhibition,start);
-    await writeSharedVerifiedBeforeinfo(env,date,venue,race,exhibition,start);
+    saveVerifiedBeforeinfo(date,venue,race,exhibition,start,weather);
+    await writeSharedVerifiedBeforeinfo(env,date,venue,race,exhibition,start,weather);
     return reply(request,{
       status:exhibition.verified&&start.verified?'verified':'partial',
       exhibitionVerified:exhibition.verified,startVerified:start.verified,
