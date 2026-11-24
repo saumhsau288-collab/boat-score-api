@@ -471,7 +471,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-deadline-recheck',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261124-interactive-card-fast',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -935,7 +935,7 @@ function getPreviewRaceCard(key){const entry=previewRaceCardCache.get(key);if(!e
 function savePreviewRaceCard(key,data){if(data?.racersVerified!==true||data?.statsVerified!==true||data.racersByBoat?.length!==6||data.statsByBoat?.length!==6||new Set(data.racersByBoat.map(x=>x.boat)).size!==6||!data.statsByBoat.every(x=>data.racersByBoat.some(r=>r.boat===x.boat&&String(r.racerId)===String(x.racerId))))return;if(previewRaceCardCache.size>=24)previewRaceCardCache.delete(previewRaceCardCache.keys().next().value);previewRaceCardCache.set(key,{savedAt:Date.now(),data});}
 let previewCardPending=null;
 function cancelPreviewCard(){if(previewCardPending){previewCardPending.controller.abort();previewCardPending=null;}}
-function requestPreviewCard(key,urlBase){const cached=getPreviewRaceCard(key);if(cached)return Promise.resolve({data:cached.data,cached:true});if(previewCardPending?.key===key)return previewCardPending.promise;cancelPreviewCard();const controller=new AbortController();const entry={key,controller,promise:null};entry.promise=(async()=>{try{const response=await fetch('/api/official/racers-only'+urlBase,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(32000)])});if(!response.ok)throw Error('公式出走表 HTTP '+response.status);const data=await response.json();if(!controller.signal.aborted)savePreviewRaceCard(key,data);return {data,cached:false};}catch(error){return {error};}finally{if(previewCardPending===entry)previewCardPending=null;}})();previewCardPending=entry;return entry.promise;}
+function requestPreviewCard(key,urlBase){const cached=getPreviewRaceCard(key);if(cached)return Promise.resolve({data:cached.data,cached:true});if(previewCardPending?.key===key)return previewCardPending.promise;cancelPreviewCard();const controller=new AbortController();const entry={key,controller,promise:null};entry.promise=(async()=>{try{const response=await fetch('/api/official/racers-only'+urlBase,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});if(!response.ok)throw Error('公式出走表 HTTP '+response.status);const data=await response.json();if(!controller.signal.aborted)savePreviewRaceCard(key,data);return {data,cached:false};}catch(error){return {error};}finally{if(previewCardPending===entry)previewCardPending=null;}})();previewCardPending=entry;return entry.promise;}
 function prefetchSelectedCard(){if(!day.value||!venue.value||!race.value||venue.disabled||race.disabled)return;const key=dateCode()+':'+venue.value+':'+race.value;const params='?'+new URLSearchParams({date:dateCode(),venue:venue.value,race:race.value});void requestPreviewCard(key,params);}
 function clearRaceDisplay(){cancelPreviewCard();document.getElementById('beforeinfoStatus').textContent='直前情報：未取得。選択レースの公式情報を確認してください。';raceDataRequest++;if(raceDataController){raceDataController.abort();raceDataController=null;}document.getElementById('load').disabled=false;document.getElementById('comparisonBody').replaceChildren();document.getElementById('finishRateSummary').textContent='選択中のレースの公式データは未確認です';document.getElementById('racerPoints').textContent='レースを選んで公式データを確認してください';document.getElementById('output').textContent='';document.getElementById('status').textContent='';}
 day.addEventListener('change',()=>{scheduleRequest++;if(scheduleController){scheduleController.abort();scheduleController=null;}document.getElementById('scheduleOutput').textContent='';if(venue.value)refreshVerifiedRaces();else resetRaceChoices();document.getElementById('scheduleStatus').textContent='日付を変更しました。選択日の公式レース一覧を再確認します。';});
@@ -2465,7 +2465,7 @@ if (u.pathname === '/api/makulabo/screenshot-review') {
 if (u.pathname === '/api/official/racers-only') {
  const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
  if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply(request,{error:'Invalid parameters'},400);
- const result=await fetchOfficialRacers(date,venue,race);
+ const result=await fetchOfficialRacers(date,venue,race,{interactive:true});
  return reply(request,{date,venue,race,racersVerified:result.verified===true,statsVerified:result.statsVerified===true,racersByBoat:result.verified?result.racers:[],statsByBoat:result.statsVerified?result.statsByBoat:[],diagnostics:{reason:result.reason||null,htmlLength:result.htmlLength||null,averageSTParseDiagnostics:result.averageSTParseDiagnostics||[]}});
 }
 if (u.pathname === '/api/official/race-data') {
@@ -3438,7 +3438,7 @@ async function fetchOfficialRacers(date, venue, race, options={}) {
     // never treat a timeout or an unverified response as valid racer data.
     let response;
     let lastTransportError;
-    for (const timeoutMs of (options.fastVerification ? [4500, 4500] : [10000, 18000])) {
+    for (const timeoutMs of (options.interactive ? [6000, 6000] : options.fastVerification ? [4500, 4500] : [10000, 18000])) {
       try {
         response = await fetch(url.toString(), {
           headers: {Accept: 'text/html,application/xhtml+xml'},
