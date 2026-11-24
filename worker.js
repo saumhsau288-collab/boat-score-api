@@ -554,7 +554,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
   const data=await response.json();
   if(token!==makulaboSearchToken||date!==dateCode()||v!==venue.value||r!==race.value)return;
   if(!response.ok||data.last50Verified!==true||!Array.isArray(data.last50ByBoat)||data.last50ByBoat.length!==6){
-   const diagnostic=data.last50ParseDiagnostics; const parseDetail=diagnostic?' 表の診断: 全行'+diagnostic.tableRowCount+'・有効行'+diagnostic.validRowCount+'・艇番['+(diagnostic.boatsFound||[]).join(',')+']・名前文字数['+(diagnostic.nameLengths||[]).join(',')+']・除外行['+(diagnostic.rejectedRows||[]).map(x=>x.boat+'号艇 '+x.reason+' 走数:'+x.runs+' 着順合計:'+x.countSum+' 平均:'+x.average+' 計算:'+x.calculatedAverage).join('、')+']。':''; const comparison=data.last50IdentityComparison; const mismatches=Array.isArray(comparison?.mismatches)?comparison.mismatches:[]; const detail=mismatches.length?' 不一致: '+mismatches.map(x=>x.boat+'号艇 公式「'+x.officialName+'」／まくらぼ「'+(x.parsedName??'該当なし')+'」').join('、'):''; status.textContent='自動取得・6艇照合は未完了（'+(data.last50ParseReason||data.reason||data.last50Reason||'データ不足')+'）。'+parseDetail+detail+' 未取得の項目は画面上で未確認と表示し、評価への加点は0点です。実際の50走成績を0回とみなすものではありません。';return;
+   const diagnostic=data.last50ParseDiagnostics; const parseDetail=diagnostic?' 表の診断: 全行'+diagnostic.tableRowCount+'・有効行'+diagnostic.validRowCount+'・艇番['+(diagnostic.boatsFound||[]).join(',')+']・名前文字数['+(diagnostic.nameLengths||[]).join(',')+']・除外行['+(diagnostic.rejectedRows||[]).map(x=>x.boat+'号艇 '+x.reason+' 異常値:'+(x.invalidCountCells||[]).map(y=>y.finish+'着='+y.value).join('/')+' 走数:'+x.runs+' 着順合計:'+x.countSum+' 平均:'+x.average+' 計算:'+x.calculatedAverage).join('、')+']。':''; const comparison=data.last50IdentityComparison; const mismatches=Array.isArray(comparison?.mismatches)?comparison.mismatches:[]; const detail=mismatches.length?' 不一致: '+mismatches.map(x=>x.boat+'号艇 公式「'+x.officialName+'」／まくらぼ「'+(x.parsedName??'該当なし')+'」').join('、'):''; status.textContent='自動取得・6艇照合は未完了（'+(data.last50ParseReason||data.reason||data.last50Reason||'データ不足')+'）。'+parseDetail+detail+' 未取得の項目は画面上で未確認と表示し、評価への加点は0点です。実際の50走成績を0回とみなすものではありません。';return;
   }
   const table=document.createElement('table'),head=document.createElement('tr');
   ['艇','選手','1着','2着','3着','4着','5着','6着','走数','平均'].forEach(t=>{const th=document.createElement('th');th.textContent=t;head.appendChild(th);});table.appendChild(head);
@@ -2822,7 +2822,7 @@ function parseLast50Heatmap(html) {
   const rejectedRows = [];
   const rows = [...table[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m => {
     const cells = [...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)]
-      .map(c => c[1].replace(/<[^>]*>/g,'').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').trim());
+      .map(c => c[1].replace(/<[^>]*>/g,'').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').normalize('NFKC').trim());
     if (cells.length < 10 || !/^[1-6]$/.test(cells[0])) return null;
     const counts = cells.slice(2,8).map(v => v === '' ? 0 : (/^\d+$/.test(v) ? Number(v) : NaN));
     const runs = /^\d+$/.test(cells[8]) ? Number(cells[8]) : NaN;
@@ -2830,7 +2830,7 @@ function parseLast50Heatmap(html) {
     const weighted = counts.reduce((sum,n,i) => sum + n*(i+1),0);
     const countSum=counts.reduce((a,b)=>a+b,0);
     const reason=!cells[1]?'missing_name':!counts.every(Number.isInteger)?'invalid_finish_counts':!Number.isInteger(runs)||runs<1||runs>50?'invalid_run_count':countSum!==runs?'run_count_mismatch':!Number.isFinite(avg)?'invalid_average':Math.abs(weighted/runs-avg)>0.011?'average_mismatch':null;
-    if(reason){rejectedRows.push({boat:Number(cells[0]),reason,runs:Number.isFinite(runs)?runs:null,countSum:Number.isFinite(countSum)?countSum:null,average:Number.isFinite(avg)?avg:null,calculatedAverage:runs>0&&Number.isFinite(weighted)?Number((weighted/runs).toFixed(3)):null});return null;}
+    if(reason){rejectedRows.push({boat:Number(cells[0]),reason,runs:Number.isFinite(runs)?runs:null,countSum:Number.isFinite(countSum)?countSum:null,average:Number.isFinite(avg)?avg:null,calculatedAverage:runs>0&&Number.isFinite(weighted)?Number((weighted/runs).toFixed(3)):null,invalidCountCells:cells.slice(2,8).map((value,index)=>({finish:index+1,value})).filter(x=>x.value!==''&&!/^\d+$/.test(x.value)).map(x=>({finish:x.finish,value:x.value.slice(0,20)}))});return null;}
     return {boat:Number(cells[0]),name:cells[1],counts,runs,average:avg};
   }).filter(Boolean);
   const verified = rows.length===6 && new Set(rows.map(r=>r.boat)).size===6 &&
