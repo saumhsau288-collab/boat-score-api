@@ -2800,8 +2800,8 @@ function last50RacerNamesMatch(officialName, heatmapName) {
   const official = normalizeLast50RacerName(officialName);
   const heatmap = normalizeLast50RacerName(heatmapName);
   // Makulabo can shorten a given name by one character (e.g. 船岡洋一郎 -> 船岡洋一).
-  // Only accept a single-character truncation within the SAME numbered boat.
-  return official === heatmap || (heatmap.length >= 3 && official.length === heatmap.length + 1 && official.startsWith(heatmap));
+  // Accept a four-character or longer prefix within the SAME numbered boat; retain existing 3-to-4 matching.
+  return !!official && !!heatmap && (official === heatmap || (heatmap.length >= 4 && official.startsWith(heatmap)) || (heatmap.length === 3 && official.length === 4 && official.startsWith(heatmap)));
 }
 function parseLast50Heatmap(html) {
   const section = html.split(/枠番別ヒートマップ/)[1];
