@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {auditCaptureProvenance as audit} from './audit-capture-provenance.mjs';
+const base={capturedAt:'2026-11-24T08:00:00+09:00',cutoffAt:'2026-11-24T10:00:00+09:00',source:'official',racers:Array.from({length:6},(_,i)=>({racerId:String(4000+i)}))};
+assert.equal(audit(base).structurallyValid,true);
+assert.equal(audit(base).independentlyAuthenticated,false);
+assert.ok(audit({...base,capturedAt:base.cutoffAt}).issues.includes('capture_not_before_cutoff'));
+assert.ok(audit({...base,cutoffAt:null}).issues.includes('missing_or_invalid_timestamp'));
+assert.ok(audit({...base,racers:Array(6).fill({racerId:'4000'})}).issues.includes('invalid_racer_identity'));
+assert.ok(audit({...base,source:''}).issues.includes('missing_source'));
+assert.equal(audit(null).structurallyValid,false);
+console.log('PASS: 7 provenance assertions');
