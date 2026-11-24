@@ -15,3 +15,4 @@ jobs:
           node-version: '22'
       - run: node --experimental-default-type=module scripts/audit-phase-score-separation.mjs
       - run: node scripts/test-normalize-exhibition-st.mjs
+      - run: node --experimental-default-type=module scripts/test-phase-comparison.mjs
