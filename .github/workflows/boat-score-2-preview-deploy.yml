@@ -41,6 +41,7 @@ jobs:
         run: |
           node --input-type=module --check < worker.js
           node scripts/test-preview-integration.mjs
+          node scripts/test-rank-audit-windows.mjs
           node --check generate-twelve-independent-methods.mjs
           node scripts/test-twelve-independent-preview.mjs
           node scripts/test-top-two-exclusion.mjs
