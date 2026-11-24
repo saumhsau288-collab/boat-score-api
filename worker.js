@@ -569,7 +569,7 @@ document.getElementById('searchMakulaboInBoatScore').onclick=async function(){
      const values=row?[boat,row.name,...row.counts,row.runs,row.average]:[boat,official.find(x=>x.boat===boat)?.name||'未確認',...Array(8).fill('未確認')];
      values.forEach(value=>{const td=document.createElement('td');td.textContent=String(value);tr.appendChild(td);});table.appendChild(tr);
     }
-    result.appendChild(table);
+    const scroll=document.createElement('div');scroll.style.cssText='max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch';table.style.cssText='border-collapse:collapse;font-size:13px;white-space:nowrap';for(const cell of table.querySelectorAll('th,td'))cell.style.cssText='border:1px solid #64748b;padding:5px';scroll.appendChild(table);result.appendChild(scroll);
    }
    return;
   }
