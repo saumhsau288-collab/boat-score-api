@@ -3017,8 +3017,8 @@ function extractOfficialWeather(html) {
   // Accept only an explicit cardinal direction in the weather section; never infer from an icon.
   const weatherHtml=html.match(/水面気象情報[\s\S]{0,6000}/)?.[0]||'';
   const cardinal='北北東|東北東|東南東|南南東|南南西|西南西|西北西|北北西|北東|南東|南西|北西|北|東|南|西|無風';
-  const imageLabels=[...weatherHtml.matchAll(/<(?:img|span)\\b[^>]*>/gi)]
-    .flatMap(m=>[...m[0].matchAll(/(?:alt|title|aria-label)\\s*=\\s*["']([^"']+)["']/gi)].map(a=>a[1]));
+  const imageLabels=[...weatherHtml.matchAll(/<(?:img|span)\b[^>]*>/gi)]
+    .flatMap(m=>[...m[0].matchAll(/(?:alt|title|aria-label)\s*=\s*["']([^"']+)["']/gi)].map(a=>a[1]));
   const imageDirections=imageLabels.flatMap(label=>{
     const match=label.match(new RegExp('(?:風向\\s*[:：]?\\s*)?('+cardinal+')(?:の風|風向)?$'));
     return match?[match[1]]:[];
