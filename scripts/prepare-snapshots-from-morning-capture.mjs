@@ -2,6 +2,7 @@
 // snapshots. Requires externally verified per-race cutoff timestamps.
 // Never treats workflow timestamps as independent proof of pre-race forecasts.
 import {prepareCaptureFromApiResponse} from './prepare-capture-from-api-response.mjs';
+import {auditCaptureProvenance} from './audit-capture-provenance.mjs';
 export function prepareSnapshotsFromMorningCapture(capture, cutoffByRace) {
  if(!Array.isArray(capture?.records) || !cutoffByRace || typeof cutoffByRace!=='object')
   return {status:'invalid_input'};
@@ -28,7 +29,9 @@ export function prepareSnapshotsFromMorningCapture(capture, cutoffByRace) {
   });
   if(result.status==='prepared_not_authenticated')
    snapshots.push({...result.snapshot,sourceResponseSha256:row.responseSha256??null,
-    captureRunId:capture.run?.workflowRunId??null});
+    captureRunId:capture.run?.workflowRunId??null,
+    provenanceDiagnostics:auditCaptureProvenance({capturedAt:row.receivedAt,cutoffAt,
+      racers:row.response?.scoreInputsByBoat,source:row.response?.source})});
   else excluded.push({key,reason:result.status});
  }
  return {status:'prepared_not_authenticated',snapshots,excluded,
