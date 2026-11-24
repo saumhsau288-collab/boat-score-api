@@ -330,7 +330,7 @@ const validBoat = Number.isInteger(boat) && boat >= 1 && boat <= 6 ? boat : null
 );
     const runs = counts ? counts.reduce((a, b) => a + b, 0) : 0;
 
-    if (!counts || counts.length !== 6 || counts.some(n => !Number.isInteger(n) || n < 0)) {
+    if (!counts || counts.length !== 6 || counts.some(n => !Number.isSafeInteger(n) || n < 0) || !Number.isSafeInteger(runs)) {
       return { name, counts: null, verified: false };
     }
 
@@ -366,7 +366,8 @@ function verifyHeatmapBoats(html, officialRacers) {
 row.boat === racer.boat &&
         Array.isArray(row.counts) &&
         row.counts.length === 6 &&
-row.counts.every(n => Number.isInteger(n) && n >= 0) &&
+row.counts.every(n => Number.isSafeInteger(n) && n >= 0) &&
+Number.isSafeInteger(row.runs) &&
 row.counts.reduce((sum, n) => sum + n, 0) === row.runs
     };
   });
@@ -383,13 +384,16 @@ async function fetchOfficialRacers(date, venue, race) {
   url.searchParams.set("hd", String(date));
 
   try {
-    const response = await fetch(url.toString());
+    const response = await fetch(url.toString(), {headers:{Accept:"text/html"}, signal:AbortSignal.timeout(9000)});
 
     if (!response.ok) {
       return { verified: false, racers: [] };
     }
 
-    const html = await response.text();
+    const type = response.headers.get("content-type") || "";
+if (!/text\/html/i.test(type)) return {verified:false,racers:[],reason:"invalid_content_type"};
+const html = await response.text();
+if (html.length > 2_000_000) return {verified:false,racers:[],reason:"response_too_large"};
 const officialRows = [];
 const racerLinks = [...html.matchAll(/href="([^"]*\/owpc\/pc\/data\/racersearch\/profile[^"]*)"/g)];
 const uniqueRacerLinks = [...new Set(racerLinks.map(m => m[1]))];
