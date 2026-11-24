@@ -430,12 +430,23 @@ function renderExperimental100PointPrediction(){
   for(const x of unique.values())bonus.set(x.boat,5*(x.counts[0]+.5*x.counts[1]+.25*x.counts[2])/x.runs);
  }
  const rows=model.rows.map(x=>({...x,score:x.score+(bonus.get(x.boat)||0),components:{...x.components,last50:Number((bonus.get(x.boat)||0).toFixed(2))}}));
+ // 1st/2nd/3rd suitability uses verified 2/3-place rates, not only a shared total score.
  const map=new Map(rows.map(x=>[x.boat,x]));
  const combinations=[];
  for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let z=1;z<=6;z++){
   if(a===b||a===z||b===z)continue;
   const first=map.get(a),second=map.get(b),third=map.get(z);
-  combinations.push({boats:[a,b,z],strength:first.score*.54+second.score*.28+third.score*.18+(second.top2===null?0:second.top2*.035)+(third.top3===null?0:third.top3*.025)});
+  // Separate finishing-position suitability. The course arrays are experimental
+  // shape priors, NOT claimed venue-specific observed probabilities.
+  const courseByBoat=new Map((d.experimental?.rows||[]).map(x=>[x.boat,x.course]));
+  const observedCourses=Array.isArray(d.experimental?.courses)?d.experimental.courses:null;
+  const courseOf=boat=>observedCourses?.find(x=>x.boat===boat)?.course||null;
+  const firstCourse=[1,.58,.43,.30,.18,.08],secondCourse=[.60,1,.90,.67,.46,.25],thirdCourse=[.44,.88,1,.94,.77,.48];
+  const courseTerm=(boat,table)=>{const course=courseOf(boat);return Number.isInteger(course)&&course>=1&&course<=6?table[course-1]*8:0;};
+  const secondSuitability=second.score*.25+(second.top2===null?0:second.top2*.075)+courseTerm(b,secondCourse);
+  const thirdSuitability=third.score*.19+(third.top3===null?0:third.top3*.065)+courseTerm(z,thirdCourse);
+  const firstSuitability=first.score*.56+courseTerm(a,firstCourse);
+  combinations.push({boats:[a,b,z],strength:firstSuitability+secondSuitability+thirdSuitability});
  }
  combinations.sort((a,b)=>b.strength-a.strength||a.boats.join('').localeCompare(b.boats.join('')));
  const main=combinations.slice(0,6).map(x=>x.boats),used=new Set(main.map(x=>x.join('-')));
@@ -447,7 +458,7 @@ function renderExperimental100PointPrediction(){
  const pre=document.createElement('pre');pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';
  pre.textContent='【本命6点】\\n'+fmt(main)+'\\n\\n【穴6点】\\n'+fmt(upset)+'\\n\\n【艇別評価と反映内訳】\\n'+rows.map(x=>x.boat+'号艇 '+x.score.toFixed(1)+'点（'+Object.entries(x.components).map(([k,v])=>(components[k]||k)+':'+Number(v).toFixed(1)).join(' / ')+'）').join('\\n')+
  '\\n\\n【取得・反映状況】\\n展示・展示ST：'+(model.missingInputs.includes('exhibitionTime')?'展示タイム未反映':'展示タイム反映')+' / '+(model.missingInputs.includes('exhibitionST')?'展示ST未反映':'展示ST反映')+'\\n進入：'+(model.missingInputs.includes('course')?'未確認・未反映':'公式6艇の進入を反映')+'\\nまくらぼ50走：'+(complete?'6艇照合済み・最大5点を反映':unique.size+'艇確認・6艇未完了のため予想点には未反映')+
- '\\n未反映：'+model.missingInputs.filter(x=>x!=='last50').join('、')+'\\n※仮配点・的中率未検証。50走はコース別ではない着順実績です。欠損を実測0とはみなしません。従来予想は変更しません。';
+ '\\n着順別評価：1着=勝ち切る力、2着=2連対率、3着=3連対率。進入が6艇確認済みなら着順別コース仮補正を適用。\\n未反映：'+model.missingInputs.filter(x=>x!=='last50').join('、')+'\\n※コース別補正は実測確率ではなく検証用の仮値。的中率未検証。50走はコース別ではない着順実績です。欠損を実測0とはみなしません。従来予想は変更しません。';
  trial.append(head,pre);document.getElementById('predictOutput')?.parentElement?.appendChild(trial);
 }
 function updateCombinedPredictionPanel(){
@@ -1107,7 +1118,7 @@ if (u.pathname === '/api/predict/selected-race') {
     const used=new Set(main.map(x=>x.join('-')));
     const upset=combinations.filter(x=>x.boats[0]>=4&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
     const missing=[...(!courses?['course']:[]),...(!avgST?['averageST']:[]),...(!exTime?['exhibitionTime']:[]),...(!exST?['exhibitionST']:[]),'last50','currentMeet','wind'];
-    return {ready:true,main,upset,rows,missingInputs:missing,model:'experimental_100_point_v1_not_backtested',note:'仮配点。コース別選手実績・今節成績・風・50走は未反映。欠損項目は0点であり能力0を意味しません。的中率未検証。'};
+    return {ready:true,main,upset,rows,courses:courses?values.map(x=>({boat:x.boat,course:x.course})):[],missingInputs:missing,model:'experimental_100_point_v2_position_suitability_unvalidated',note:'仮配点。コース別選手実績・今節成績・風・50走は未反映。欠損項目は0点であり能力0を意味しません。的中率未検証。'};
   })();
   const basePicks=rankTrifectaCandidates(inputs.rankedScores);
   const picks=rankTrifectaCandidates(startAdjustment.rankedScores);
