@@ -208,9 +208,11 @@ jobs:
             throw Error('Completed status conflicts with incomplete venue coverage');
           const seenRaceKeys=new Set();
           let legacyMissingOrder=0,legacyMissingCapture=0;
-          // 2026-11-23 snapshot was saved before six-boat order persistence.
+          // The 2026-11-23 and 2026-11-24 snapshots were captured before the
+          // six-boat order/capture-time persistence changes were deployed.
           // Never reconstruct absent historical evidence from revised race pages.
-          const legacySnapshotDate=date==='20261123';
+          // Require complete evidence for every snapshot dated 2026-11-25 onward.
+          const legacySnapshotDate=date==='20261123'||date==='20261124';
           for(const category of ['main','upset','chaos']){
             const picks=d.categories[category];
             if(!Array.isArray(picks)||picks.length>20)
