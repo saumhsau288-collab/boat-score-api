@@ -13,7 +13,7 @@ export function createRaceDataClient({fetcher=globalThis.fetch, now=Date.now, tt
       if(!res.ok) throw Error('HTTP '+res.status);
       const data=await res.json();
       if(data?.error||data?.status==='error') throw Error('Data unavailable');
-      if(data&&data.verified===true&&String(data.date)===String(date)&&Number(data.venue)===Number(venue)&&Number(data.race)===Number(race)){
+      if(data&&data.racersVerified===true&&data.statsVerified===true&&Array.isArray(data.racersByBoat)&&data.racersByBoat.length===6&&Array.isArray(data.statsByBoat)&&data.statsByBoat.length===6&&String(data.date)===String(date)&&Number(data.venue)===Number(venue)&&Number(data.race)===Number(race)){
         cache.set(key,{at:now(),data});
         if(cache.size>48) cache.delete(cache.keys().next().value);
       }
