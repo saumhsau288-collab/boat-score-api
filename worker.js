@@ -2169,7 +2169,17 @@ if (u.pathname === '/api/official/beforeinfo') {
   url.searchParams.set('jcd',String(venue).padStart(2,'0'));
   url.searchParams.set('hd',date);
   try {
-    const res=await fetch(url.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(10000)});
+    // Retry only transport failures and transient upstream 5xx responses.
+    // Never use unverified data as a substitute for a failed official response.
+    let res;
+    for (const timeoutMs of [10000, 15000]) {
+      try {
+        res=await fetch(url.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(timeoutMs)});
+        if(res.ok || res.status<500)break;
+      } catch(error) {
+        if(timeoutMs===15000)throw error;
+      }
+    }
     if(!res.ok)return reply(request,{status:'unavailable',reason:'upstream_http_'+res.status,dataReadyForPrediction:false},502);
     const html=await res.text();
     if(html.length>1000000)return reply(request,{status:'unavailable',reason:'response_too_large',dataReadyForPrediction:false},502);
