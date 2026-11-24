@@ -43,3 +43,27 @@ test('shared cache preserves weather and rejects expired records',async()=>{
  old.savedAt-=121000;store.set(key,JSON.stringify(old));
  assert.equal(await cache.readSharedVerifiedBeforeinfo(env,'20261124',7,1),null);
 });
+
+const stA=source.indexOf('function extractOfficialStartExhibition(');
+const stB=source.indexOf('function extractOfficialExhibition(',stA);
+assert.ok(stA>=0&&stB>stA);
+const parseStart=vm.runInNewContext(source.slice(stA,stB)+'\nextractOfficialStartExhibition');
+const startPage=(boats,values)=>'<table><tr><th>スタート展示</th></tr>'+boats.map((boat,i)=>'<tr><td>'+boat+'</td><td>'+values[i]+'</td></tr>').join('')+'</table>';
+test('start exhibition preserves course order distinct from boat number',()=>{
+ const r=parseStart(startPage([1,3,2,4,6,5],['.12','.08','.19','.15','.10','.20']));
+ assert.equal(r.verified,true);
+ assert.equal(r.rows[1].boat,3);
+ assert.equal(r.rows[1].course,2);
+ assert.equal(r.rows[1].startTiming,.08);
+});
+test('duplicate boat in start exhibition is rejected',()=>{
+ assert.equal(parseStart(startPage([1,2,3,4,5,5],Array(6).fill('.12'))).verified,false);
+});
+test('missing start timing is not zero',()=>{
+ assert.equal(parseStart(startPage([1,2,3,4,5,6],['.12','.08','','.15','.10','.20'])).verified,false);
+});
+test('explicit flying start remains distinct from normal ST',()=>{
+ const r=parseStart(startPage([1,2,3,4,5,6],['F.01','.08','.19','.15','.10','.20']));
+ assert.equal(r.verified,true);
+ assert.equal(r.rows[0].startTiming,'F.01');
+});
