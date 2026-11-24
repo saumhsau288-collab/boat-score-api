@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {auditRelativeOutcomes as audit} from './audit-relative-outcomes.mjs';
+const racers=[78,72,65,85,80,68].map((score,i)=>({course:i+1,score,finish:[3,4,6,2,1,5][i]}));
+const r=audit(racers);
+assert.equal(r.eligiblePairs,7);
+assert.equal(r.reversedPairs,1);
+assert.deepEqual(r.pairs.find(p=>p.inside===4&&p.outside===5),{inside:4,outside:5,scoreGap:5,outsideFinishedAhead:true,outsideWon:true});
+assert.deepEqual(audit([...racers].reverse()).pairs.sort((a,b)=>a.inside-b.inside||a.outside-b.outside),r.pairs);
+assert.equal(audit(racers.map(x=>({...x,score:50}))).eligiblePairs,0);
+assert.throws(()=>audit(racers.slice(1)));
+assert.throws(()=>audit(racers.map(x=>({...x,finish:1}))));
+assert.throws(()=>audit(racers.map(x=>({...x,score:null}))));
+console.log('PASS: relative outcome accounting (synthetic only)');
