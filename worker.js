@@ -2823,7 +2823,7 @@ function parseLast50Heatmap(html) {
   }).filter(Boolean);
   const verified = rows.length===6 && new Set(rows.map(r=>r.boat)).size===6 &&
     new Set(rows.map(r=>normalizeLast50RacerName(r.name))).size===6;
-  return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table'};
+  return {verified,rows:verified?rows:[],reason:verified?null:'incomplete_or_inconsistent_table',diagnostics:{tableRowCount:[...table[0].matchAll(/<tr\\b/gi)].length,validRowCount:rows.length,boatsFound:rows.map(r=>r.boat),nameLengths:rows.map(r=>normalizeLast50RacerName(r.name).length)}};
 }
 
 function verifyHeatmapBoats(html, officialRacers) {
