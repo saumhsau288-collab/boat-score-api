@@ -1,0 +1,40 @@
+name: Research live official racelist probe
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/research-live-official-probe.yml'
+      - 'scripts/run-official-twelve-input-probe.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Probe one real official racelist page (research only)
+        shell: bash
+        run: |
+          DATE_JST="$(TZ=Asia/Tokyo date +%Y%m%d)"
+          node scripts/run-official-twelve-input-probe.mjs "$DATE_JST" 02 1 official-probe.json
+      - name: Require successful extraction for green status
+        run: |
+          node -e "const r=require('./official-probe.json');if(r.status!=='mapped'||r.racers?.length!==6){console.error('Official extraction unsuccessful:',r.status,r.error||r.reason||'unknown');process.exit(1)}"
+      - name: Summarize observed extraction without claiming forecast verification
+        if: always()
+        shell: bash
+        run: |
+          if [ -f official-probe.json ]; then
+            node -e "const r=require('./official-probe.json'); console.log(JSON.stringify({status:r.status,reason:r.reason||null,sourceUrl:r.sourceUrl||null,boats:r.racers?.length||0,preRaceAuthenticated:false},null,2))"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: research-live-official-probe-${{ github.run_id }}
+          path: official-probe.json
+          retention-days: 7
+          if-no-files-found: warn

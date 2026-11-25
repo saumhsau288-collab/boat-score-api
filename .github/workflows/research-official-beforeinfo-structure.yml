@@ -1,0 +1,41 @@
+name: Research official beforeinfo structure
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/research-official-beforeinfo-structure.yml'
+      - 'scripts/probe-official-beforeinfo-structure.mjs'
+      - 'scripts/extract-start-display-boats.mjs'
+      - 'scripts/test-extract-start-display-boats.mjs'
+  workflow_dispatch:
+    inputs:
+      race_date:
+        description: 'Race date YYYYMMDD (blank uses today in Japan)'
+        type: string
+      venue:
+        description: 'Venue number 1–24'
+        type: string
+        default: '02'
+      race:
+        description: 'Race number 1–12'
+        type: string
+        default: '1'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test strict six-boat start-display extraction
+        run: node --test scripts/test-extract-start-display-boats.mjs
+      - name: Inspect one official beforeinfo table structure
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          RACE_DATE: ${{ inputs.race_date }}
+          VENUE: ${{ inputs.venue }}
+          RACE: ${{ inputs.race }}
+        run: node scripts/probe-official-beforeinfo-structure.mjs "${RACE_DATE:-$(TZ=Asia/Tokyo date +%Y%m%d)}" "${VENUE:-02}" "${RACE:-1}"

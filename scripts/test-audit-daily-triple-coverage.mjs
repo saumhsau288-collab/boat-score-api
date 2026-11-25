@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditDailyTripleCoverage} from './audit-daily-triple-coverage.mjs';
+const day=(date,o)=>({date,reports:[{records:[{resultVerified:true,finishOrder:o}]}]});
+test('reports held-out dates independently',()=>{const x=auditDailyTripleCoverage([day('20261101',[1,2,3,4,5,6]),day('20261102',[1,2,3,4,5,6]),day('20261103',[1,2,3,4,5,6]),day('20261104',[2,1,3,4,5,6]),day('20261105',[1,2,3,4,5,6]),day('20261106',[2,1,3,4,5,6])]);assert.deepEqual(x.byDay.map(d=>d.date),['20261105','20261106']);assert.equal(x.byDay[0].coverage[1].hits,1);assert.equal(x.byDay[1].coverage[1].hits,0);});

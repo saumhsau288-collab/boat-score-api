@@ -1,0 +1,252 @@
+name: Historical adjacent podium descriptive report
+on:
+  pull_request:
+    paths:
+      - 'scripts/probe-official-twelve-inputs.mjs'
+      - 'scripts/test-probe-official-twelve-inputs.mjs'
+      - 'scripts/adapt-verified-official-metrics-to-twelve.mjs'
+      - 'scripts/test-adapt-verified-official-metrics-to-twelve.mjs'
+      - 'scripts/adapt-existing-score-inputs-to-twelve.mjs'
+      - 'scripts/test-adapt-existing-score-inputs-to-twelve.mjs'
+      - 'scripts/save-independent-method-capture.mjs'
+      - 'scripts/test-save-independent-method-capture.mjs'
+      - 'scripts/audit-archived-capture-twelve-methods.mjs'
+      - 'scripts/test-audit-archived-capture-twelve-methods.mjs'
+      - 'scripts/audit-twelve-method-readiness.mjs'
+      - 'scripts/test-audit-twelve-method-readiness.mjs'
+      - 'scripts/prepare-independent-method-prediction.mjs'
+      - 'scripts/test-prepare-independent-method-prediction.mjs'
+      - 'scripts/generate-twelve-independent-methods.mjs'
+      - 'scripts/test-generate-twelve-independent-methods.mjs'
+      - 'scripts/inventory-saved-ticket-evidence.mjs'
+      - 'scripts/run-eligible-saved-ticket-slots.mjs'
+      - 'scripts/evaluate-eligible-saved-ticket-slots.mjs'
+      - 'scripts/test-evaluate-eligible-saved-ticket-slots.mjs'
+      - 'scripts/audit-deployed-ticket-slots.mjs'
+      - 'scripts/test-audit-deployed-ticket-slots.mjs'
+      - 'scripts/evaluate-twelve-independent-methods.mjs'
+      - 'scripts/test-evaluate-twelve-independent-methods.mjs'
+      - 'scripts/evaluate-saved-prospective-predictions.mjs'
+      - 'scripts/test-evaluate-saved-prospective-predictions.mjs'
+      - 'scripts/save-locked-prospective-prediction.mjs'
+      - 'scripts/test-save-locked-prospective-prediction.mjs'
+      - 'scripts/evaluate-locked-prospective-predictions.mjs'
+      - 'scripts/test-evaluate-locked-prospective-predictions.mjs'
+      - 'scripts/evaluate-position-model-holdout.mjs'
+      - 'scripts/test-evaluate-position-model-holdout.mjs'
+      - 'scripts/report-capture-racer-fields.mjs'
+      - 'scripts/audit-capture-racer-fields.mjs'
+      - 'scripts/test-audit-capture-racer-fields.mjs'
+      - 'scripts/audit-existing-capture-prospective-bridge.mjs'
+      - 'scripts/test-audit-existing-capture-prospective-bridge.mjs'
+      - 'scripts/assess-prospective-admission.mjs'
+      - 'scripts/test-assess-prospective-admission.mjs'
+      - 'scripts/prepare-strict-prospective-snapshot.mjs'
+      - 'scripts/test-prepare-strict-prospective-snapshot.mjs'
+      - 'scripts/build-prospective-race-record.mjs'
+      - 'scripts/test-build-prospective-race-record.mjs'
+      - 'scripts/audit-snapshot-timing.mjs'
+      - 'scripts/test-audit-snapshot-timing.mjs'
+      - 'scripts/audit-inside-gap-uncertainty.mjs'
+      - 'scripts/test-audit-inside-gap-uncertainty.mjs'
+      - 'scripts/audit-inside-gap-by-winner.mjs'
+      - 'scripts/test-audit-inside-gap-by-winner.mjs'
+      - 'scripts/audit-inside-ability-gap.mjs'
+      - 'scripts/test-audit-inside-ability-gap.mjs'
+      - 'scripts/audit-inside-versus-ability.mjs'
+      - 'scripts/test-audit-inside-versus-ability.mjs'
+      - 'scripts/audit-second-third-ability-order.mjs'
+      - 'scripts/test-audit-second-third-ability-order.mjs'
+      - 'scripts/audit-daily-triple-coverage.mjs'
+      - 'scripts/test-audit-daily-triple-coverage.mjs'
+      - 'scripts/evaluate-ordered-triple-coverage.mjs'
+      - 'scripts/test-evaluate-ordered-triple-coverage.mjs'
+      - 'scripts/evaluate-ordered-triples.mjs'
+      - 'scripts/test-evaluate-ordered-triples.mjs'
+      - 'scripts/audit-conditional-finish-order.mjs'
+      - 'scripts/test-audit-conditional-finish-order.mjs'
+      - 'scripts/audit-holdout-winner-confusion.mjs'
+      - 'scripts/test-audit-holdout-winner-confusion.mjs'
+      - 'scripts/audit-holdout-order-by-winner.mjs'
+      - 'scripts/test-audit-holdout-order-by-winner.mjs'
+      - 'scripts/assess-archive-promotion.mjs'
+      - 'scripts/test-assess-archive-promotion.mjs'
+      - 'scripts/evaluate-two-stage-archive.mjs'
+      - 'scripts/test-evaluate-two-stage-archive.mjs'
+      - 'scripts/evaluate-chronological-heuristics.mjs'
+      - 'scripts/test-evaluate-chronological-heuristics.mjs'
+      - 'scripts/validate-prospective-snapshot.mjs'
+      - 'scripts/test-validate-prospective-snapshot.mjs'
+      - 'scripts/audit-prospective-readiness.mjs'
+      - 'scripts/test-audit-prospective-readiness.mjs'
+      - 'scripts/audit-daily-ability-rank.mjs'
+      - 'scripts/test-audit-daily-ability-rank.mjs'
+      - 'scripts/audit-between-by-rank.mjs'
+      - 'scripts/test-audit-between-by-rank.mjs'
+      - 'scripts/audit-between-vs-not-between.mjs'
+      - 'scripts/test-audit-between-vs-not-between.mjs'
+      - 'scripts/audit-intervening-frame-baseline.mjs'
+      - 'scripts/test-audit-intervening-frame-baseline.mjs'
+      - 'scripts/audit-intervening-by-boat.mjs'
+      - 'scripts/test-audit-intervening-by-boat.mjs'
+      - 'scripts/audit-intervening-candidates.mjs'
+      - 'scripts/test-audit-intervening-candidates.mjs'
+      - 'scripts/audit-gap-strata.mjs'
+      - 'scripts/test-audit-gap-strata.mjs'
+      - 'scripts/audit-separated-top-two.mjs'
+      - 'scripts/test-audit-separated-top-two.mjs'
+      - 'scripts/audit-archived-ability-placement.mjs'
+      - 'scripts/test-audit-archived-ability-placement.mjs'
+      - 'scripts/audit-top-three-sandwich.mjs'
+      - 'scripts/test-audit-top-three-sandwich.mjs'
+      - 'scripts/audit-finish-order-pairs.mjs'
+      - 'scripts/test-audit-finish-order-pairs.mjs'
+      - 'scripts/test-diagnose-holdout-order-errors.mjs'
+      - 'scripts/audit-top-rated-boat-one.mjs'
+      - 'scripts/evaluate-boat-one-app-score-snapshots.mjs'
+      - 'scripts/test-evaluate-boat-one-app-score-snapshots.mjs'
+      - 'scripts/audit-second-choice-by-boat-one-local-advantage.mjs'
+      - 'scripts/test-audit-second-choice-by-boat-one-local-advantage.mjs'
+      - 'scripts/audit-trifecta-friendly-profiles.mjs'
+      - 'scripts/test-audit-trifecta-friendly-profiles.mjs'
+      - 'scripts/audit-boat-one-top-local-advantage.mjs'
+      - 'scripts/test-audit-boat-one-top-local-advantage.mjs'
+      - 'scripts/audit-local-above-national.mjs'
+      - 'scripts/test-audit-local-above-national.mjs'
+      - 'scripts/evaluate-second-place-when-boat-one-top.mjs'
+      - 'scripts/test-evaluate-second-place-when-boat-one-top.mjs'
+      - 'scripts/compare-national-vs-national-local.mjs'
+      - 'scripts/test-compare-national-vs-national-local.mjs'
+      - 'scripts/audit-boat-one-national-local-average.mjs'
+      - 'scripts/test-audit-boat-one-national-local-average.mjs'
+      - 'scripts/select-boat-one-highest-app-score.mjs'
+      - 'scripts/test-select-boat-one-highest-app-score.mjs'
+      - 'scripts/audit-boat-two-vs-three-when-one-top.mjs'
+      - 'scripts/test-audit-boat-two-vs-three-when-one-top.mjs'
+      - 'scripts/audit-top-rated-boat-one-finish-patterns.mjs'
+      - 'scripts/test-audit-top-rated-boat-one-finish-patterns.mjs'
+      - 'scripts/evaluate-top-rated-boat-one-only.mjs'
+      - 'scripts/test-evaluate-top-rated-boat-one-only.mjs'
+      - 'scripts/audit-prospective-feature-coverage.mjs'
+      - 'scripts/test-audit-prospective-feature-coverage.mjs'
+      - 'scripts/assess-candidate-promotion.mjs'
+      - 'scripts/test-assess-candidate-promotion.mjs'
+      - 'scripts/evaluate-candidate-trifecta-archive.mjs'
+      - 'scripts/test-evaluate-candidate-trifecta-archive.mjs'
+      - 'scripts/candidate-trifecta-score.mjs'
+      - 'scripts/test-candidate-trifecta-score.mjs'
+      - 'scripts/candidate-winner-score.mjs'
+      - 'scripts/test-candidate-winner-score.mjs'
+      - 'scripts/test-audit-high-ability-inner-finish.mjs'
+      - 'scripts/audit-high-ability-inner-finish.mjs'
+      - 'scripts/audit-order-benefit-by-ability-gap.mjs'
+      - 'scripts/assess-paired-day-stability.mjs'
+      - 'scripts/audit-fixed-winner-paired-days.mjs'
+      - 'scripts/evaluate-fixed-winner-second-third.mjs'
+      - 'scripts/diagnose-holdout-order-errors.mjs'
+      - 'scripts/audit-archived-adjacency.mjs'
+      - 'scripts/test-audit-archived-adjacency.mjs'
+      - '.github/workflows/historical-adjacent-podium-report.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  historical-adjacency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run archive parser tests
+        run: node --check scripts/probe-official-twelve-inputs.mjs && node --test scripts/test-probe-official-twelve-inputs.mjs && node --check scripts/adapt-verified-official-metrics-to-twelve.mjs && node --test scripts/test-adapt-verified-official-metrics-to-twelve.mjs && node --check scripts/adapt-existing-score-inputs-to-twelve.mjs && node --test scripts/test-adapt-existing-score-inputs-to-twelve.mjs && node --check scripts/save-independent-method-capture.mjs && node --test scripts/test-save-independent-method-capture.mjs && node --check scripts/audit-archived-capture-twelve-methods.mjs && node --test scripts/test-audit-archived-capture-twelve-methods.mjs && node --check scripts/audit-twelve-method-readiness.mjs && node --test scripts/test-audit-twelve-method-readiness.mjs && node --check scripts/prepare-independent-method-prediction.mjs && node --test scripts/test-prepare-independent-method-prediction.mjs && node --check scripts/generate-twelve-independent-methods.mjs && node --test scripts/test-generate-twelve-independent-methods.mjs && node --check scripts/run-eligible-saved-ticket-slots.mjs && node --check scripts/inventory-saved-ticket-evidence.mjs && node scripts/inventory-saved-ticket-evidence.mjs && node --test scripts/test-evaluate-eligible-saved-ticket-slots.mjs scripts/test-audit-deployed-ticket-slots.mjs scripts/test-evaluate-twelve-independent-methods.mjs scripts/test-evaluate-saved-prospective-predictions.mjs scripts/test-save-locked-prospective-prediction.mjs scripts/test-evaluate-locked-prospective-predictions.mjs scripts/test-evaluate-position-model-holdout.mjs scripts/test-audit-second-choice-by-boat-one-local-advantage.mjs scripts/test-audit-boat-one-top-local-advantage.mjs scripts/test-audit-local-above-national.mjs scripts/test-evaluate-second-place-when-boat-one-top.mjs scripts/test-compare-national-vs-national-local.mjs scripts/test-audit-boat-one-national-local-average.mjs scripts/test-evaluate-boat-one-app-score-snapshots.mjs scripts/test-select-boat-one-highest-app-score.mjs scripts/test-audit-boat-two-vs-three-when-one-top.mjs scripts/test-audit-top-rated-boat-one-finish-patterns.mjs scripts/test-evaluate-top-rated-boat-one-only.mjs scripts/test-audit-prospective-feature-coverage.mjs scripts/test-assess-candidate-promotion.mjs scripts/test-evaluate-candidate-trifecta-archive.mjs scripts/test-candidate-trifecta-score.mjs scripts/test-candidate-winner-score.mjs scripts/test-audit-high-ability-inner-finish.mjs scripts/test-diagnose-holdout-order-errors.mjs scripts/test-audit-archived-adjacency.mjs scripts/test-audit-finish-order-pairs.mjs scripts/test-audit-top-three-sandwich.mjs scripts/test-audit-archived-ability-placement.mjs scripts/test-audit-separated-top-two.mjs scripts/test-audit-gap-strata.mjs scripts/test-audit-intervening-candidates.mjs scripts/test-audit-intervening-by-boat.mjs scripts/test-audit-intervening-frame-baseline.mjs scripts/test-audit-between-vs-not-between.mjs scripts/test-audit-between-by-rank.mjs scripts/test-audit-daily-ability-rank.mjs scripts/test-audit-prospective-readiness.mjs scripts/test-validate-prospective-snapshot.mjs scripts/test-evaluate-chronological-heuristics.mjs scripts/test-evaluate-two-stage-archive.mjs scripts/test-assess-archive-promotion.mjs scripts/test-audit-holdout-order-by-winner.mjs scripts/test-audit-holdout-winner-confusion.mjs scripts/test-audit-conditional-finish-order.mjs scripts/test-evaluate-ordered-triples.mjs scripts/test-evaluate-ordered-triple-coverage.mjs scripts/test-audit-daily-triple-coverage.mjs scripts/test-audit-second-third-ability-order.mjs scripts/test-audit-inside-versus-ability.mjs scripts/test-audit-inside-ability-gap.mjs scripts/test-audit-inside-gap-by-winner.mjs scripts/test-audit-inside-gap-uncertainty.mjs scripts/test-audit-snapshot-timing.mjs scripts/test-build-prospective-race-record.mjs scripts/test-prepare-strict-prospective-snapshot.mjs scripts/test-assess-prospective-admission.mjs scripts/test-audit-existing-capture-prospective-bridge.mjs scripts/test-audit-capture-racer-fields.mjs
+      - name: Verify offline capture field report syntax
+        run: node --check scripts/report-capture-racer-fields.mjs
+      - name: Fetch isolated immutable historical archive (read-only)
+        run: |
+          git fetch --depth=1 origin historical-research-data
+          mkdir -p /tmp/boat-score-verified-daily
+          git archive FETCH_HEAD verified-daily | tar -xf - -C /tmp/boat-score-verified-daily
+          echo 'ARCHIVE_AVAILABLE_DATES:'
+          find /tmp/boat-score-verified-daily/verified-daily -maxdepth 1 -type f -name '20??????.json' -printf '%f\n' | sort
+          echo 'ARCHIVE_LATEST_DATE:'
+          find /tmp/boat-score-verified-daily/verified-daily -maxdepth 1 -type f -name '20??????.json' -printf '%f\n' | sort | tail -1
+      - name: Audit real official historical results
+        run: |
+          node scripts/audit-archived-adjacency.mjs /tmp/boat-score-verified-daily/verified-daily reports/historical-adjacent-podium.json
+      - name: Print high-ability inner-course result summary
+        run: |
+          node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync("reports/historical-adjacent-podium.json","utf8")); console.log("HIGH_ABILITY_INNER_SUMMARY="+JSON.stringify(r.highAbilityInnerFinish));'
+      - name: Summarize historical descriptive evidence
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const r=JSON.parse(fs.readFileSync("reports/historical-adjacent-podium.json","utf8"));
+            const rows=["## Verified historical finish-order adjacency (descriptive only)","","Archive days: "+r.archiveDays+"; eligible races: "+r.eligible+"; excluded: "+r.excluded,"","| Winner | Races | Adjacent 2nd/3rd | Rate | Uniform baseline |","|---|---:|---:|---:|---:|"];
+            for(const [boat,x] of Object.entries(r.byWinningBoat))rows.push("| "+boat+" | "+x.races+" | "+x.neighborPodium+" | "+(x.neighborPodiumRate===null?"n/a":(100*x.neighborPodiumRate).toFixed(1)+"%")+" | "+(100*x.expectedPodiumRate).toFixed(1)+"% |");
+            rows.push("","### Winner-conditioned second-place frequencies","","| Winner | Second boat | Count | Rate |","|---|---|---:|---:|");
+            for(const [winner,x] of Object.entries(r.finishOrderPairs.byWinner))for(const [second,count] of Object.entries(x.second))if(Number(second)!==Number(winner))rows.push("| "+winner+" | "+second+" | "+count+" | "+(100*x.secondRate[second]).toFixed(1)+"% |");
+            rows.push("","### Inner/outer top-three patterns","","| Pattern | Count | Rate |","|---|---:|---:|");
+            for(const [name,p] of Object.entries(r.topThreePatterns.patterns))rows.push("| "+name+" | "+p.count+" | "+(100*p.rate).toFixed(1)+"% |");
+            rows.push("","### Pattern rates conditioned on winning frame group","","| Pattern | Count | Winner-group races | Conditional rate |","|---|---:|---:|---:|");
+            for(const [name,p] of Object.entries(r.topThreePatterns.patterns))rows.push("| "+name+" | "+p.count+" | "+p.conditionedOnWinnerRaces+" | "+(p.rateGivenWinnerGroup===null?"n/a":(100*p.rateGivenWinnerGroup).toFixed(1)+"%")+" |");
+            rows.push("","### Exploratory archive win-rate placement (NOT pre-race verified)","","| Placement | Races | Both top-three | Rate |","|---|---:|---:|---:|");
+            for(const [name,g] of Object.entries(r.archivedAbilityPlacement.groups))rows.push("| "+name+" | "+g.races+" | "+g.bothPodium+" | "+(g.bothPodiumRate===null?"n/a":(100*g.bothPodiumRate).toFixed(1)+"%")+" |");
+            rows.push("","### Between two strongest archived racers (exploratory)","","| Placement | Races | Both top-three | Between 2nd | Between podium |","|---|---:|---:|---:|---:|");
+            for(const [name,g] of Object.entries(r.separatedTopTwo.groups))rows.push("| "+name+" | "+g.races+" | "+g.bothPodium+" | "+g.betweenSecond+" | "+g.betweenPodium+" |");
+            rows.push("","### Stratified by number of intervening frame numbers","","| Between frames | Races | Between 2nd | Rate | Between top-three | Rate |","|---|---:|---:|---:|---:|---:|");
+            for(const [gap,g] of Object.entries(r.gapStrata.byGap))rows.push("| "+gap+" | "+g.races+" | "+g.betweenSecond+" | "+(g.betweenSecondRate===null?"n/a":(100*g.betweenSecondRate).toFixed(1)+"%")+" | "+g.betweenPodium+" | "+(g.betweenPodiumRate===null?"n/a":(100*g.betweenPodiumRate).toFixed(1)+"%")+" |");
+            rows.push("","### Per-candidate normalized frequencies (exploratory)","","| Between frames | Candidate slots | 2nd per candidate | Top-three per candidate |","|---|---:|---:|---:|");
+            for(const [gap,g] of Object.entries(r.interveningCandidates.byGap))rows.push("| "+gap+" | "+g.candidateSlots+" | "+(g.perCandidateSecondRate===null?"n/a":(100*g.perCandidateSecondRate).toFixed(1)+"%")+" | "+(g.perCandidatePodiumRate===null?"n/a":(100*g.perCandidatePodiumRate).toFixed(1)+"%")+" |");
+            rows.push("","### Intervening candidate by boat number","","| Boat | Candidate races | 2nd rate | Top-three rate |","|---|---:|---:|---:|");
+            for(const [boat,g] of Object.entries(r.interveningByBoat.byBoat))rows.push("| "+boat+" | "+g.candidateRaces+" | "+(g.secondRate===null?"n/a":(100*g.secondRate).toFixed(1)+"%")+" | "+(g.podiumRate===null?"n/a":(100*g.podiumRate).toFixed(1)+"%")+" |");
+            rows.push("","### Same-boat-number baseline comparison (exploratory)","","| Boat | All 2nd | Between 2nd | Difference (pp) | All podium | Between podium |","|---|---:|---:|---:|---:|---:|");
+            for(const [boat,g] of Object.entries(r.interveningFrameBaseline.byBoat))rows.push("| "+boat+" | "+(100*g.allSecondRate).toFixed(1)+"% | "+(100*g.betweenSecondRate).toFixed(1)+"% | "+(100*g.secondLift).toFixed(1)+" | "+(100*g.allPodiumRate).toFixed(1)+"% | "+(100*g.betweenPodiumRate).toFixed(1)+"% |");
+            rows.push("","### Between vs not-between (same boat number, exploratory)","","| Boat | Between races | Between 2nd | Not-between races | Not-between 2nd | Difference (pp) |","|---|---:|---:|---:|---:|---:|");
+            for(const [boat,g] of Object.entries(r.betweenVsNotBetween.byBoat))rows.push("| "+boat+" | "+g.between.races+" | "+(100*g.between.secondRate).toFixed(1)+"% | "+g.notBetween.races+" | "+(100*g.notBetween.secondRate).toFixed(1)+"% | "+(100*g.secondDifference).toFixed(1)+" |");
+            rows.push("","### Candidate ability rank stratification (exploratory)","","| Boat | Between? | Rank group | Races | 2nd rate | Top-three rate |","|---|---|---|---:|---:|---:|");
+            for(const [boat,g] of Object.entries(r.betweenByRank.groups))for(const [side,buckets] of Object.entries(g))for(const [rank,s] of Object.entries(buckets))rows.push("| "+boat+" | "+side+" | "+rank+" | "+s.races+" | "+(s.secondRate===null?"n/a":(100*s.secondRate).toFixed(1)+"%")+" | "+(s.podiumRate===null?"n/a":(100*s.podiumRate).toFixed(1)+"%")+" |");
+            rows.push("","### Daily 2/3-boat ability-rank stability (exploratory)","","| Date | Races | Top-half 2nd | Bottom-half 2nd |","|---|---:|---:|---:|");
+            for(const [date,g] of Object.entries(r.dailyAbilityRank.byDay))rows.push("| "+date+" | "+g.eligible+" | "+(g.innerTopHalf.secondRate===null?"n/a":(100*g.innerTopHalf.secondRate).toFixed(1)+"%")+" | "+(g.innerBottomHalf.secondRate===null?"n/a":(100*g.innerBottomHalf.secondRate).toFixed(1)+"%")+" |");
+            rows.push("","### Prospective-data readiness","","| Field | Records |","|---|---:|");
+            for(const [field,count] of Object.entries(r.prospectiveReadiness))if(typeof count==="number")rows.push("| "+field+" | "+count+" |");
+            rows.push("","### Chronological archive heuristic holdout (NOT current app)","","Training dates: "+r.chronologicalHeuristics.trainDates.join(", ")+"; holdout dates: "+r.chronologicalHeuristics.testDates.join(", "),"","Selected weight: "+r.chronologicalHeuristics.selectedWeight,"","| Heuristic | Holdout races | 1st rate | 2nd rate | Exact trifecta | Top-three membership |","|---|---:|---:|---:|---:|---:|");
+            for(const [name,g] of [["Selected archive heuristic",r.chronologicalHeuristics.holdout],["Frame-only heuristic",r.chronologicalHeuristics.frameOnlyHoldout]])rows.push("| "+name+" | "+g.races+" | "+(100*g.firstRate).toFixed(1)+"% | "+(100*g.secondRate).toFixed(1)+"% | "+(100*g.exactRate).toFixed(1)+"% | "+(100*g.podiumRate).toFixed(1)+"% |");
+            rows.push("","### Two-stage podium selection / finish ordering (archive only)","","Selected podium weight: "+r.twoStageArchive.selected.podiumWeight+"; order weight: "+r.twoStageArchive.selected.orderWeight,"","| Variant | First | Second | Exact trifecta | Podium membership |","|---|---:|---:|---:|---:|");
+            for(const [name,g] of [["Two-stage selected",r.twoStageArchive.holdout],["Frame-only",r.twoStageArchive.frameOnlyHoldout]])rows.push("| "+name+" | "+(100*g.firstRate).toFixed(1)+"% | "+(100*g.secondRate).toFixed(1)+"% | "+(100*g.exactRate).toFixed(1)+"% | "+(100*g.membershipRate).toFixed(1)+"% |");
+            rows.push("","### App promotion gate","","Promote: "+r.promotionGate.promote+"; reason: "+r.promotionGate.reason,"","Archive win rates are NOT verified as pre-race snapshots. No predictive accuracy claim. No score change.");
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,rows.join("\n")+"\n");
+          '
+      - name: Print candidate trifecta holdout comparison
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const r=JSON.parse(fs.readFileSync("reports/historical-adjacent-podium.json","utf8"));
+            console.log("CANDIDATE_TRIFECTA_HOLDOUT="+JSON.stringify(r.candidateTrifectaHoldout));
+            console.log("CANDIDATE_PROMOTION_GATE="+JSON.stringify(r.candidatePromotionGate));
+            console.log("ARCHIVED_FEATURE_COVERAGE="+JSON.stringify(r.prospectiveFeatureCoverage));
+            console.log("TOP_RATED_BOAT_ONE_ONLY="+JSON.stringify(r.topRatedBoatOneOnly));
+            console.log("TOP_RATED_BOAT_ONE_FINISH_PATTERNS="+JSON.stringify(r.topRatedBoatOneFinishPatterns));
+            console.log("BOAT_TWO_VS_THREE_WHEN_ONE_TOP="+JSON.stringify(r.boatTwoVsThreeWhenOneTop));
+            console.log("BOAT_ONE_ACTUAL_APP_SCORE_FILTER="+JSON.stringify(r.boatOneActualAppScoreFilter));
+            console.log("BOAT_ONE_NATIONAL_LOCAL_AVERAGE="+JSON.stringify(r.boatOneNationalLocalAverage));
+            console.log("NATIONAL_VS_NATIONAL_LOCAL="+JSON.stringify(r.nationalVsNationalLocal));
+            console.log("SECOND_PLACE_WHEN_BOAT_ONE_TOP="+JSON.stringify(r.secondPlaceWhenBoatOneTop));
+            console.log("LOCAL_ABOVE_NATIONAL="+JSON.stringify(r.localAboveNational));
+            console.log("BOAT_ONE_TOP_LOCAL_ADVANTAGE="+JSON.stringify(r.boatOneTopLocalAdvantage));
+            console.log("TRIFECTA_FRIENDLY_PROFILES="+JSON.stringify(r.trifectaFriendlyProfiles));
+            console.log("TRIFECTA_PROFILE_TIME_SPLIT="+JSON.stringify(r.trifectaProfileTimeSplit));
+            console.log("TOP_SCORE_WIN_THRESHOLDS="+JSON.stringify(r.topScoreWinThresholds));
+            console.log("RATE_BY_BOAT_PLACEMENT="+JSON.stringify(r.rateByBoatPlacement));
+            console.log("RELATIVE_ABILITY_PLACEMENT="+JSON.stringify(r.relativeAbilityPlacement));
+            console.log("POSITION_MODEL_HOLDOUT="+JSON.stringify(r.positionModelHoldout));
+            console.log("FROZEN_FUTURE_VALIDATION="+JSON.stringify(r.positionModelHoldout.futureIndependent));
+            console.log("SECOND_CHOICE_BY_BOAT_ONE_LOCAL_ADVANTAGE="+JSON.stringify(r.secondChoiceByBoatOneLocalAdvantage));
+          '
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: historical-adjacent-podium-research
+          path: reports/historical-adjacent-podium.json
+          retention-days: 30

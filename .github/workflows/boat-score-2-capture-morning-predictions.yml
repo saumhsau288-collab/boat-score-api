@@ -63,6 +63,8 @@ jobs:
           node --check scripts/test-classify-morning-capture-quality.mjs
           node --check scripts/audit-pre-race-feature-snapshots.mjs
           node --check scripts/test-audit-pre-race-feature-snapshots.mjs
+          node --check scripts/audit-capture-racer-fields.mjs
+          node --check scripts/report-capture-racer-fields.mjs
           node --check scripts/audit-capture-score-inputs.mjs
           node --check scripts/test-audit-capture-score-inputs.mjs
           node --check scripts/audit-capture-response-shapes.mjs
@@ -95,6 +97,7 @@ jobs:
           node scripts/test-audit-morning-input-coverage.mjs
           node scripts/test-classify-morning-capture-quality.mjs
           node scripts/test-audit-pre-race-feature-snapshots.mjs
+          node --test scripts/test-audit-capture-racer-fields.mjs
           node scripts/test-audit-capture-score-inputs.mjs
           node scripts/test-audit-capture-response-shapes.mjs
           node scripts/test-audit-morning-official-cutoffs.mjs
@@ -182,6 +185,15 @@ jobs:
             case "$file" in *-quality.json|*-score-inputs.json|*-response-shape.json|*-cutoff-audit.json|*-source-evidence.json) continue ;; esac
             node scripts/classify-morning-capture-quality.mjs "$file" > "${file%.json}-quality.json"
           done
+      - name: Audit six-racer feature completeness including average ST (research only)
+        if: always()
+        run: |
+          for file in prediction-captures/*.json; do
+            [ -f "$file" ] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
+            node scripts/report-capture-racer-fields.mjs "$file" > "${file%.json}-racer-fields.json"
+            node --input-type=module -e "import fs from 'node:fs';const r=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));console.log(JSON.stringify({date:r.date,ready:r.readyPredictions,sixBoat:r.withSixBoatInputs,averageSTComplete:r.fields.averageStartTiming.completeRaces,allFieldsComplete:r.allFieldsComplete}));" "${file%.json}-racer-fields.json"
+          done
       - name: Audit per-boat scoring inputs in raw captures
         if: always()
         run: |
@@ -197,7 +209,7 @@ jobs:
         run: |
           for file in prediction-captures/*.json; do
             [ -f "$file" ] || continue
-            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\\.json$ ]] || continue
+            [[ "${file##*/}" =~ ^20[0-9]{6}-[0-9]+\.json$ ]] || continue
             node scripts/audit-pre-race-feature-snapshots.mjs "$file" > "${file%.json}-feature-snapshot-audit.json"
             node --input-type=module -e "import fs from 'node:fs'; const r=JSON.parse(fs.readFileSync(process.argv[1],'utf8')); console.log(JSON.stringify({snapshotAudit:process.argv[1],total:r.total,completeSixBoatFeatures:r.completeSixBoatFeatures,eligibleForHistoricalCalibration:r.eligibleForHistoricalCalibration}));" "${file%.json}-feature-snapshot-audit.json"
           done

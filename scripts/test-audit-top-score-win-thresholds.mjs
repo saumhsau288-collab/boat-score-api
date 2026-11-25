@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditTopScoreWinThresholds} from './audit-top-score-win-thresholds.mjs';
+const racers=[{boat:1,nationalWinRate:8,localWinRate:8},...Array.from({length:5},(_,i)=>({boat:i+2,nationalWinRate:5,localWinRate:5}))];
+test('reports score and gap thresholds for top-ranked winner',()=>{const x=auditTopScoreWinThresholds([{racers,resultVerified:true,finishOrder:[1,3,2,4,5,6]}]);assert.equal(x.valid,1);assert.equal(x.cumulative.find(a=>a.minimumScore===8).wins,1);assert.equal(x.cumulative.find(a=>a.minimumScore===8.5).races,0);assert.equal(x.gaps.find(a=>a.minimumGap===3).wins,1);});

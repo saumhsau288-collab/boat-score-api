@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditConditionalFinishOrder} from './audit-conditional-finish-order.mjs';
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:[4,7,5,6,2,1][i]}));
+test('counts conditional second-third ordered pairs and ability rank',()=>{const r=auditConditionalFinishOrder([{date:'20261120',venue:1,race:1,resultVerified:true,finishOrder:[4,1,2,3,5,6],racers}]);assert.equal(r.eligible,1);assert.equal(r.byWinner[4].secondThirdPairs['1-2'],1);assert.equal(r.byWinner[4].second[1],1);assert.equal(r.byWinner[4].third[2],1);assert.equal(r.byWinner[4].topRateThird,1);});

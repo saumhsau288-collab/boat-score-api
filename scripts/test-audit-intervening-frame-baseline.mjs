@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditInterveningVsFrameBaseline} from './audit-intervening-frame-baseline.mjs';
+const racers=(a,b)=>Array.from({length:6},(_,i)=>({boat:i+1,nationalWinRate:i+1===a?8:i+1===b?7:4}));
+test('compares between vs all same-number races',()=>{const base={date:'20261120',venue:1,resultVerified:true,finishOrder:[1,3,5,2,4,6]};const r=auditInterveningVsFrameBaseline([{...base,race:1,racers:racers(1,5)},{...base,race:2,racers:racers(3,4)}]);assert.equal(r.byBoat[3].allRaces,2);assert.equal(r.byBoat[3].betweenRaces,1);assert.equal(r.byBoat[3].betweenSecondRate,1);assert.equal(r.byBoat[3].allSecondRate,1);});

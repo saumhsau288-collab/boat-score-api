@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {auditBoatOneTopLocalAdvantage} from './audit-boat-one-top-local-advantage.mjs';
+const base=[{boat:1,nationalWinRate:8,localWinRate:9},...Array.from({length:5},(_,i)=>({boat:i+2,nationalWinRate:5,localWinRate:5}))];
+test('stratifies top-rated boat one by its own local advantage',()=>{const a=auditBoatOneTopLocalAdvantage([{racers:base,resultVerified:true,finishOrder:[1,3,2,4,5,6]},{racers:base.map((r,i)=>i===0?{...r,localWinRate:7}:r),resultVerified:true,finishOrder:[2,1,3,4,5,6]}]);assert.equal(a.groups.higher.wins,1);assert.equal(a.groups.lower.races,1);assert.equal(a.groups.higher.secondWhenOneWins[3],1);});
