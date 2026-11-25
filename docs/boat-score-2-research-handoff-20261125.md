@@ -263,3 +263,8 @@
 ## 11/26 06:51 JST 公式コース成績取り込みの初回結果と修正
 - 実行 https://github.com/saumhsau288-collab/boat-score-api/actions/runs/45708025551 のimport-course-dataは失敗、公開・レース研究はスキップ。模擬パーサーテスト、公式fan2610.lzh（181.3k）のダウンロード、fan2610.txt解凍は成功。1659行目の空行でunexpected row length 0、実データJSON未保存。
 - 7f44efecで末尾の連続空CRLF行を除去し、内部空行は引き続きエラー扱い。1000件の模擬行＋複数末尾改行および内部空行の拒否テストを追加。実行未確認。新規ワークフローを同じ開発ブランチ、research_only OFF / course_data_only ONで実行する。旧本番・公開Worker未変更。
+
+## 11/26 06:54 JST 公式選手コース成績取り込み成功
+- 実行 https://github.com/saumhsau288-collab/boat-score-api/actions/runs/45708532269 のimport-course-data全工程成功、公開・レース研究ジョブスキップ。チェックアウトe83dc620、末尾空行対応を含む模擬テスト合格。保存コミットf5244af。
+- 公式fan2610.txt、2027年前期、算出期間2026-05-01〜2026-10-31、選手1658人×6コース=9948件。通常完走率算出可能9369件、通常完走なし579件、件数不整合0。sourceTextSha256=16bb743708718227014b697851a21807255d3af31c8a8fdd06dccf69b1bb49bc。research/course-stats/2027-1.json に保存成功。率は通常1〜6着合計分母、進入数・事故件数は別保持。
+- 次は登録番号によるレース出走選手照合、着順別率の小標本平滑化、開催場別傾向の検証。朝ランキングや展開指定予想への配点反映はまだ未実装。既存公開Worker・旧本番未変更。
