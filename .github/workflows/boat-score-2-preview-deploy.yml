@@ -188,6 +188,7 @@ jobs:
           node <<'NODE'
           const fs=require('node:fs');
           const html=fs.readFileSync('preview-home.html','utf8');
+          if(!html.includes('1号艇1着期待度ランキング（研究用）')||!html.includes('d.boatOneRanking'))throw Error('Missing independent morning boat-one display');
           for(const id of ['scenarioPredictionPanel','scenarioFirst','scenarioSecond','scenarioThird','runScenarioPrediction','clearScenarioPrediction','scenarioPredictionOutput']) {
             if(!html.includes('id="'+id+'"'))throw Error('Missing scenario prediction control: '+id);
           }
@@ -285,10 +286,21 @@ jobs:
               }
             }
           }
+          if(!Array.isArray(d.boatOneRanking)||d.boatOneRanking.length>20||d.boatOneRankingProbabilityVerified!==false)throw Error('Invalid independent boat-one ranking');
+          const oneKeys=new Set();
+          let previous=Infinity;
+          for(const row of d.boatOneRanking){
+            const key=row.venue+':'+row.race,capture=Date.parse(row.capturedAt),deadline=Date.parse(row.deadlineAt);
+            const scores=row.rankedScores;
+            if(row.date!==date||!venueSet.has(row.venue)||!Number.isInteger(row.race)||row.race<1||row.race>12||oneKeys.has(key)||row.verifiedProbability!==false||row.method!=='boat_one_score_margin_v1'||!Number.isFinite(capture)||!Number.isFinite(deadline)||capture>=deadline||!Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x.boat)).size!==6||!scores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)))throw Error('Invalid boat-one ranking evidence: '+key);
+            const one=scores.find(x=>x.boat===1).score,rival=Math.max(...scores.filter(x=>x.boat!==1).map(x=>x.score));
+            if(row.boatOneScore!==one||row.nearestRivalScore!==rival||row.score!==one-rival||row.score>previous||JSON.stringify(row.predictedOrder)!==JSON.stringify(scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat)))throw Error('Incorrect boat-one ranking margin or order: '+key);
+            oneKeys.add(key);previous=row.score;
+          }
           console.log(JSON.stringify({date,httpStatus:status,status:d.status,venues:d.venues.length,
             completedVenues:d.completedVenues.length,eligible,failedVenues:(d.failedVenues||[]).length,
             main:(d.categories.main||[]).length,upset:(d.categories.upset||[]).length,
-            chaos:(d.categories.chaos||[]).length,
+            chaos:(d.categories.chaos||[]).length,boatOne:d.boatOneRanking.length,
             legacyMissingOrder,legacyMissingCapture,
             note:legacyMissingOrder||legacyMissingCapture?'Legacy morning snapshot: missing fields were NOT backfilled and must not be used for pre-race accuracy.':'Observed snapshot only; not a historical accuracy test.'}));
           NODE
