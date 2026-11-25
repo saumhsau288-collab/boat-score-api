@@ -32,3 +32,63 @@ assert.equal(parseDeadline('<div>締切予定時刻 12:15 締切予定時刻 12:
 assert.equal(parseDeadline('<div>12:15</div>','20261123'),null);
 assert.equal(parseDeadline('<div>締切予定時刻 25:15</div>','20261123'),null);
 console.log('Production official cutoff parser: labeled JST time, ambiguity and missing evidence checks passed.');
+
+
+// Exercise the production scheduled handler with an isolated in-memory KV.
+// Neither official upstream services nor the deployed Worker are modified.
+const schedulerStart=src.indexOf('  async scheduled(event,env,ctx) {');
+const schedulerEnd=src.indexOf('\n  async fetch(request,env)',schedulerStart);
+assert.ok(schedulerStart>=0&&schedulerEnd>schedulerStart);
+const schedulerSource=src.slice(schedulerStart,schedulerEnd).trim().replace(/,$/,'');
+const calls=[],saved=new Map();
+let failMode=null;
+const run=mode=>async()=>{calls.push(mode);if(failMode===mode)throw Error('fixture collection failure');};
+const scheduler=vm.runInNewContext('({'+schedulerSource+'}).scheduled',{
+ jstDateFromUtc:d=>new Date(d.getTime()+9*3600000).toISOString().slice(0,10).replace(/-/g,''),
+ runScheduledMorning:run('morning'),runScheduledBeforeArchive:run('before'),runScheduledResultArchive:run('result'),
+ console:{error(){}}
+});
+const env={MORNING_KV:{async put(key,value){saved.set(key,JSON.parse(value));}}};
+async function trigger(iso,mode,date,expectFailure=false){
+ let pending;
+ await scheduler({scheduledTime:Date.parse(iso),cron:'provider normalized expression'},env,{waitUntil(p){pending=p;}});
+ assert.ok(pending,'Scheduled collector must register asynchronous work');
+ if(expectFailure)await assert.rejects(pending,/fixture collection failure/);else await pending;
+ assert.equal(calls.at(-1),mode);
+ const health=saved.get('scheduler-health:v1:'+mode+':'+date);
+ assert.equal(health.status,expectFailure?'failed':'finished');
+ assert.equal(health.date,date);
+ assert.equal(health.scheduledAt,iso);
+ assert.ok(health.finishedAt);
+ if(expectFailure)assert.equal(health.error,'fixture collection failure');
+}
+await trigger('2026-11-24T23:00:00.000Z','morning','20261125');
+await trigger('2026-11-25T00:05:00.000Z','before','20261125');
+await trigger('2026-11-25T14:55:00.000Z','before','20261125');
+await trigger('2026-11-25T15:00:00.000Z','result','20261125');
+await trigger('2026-11-25T22:55:00.000Z','result','20261125');
+failMode='before';
+await trigger('2026-11-25T04:00:00.000Z','before','20261125',true);
+console.log('Production scheduler: UTC/JST routing, previous-day result archive, health and failure recording passed.');
+
+// Read the production API handler with a fixture containing original and legacy rows.
+const recordsStart=src.indexOf("if(u.pathname==='/api/research/morning-records'){");
+const recordsEnd=src.indexOf("if(u.pathname==='/api/research/scheduler-health'){",recordsStart);
+assert.ok(recordsStart>=0&&recordsEnd>recordsStart);
+const original={...row,ready:true,predictedOrder:[1,2,3,4,5,6],method:'fixture'};
+const legacy={...original,race:2,capturedAt:null,predictedOrder:null};
+const rejected={...original,race:3,statsVerified:false};
+const originalJSON=JSON.stringify({date:row.date,records:[original,legacy,rejected]});
+const fixtureEnv={MORNING_KV:{async get(){return originalJSON;}}};
+const handler=vm.runInNewContext('(async (request,env,u)=>{'+src.slice(recordsStart,recordsEnd)+'})',{
+ reply:(_request,data,status=200)=>({data,status})
+});
+const response=await handler({method:'GET'},fixtureEnv,new URL('https://example.invalid/api/research/morning-records?date='+row.date));
+assert.equal(response.status,200);
+assert.equal(response.data.records.length,2);
+assert.equal(response.data.records[0].capturedAt,original.capturedAt);
+assert.equal(response.data.records[1].capturedAt,null);
+assert.equal(response.data.records[1].predictedOrder,null);
+assert.equal(response.data.records[0].rankedScores.length,6);
+assert.equal((await handler({method:'POST'},fixtureEnv,new URL('https://example.invalid/api/research/morning-records?date='+row.date))).status,405);
+console.log('Archived research API: original records preserved, unverified rows excluded, legacy timestamps not invented.');
