@@ -9,6 +9,12 @@ on:
         required: false
         default: false
 
+      course_data_only:
+        description: 'Official racer course-count import only; skip deployment and race research'
+        type: boolean
+        required: false
+        default: false
+
 permissions:
   contents: read
 
@@ -18,7 +24,7 @@ concurrency:
 
 jobs:
   deploy-preview:
-    if: ${{ !inputs.research_only }}
+    if: ${{ !inputs.research_only && !inputs.course_data_only }}
     runs-on: ubuntu-latest
     environment: boat-score-2-preview
     steps:
@@ -320,7 +326,7 @@ jobs:
           NODE
 
   research-two-days:
-    if: ${{ inputs.research_only }}
+    if: ${{ inputs.research_only && !inputs.course_data_only }}
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -611,4 +617,50 @@ jobs:
           git config user.name 'boat-score-2-research'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Retain verified research observations [skip ci]'
+          git push origin HEAD:refs/heads/fix-boat-score-2-syntax-20261115
+
+  import-course-data:
+    if: ${{ inputs.course_data_only }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout isolated development branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix-boat-score-2-syntax-20261115
+          persist-credentials: true
+      - name: Validate official byte-layout parser
+        run: python3 scripts/import-official-racer-course-counts.py --self-test
+      - name: Download official period file and extract in temporary directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y lhasa
+          TMP=$(mktemp -d)
+          trap 'rm -rf "$TMP"' EXIT
+          curl --fail --location --retry 2 --max-time 90 'https://www.boatrace.jp/static_extra/pc_static/download/data/kibetsu/fan2610.lzh' -o "$TMP/fan2610.lzh"
+          mkdir "$TMP/unpacked"
+          (cd "$TMP/unpacked" && lha x "$TMP/fan2610.lzh")
+          mapfile -d '' files < <(find "$TMP/unpacked" -type f -iname 'fan2610.txt' -print0)
+          if [ "${#files[@]}" -ne 1 ]; then
+            echo 'Expected exactly one official fan2610.txt file'
+            exit 1
+          fi
+          python3 scripts/import-official-racer-course-counts.py --input "${files[0]}" --output research/course-stats/2027-1.json
+      - name: Preserve verified counts on development branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = "fix-boat-score-2-syntax-20261115"
+          git add -- research/course-stats/2027-1.json
+          if git diff --cached --quiet; then
+            echo 'Official course dataset already saved'
+            exit 0
+          fi
+          git config user.name 'boat-score-2-research'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Import official racer course counts [skip ci]'
           git push origin HEAD:refs/heads/fix-boat-score-2-syntax-20261115
