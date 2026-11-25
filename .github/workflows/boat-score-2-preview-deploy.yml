@@ -249,6 +249,7 @@ jobs:
   research-two-days:
     if: ${{ inputs.research_only }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Read-only archived six-boat comparison
         shell: bash
@@ -259,20 +260,33 @@ jobs:
           const orderOK=a=>Array.isArray(a)&&a.length===6&&new Set(a).size===6&&a.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
           const id=x=>x.venue+':'+x.race;
           const timely=x=>Number.isFinite(Date.parse(x.capturedAt))&&Number.isFinite(Date.parse(x.deadlineAt))&&Date.parse(x.capturedAt)<Date.parse(x.deadlineAt);
-          async function get(path,date){
-           try{const r=await fetch(base+path+'?date='+date,{signal:AbortSignal.timeout(20000)});if(!r.ok){console.log(JSON.stringify({date,path,http:r.status}));return null;}const d=await r.json();return d.date===date?d:null;}
+          async function get(path,date,params=''){
+           try{const r=await fetch(base+path+'?date='+date+params,{signal:AbortSignal.timeout(20000)});if(!r.ok){console.log(JSON.stringify({date,path,http:r.status}));return null;}const d=await r.json();return d.date===date?d:null;}
            catch(e){console.log(JSON.stringify({date,path,error:String(e)}));return null;}
           }
           const groups={verified:[],exploratory:[],before:[]};
           for(const date of dates){
-           const [morning,results,before,quality]=await Promise.all(['/api/morning/snapshot','/api/research/result-archive','/api/research/before-audit','/api/research/archive-quality'].map(p=>get(p,date)));
-           const candidates=Object.values(morning?.categories||{}).flat().filter(x=>x?.date===date);
+           const [morning,results,before,quality,health]=await Promise.all(['/api/research/morning-records','/api/research/result-archive','/api/research/before-audit','/api/research/archive-quality','/api/research/scheduler-health'].map(p=>get(p,date)));
+           const candidates=(Array.isArray(morning?.records)?morning.records:[]).filter(x=>x?.date===date);
+           const validResult=(f,x)=>f?.date===date&&f.venue===x.venue&&f.race===x.race&&f.verified===true&&orderOK(f.finishOrder);
+           const recovered=new Map();
+           const tasks=candidates.filter(x=>Array.isArray(x.rankedScores)&&x.rankedScores.length===6&&orderOK(x.rankedScores.map(y=>y.boat))&&x.rankedScores.every(y=>Number.isFinite(y.score))&&!validResult(results?.records?.[id(x)],x)&&(!Number.isFinite(Date.parse(x.deadlineAt))||Date.parse(x.deadlineAt)<Date.now()));
+           let next=0;
+           await Promise.all(Array.from({length:Math.min(4,tasks.length)},async()=>{
+            while(next<tasks.length){
+             const x=tasks[next++];
+             const f=await get('/api/official/result',date,'&venue='+x.venue+'&race='+x.race);
+             if(validResult(f,x))recovered.set(id(x),f);
+             await new Promise(resolve=>setTimeout(resolve,250));
+            }
+           }));
+           console.log('RECOVERY '+JSON.stringify({date,attempted:tasks.length,verified:recovered.size,health:health?.modes||null}));
            const seen=new Set();let missing=0,invalid=0,strict=0,legacy=0;
            for(const x of candidates){
             if(seen.has(id(x)))continue;seen.add(id(x));
             const scores=x.rankedScores;
             if(!Array.isArray(scores)||scores.length!==6||!orderOK(scores.map(y=>y.boat))||!scores.every(y=>Number.isFinite(y.score))){invalid++;continue;}
-            const f=results?.records?.[id(x)];
+            const saved=results?.records?.[id(x)];const f=validResult(saved,x)?saved:recovered.get(id(x));
             if(f?.date!==date||f.venue!==x.venue||f.race!==x.race||f.verified!==true||!orderOK(f.finishOrder)){missing++;continue;}
             const ranked=scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
             const verified=timely(x)&&orderOK(x.predictedOrder)&&x.predictedOrder.every((b,i)=>b===ranked[i].boat);
@@ -303,5 +317,5 @@ jobs:
             console.log('ANALYSIS '+JSON.stringify({kind,date,n:a.length,innerScoreSpread3_boat4Podium:compare(a,x=>spread(x)<=3,x=>x.finish.slice(0,3).includes(4)),innerScoreSpread3_outerPodium:compare(a,x=>spread(x)<=3,x=>x.finish.slice(0,3).some(b=>b>=4))}));
            }
           }
-          console.log('Limits: legacy candidates lack pre-deadline evidence; candidate selection is biased; boat numbers are not actual courses; ST means exhibition not race; no causal or betting accuracy claims.');
+          console.log('Limits: legacy candidates lack pre-deadline evidence; legacy observations are exploratory; boat numbers are not actual courses; ST means exhibition not race; no causal or betting accuracy claims.');
           NODE
