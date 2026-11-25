@@ -58,7 +58,8 @@ def parse_row(raw):
 
 def parse_file(data):
     rows = data.split(b"\n")
-    if rows and rows[-1] == b"":
+    # Official files may end in multiple empty CRLF lines. Never skip internal blank rows.
+    while rows and rows[-1] in (b"", b"\r"):
         rows.pop()
     records = {}
     period = None
@@ -112,7 +113,15 @@ def self_test():
         raise AssertionError("duplicate accepted")
     except ValueError as e:
         assert "duplicate" in str(e)
-    print("Official course count parser: byte offsets, exact finish rates, zero samples, mismatches and duplicate guards passed.")
+    sample = b"\r\n".join(bytes(row(reg)) for reg in range(3000,4000))
+    parsed = parse_file(sample + b"\r\n\r\n\r\n")
+    assert parsed["racerCount"] == 1000
+    try:
+        parse_file(bytes(row()) + b"\r\n\r\n" + bytes(row(3416)) + b"\r\n")
+        raise AssertionError("internal blank row accepted")
+    except ValueError as e:
+        assert "line 2: unexpected row length 0" in str(e)
+    print("Official course count parser: byte offsets, exact finish rates, zero samples, mismatches, duplicate and trailing empty line guards passed.")
 
 if __name__ == "__main__":
     p=argparse.ArgumentParser()
