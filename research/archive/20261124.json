@@ -1,0 +1,5880 @@
+{
+  "date": "20261124",
+  "version": 1,
+  "results": {
+    "2:2": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        3,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:07.774Z"
+    },
+    "2:3": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        5,
+        2,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:07.946Z"
+    },
+    "2:1": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        6,
+        5,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:08.778Z"
+    },
+    "2:4": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        3,
+        5,
+        1,
+        4,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:09.760Z"
+    },
+    "2:7": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        3,
+        4,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:18.266Z"
+    },
+    "2:5": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        3,
+        4,
+        5,
+        1,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:18.407Z"
+    },
+    "2:6": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        5,
+        3,
+        6,
+        2,
+        1,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:18.463Z"
+    },
+    "2:8": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        5,
+        6,
+        2,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:19.178Z"
+    },
+    "2:10": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        5,
+        3,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:26.844Z"
+    },
+    "2:11": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        3,
+        4,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:26.927Z"
+    },
+    "2:9": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        6,
+        2,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:27.750Z"
+    },
+    "2:12": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        3,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:29.668Z"
+    },
+    "5:1": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        3,
+        5,
+        2,
+        6,
+        4,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:36.354Z"
+    },
+    "5:2": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        3,
+        4,
+        6,
+        2,
+        1,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:36.363Z"
+    },
+    "5:3": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        3,
+        5,
+        4,
+        1,
+        2,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:38.218Z"
+    },
+    "5:4": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        2,
+        3,
+        5,
+        4,
+        1,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:39.140Z"
+    },
+    "5:5": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        6,
+        4,
+        1,
+        5,
+        2,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:45.822Z"
+    },
+    "5:7": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        3,
+        2,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:46.692Z"
+    },
+    "5:8": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        5,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:48.596Z"
+    },
+    "5:9": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        4,
+        2,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:56.303Z"
+    },
+    "5:11": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        5,
+        2,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:28:58.131Z"
+    },
+    "5:12": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        2,
+        5,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:04.826Z"
+    },
+    "7:2": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        2,
+        5,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:07.597Z"
+    },
+    "7:1": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        6,
+        4,
+        3,
+        1,
+        5,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:07.658Z"
+    },
+    "7:3": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        4,
+        2,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:14.416Z"
+    },
+    "7:4": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:15.948Z"
+    },
+    "7:6": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        4,
+        2,
+        6,
+        1,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:17.148Z"
+    },
+    "7:5": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        3,
+        5,
+        1,
+        6,
+        4,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:18.064Z"
+    },
+    "7:7": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        4,
+        3,
+        2,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:25.095Z"
+    },
+    "7:8": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        3,
+        2,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:26.455Z"
+    },
+    "7:10": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        6,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:26.548Z"
+    },
+    "7:9": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        1,
+        6,
+        4,
+        2,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:27.744Z"
+    },
+    "7:11": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        5,
+        6,
+        3,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:33.577Z"
+    },
+    "7:12": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        2,
+        3,
+        5,
+        4,
+        6,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:34.905Z"
+    },
+    "8:1": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        2,
+        5,
+        1,
+        3,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:36.174Z"
+    },
+    "8:2": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        4,
+        6,
+        1,
+        5,
+        2,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:36.223Z"
+    },
+    "8:3": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        3,
+        6,
+        5,
+        4,
+        1,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:43.070Z"
+    },
+    "8:4": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        6,
+        4,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:44.421Z"
+    },
+    "8:5": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        2,
+        4,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:44.876Z"
+    },
+    "8:6": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        6,
+        4,
+        3,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:46.728Z"
+    },
+    "8:8": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        3,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:52.976Z"
+    },
+    "8:7": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        3,
+        4,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:53.562Z"
+    },
+    "8:9": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        5,
+        2,
+        1,
+        4,
+        6,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:54.555Z"
+    },
+    "8:10": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:29:56.262Z"
+    },
+    "8:11": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:01.555Z"
+    },
+    "8:12": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        3,
+        6,
+        2,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:02.047Z"
+    },
+    "9:1": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        5,
+        2,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:04.566Z"
+    },
+    "9:2": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        1,
+        6,
+        3,
+        2,
+        4,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:06.378Z"
+    },
+    "9:3": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        3,
+        4,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:12.370Z"
+    },
+    "9:4": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        6,
+        3,
+        4,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:12.526Z"
+    },
+    "9:5": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        6,
+        4,
+        3,
+        2,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:14.393Z"
+    },
+    "9:6": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        4,
+        2,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:15.009Z"
+    },
+    "9:8": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        4,
+        2,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:21.000Z"
+    },
+    "9:7": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        4,
+        5,
+        2,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:23.272Z"
+    },
+    "9:10": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        3,
+        5,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:24.765Z"
+    },
+    "9:9": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        5,
+        4,
+        6,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:25.148Z"
+    },
+    "9:11": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        6,
+        4,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:30.472Z"
+    },
+    "9:12": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        5,
+        3,
+        6,
+        2,
+        1,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:33.289Z"
+    },
+    "10:2": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:34.838Z"
+    },
+    "10:1": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        5,
+        6,
+        2,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:35.952Z"
+    },
+    "10:3": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        6,
+        3,
+        2,
+        4,
+        1,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:40.890Z"
+    },
+    "10:4": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:44.461Z"
+    },
+    "10:5": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        4,
+        5,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:45.029Z"
+    },
+    "10:6": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        5,
+        3,
+        2,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:46.714Z"
+    },
+    "10:7": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        6,
+        2,
+        4,
+        3,
+        5,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:51.412Z"
+    },
+    "10:8": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        6,
+        5,
+        1,
+        3,
+        4,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:53.047Z"
+    },
+    "10:10": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        4,
+        2,
+        3,
+        5,
+        6,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:30:55.306Z"
+    },
+    "10:11": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        2,
+        5,
+        6,
+        4,
+        3,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:01.998Z"
+    },
+    "10:12": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        3,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:02.595Z"
+    },
+    "11:1": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        5,
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:05.864Z"
+    },
+    "11:2": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        3,
+        2,
+        1,
+        5,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:10.499Z"
+    },
+    "11:3": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        2,
+        3,
+        6,
+        1,
+        5,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:12.164Z"
+    },
+    "11:4": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        5,
+        4,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:13.463Z"
+    },
+    "11:5": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        5,
+        2,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:15.425Z"
+    },
+    "11:6": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        3,
+        6,
+        1,
+        2,
+        5,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:20.079Z"
+    },
+    "11:7": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        4,
+        1,
+        3,
+        5,
+        2,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:20.695Z"
+    },
+    "11:8": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        3,
+        6,
+        5,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:22.956Z"
+    },
+    "11:9": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:24.952Z"
+    },
+    "11:11": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        4,
+        6,
+        5,
+        3,
+        1,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:29.178Z"
+    },
+    "11:10": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        4,
+        2,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:30.504Z"
+    },
+    "11:12": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        4,
+        2,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:32.385Z"
+    },
+    "12:1": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        4,
+        2,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:33.669Z"
+    },
+    "12:2": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        2,
+        3,
+        4,
+        5,
+        1,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:39.634Z"
+    },
+    "12:4": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        2,
+        3,
+        6,
+        4,
+        5,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:40.886Z"
+    },
+    "12:5": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        3,
+        2,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:44.322Z"
+    },
+    "12:6": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        5,
+        6,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:50.126Z"
+    },
+    "12:7": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        3,
+        6,
+        2,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:50.347Z"
+    },
+    "12:8": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        2,
+        4,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:52.993Z"
+    },
+    "12:10": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        2,
+        6,
+        5,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:31:59.614Z"
+    },
+    "12:9": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        3,
+        5,
+        1,
+        2,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:00.639Z"
+    },
+    "12:12": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        4,
+        1,
+        2,
+        3,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:02.475Z"
+    },
+    "13:1": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        3,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:09.220Z"
+    },
+    "13:2": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        5,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:09.351Z"
+    },
+    "13:3": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        3,
+        4,
+        2,
+        5,
+        1,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:13.032Z"
+    },
+    "13:4": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        3,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:17.664Z"
+    },
+    "13:5": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:18.648Z"
+    },
+    "13:7": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        6,
+        4,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:22.522Z"
+    },
+    "13:9": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        4,
+        1,
+        2,
+        5,
+        6,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:27.126Z"
+    },
+    "13:8": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        5,
+        3,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:27.132Z"
+    },
+    "13:10": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        5,
+        4,
+        1,
+        2,
+        6,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:32.949Z"
+    },
+    "13:11": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        4,
+        5,
+        2,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:35.555Z"
+    },
+    "13:12": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:36.653Z"
+    },
+    "15:1": {
+      "date": "20261124",
+      "venue": 15,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        2,
+        5,
+        6,
+        4,
+        3,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:39.552Z"
+    },
+    "15:2": {
+      "date": "20261124",
+      "venue": 15,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        4,
+        5,
+        6,
+        3,
+        1,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:32:43.408Z"
+    },
+    "18:1": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        5,
+        3,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:33:28.443Z"
+    },
+    "18:2": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        3,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:33:29.280Z"
+    },
+    "18:3": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        3,
+        1,
+        5,
+        2,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:33:38.980Z"
+    },
+    "18:5": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        6,
+        2,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:33:39.206Z"
+    },
+    "18:6": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        6,
+        4,
+        3,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:33:42.257Z"
+    },
+    "18:7": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        6,
+        4,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:33:49.443Z"
+    },
+    "18:9": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        3,
+        2,
+        5,
+        6,
+        4,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:33:52.735Z"
+    },
+    "18:10": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        2,
+        4,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:00.091Z"
+    },
+    "18:11": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        5,
+        3,
+        4,
+        2,
+        1,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:00.501Z"
+    },
+    "18:12": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        5,
+        4,
+        6,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:01.250Z"
+    },
+    "19:3": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        6,
+        5,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:08.988Z"
+    },
+    "19:1": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        6,
+        4,
+        5,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:09.366Z"
+    },
+    "19:5": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        5,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:17.500Z"
+    },
+    "19:6": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        5,
+        2,
+        6,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:19.874Z"
+    },
+    "19:7": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        5,
+        6,
+        1,
+        2,
+        3,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:25.954Z"
+    },
+    "19:9": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        5,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:26.377Z"
+    },
+    "19:8": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        4,
+        2,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:28.342Z"
+    },
+    "19:10": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        4,
+        6,
+        2,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:28.343Z"
+    },
+    "19:11": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:34.421Z"
+    },
+    "19:12": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        2,
+        4,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:34.849Z"
+    },
+    "21:1": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:37.808Z"
+    },
+    "21:2": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        5,
+        3,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:38.819Z"
+    },
+    "21:3": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        5,
+        6,
+        4,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:43.912Z"
+    },
+    "21:4": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        2,
+        5,
+        4,
+        6,
+        3,
+        1
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:45.338Z"
+    },
+    "21:5": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        6,
+        5,
+        3,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:47.292Z"
+    },
+    "21:6": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        6,
+        1,
+        4,
+        3,
+        2,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:48.321Z"
+    },
+    "21:7": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        5,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:54.391Z"
+    },
+    "21:9": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        3,
+        5,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:55.742Z"
+    },
+    "21:8": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        5,
+        1,
+        4,
+        3,
+        6,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:55.775Z"
+    },
+    "21:10": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        3,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:34:56.761Z"
+    },
+    "21:11": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        3,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:04.867Z"
+    },
+    "22:1": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        6,
+        5,
+        3,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:06.214Z"
+    },
+    "21:12": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        3,
+        2,
+        6,
+        4,
+        1,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:06.272Z"
+    },
+    "22:2": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        4,
+        3,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:07.229Z"
+    },
+    "22:3": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        4,
+        2,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:14.349Z"
+    },
+    "22:5": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        2,
+        5,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:15.014Z"
+    },
+    "22:4": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        3,
+        5,
+        2,
+        4,
+        1,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:16.660Z"
+    },
+    "22:6": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        5,
+        3,
+        6,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:16.768Z"
+    },
+    "22:8": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        4,
+        3,
+        1,
+        5,
+        2,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:24.584Z"
+    },
+    "22:7": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        6,
+        5,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:24.883Z"
+    },
+    "22:10": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 10,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        5,
+        2,
+        3,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:27.468Z"
+    },
+    "22:11": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 11,
+      "verified": true,
+      "finishOrder": [
+        3,
+        4,
+        5,
+        1,
+        2,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:34.074Z"
+    },
+    "22:12": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 12,
+      "verified": true,
+      "finishOrder": [
+        2,
+        3,
+        1,
+        5,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:35.664Z"
+    },
+    "24:1": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 1,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:38.041Z"
+    },
+    "24:2": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 2,
+      "verified": true,
+      "finishOrder": [
+        1,
+        4,
+        2,
+        6,
+        3,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:43.567Z"
+    },
+    "24:3": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 3,
+      "verified": true,
+      "finishOrder": [
+        6,
+        5,
+        4,
+        1,
+        3,
+        2
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:45.173Z"
+    },
+    "24:4": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 4,
+      "verified": true,
+      "finishOrder": [
+        1,
+        5,
+        3,
+        2,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:46.948Z"
+    },
+    "24:5": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 5,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        5
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:48.518Z"
+    },
+    "24:6": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 6,
+      "verified": true,
+      "finishOrder": [
+        3,
+        6,
+        5,
+        1,
+        2,
+        4
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:53.188Z"
+    },
+    "24:7": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 7,
+      "verified": true,
+      "finishOrder": [
+        1,
+        3,
+        2,
+        5,
+        4,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:54.652Z"
+    },
+    "24:8": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 8,
+      "verified": true,
+      "finishOrder": [
+        1,
+        2,
+        4,
+        5,
+        6,
+        3
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:55.406Z"
+    },
+    "24:9": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 9,
+      "verified": true,
+      "finishOrder": [
+        2,
+        1,
+        4,
+        3,
+        5,
+        6
+      ],
+      "origin": "preview_official_result",
+      "retrievedAt": "2026-11-25T10:35:59.006Z"
+    }
+  },
+  "exhibitions": {
+    "2:5": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 5,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.17,
+          "time": 6.84
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 6.75
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.08,
+          "time": 6.81
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.19,
+          "time": 6.69
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.03,
+          "time": 6.81
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.15,
+          "time": 6.76
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:36:30.026Z",
+      "origin": "official_historical_exhibition"
+    },
+    "2:4": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 4,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.03,
+          "time": 6.7
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.04,
+          "time": 6.79
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.07,
+          "time": 6.77
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.29,
+          "time": 6.81
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.23,
+          "time": 6.82
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.15,
+          "time": 6.9
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:36:30.039Z",
+      "origin": "official_historical_exhibition"
+    },
+    "2:8": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 8,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.05,
+          "time": 6.98
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.82
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.17,
+          "time": 7
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.57,
+          "time": 6.93
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.26,
+          "time": 6.98
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.15,
+          "time": 7.01
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:36:38.586Z",
+      "origin": "official_historical_exhibition"
+    },
+    "2:9": {
+      "date": "20261124",
+      "venue": 2,
+      "race": 9,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.02,
+          "time": 6.99
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 7.04
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.29,
+          "time": 7.05
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.02,
+          "time": 7
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.24,
+          "time": 7.03
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.09,
+          "time": 6.92
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:36:41.693Z",
+      "origin": "official_historical_exhibition"
+    },
+    "5:2": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 2,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.06,
+          "time": 6.76
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.65
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.09,
+          "time": 6.7
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.51,
+          "time": 6.79
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.12,
+          "time": 6.72
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.19,
+          "time": 6.8
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:36:57.765Z",
+      "origin": "official_historical_exhibition"
+    },
+    "5:1": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 1,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.15,
+          "time": 6.77
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.15,
+          "time": 6.8
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.04,
+          "time": 6.8
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.1,
+          "time": 6.9
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.14,
+          "time": 6.83
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.14,
+          "time": 6.8
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:36:58.679Z",
+      "origin": "official_historical_exhibition"
+    },
+    "5:3": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 3,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.02,
+          "time": 6.78
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.12,
+          "time": 6.75
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.11,
+          "time": 6.83
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.15,
+          "time": 6.86
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.41,
+          "time": 6.83
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.12,
+          "time": 6.86
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:36:58.760Z",
+      "origin": "official_historical_exhibition"
+    },
+    "5:4": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 4,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.21,
+          "time": 6.86
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.77
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.35,
+          "time": 6.83
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.21,
+          "time": 6.83
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.32,
+          "time": 6.83
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.58,
+          "time": 6.81
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:07.301Z",
+      "origin": "official_historical_exhibition"
+    },
+    "5:5": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 5,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.12,
+          "time": 6.78
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.08,
+          "time": 6.9
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.15,
+          "time": 6.9
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.16,
+          "time": 6.87
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.08,
+          "time": 6.82
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.12,
+          "time": 6.85
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:08.180Z",
+      "origin": "official_historical_exhibition"
+    },
+    "5:7": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 7,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.07,
+          "time": 6.8
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.04,
+          "time": 6.85
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.11,
+          "time": 6.75
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.22,
+          "time": 6.88
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.39,
+          "time": 6.82
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.31,
+          "time": 6.82
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:09.256Z",
+      "origin": "official_historical_exhibition"
+    },
+    "5:9": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 9,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.03,
+          "time": 6.83
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.06,
+          "time": 6.8
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.04,
+          "time": 6.76
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.28,
+          "time": 6.73
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.24,
+          "time": 6.87
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.19,
+          "time": 6.93
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:17.679Z",
+      "origin": "official_historical_exhibition"
+    },
+    "5:11": {
+      "date": "20261124",
+      "venue": 5,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.11,
+          "time": 6.73
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 6.83
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.22,
+          "time": 6.83
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.24,
+          "time": 6.8
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.16,
+          "time": 6.81
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.12,
+          "time": 6.79
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:19.798Z",
+      "origin": "official_historical_exhibition"
+    },
+    "7:1": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 1,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.14,
+          "time": 6.83
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.12,
+          "time": 6.76
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.03,
+          "time": 6.77
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.16,
+          "time": 6.83
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.08,
+          "time": 6.76
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.04,
+          "time": 6.82
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:27.178Z",
+      "origin": "official_historical_exhibition"
+    },
+    "7:2": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 2,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.03,
+          "time": 6.89
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.07,
+          "time": 6.79
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.01,
+          "time": 6.81
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.02,
+          "time": 6.85
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.08,
+          "time": 6.91
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.25,
+          "time": 6.86
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:29.298Z",
+      "origin": "official_historical_exhibition"
+    },
+    "7:5": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 5,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.11,
+          "time": 6.81
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.29,
+          "time": 6.92
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.11,
+          "time": 6.88
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.17,
+          "time": 6.86
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.14,
+          "time": 6.97
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.09,
+          "time": 6.93
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:38.838Z",
+      "origin": "official_historical_exhibition"
+    },
+    "7:6": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 6,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.03,
+          "time": 6.8
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.02,
+          "time": 6.79
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.15,
+          "time": 6.88
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.16,
+          "time": 6.91
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.14,
+          "time": 6.94
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.09,
+          "time": 6.81
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:43.492Z",
+      "origin": "official_historical_exhibition"
+    },
+    "7:8": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 8,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.16,
+          "time": 6.86
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.18,
+          "time": 6.86
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.06,
+          "time": 6.8
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.11,
+          "time": 6.94
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0,
+          "time": 6.88
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.27,
+          "time": 6.86
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:48.339Z",
+      "origin": "official_historical_exhibition"
+    },
+    "7:10": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 10,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.15,
+          "time": 6.89
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.06,
+          "time": 6.86
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.11,
+          "time": 6.83
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.07,
+          "time": 6.82
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.29,
+          "time": 6.91
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.01,
+          "time": 6.93
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:56.731Z",
+      "origin": "official_historical_exhibition"
+    },
+    "7:11": {
+      "date": "20261124",
+      "venue": 7,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.11,
+          "time": 6.8
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.78
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.38,
+          "time": 6.77
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.05,
+          "time": 6.82
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.08,
+          "time": 6.87
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0,
+          "time": 6.77
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:37:58.842Z",
+      "origin": "official_historical_exhibition"
+    },
+    "8:3": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 3,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.07,
+          "time": 6.46
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.12,
+          "time": 6.54
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.02,
+          "time": 6.55
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.22,
+          "time": 6.56
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.1,
+          "time": 6.56
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.03,
+          "time": 6.53
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:38:11.092Z",
+      "origin": "official_historical_exhibition"
+    },
+    "8:8": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 8,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.07,
+          "time": 6.56
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.08,
+          "time": 6.56
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.06,
+          "time": 6.58
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.02,
+          "time": 6.52
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.06,
+          "time": 6.54
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0,
+          "time": 6.55
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:38:26.457Z",
+      "origin": "official_historical_exhibition"
+    },
+    "8:7": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 7,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.04,
+          "time": 6.55
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.19,
+          "time": 6.55
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.36,
+          "time": 6.54
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.04,
+          "time": 6.52
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.04,
+          "time": 6.53
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.09,
+          "time": 6.6
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:38:27.358Z",
+      "origin": "official_historical_exhibition"
+    },
+    "8:9": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 9,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.09,
+          "time": 6.58
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.52
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.18,
+          "time": 6.59
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.57
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.1,
+          "time": 6.52
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.04,
+          "time": 6.56
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:38:29.128Z",
+      "origin": "official_historical_exhibition"
+    },
+    "8:11": {
+      "date": "20261124",
+      "venue": 8,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.1,
+          "time": 6.58
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.06,
+          "time": 6.58
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.07,
+          "time": 6.56
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.57
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.18,
+          "time": 6.58
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.13,
+          "time": 6.61
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:38:36.902Z",
+      "origin": "official_historical_exhibition"
+    },
+    "9:5": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 5,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.1,
+          "time": 6.68
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.13,
+          "time": 6.75
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.09,
+          "time": 6.73
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.11,
+          "time": 6.62
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.19,
+          "time": 6.63
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.07,
+          "time": 6.7
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:38:54.933Z",
+      "origin": "official_historical_exhibition"
+    },
+    "9:4": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 4,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.04,
+          "time": 6.66
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.16,
+          "time": 6.67
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.1,
+          "time": 6.68
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.02,
+          "time": 6.75
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.35,
+          "time": 6.67
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.04,
+          "time": 6.71
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:38:55.687Z",
+      "origin": "official_historical_exhibition"
+    },
+    "9:7": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 7,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.02,
+          "time": 6.69
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.19,
+          "time": 6.78
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.15,
+          "time": 6.78
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.24,
+          "time": 6.75
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.09,
+          "time": 6.79
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.11,
+          "time": 6.55
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:04.438Z",
+      "origin": "official_historical_exhibition"
+    },
+    "9:11": {
+      "date": "20261124",
+      "venue": 9,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.04,
+          "time": 6.78
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.07,
+          "time": 6.81
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.16,
+          "time": 6.74
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.23,
+          "time": 6.75
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.01,
+          "time": 6.75
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.04,
+          "time": 6.75
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:14.771Z",
+      "origin": "official_historical_exhibition"
+    },
+    "10:3": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 3,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.06,
+          "time": 6.78
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.16,
+          "time": 6.7
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.1,
+          "time": 6.8
+        },
+        {
+          "boat": 6,
+          "course": 4,
+          "st": 0.02,
+          "time": 6.74
+        },
+        {
+          "boat": 4,
+          "course": 5,
+          "st": 0.36,
+          "time": 6.71
+        },
+        {
+          "boat": 5,
+          "course": 6,
+          "st": 0.01,
+          "time": 6.81
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:23.525Z",
+      "origin": "official_historical_exhibition"
+    },
+    "10:1": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 1,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.28,
+          "time": 6.82
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.27,
+          "time": 6.74
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.19,
+          "time": 6.8
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.16,
+          "time": 6.73
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.09,
+          "time": 6.8
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.24,
+          "time": 6.7
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:25.333Z",
+      "origin": "official_historical_exhibition"
+    },
+    "10:4": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 4,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.15,
+          "time": 6.67
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.18,
+          "time": 6.7
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.07,
+          "time": 6.79
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.01,
+          "time": 6.7
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.26,
+          "time": 6.7
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.21,
+          "time": 6.76
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:32.066Z",
+      "origin": "official_historical_exhibition"
+    },
+    "10:5": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 5,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.01,
+          "time": 6.77
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.01,
+          "time": 6.68
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.22,
+          "time": 6.68
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.11,
+          "time": 6.82
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.09,
+          "time": 6.76
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.09,
+          "time": 6.8
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:34.005Z",
+      "origin": "official_historical_exhibition"
+    },
+    "10:6": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 6,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.06,
+          "time": 6.7
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.05,
+          "time": 6.67
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.17,
+          "time": 6.67
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.28,
+          "time": 6.71
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.27,
+          "time": 6.8
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.41,
+          "time": 6.82
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:34.869Z",
+      "origin": "official_historical_exhibition"
+    },
+    "10:7": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 7,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.19,
+          "time": 6.77
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.03,
+          "time": 6.68
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.09,
+          "time": 6.8
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.34,
+          "time": 6.84
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.32,
+          "time": 6.84
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.19,
+          "time": 6.76
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:40.665Z",
+      "origin": "official_historical_exhibition"
+    },
+    "10:11": {
+      "date": "20261124",
+      "venue": 10,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.05,
+          "time": 6.93
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.04,
+          "time": 6.85
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.07,
+          "time": 6.83
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.16,
+          "time": 6.86
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.17,
+          "time": 6.88
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.07,
+          "time": 6.82
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:49.188Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:1": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 1,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.08,
+          "time": 6.75
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.15,
+          "time": 6.77
+        },
+        {
+          "boat": 4,
+          "course": 3,
+          "st": 0.23,
+          "time": 6.75
+        },
+        {
+          "boat": 3,
+          "course": 4,
+          "st": 0.14,
+          "time": 6.78
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.1,
+          "time": 6.78
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.22,
+          "time": 6.7
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:54.939Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:2": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 2,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.09,
+          "time": 6.63
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.08,
+          "time": 6.67
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.31,
+          "time": 6.66
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.12,
+          "time": 6.66
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.08,
+          "time": 6.77
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.17,
+          "time": 6.79
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:39:57.734Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:3": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 3,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.27,
+          "time": 6.72
+        },
+        {
+          "boat": 3,
+          "course": 2,
+          "st": 0.27,
+          "time": 6.72
+        },
+        {
+          "boat": 4,
+          "course": 3,
+          "st": 0.15,
+          "time": 6.7
+        },
+        {
+          "boat": 2,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.72
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.11,
+          "time": 6.73
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.18,
+          "time": 6.71
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:02.543Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:4": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 4,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.12,
+          "time": 6.72
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.04,
+          "time": 6.82
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.05,
+          "time": 6.79
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.14,
+          "time": 6.67
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.13,
+          "time": 6.8
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.12,
+          "time": 6.74
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:03.589Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:6": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 6,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.24,
+          "time": 6.68
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.03,
+          "time": 6.64
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.15,
+          "time": 6.67
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.17,
+          "time": 6.7
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.22,
+          "time": 6.62
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.29,
+          "time": 6.73
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:12.123Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:8": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 8,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.17,
+          "time": 6.72
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 6.78
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.03,
+          "time": 6.68
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.76
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.08,
+          "time": 6.8
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.07,
+          "time": 6.87
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:16.849Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:10": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 10,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.08,
+          "time": 6.68
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.21,
+          "time": 6.7
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.09,
+          "time": 6.77
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.05,
+          "time": 6.7
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.14,
+          "time": 6.77
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.15,
+          "time": 6.84
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:22.682Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:11": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.08,
+          "time": 6.79
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.12,
+          "time": 6.74
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.26,
+          "time": 6.69
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.15,
+          "time": 6.73
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.35,
+          "time": 6.82
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.28,
+          "time": 6.74
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:27.358Z",
+      "origin": "official_historical_exhibition"
+    },
+    "11:12": {
+      "date": "20261124",
+      "venue": 11,
+      "race": 12,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.14,
+          "time": 6.68
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.1,
+          "time": 6.76
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.19,
+          "time": 6.79
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.07,
+          "time": 6.82
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.04,
+          "time": 6.78
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.02,
+          "time": 6.84
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:32.233Z",
+      "origin": "official_historical_exhibition"
+    },
+    "12:7": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 7,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.25,
+          "time": 6.9
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.18,
+          "time": 6.83
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0,
+          "time": 6.86
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.08,
+          "time": 6.86
+        },
+        {
+          "boat": 6,
+          "course": 5,
+          "st": 0.12,
+          "time": 6.99
+        },
+        {
+          "boat": 5,
+          "course": 6,
+          "st": 0.14,
+          "time": 6.84
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:52.266Z",
+      "origin": "official_historical_exhibition"
+    },
+    "12:9": {
+      "date": "20261124",
+      "venue": 12,
+      "race": 9,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.15,
+          "time": 6.93
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.1,
+          "time": 6.88
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.07,
+          "time": 6.97
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.08,
+          "time": 6.97
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.02,
+          "time": 6.84
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.03,
+          "time": 6.87
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:40:56.935Z",
+      "origin": "official_historical_exhibition"
+    },
+    "13:3": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 3,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.11,
+          "time": 6.79
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 6.84
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.15,
+          "time": 6.77
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.01,
+          "time": 6.83
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.09,
+          "time": 6.83
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.14,
+          "time": 6.8
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:09.367Z",
+      "origin": "official_historical_exhibition"
+    },
+    "13:8": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 8,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.07,
+          "time": 6.89
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.13,
+          "time": 6.83
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.06,
+          "time": 6.84
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.03,
+          "time": 6.82
+        },
+        {
+          "boat": 6,
+          "course": 5,
+          "st": 0.05,
+          "time": 6.88
+        },
+        {
+          "boat": 5,
+          "course": 6,
+          "st": 0.01,
+          "time": 6.84
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:26.572Z",
+      "origin": "official_historical_exhibition"
+    },
+    "13:11": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.02,
+          "time": 6.85
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.06,
+          "time": 6.89
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.03,
+          "time": 6.86
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.26,
+          "time": 6.78
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.31,
+          "time": 6.85
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.13,
+          "time": 6.78
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:37.094Z",
+      "origin": "official_historical_exhibition"
+    },
+    "13:12": {
+      "date": "20261124",
+      "venue": 13,
+      "race": 12,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.11,
+          "time": 6.75
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.01,
+          "time": 6.74
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.07,
+          "time": 6.85
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.05,
+          "time": 6.87
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.01,
+          "time": 6.87
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.02,
+          "time": 6.83
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:37.842Z",
+      "origin": "official_historical_exhibition"
+    },
+    "15:1": {
+      "date": "20261124",
+      "venue": 15,
+      "race": 1,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.34,
+          "time": 6.71
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.25,
+          "time": 6.8
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.23,
+          "time": 6.79
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.24,
+          "time": 6.67
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.23,
+          "time": 6.78
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.2,
+          "time": 6.73
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:38.920Z",
+      "origin": "official_historical_exhibition"
+    },
+    "15:2": {
+      "date": "20261124",
+      "venue": 15,
+      "race": 2,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.14,
+          "time": 6.62
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.72
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.13,
+          "time": 6.78
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.28,
+          "time": 6.73
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.18,
+          "time": 6.76
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.27,
+          "time": 6.69
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:45.612Z",
+      "origin": "official_historical_exhibition"
+    },
+    "18:1": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 1,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.14,
+          "time": 6.87
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.1,
+          "time": 6.93
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.08,
+          "time": 6.89
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.05,
+          "time": 6.94
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.01,
+          "time": 6.9
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.04,
+          "time": 6.95
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:46.332Z",
+      "origin": "official_historical_exhibition"
+    },
+    "18:2": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 2,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.24,
+          "time": 6.85
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.13,
+          "time": 6.96
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.03,
+          "time": 6.92
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.14,
+          "time": 6.9
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.21,
+          "time": 6.95
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.09,
+          "time": 6.89
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:47.439Z",
+      "origin": "official_historical_exhibition"
+    },
+    "18:5": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 5,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.23,
+          "time": 6.83
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.15,
+          "time": 6.91
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.12,
+          "time": 6.81
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.8
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.24,
+          "time": 6.88
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.04,
+          "time": 6.82
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:41:55.830Z",
+      "origin": "official_historical_exhibition"
+    },
+    "18:9": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 9,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.33,
+          "time": 6.79
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.34,
+          "time": 6.88
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.07,
+          "time": 6.86
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.18,
+          "time": 6.92
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.16,
+          "time": 6.87
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.27,
+          "time": 6.86
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:06.350Z",
+      "origin": "official_historical_exhibition"
+    },
+    "18:10": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 10,
+      "rows": [
+        {
+          "boat": 2,
+          "course": 1,
+          "st": 0,
+          "time": 6.85
+        },
+        {
+          "boat": 1,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.87
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.31,
+          "time": 6.93
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.05,
+          "time": 6.91
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.19,
+          "time": 6.95
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.04,
+          "time": 6.94
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:06.532Z",
+      "origin": "official_historical_exhibition"
+    },
+    "18:11": {
+      "date": "20261124",
+      "venue": 18,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.19,
+          "time": 6.78
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.01,
+          "time": 6.8
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.01,
+          "time": 6.73
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.01,
+          "time": 6.85
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.2,
+          "time": 6.78
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.32,
+          "time": 6.76
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:15.186Z",
+      "origin": "official_historical_exhibition"
+    },
+    "19:3": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 3,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.02,
+          "time": 6.65
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 6.7
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.12,
+          "time": 6.74
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.72
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.26,
+          "time": 6.76
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.16,
+          "time": 6.68
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:24.733Z",
+      "origin": "official_historical_exhibition"
+    },
+    "19:6": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 6,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.09,
+          "time": 6.79
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.07,
+          "time": 6.76
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.09,
+          "time": 6.81
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.1,
+          "time": 6.82
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0,
+          "time": 6.88
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.13,
+          "time": 6.78
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:26.632Z",
+      "origin": "official_historical_exhibition"
+    },
+    "19:8": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 8,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.04,
+          "time": 6.68
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.19,
+          "time": 6.83
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.06,
+          "time": 6.81
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.77
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.05,
+          "time": 6.84
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.13,
+          "time": 6.85
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:34.927Z",
+      "origin": "official_historical_exhibition"
+    },
+    "19:9": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 9,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.16,
+          "time": 6.68
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.69
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.13,
+          "time": 6.74
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.01,
+          "time": 6.69
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.09,
+          "time": 6.74
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.08,
+          "time": 6.7
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:35.171Z",
+      "origin": "official_historical_exhibition"
+    },
+    "19:7": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 7,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.03,
+          "time": 6.73
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 6.79
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.17,
+          "time": 6.76
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.25,
+          "time": 6.74
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.21,
+          "time": 6.71
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.12,
+          "time": 6.73
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:35.293Z",
+      "origin": "official_historical_exhibition"
+    },
+    "19:11": {
+      "date": "20261124",
+      "venue": 19,
+      "race": 11,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.09,
+          "time": 6.67
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.11,
+          "time": 6.63
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.06,
+          "time": 6.66
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.13,
+          "time": 6.71
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.13,
+          "time": 6.76
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.13,
+          "time": 6.64
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:42:45.746Z",
+      "origin": "official_historical_exhibition"
+    },
+    "21:5": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 5,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.12,
+          "time": 6.83
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.05,
+          "time": 6.79
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.08,
+          "time": 6.93
+        },
+        {
+          "boat": 6,
+          "course": 4,
+          "st": 0.04,
+          "time": 6.74
+        },
+        {
+          "boat": 4,
+          "course": 5,
+          "st": 0.21,
+          "time": 6.82
+        },
+        {
+          "boat": 5,
+          "course": 6,
+          "st": 0.25,
+          "time": 6.85
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:03.757Z",
+      "origin": "official_historical_exhibition"
+    },
+    "21:7": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 7,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.17,
+          "time": 6.73
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.1,
+          "time": 6.79
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.46,
+          "time": 6.86
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.14,
+          "time": 6.81
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.2,
+          "time": 6.86
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.37,
+          "time": 6.84
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:10.994Z",
+      "origin": "official_historical_exhibition"
+    },
+    "21:9": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 9,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.1,
+          "time": 6.77
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 6.78
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.13,
+          "time": 6.78
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.26,
+          "time": 6.92
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.19,
+          "time": 6.89
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.2,
+          "time": 6.8
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:12.371Z",
+      "origin": "official_historical_exhibition"
+    },
+    "21:8": {
+      "date": "20261124",
+      "venue": 21,
+      "race": 8,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.1,
+          "time": 6.8
+        },
+        {
+          "boat": 5,
+          "course": 2,
+          "st": 0.17,
+          "time": 6.77
+        },
+        {
+          "boat": 2,
+          "course": 3,
+          "st": 0.05,
+          "time": 6.81
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.2,
+          "time": 6.78
+        },
+        {
+          "boat": 3,
+          "course": 5,
+          "st": 0.23,
+          "time": 6.85
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.21,
+          "time": 6.88
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:14.285Z",
+      "origin": "official_historical_exhibition"
+    },
+    "22:4": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 4,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.21,
+          "time": 6.79
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.2,
+          "time": 6.74
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.23,
+          "time": 6.74
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.18,
+          "time": 6.85
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.03,
+          "time": 6.78
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.21,
+          "time": 6.75
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:39.551Z",
+      "origin": "official_historical_exhibition"
+    },
+    "22:6": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 6,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.09,
+          "time": 6.86
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.2,
+          "time": 6.79
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.1,
+          "time": 6.79
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.19,
+          "time": 6.79
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.04,
+          "time": 6.84
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.14,
+          "time": 6.85
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:41.762Z",
+      "origin": "official_historical_exhibition"
+    },
+    "22:5": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 5,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.16,
+          "time": 6.75
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.15,
+          "time": 6.72
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.22,
+          "time": 6.81
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.17,
+          "time": 6.8
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.06,
+          "time": 6.77
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.13,
+          "time": 6.78
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:42.927Z",
+      "origin": "official_historical_exhibition"
+    },
+    "22:8": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 8,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0,
+          "time": 6.81
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.09,
+          "time": 6.81
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.19,
+          "time": 6.8
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.85
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.23,
+          "time": 6.84
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.25,
+          "time": 6.83
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:52.274Z",
+      "origin": "official_historical_exhibition"
+    },
+    "22:10": {
+      "date": "20261124",
+      "venue": 22,
+      "race": 10,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.06,
+          "time": 6.84
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.02,
+          "time": 6.92
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.29,
+          "time": 6.79
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.09,
+          "time": 6.8
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.12,
+          "time": 6.89
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.11,
+          "time": 6.91
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:43:53.433Z",
+      "origin": "official_historical_exhibition"
+    },
+    "24:2": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 2,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.14,
+          "time": 6.8
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.12,
+          "time": 6.86
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.15,
+          "time": 6.8
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.12,
+          "time": 6.91
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.17,
+          "time": 6.9
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.13,
+          "time": 6.92
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:44:06.110Z",
+      "origin": "official_historical_exhibition"
+    },
+    "24:7": {
+      "date": "20261124",
+      "venue": 24,
+      "race": 7,
+      "rows": [
+        {
+          "boat": 1,
+          "course": 1,
+          "st": 0.01,
+          "time": 6.95
+        },
+        {
+          "boat": 2,
+          "course": 2,
+          "st": 0.01,
+          "time": 7.06
+        },
+        {
+          "boat": 3,
+          "course": 3,
+          "st": 0.08,
+          "time": 7.03
+        },
+        {
+          "boat": 4,
+          "course": 4,
+          "st": 0.31,
+          "time": 7
+        },
+        {
+          "boat": 5,
+          "course": 5,
+          "st": 0.24,
+          "time": 7.04
+        },
+        {
+          "boat": 6,
+          "course": 6,
+          "st": 0.1,
+          "time": 7.05
+        }
+      ],
+      "retrievedAt": "2026-11-25T10:44:22.030Z",
+      "origin": "official_historical_exhibition"
+    }
+  },
+  "conflicts": []
+}
