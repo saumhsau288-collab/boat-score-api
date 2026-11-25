@@ -367,6 +367,18 @@ jobs:
           const rawST=x=>validST(x)||typeof x==='string'&&/^[FL]\.?\d{1,2}$/i.test(x);
           const validRawExhibition=rows=>Array.isArray(rows)&&orderOK(rows.map(y=>y.boat))&&orderOK(rows.map(y=>y.course))&&rows.every(y=>rawST(y.st)&&Number.isFinite(y.time)&&y.time>=5&&y.time<=9);
           const validExhibition=rows=>validRawExhibition(rows)&&rows.every(y=>validST(y.st));
+          // Fixture checks execute before fetching any race or modifying saved files.
+          const assert=(condition,message)=>{if(!condition)throw Error('Research fixture failed: '+message);};
+          const fixture='<table><tr><th>着</th><th>枠</th></tr><tr><td>1</td><td>1</td></tr><tr><td>F</td><td>2</td></tr><tr><td>欠</td><td>3</td></tr></table>';
+          const evidence=resultEvidence(fixture);
+          assert(evidence.classification==='explicit_nonstandard_rank'&&evidence.explicit.length===2,'explicit official rank labels retained');
+          assert(parseFinish(fixture).verified===false,'nonstandard result must not count as a six-boat finish');
+          assert(resultEvidence('<div>当レースは中止となりました</div>').classification==='explicit_cancel_notice','explicit cancellation');
+          assert(resultEvidence('<div>返還金一覧</div>').classification==='result_table_missing_or_ambiguous','generic refund heading must not imply a refund');
+          const rawFixture=[1,2,3,4,5,6].map(boat=>({boat,course:boat,st:boat===2?'F.03':boat===3?'L.01':.1,time:6.8}));
+          assert(validRawExhibition(rawFixture)&&!validExhibition(rawFixture),'retain F/L and exclude from numeric ST group');
+          assert(!validRawExhibition(rawFixture.map(y=>({...y,st:'missing'}))),'unknown values not accepted');
+          console.log('Research missing-result and raw exhibition fixtures passed.');
           async function historical(x){
            const url='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+x.race+'&jcd='+String(x.venue).padStart(2,'0')+'&hd='+x.date;
            try{
