@@ -306,3 +306,19 @@ assert.equal(summarizeOne('20261126',{...oneMorning,boatOneRanking:[{...oneSelec
 assert.equal(summarizeOne('20261126',{...oneMorning,boatOneRanking:[oneSelected[0],oneSelected[0]]},oneArchive).matched,1);
 assert.equal(summarizeOne('20261126',oneMorning,{...oneArchive,date:'20261125'}).matched,0);
 console.log('Morning boat-one audit: saved ranking only, cutoff timing, official results, duplicates and separate comparison group passed.');
+
+const officialPosition=vm.runInNewContext(src.slice(scenarioStart,scenarioEnd)+'\nrankOfficialPositionTrial;');
+const courseEvidence={start:courseStarts,exhibition:courseEx,courseStats:{ready:true,courseBasis:'verified_exhibition_course',rows:courseStarts.map(x=>({boat:x.boat,course:x.course,racerId:String(4000+x.boat),status:'available',normalFinishes:20,priorStrength:20,pooledRates:[.2,.2,.2],smoothedRates:[.2,x.boat===2?.3:.2,x.boat===3?.3:.2]}))}};
+const newOfficial=officialPosition(boats,recordConditions,courseEvidence,positionRecent);
+assert.equal(newOfficial.ready,true);
+assert.equal(newOfficial.method,'official_position_shrink20_log3_v1');
+assert.ok(newOfficial.adjustments.find(x=>x.boat===2).second>0);
+assert.equal(newOfficial.adjustments.find(x=>x.boat===2).third,0);
+assert.ok(newOfficial.adjustments.find(x=>x.boat===3).third>0);
+assert.equal(new Set([...newOfficial.main,...newOfficial.upset].map(x=>x.join('-'))).size,12);
+assert.equal(officialPosition(boats,recordConditions,{...courseEvidence,courseStats:{...courseEvidence.courseStats,courseBasis:'assumed_frame_not_verified_course'}},positionRecent).ready,false);
+assert.equal(officialPosition(boats,recordConditions,{...courseEvidence,courseStats:{...courseEvidence.courseStats,rows:courseEvidence.courseStats.rows.map((x,i)=>i===0?{...x,normalFinishes:0}:x)}},positionRecent).ready,false);
+assert.equal(JSON.stringify(courseTrial(boats,recordConditions,courseEvidence,positionRecent)),JSON.stringify(ctrial));
+assert.equal(JSON.stringify(boats),originalScores);
+assert.equal(makeScenarioRecord(recordInput,recordConditions,recordPicks,ctrial,boats,positionRecent,'2026-11-26T01:00:02Z',newOfficial).officialPositionTrial.method,newOfficial.method);
+console.log('Official position trial: separate second/third adjustments, evidence gate, saved comparison and unchanged existing model passed.');
