@@ -953,9 +953,11 @@ function renderLocalPredictions(){
   const details=document.createElement('small');details.style.display='block';details.style.marginTop='8px';details.textContent=note+'。試算・的中率未検証。色：差±1.00以上で黄／緑、その他は白。';target.appendChild(details);
  };
  draw(left,model.baseScores,trialPicks(model.baseScores),'当地勝率に置換・モーター等は従来配点');
- if(!hasBefore){right.textContent='保留：公式展示タイム・展示STの反映待ち。';return;}
+ // One verified supplemental source is enough for a clearly labelled comparison; never invent missing measurements.
+ if(!hasBefore&&!hasRecent){right.textContent='保留：公式展示タイム・展示STと、まくらぼ6艇分のいずれも反映できません。';return;}
  const rows=model.adjustedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)}));
- draw(right,rows,trialPicks(rows),'展示タイム：'+(model.exhibitionApplied?'反映':'未反映')+'／展示ST：'+(model.startApplied?'反映':'未反映')+'／まくらぼ：'+(hasRecent?'6艇反映':'未取得・直前情報のみ'),!hasRecent);
+ const sourceNote=hasBefore?(hasRecent?'直前情報＋まくらぼ6艇':'直前情報のみ・まくらぼ未取得'):'まくらぼ6艇のみ・直前情報未反映';
+ draw(right,rows,trialPicks(rows),'使用データ：'+sourceNote+'／展示タイム：'+(model.exhibitionApplied?'反映':'未反映')+'／展示ST：'+(model.startApplied?'反映':'未反映'),!hasRecent||!hasBefore);
 }
 // Independent constrained ranking. The existing four prediction panels are not modified.
 function enumerateScenarioOrders(fixed){
