@@ -370,9 +370,31 @@ jobs:
            const tally=a=>({n:a.length,count:a.filter(outcome).length,rate:a.length?Number((100*a.filter(outcome).length/a.length).toFixed(1)):null});
            return {condition:tally(rows.filter(condition)),comparison:tally(rows.filter(x=>!condition(x)))};
           }
+          // Research hypothesis: either inner boat and boat 6 outrank each of boats 3/4/5.
+          function classifyOuter6(x,threshold=0){
+           const m=Math.max(x.scores[3],x.scores[4],x.scores[5]);
+           const above=n=>x.scores[n]>m&&x.scores[n]-m>=threshold;
+           const inner=[1,2].filter(above);
+           return {inner,outer:above(6),gap:Math.min(Math.max(x.scores[1],x.scores[2]),x.scores[6])-m};
+          }
+          function summarizeOuter6(rows){
+           const tally=fn=>rows.filter(fn).length;
+           const count={};
+           for(const x of rows){const key=x.finish.slice(0,3).join('-');count[key]=(count[key]||0)+1;}
+           return {n:rows.length,boat6First:tally(x=>x.finish[0]===6),boat6Second:tally(x=>x.finish[1]===6),boat6Third:tally(x=>x.finish[2]===6),boat6Top2:tally(x=>x.finish.slice(0,2).includes(6)),boat6Podium:tally(x=>x.finish.slice(0,3).includes(6)),strongInnerAnd6Top2:tally(x=>classifyOuter6(x).inner.some(n=>x.finish.slice(0,2).includes(n))&&x.finish.slice(0,2).includes(6)),strongInnerAnd6Podium:tally(x=>classifyOuter6(x).inner.some(n=>x.finish.slice(0,3).includes(n))&&x.finish.slice(0,3).includes(6)),all126Podium:tally(x=>[1,2,6].every(n=>x.finish.slice(0,3).includes(n))),trifectaFrequency:Object.entries(count).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))};
+          }
+          function reportOuter6(a,kind,date){
+           const matching=a.filter(x=>{const q=classifyOuter6(x);return q.outer&&q.inner.length>0;});
+           const select=fn=>matching.filter(x=>fn(classifyOuter6(x).inner));
+           const outsideOnly=a.filter(x=>{const q=classifyOuter6(x);return q.outer&&!q.inner.length;});
+           const insideOnly=a.filter(x=>{const q=classifyOuter6(x);return !q.outer&&q.inner.length>0;});
+           const notMatching=a.filter(x=>{const q=classifyOuter6(x);return !q.outer||!q.inner.length;});
+           console.log('PATTERN_OUTER6 '+JSON.stringify({kind,date,definition:'max(score1,score2)>max(score3,score4,score5) and score6>max(score3,score4,score5)',all:summarizeOuter6(matching),only1:summarizeOuter6(select(i=>i.length===1&&i[0]===1)),only2:summarizeOuter6(select(i=>i.length===1&&i[0]===2)),both:summarizeOuter6(select(i=>i.length===2)),outsideOnly:summarizeOuter6(outsideOnly),insideOnly:summarizeOuter6(insideOnly),other:summarizeOuter6(notMatching),gapThresholds:[5,10].map(t=>({threshold:t,result:summarizeOuter6(a.filter(x=>{const q=classifyOuter6(x,t);return q.outer&&q.inner.length>0;}))})),races:matching.map(x=>({date:x.date,venue:x.venue,race:x.race,inner:classifyOuter6(x).inner,gap:classifyOuter6(x).gap,finish:x.finish.slice(0,3)}))}));
+          }
           for(const [kind,rows] of Object.entries(groups)){
            for(const date of [...dates,'combined']){
             const a=rows.filter(x=>date==='combined'||x.date===date);
+            if(['verified','timedScores','exploratory'].includes(kind))reportOuter6(a,kind,date);
             if(kind==='before'||kind==='historicalExhibition'){
              const spread=x=>{const st=x.rows.filter(y=>y.course<=3).map(y=>y.st);return Math.max(...st)-Math.min(...st);};
              const c=(x,n)=>x.rows.find(y=>y.course===n);
@@ -383,6 +405,12 @@ jobs:
               console.log('ST_PAIR '+JSON.stringify({kind,date,pair:[n,n+1],target:n+2,close:compare(a,x=>closePair(x,n),x=>place(x,n+2)),closeAndOutsideST:compare(a,x=>closePair(x,n)&&c(x,n+2).st<=Math.max(c(x,n).st,c(x,n+1).st)+.03+1e-9,x=>place(x,n+2))}));
              }
              if(kind==='historicalExhibition'){
+              const matching=a.filter(x=>{const q=classifyOuter6(x);return q.outer&&q.inner.length>0;});
+              const boat6=x=>x.rows.find(y=>y.boat===6);
+              const stGood=x=>boat6(x).st<=Math.min(...x.rows.filter(y=>[3,4,5].includes(y.boat)).map(y=>y.st))+.03+1e-9;
+              const timeGood=x=>boat6(x).time<=Math.min(...x.rows.filter(y=>[3,4,5].includes(y.boat)).map(y=>y.time))+.05+1e-9;
+              const outcome=x=>x.finish.slice(0,3).includes(6);
+              console.log('PATTERN_OUTER6_EXHIBITION '+JSON.stringify({kind,date,n:matching.length,boat6ST:compare(matching,stGood,outcome),boat6Time:compare(matching,timeGood,outcome),both:compare(matching,x=>stGood(x)&&timeGood(x),outcome),actualOuterCourse:compare(matching,x=>boat6(x).course===6,outcome)}));
               const eligible=a.filter(x=>Number.isFinite(c(x,4).time));
               console.log('ST_TIME '+JSON.stringify({kind,date,n:eligible.length,innerCloseAnd4Quick:compare(eligible,x=>spread(x)<=.05+1e-9&&c(x,4).time<=Math.min(...x.rows.filter(y=>y.course<=3).map(y=>y.time))+.05+1e-9,x=>place(x,4))}));
              }
