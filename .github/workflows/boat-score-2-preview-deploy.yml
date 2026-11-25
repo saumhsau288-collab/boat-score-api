@@ -275,6 +275,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
+      - name: Checkout isolated research source
+        uses: actions/checkout@v4
+        with:
+          ref: fix-boat-score-2-syntax-20261115
+          persist-credentials: false
       - name: Read-only archived six-boat comparison
         shell: bash
         run: |
@@ -288,7 +293,31 @@ jobs:
            try{const r=await fetch(base+path+'?date='+date+params,{signal:AbortSignal.timeout(20000)});if(!r.ok){console.log(JSON.stringify({date,path,http:r.status}));return null;}const d=await r.json();return d.date===date?d:null;}
            catch(e){console.log(JSON.stringify({date,path,error:String(e)}));return null;}
           }
-          const groups={verified:[],exploratory:[],before:[]};
+          const groups={verified:[],timedScores:[],exploratory:[],before:[],historicalExhibition:[]};
+          const fs=await import('node:fs');
+          const vm=await import('node:vm');
+          const source=fs.readFileSync('worker.js','utf8');
+          const parserStart=source.indexOf('function extractOfficialStartExhibition(');
+          const parserEnd=source.indexOf('function extractOfficialBoatStats(',parserStart);
+          if(parserStart<0||parserEnd<=parserStart)throw Error('Official exhibition parsers missing');
+          const {extractOfficialStartExhibition,extractOfficialExhibition}=vm.runInNewContext(source.slice(parserStart,parserEnd)+'\n({extractOfficialStartExhibition,extractOfficialExhibition});');
+          const validST=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0&&x<=1;
+          async function historical(x){
+           const url='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+x.race+'&jcd='+String(x.venue).padStart(2,'0')+'&hd='+x.date;
+           try{
+            const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
+            if(!res.ok)return {reason:'http_'+res.status};
+            if(res.url!==url)return {reason:'redirect'};
+            const html=await res.text();
+            if(html.length>1000000)return {reason:'too_large'};
+            const st=extractOfficialStartExhibition(html),ex=extractOfficialExhibition(html);
+            if(st.verified!==true||ex.verified!==true||!orderOK(st.rows.map(y=>y.boat))||!orderOK(st.rows.map(y=>y.course))||!orderOK(ex.rows.map(y=>y.boat)))return {reason:'unverified_exhibition'};
+            if(!st.rows.every(y=>validST(y.startTiming)))return {reason:'non_numeric_ST'};
+            const byBoat=new Map(ex.rows.map(y=>[y.boat,y.exhibitionTime]));
+            if(!ex.rows.every(y=>Number.isFinite(y.exhibitionTime)))return {reason:'invalid_time'};
+            return {rows:st.rows.map(y=>({boat:y.boat,course:y.course,st:y.startTiming,time:byBoat.get(y.boat)}))};
+           }catch(e){return {reason:String(e?.name||'fetch_failed')};}
+          }
           for(const date of dates){
            const [morning,results,before,quality,health]=await Promise.all(['/api/research/morning-records','/api/research/result-archive','/api/research/before-audit','/api/research/archive-quality','/api/research/scheduler-health'].map(p=>get(p,date)));
            const candidates=(Array.isArray(morning?.records)?morning.records:[]).filter(x=>x?.date===date);
@@ -305,7 +334,7 @@ jobs:
             }
            }));
            console.log('RECOVERY '+JSON.stringify({date,attempted:tasks.length,verified:recovered.size,health:health?.modes||null}));
-           const seen=new Set();let missing=0,invalid=0,strict=0,legacy=0;
+           const seen=new Set();const matched=[];let missing=0,invalid=0,strict=0,legacy=0,timed=0;
            for(const x of candidates){
             if(seen.has(id(x)))continue;seen.add(id(x));
             const scores=x.rankedScores;
@@ -315,8 +344,19 @@ jobs:
             const ranked=scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
             const verified=timely(x)&&orderOK(x.predictedOrder)&&x.predictedOrder.every((b,i)=>b===ranked[i].boat);
             const item={date,venue:x.venue,race:x.race,scores:Object.fromEntries(scores.map(y=>[y.boat,y.score])),finish:f.finishOrder};
-            groups[verified?'verified':'exploratory'].push(item);if(verified)strict++;else legacy++;
+            const kind=verified?'verified':timely(x)?'timedScores':'exploratory';
+            groups[kind].push(item);matched.push(item);if(verified)strict++;else if(kind==='timedScores')timed++;else legacy++;
            }
+           const historicalFailures={};let hnext=0,hcount=0;
+           await Promise.all(Array.from({length:Math.min(3,matched.length)},async()=>{
+            while(hnext<matched.length){
+             const x=matched[hnext++],h=await historical(x);
+             if(h.rows){groups.historicalExhibition.push({...x,rows:h.rows});hcount++;}
+             else historicalFailures[h.reason]=(historicalFailures[h.reason]||0)+1;
+             await new Promise(resolve=>setTimeout(resolve,350));
+            }
+           }));
+           console.log('HISTORICAL_EXHIBITION '+JSON.stringify({date,attempted:matched.length,verified:hcount,failures:historicalFailures,note:'Retrieved after result; not predeadline archived evidence'}));
            for(const x of before?.records||[]){
             if(x.date!==date||!timely(x)||!orderOK(x.finishOrder)||!Array.isArray(x.start)||x.start.length!==6||!orderOK(x.start.map(y=>y.boat)))continue;
             const rows=x.start.map(y=>({boat:y.boat,course:y.course,st:y.st??y.startTiming??y.startTime}));
@@ -324,7 +364,7 @@ jobs:
             if(!rows.every(y=>y.st!==null&&y.st!==undefined&&/^(?:0?\.\d+|0)$/.test(String(y.st))&&Number(y.st)>=0&&Number(y.st)<=1))continue;
             groups.before.push({date,finish:x.finishOrder,rows:rows.map(y=>({...y,st:Number(y.st)}))});
            }
-           console.log('COVERAGE '+JSON.stringify({date,candidates:seen.size,strict,legacy,missing,invalid,quality:quality?{morning:quality.morning,before:quality.before,results:quality.results,matched:quality.matched}:null}));
+           console.log('COVERAGE '+JSON.stringify({date,candidates:seen.size,strict,timed,legacy,missing,invalid,quality:quality?{morning:quality.morning,before:quality.before,results:quality.results,matched:quality.matched}:null}));
           }
           function compare(rows,condition,outcome){
            const tally=a=>({n:a.length,count:a.filter(outcome).length,rate:a.length?Number((100*a.filter(outcome).length/a.length).toFixed(1)):null});
@@ -333,13 +373,35 @@ jobs:
           for(const [kind,rows] of Object.entries(groups)){
            for(const date of [...dates,'combined']){
             const a=rows.filter(x=>date==='combined'||x.date===date);
-            if(kind==='before'){
+            if(kind==='before'||kind==='historicalExhibition'){
              const spread=x=>{const st=x.rows.filter(y=>y.course<=3).map(y=>y.st);return Math.max(...st)-Math.min(...st);};
-             console.log('ANALYSIS '+JSON.stringify({kind,date,n:a.length,innerSTClose_course4Podium:compare(a,x=>spread(x)<=.05+1e-9,x=>x.finish.slice(0,3).includes(x.rows.find(y=>y.course===4).boat))}));continue;
+             const c=(x,n)=>x.rows.find(y=>y.course===n);
+             const place=(x,n)=>x.finish.slice(0,3).includes(c(x,n).boat);
+             const closePair=(x,n)=>Math.abs(c(x,n).st-c(x,n+1).st)<=.05+1e-9;
+             console.log('ANALYSIS '+JSON.stringify({kind,date,n:a.length,innerSTClose_course4Podium:compare(a,x=>spread(x)<=.05+1e-9,x=>place(x,4))}));
+             for(const n of [1,2,3,4]){
+              console.log('ST_PAIR '+JSON.stringify({kind,date,pair:[n,n+1],target:n+2,close:compare(a,x=>closePair(x,n),x=>place(x,n+2)),closeAndOutsideST:compare(a,x=>closePair(x,n)&&c(x,n+2).st<=Math.max(c(x,n).st,c(x,n+1).st)+.03+1e-9,x=>place(x,n+2))}));
+             }
+             if(kind==='historicalExhibition'){
+              const eligible=a.filter(x=>Number.isFinite(c(x,4).time));
+              console.log('ST_TIME '+JSON.stringify({kind,date,n:eligible.length,innerCloseAnd4Quick:compare(eligible,x=>spread(x)<=.05+1e-9&&c(x,4).time<=Math.min(...x.rows.filter(y=>y.course<=3).map(y=>y.time))+.05+1e-9,x=>place(x,4))}));
+             }
+             continue;
             }
             const spread=x=>Math.max(x.scores[1],x.scores[2],x.scores[3])-Math.min(x.scores[1],x.scores[2],x.scores[3]);
+            const rank=(x,n)=>Object.entries(x.scores).sort((a,b)=>b[1]-a[1]||Number(a[0])-Number(b[0])).findIndex(y=>Number(y[0])===n)+1;
+            for(const n of [1,2,3,4]){
+             const near=x=>Math.abs(x.scores[n]-x.scores[n+1])<=5;
+             const target=n+2,hit=x=>x.finish.slice(0,3).includes(target);
+             for(const stratum of ['all','target_top3','target_bottom3']){
+              const subset=a.filter(x=>stratum==='all'||(stratum==='target_top3'?rank(x,target)<=3:rank(x,target)>3));
+              console.log('SCORE_PAIR '+JSON.stringify({kind,date,pair:[n,n+1],target,stratum,near:compare(subset,near,hit)}));
+             }
+             console.log('INNER_BLOCK '+JSON.stringify({kind,date,pair:[n,n+1],outerHighWithStrongInner:compare(a.filter(x=>rank(x,n+1)<=3),x=>x.scores[n]>=x.scores[n+1]-5,x=>!x.finish.slice(0,2).includes(n+1))}));
+            }
+            for(const threshold of [5,10,15])console.log('SPREAD '+JSON.stringify({kind,date,threshold,boat4Podium:compare(a,x=>spread(x)<=threshold,x=>x.finish.slice(0,3).includes(4))}));
             console.log('ANALYSIS '+JSON.stringify({kind,date,n:a.length,innerScoreSpread3_boat4Podium:compare(a,x=>spread(x)<=3,x=>x.finish.slice(0,3).includes(4)),innerScoreSpread3_outerPodium:compare(a,x=>spread(x)<=3,x=>x.finish.slice(0,3).some(b=>b>=4))}));
            }
           }
-          console.log('Limits: legacy candidates lack pre-deadline evidence; legacy observations are exploratory; boat numbers are not actual courses; ST means exhibition not race; no causal or betting accuracy claims.');
+          console.log('Limits: legacy candidates lack pre-deadline evidence; legacy observations are exploratory; timed scores do not prove original prediction order; historical exhibition is retrospective; score pairs are boat numbers not actual courses; ST means exhibition not race; exploratory thresholds 5 points, 0.05 seconds and 0.03 seconds are not validated; no causal or betting accuracy claims.');
           NODE
