@@ -275,7 +275,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout isolated research source
         uses: actions/checkout@v4
@@ -332,18 +332,41 @@ jobs:
            if(!old)a.results[key]=row;
            return a.results[key];
           }
+          // A nonstandard race is not a verified full six-boat finish.
+          // Store explicit official table labels separately; never infer a missing finish.
+          function resultEvidence(html){
+           const clean=v=>String(v).replace(/<[^>]*>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').replace(/\s+/g,' ').trim().normalize('NFKC');
+           const tables=[...html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)].map(m=>m[0]);
+           const observations=[];
+           for(const table of tables){
+            const rows=[...table.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map(m=>[...m[1].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(c=>clean(c[1])));
+            const i=rows.findIndex(c=>c.some(v=>v==='着'||v==='着順')&&c.some(v=>v==='枠'||v==='艇番'));
+            if(i<0)continue;
+            const ri=rows[i].findIndex(v=>v==='着'||v==='着順'),bi=rows[i].findIndex(v=>v==='枠'||v==='艇番');
+            const found=rows.slice(i+1).filter(c=>/^[1-6]$/.test(c[bi]||'')).map(c=>({boat:Number(c[bi]),rank:(c[ri]||'').slice(0,30)}));
+            if(found.length&&new Set(found.map(y=>y.boat)).size===found.length)observations.push(found);
+           }
+           const rows=observations.length===1?observations[0]:[];
+           const explicit=rows.filter(y=>/^(?:F|L|欠|欠場|失|失格|転|転覆|落|落水|妨|妨害|沈|沈没|不|不完走|エ|エンスト|返還)(?:[0-9]{1,2})?$/i.test(y.rank));
+           const text=clean(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' '));
+           const cancelled=text.match(/(?:本レース|当レース|このレース)(?:は|が)?\s*(?:中止(?:となりました|になりました|しました)?|不成立(?:となりました|になりました)?)/);
+           return {classification:cancelled?'explicit_cancel_notice':explicit.length?'explicit_nonstandard_rank':rows.length?'incomplete_or_unknown_rank':'result_table_missing_or_ambiguous',rows,explicit,cancelNotice:cancelled?.[0]||null};
+          }
           async function directResult(x){
            const url='https://www.boatrace.jp/owpc/pc/race/raceresult?rno='+x.race+'&jcd='+String(x.venue).padStart(2,'0')+'&hd='+x.date;
            try{
             const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
-            if(!res.ok||res.url!==url)return null;
+            if(!res.ok)return {reason:'http_'+res.status};
+            if(res.url!==url)return {reason:'unexpected_redirect'};
             const html=await res.text();
-            if(html.length>1000000)return null;
+            if(html.length>1000000)return {reason:'response_too_large'};
             const f=parseFinish(html);
-            return {...f,date:x.date,venue:x.venue,race:x.race};
-           }catch{return null;}
+            return {...f,date:x.date,venue:x.venue,race:x.race,evidence:f.verified===true?null:resultEvidence(html)};
+           }catch(e){return {reason:'fetch_'+String(e?.name||'error')};}
           }
-          const validExhibition=rows=>Array.isArray(rows)&&orderOK(rows.map(y=>y.boat))&&orderOK(rows.map(y=>y.course))&&rows.every(y=>validST(y.st)&&Number.isFinite(y.time)&&y.time>=5&&y.time<=9);
+          const rawST=x=>validST(x)||typeof x==='string'&&/^[FL]\.?\d{1,2}$/i.test(x);
+          const validRawExhibition=rows=>Array.isArray(rows)&&orderOK(rows.map(y=>y.boat))&&orderOK(rows.map(y=>y.course))&&rows.every(y=>rawST(y.st)&&Number.isFinite(y.time)&&y.time>=5&&y.time<=9);
+          const validExhibition=rows=>validRawExhibition(rows)&&rows.every(y=>validST(y.st));
           async function historical(x){
            const url='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+x.race+'&jcd='+String(x.venue).padStart(2,'0')+'&hd='+x.date;
            try{
@@ -354,7 +377,7 @@ jobs:
             if(html.length>1000000)return {reason:'too_large'};
             const st=extractOfficialStartExhibition(html),ex=extractOfficialExhibition(html);
             if(st.verified!==true||ex.verified!==true||!orderOK(st.rows.map(y=>y.boat))||!orderOK(st.rows.map(y=>y.course))||!orderOK(ex.rows.map(y=>y.boat)))return {reason:'unverified_exhibition'};
-            if(!st.rows.every(y=>validST(y.startTiming)))return {reason:'non_numeric_ST'};
+            if(!st.rows.every(y=>rawST(y.startTiming)))return {reason:'unknown_ST_format'};
             const byBoat=new Map(ex.rows.map(y=>[y.boat,y.exhibitionTime]));
             if(!ex.rows.every(y=>Number.isFinite(y.exhibitionTime)))return {reason:'invalid_time'};
             return {rows:st.rows.map(y=>({boat:y.boat,course:y.course,st:y.startTiming,time:byBoat.get(y.boat)}))};
@@ -365,6 +388,14 @@ jobs:
            const candidates=(Array.isArray(morning?.records)?morning.records:[]).filter(x=>x?.date===date);
            const validResult=(f,x)=>f?.date===date&&f.venue===x.venue&&f.race===x.race&&f.verified===true&&orderOK(f.finishOrder);
            const archive=readArchive(date);
+           archive.resultFailures=archive.resultFailures||{};
+           archive.exhibitionFailures=archive.exhibitionFailures||{};
+           archive.morning=archive.morning||{};
+           for(const x of candidates){
+            if(!validId(x,date)||!Array.isArray(x.rankedScores)||!orderOK(x.rankedScores.map(y=>y.boat))||!x.rankedScores.every(y=>Number.isFinite(y.score)))continue;
+            const key=id(x),old=archive.morning[key];
+            if(!old)archive.morning[key]={date,venue:x.venue,race:x.race,rankedScores:x.rankedScores,capturedAt:x.capturedAt||null,deadlineAt:x.deadlineAt||null,predictedOrder:x.predictedOrder||null,method:x.method||null};
+           }
            const previousCount=Object.keys(archive.results).length;
            const recovered=new Map();
            for(const x of candidates){
@@ -379,7 +410,11 @@ jobs:
              const x=tasks[next++];
              let f=await get('/api/official/result',date,'&venue='+x.venue+'&race='+x.race),origin='preview_official_result';
              if(!validResult(f,x)){f=await directResult(x);origin='official_site_direct';}
-             if(validResult(f,x)){const retained=retainResult(archive,f,x,origin);if(retained)recovered.set(id(x),retained);}
+             if(validResult(f,x)){const retained=retainResult(archive,f,x,origin);if(retained){recovered.set(id(x),retained);delete archive.resultFailures[id(x)];}}
+             else {
+              const key=id(x),old=archive.resultFailures[key],evidence=f?.evidence||null;
+              archive.resultFailures[key]={date,venue:x.venue,race:x.race,attempts:(old?.attempts||0)+1,lastAttemptAt:new Date().toISOString(),reason:f?.reason||'unknown_result_failure',evidence:evidence||old?.evidence||null};
+             }
              await new Promise(resolve=>setTimeout(resolve,250));
             }
            }));
@@ -397,20 +432,25 @@ jobs:
             const kind=verified?'verified':timely(x)?'timedScores':'exploratory';
             groups[kind].push(item);matched.push(item);if(verified)strict++;else if(kind==='timedScores')timed++;else legacy++;
            }
-           const historicalFailures={};let hnext=0,hcount=0;
+           const historicalFailures={};let hnext=0,hcount=0,rawCount=0,flaggedCount=0;
            await Promise.all(Array.from({length:Math.min(3,matched.length)},async()=>{
             while(hnext<matched.length){
              const x=matched[hnext++],key=id(x),cached=archive.exhibitions[key];
-             const h=validId(cached,date)&&id(cached)===key&&validExhibition(cached.rows)?{rows:cached.rows}:await historical(x);
-             if(validExhibition(h.rows)){
-              if(!cached||!validExhibition(cached.rows))archive.exhibitions[key]={date,venue:x.venue,race:x.race,rows:h.rows,retrievedAt:new Date().toISOString(),origin:'official_historical_exhibition'};
-              groups.historicalExhibition.push({...x,rows:h.rows});hcount++;
+             const h=validId(cached,date)&&id(cached)===key&&validRawExhibition(cached.rows)?{rows:cached.rows}:await historical(x);
+             if(validRawExhibition(h.rows)){
+              if(!cached||!validRawExhibition(cached.rows))archive.exhibitions[key]={date,venue:x.venue,race:x.race,rows:h.rows,retrievedAt:new Date().toISOString(),origin:'official_historical_exhibition'};
+              delete archive.exhibitionFailures[key];rawCount++;
+              if(validExhibition(h.rows)){groups.historicalExhibition.push({...x,rows:h.rows});hcount++;}
+              else flaggedCount++;
+             }else{
+              const reason=h.reason||'invalid_exhibition_rows',old=archive.exhibitionFailures[key];
+              historicalFailures[reason]=(historicalFailures[reason]||0)+1;
+              archive.exhibitionFailures[key]={date,venue:x.venue,race:x.race,reason,attempts:(old?.attempts||0)+1,lastAttemptAt:new Date().toISOString()};
              }
-             else historicalFailures[h.reason]=(historicalFailures[h.reason]||0)+1;
              await new Promise(resolve=>setTimeout(resolve,350));
             }
            }));
-           console.log('HISTORICAL_EXHIBITION '+JSON.stringify({date,attempted:matched.length,verified:hcount,failures:historicalFailures,note:'Retrieved after result; not predeadline archived evidence'}));
+           console.log('HISTORICAL_EXHIBITION '+JSON.stringify({date,attempted:matched.length,verified:hcount,rawSaved:rawCount,flaggedST:flaggedCount,failures:historicalFailures,note:'Retrieved after result; not predeadline archived evidence'}));
            for(const x of before?.records||[]){
             if(x.date!==date||!timely(x)||!orderOK(x.finishOrder)||!Array.isArray(x.start)||x.start.length!==6||!orderOK(x.start.map(y=>y.boat)))continue;
             const rows=x.start.map(y=>({boat:y.boat,course:y.course,st:y.st??y.startTiming??y.startTime}));
@@ -418,8 +458,16 @@ jobs:
             if(!rows.every(y=>y.st!==null&&y.st!==undefined&&/^(?:0?\.\d+|0)$/.test(String(y.st))&&Number(y.st)>=0&&Number(y.st)<=1))continue;
             groups.before.push({date,finish:x.finishOrder,rows:rows.map(y=>({...y,st:Number(y.st)}))});
            }
+           const missingReasons={};
+           for(const x of candidates){
+            const key=id(x);
+            if(archive.results[key])continue;
+            const f=archive.resultFailures[key],reason=f?.evidence?.classification||f?.reason||'not_attempted';
+            missingReasons[reason]=(missingReasons[reason]||0)+1;
+           }
+           console.log('MISSING_REASONS '+JSON.stringify({date,counts:missingReasons,details:Object.values(archive.resultFailures).filter(x=>!archive.results[id(x)])}));
            fs.writeFileSync(dir+'/'+date+'.json',JSON.stringify(archive,null,2)+'\n');
-           console.log('ARCHIVE_PERSIST '+JSON.stringify({date,previous:previousCount,retained:Object.keys(archive.results).length,newResults:Object.keys(archive.results).length-previousCount,exhibitions:Object.keys(archive.exhibitions).length,conflicts:archive.conflicts.length}));
+           console.log('ARCHIVE_PERSIST '+JSON.stringify({date,previous:previousCount,retained:Object.keys(archive.results).length,newResults:Object.keys(archive.results).length-previousCount,exhibitions:Object.keys(archive.exhibitions).length,morningSaved:Object.keys(archive.morning).length,flaggedExhibitions:Object.values(archive.exhibitions).filter(x=>validRawExhibition(x.rows)&&!validExhibition(x.rows)).length,conflicts:archive.conflicts.length}));
            console.log('COVERAGE '+JSON.stringify({date,candidates:seen.size,strict,timed,legacy,missing,invalid,quality:quality?{morning:quality.morning,before:quality.before,results:quality.results,matched:quality.matched}:null}));
           }
           function compare(rows,condition,outcome){
