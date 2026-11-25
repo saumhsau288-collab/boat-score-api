@@ -272,6 +272,8 @@ jobs:
 
   research-two-days:
     if: ${{ inputs.research_only }}
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -279,7 +281,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: fix-boat-score-2-syntax-20261115
-          persist-credentials: false
+          persist-credentials: true
       - name: Read-only archived six-boat comparison
         shell: bash
         run: |
@@ -302,6 +304,46 @@ jobs:
           if(parserStart<0||parserEnd<=parserStart)throw Error('Official exhibition parsers missing');
           const {extractOfficialStartExhibition,extractOfficialExhibition}=vm.runInNewContext(source.slice(parserStart,parserEnd)+'\n({extractOfficialStartExhibition,extractOfficialExhibition});');
           const validST=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0&&x<=1;
+          const resultStart=source.indexOf('function parseOfficialFinishOrder(');
+          const resultEnd=source.indexOf('\nfunction normalizeLast50RacerName(',resultStart);
+          if(resultStart<0||resultEnd<=resultStart)throw Error('Official result parser missing');
+          const parseFinish=vm.runInNewContext(source.slice(resultStart,resultEnd)+'\nparseOfficialFinishOrder;');
+          const dir='research/archive';
+          fs.mkdirSync(dir,{recursive:true});
+          const validId=(x,date)=>x?.date===date&&Number.isInteger(x.venue)&&x.venue>=1&&x.venue<=24&&Number.isInteger(x.race)&&x.race>=1&&x.race<=12;
+          const validSaved=(x,date)=>validId(x,date)&&x.verified===true&&orderOK(x.finishOrder)&&typeof x.retrievedAt==='string'&&Number.isFinite(Date.parse(x.retrievedAt));
+          function readArchive(date){
+           const path=dir+'/'+date+'.json';
+           if(!fs.existsSync(path))return {date,version:1,results:{},exhibitions:{},conflicts:[]};
+           const a=JSON.parse(fs.readFileSync(path,'utf8'));
+           if(a.date!==date||a.version!==1||!a.results||!a.exhibitions||!Array.isArray(a.conflicts))throw Error('Invalid archive schema: '+date);
+           for(const [key,row] of Object.entries(a.results))if(!validSaved(row,date)||id(row)!==key)throw Error('Invalid saved result: '+key);
+           return a;
+          }
+          function retainResult(a,f,x,origin){
+           const key=id(x);
+           const row={date:x.date,venue:x.venue,race:x.race,verified:true,finishOrder:f.finishOrder,origin,retrievedAt:new Date().toISOString()};
+           if(!validSaved(row,a.date))throw Error('Invalid result to archive');
+           const old=a.results[key];
+           if(old&&old.finishOrder.join(',')!==row.finishOrder.join(',')){
+            if(!a.conflicts.some(c=>c.key===key&&c.observed.join(',')===row.finishOrder.join(',')))a.conflicts.push({key,observed:row.finishOrder,retrievedAt:row.retrievedAt,origin});
+            return null;
+           }
+           if(!old)a.results[key]=row;
+           return a.results[key];
+          }
+          async function directResult(x){
+           const url='https://www.boatrace.jp/owpc/pc/race/raceresult?rno='+x.race+'&jcd='+String(x.venue).padStart(2,'0')+'&hd='+x.date;
+           try{
+            const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
+            if(!res.ok||res.url!==url)return null;
+            const html=await res.text();
+            if(html.length>1000000)return null;
+            const f=parseFinish(html);
+            return {...f,date:x.date,venue:x.venue,race:x.race};
+           }catch{return null;}
+          }
+          const validExhibition=rows=>Array.isArray(rows)&&orderOK(rows.map(y=>y.boat))&&orderOK(rows.map(y=>y.course))&&rows.every(y=>validST(y.st)&&Number.isFinite(y.time)&&y.time>=5&&y.time<=9);
           async function historical(x){
            const url='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+x.race+'&jcd='+String(x.venue).padStart(2,'0')+'&hd='+x.date;
            try{
@@ -322,14 +364,22 @@ jobs:
            const [morning,results,before,quality,health]=await Promise.all(['/api/research/morning-records','/api/research/result-archive','/api/research/before-audit','/api/research/archive-quality','/api/research/scheduler-health'].map(p=>get(p,date)));
            const candidates=(Array.isArray(morning?.records)?morning.records:[]).filter(x=>x?.date===date);
            const validResult=(f,x)=>f?.date===date&&f.venue===x.venue&&f.race===x.race&&f.verified===true&&orderOK(f.finishOrder);
+           const archive=readArchive(date);
+           const previousCount=Object.keys(archive.results).length;
            const recovered=new Map();
-           const tasks=candidates.filter(x=>Array.isArray(x.rankedScores)&&x.rankedScores.length===6&&orderOK(x.rankedScores.map(y=>y.boat))&&x.rankedScores.every(y=>Number.isFinite(y.score))&&!validResult(results?.records?.[id(x)],x)&&(!Number.isFinite(Date.parse(x.deadlineAt))||Date.parse(x.deadlineAt)<Date.now()));
+           for(const x of candidates){
+            const saved=results?.records?.[id(x)];
+            if(validId(x,date)&&validResult(saved,x))retainResult(archive,saved,x,'worker_result_archive');
+           }
+           const conflictKeys=()=>new Set(archive.conflicts.map(c=>c.key));
+           const tasks=candidates.filter(x=>Array.isArray(x.rankedScores)&&x.rankedScores.length===6&&orderOK(x.rankedScores.map(y=>y.boat))&&x.rankedScores.every(y=>Number.isFinite(y.score))&&validId(x,date)&&!archive.results[id(x)]&&(!Number.isFinite(Date.parse(x.deadlineAt))||Date.parse(x.deadlineAt)<Date.now()));
            let next=0;
            await Promise.all(Array.from({length:Math.min(4,tasks.length)},async()=>{
             while(next<tasks.length){
              const x=tasks[next++];
-             const f=await get('/api/official/result',date,'&venue='+x.venue+'&race='+x.race);
-             if(validResult(f,x))recovered.set(id(x),f);
+             let f=await get('/api/official/result',date,'&venue='+x.venue+'&race='+x.race),origin='preview_official_result';
+             if(!validResult(f,x)){f=await directResult(x);origin='official_site_direct';}
+             if(validResult(f,x)){const retained=retainResult(archive,f,x,origin);if(retained)recovered.set(id(x),retained);}
              await new Promise(resolve=>setTimeout(resolve,250));
             }
            }));
@@ -339,7 +389,7 @@ jobs:
             if(seen.has(id(x)))continue;seen.add(id(x));
             const scores=x.rankedScores;
             if(!Array.isArray(scores)||scores.length!==6||!orderOK(scores.map(y=>y.boat))||!scores.every(y=>Number.isFinite(y.score))){invalid++;continue;}
-            const saved=results?.records?.[id(x)];const f=validResult(saved,x)?saved:recovered.get(id(x));
+            const f=conflictKeys().has(id(x))?null:archive.results[id(x)];
             if(f?.date!==date||f.venue!==x.venue||f.race!==x.race||f.verified!==true||!orderOK(f.finishOrder)){missing++;continue;}
             const ranked=scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
             const verified=timely(x)&&orderOK(x.predictedOrder)&&x.predictedOrder.every((b,i)=>b===ranked[i].boat);
@@ -350,8 +400,12 @@ jobs:
            const historicalFailures={};let hnext=0,hcount=0;
            await Promise.all(Array.from({length:Math.min(3,matched.length)},async()=>{
             while(hnext<matched.length){
-             const x=matched[hnext++],h=await historical(x);
-             if(h.rows){groups.historicalExhibition.push({...x,rows:h.rows});hcount++;}
+             const x=matched[hnext++],key=id(x),cached=archive.exhibitions[key];
+             const h=validId(cached,date)&&id(cached)===key&&validExhibition(cached.rows)?{rows:cached.rows}:await historical(x);
+             if(validExhibition(h.rows)){
+              if(!cached||!validExhibition(cached.rows))archive.exhibitions[key]={date,venue:x.venue,race:x.race,rows:h.rows,retrievedAt:new Date().toISOString(),origin:'official_historical_exhibition'};
+              groups.historicalExhibition.push({...x,rows:h.rows});hcount++;
+             }
              else historicalFailures[h.reason]=(historicalFailures[h.reason]||0)+1;
              await new Promise(resolve=>setTimeout(resolve,350));
             }
@@ -364,6 +418,8 @@ jobs:
             if(!rows.every(y=>y.st!==null&&y.st!==undefined&&/^(?:0?\.\d+|0)$/.test(String(y.st))&&Number(y.st)>=0&&Number(y.st)<=1))continue;
             groups.before.push({date,finish:x.finishOrder,rows:rows.map(y=>({...y,st:Number(y.st)}))});
            }
+           fs.writeFileSync(dir+'/'+date+'.json',JSON.stringify(archive,null,2)+'\n');
+           console.log('ARCHIVE_PERSIST '+JSON.stringify({date,previous:previousCount,retained:Object.keys(archive.results).length,newResults:Object.keys(archive.results).length-previousCount,exhibitions:Object.keys(archive.exhibitions).length,conflicts:archive.conflicts.length}));
            console.log('COVERAGE '+JSON.stringify({date,candidates:seen.size,strict,timed,legacy,missing,invalid,quality:quality?{morning:quality.morning,before:quality.before,results:quality.results,matched:quality.matched}:null}));
           }
           function compare(rows,condition,outcome){
@@ -433,3 +489,17 @@ jobs:
           }
           console.log('Limits: legacy candidates lack pre-deadline evidence; legacy observations are exploratory; timed scores do not prove original prediction order; historical exhibition is retrospective; score pairs are boat numbers not actual courses; ST means exhibition not race; exploratory thresholds 5 points, 0.05 seconds and 0.03 seconds are not validated; no causal or betting accuracy claims.');
           NODE
+      - name: Save verified research archive to development branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git branch --show-current)" = "fix-boat-score-2-syntax-20261115"
+          git add -- research/archive/20261124.json research/archive/20261125.json
+          if git diff --cached --quiet; then
+            echo 'No new verified observations to save'
+            exit 0
+          fi
+          git config user.name 'boat-score-2-research'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Retain verified research observations [skip ci]'
+          git push origin HEAD:refs/heads/fix-boat-score-2-syntax-20261115
