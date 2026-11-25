@@ -189,6 +189,7 @@ jobs:
           const fs=require('node:fs');
           const html=fs.readFileSync('preview-home.html','utf8');
           if(!html.includes('1号艇1着期待度ランキング（研究用）')||!html.includes('d.boatOneRanking'))throw Error('Missing independent morning boat-one display');
+          for(const id of ['loadBoatOneAudit','boatOneAuditOutput'])if(!html.includes('id="'+id+'"'))throw Error('Missing morning boat-one audit control: '+id);
           for(const id of ['scenarioPredictionPanel','scenarioFirst','scenarioSecond','scenarioThird','runScenarioPrediction','clearScenarioPrediction','scenarioPredictionOutput']) {
             if(!html.includes('id="'+id+'"'))throw Error('Missing scenario prediction control: '+id);
           }
@@ -216,6 +217,19 @@ jobs:
           test "$status" = 400 || { echo "::error::Unexpected twelve-method endpoint HTTP $status"; exit 1; }
           node -e "const d=require('./endpoint.json');if(d.error!=='Invalid date, venue or race')process.exit(1)"
           echo 'Deployed twelve-method API responds and validates inputs'
+
+      - name: Verify read-only morning boat-one audit endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          DATE=$(TZ=Asia/Tokyo date +%Y%m%d)
+          BASE="https://boat-score-2-preview.saumh-sau-288.workers.dev"
+          curl --fail --silent --show-error --max-time 25 "$BASE/api/research/morning-boat-one-audit?date=$DATE" > boat-one-audit.json
+          node - "$DATE" <<'NODE'
+          const d=JSON.parse(require('node:fs').readFileSync('boat-one-audit.json','utf8'));
+          if(d.date!==process.argv[2]||typeof d.rankingPresent!=='boolean'||!Array.isArray(d.details)||d.selected!==d.matched+d.pending+d.excluded||d.matched!==d.wins+d.losses||d.details.length!==d.selected||d.winRate!==(d.matched?d.wins/d.matched:null))throw Error('Invalid morning boat-one audit response');
+          console.log('BOAT_ONE_AUDIT '+JSON.stringify({date:d.date,status:d.status,rankedAt:d.rankedAt,selected:d.selected,matched:d.matched,wins:d.wins,pending:d.pending,excluded:d.excluded,other:d.other}));
+          NODE
 
       - name: Inspect deployed morning snapshot without assuming completion
         shell: bash
