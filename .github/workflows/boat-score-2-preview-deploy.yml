@@ -193,7 +193,12 @@ jobs:
           }
           const vm=require('node:vm');
           for(const script of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi))new vm.Script(script[1]);
-          console.log('Independent scenario controls and inline browser script syntax verified.');
+          if(!html.includes('id="scenarioCombinationCount"'))throw Error('Missing live scenario combination count');
+          for(const id of ['scenarioFirst','scenarioSecond','scenarioThird']){
+            const match=html.match(new RegExp('<fieldset id="'+id+'"[^>]*>([\\s\\S]*?)</fieldset>'));
+            if(!match||![1,2,3,4,5,6].every(n=>match[1].includes('data-boat="'+n+'"'))||(match[1].match(/aria-pressed="false"/g)||[]).length!==6)throw Error('Invalid multi-selection controls: '+id);
+          }
+          console.log('Independent scenario multi-selection controls and inline browser script syntax verified.');
           for(const id of ['dailyArchiveInventory','inventoryDate','loadInventory','inventorySummary','inventoryMissing']) {
             if(!html.includes('id="'+id+'"'))throw Error('Missing daily archive inventory control: '+id);
           }
