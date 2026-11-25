@@ -275,8 +275,7 @@ async function runScheduledResultArchive(env,scheduledTime){
  if(!venues.length)return;
  if(!state||state.date!==date)state={date,version:1,records:{},attempts:{},updatedAt:null};
  const targets=venues.flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1})));
- const pending=targets.filter(({venue,race})=>{const id=venue+':'+race;return !state.records[id]&&(state.attempts[id]||0)<3;}).sort((a,b)=>(state.attempts[a.venue+':'+a.race]||0)-(state.attempts[b.venue+':'+b.race]||0)).slice(0,12);
- if(!pending.length)return;
+ const pending=targets.filter(({venue,race})=>{const id=venue+':'+race;return !state.records[id]&&(state.attempts[id]||0)<6;}).sort((a,b)=>(state.attempts[a.venue+':'+a.race]||0)-(state.attempts[b.venue+':'+b.race]||0)).slice(0,12);
  const rows=await mapOfficialLimited(pending,3,async ({venue,race})=>{
   const id=venue+':'+race,source='https://www.boatrace.jp/owpc/pc/race/raceresult?rno='+race+'&jcd='+String(venue).padStart(2,'0')+'&hd='+date;
   try{const response=await fetch(source,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
@@ -291,7 +290,7 @@ async function runScheduledResultArchive(env,scheduledTime){
  for(const row of rows){state.attempts[row.id]=(state.attempts[row.id]||0)+1;if(row.record){state.records[row.id]=row.record;delete state.failures[row.id];}else state.failures[row.id]=row.reason;}
  state.venues=venues;state.targetCount=targets.length;state.updatedAt=new Date().toISOString();
  state.verifiedCount=Object.keys(state.records).length;
- state.status=state.verifiedCount===targets.length?'completed':targets.every(({venue,race})=>state.records[venue+':'+race]||(state.attempts[venue+':'+race]||0)>=3)?'incomplete':'partial';
+ state.status=state.verifiedCount===targets.length?'completed':targets.every(({venue,race})=>state.records[venue+':'+race]||(state.attempts[venue+':'+race]||0)>=6)?'incomplete':'partial';
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
  const audit=summarizeArchivedRanks(date,morning,state);await env.MORNING_KV.put('rank-audit:v1:'+date,JSON.stringify(audit),{expirationTtl:31536000});
  const beforeAudit=summarizeBeforeArchive(date,before,state);await env.MORNING_KV.put('before-audit:v1:'+date,JSON.stringify(beforeAudit),{expirationTtl:31536000});
@@ -310,30 +309,34 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  }
  state.deadlines=state.deadlines||{};
  state.discoveryAttempts=state.discoveryAttempts||{};
+ state.discoveryFailures=state.discoveryFailures||{};
+ state.partialRecords=state.partialRecords||{};
+ state.failures=state.failures||{};
  const venues=Array.isArray(morning?.venues)&&morning.date===date&&morning.venues.length?morning.venues:(state.venues?.length?state.venues:await officialScheduleVenueCandidates(date)||[]);
  state.venues=venues;
  for(const row of Object.values(state.deadlines))candidates.set(row.venue+':'+row.race,row);
- const missing=venues.filter(v=>Number.isInteger(v)&&v>=1&&v<=24).flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1}))).filter(({venue,race})=>!candidates.has(venue+':'+race)&&(state.discoveryAttempts[venue+':'+race]||0)<3).sort((a,b)=>(state.discoveryAttempts[a.venue+':'+a.race]||0)-(state.discoveryAttempts[b.venue+':'+b.race]||0)||a.race-b.race).slice(0,6);
+ const missing=venues.filter(v=>Number.isInteger(v)&&v>=1&&v<=24).flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1}))).filter(({venue,race})=>!candidates.has(venue+':'+race)&&(state.discoveryAttempts[venue+':'+race]||0)<8).sort((a,b)=>(state.discoveryAttempts[a.venue+':'+a.race]||0)-(state.discoveryAttempts[b.venue+':'+b.race]||0)||a.race-b.race).slice(0,6);
  const discovered=await mapOfficialLimited(missing,3,async ({venue,race})=>{
   const id=venue+':'+race;
   try{
    const url='https://www.boatrace.jp/owpc/pc/race/racelist?rno='+race+'&jcd='+String(venue).padStart(2,'0')+'&hd='+date;
    const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(5000)});
-   if(!res.ok)return {id};
+   if(!res.ok)return {id,reason:'http_'+res.status};
    const html=await res.text();
-   if(html.length>1000000)return {id};
+   if(html.length>1000000)return {id,reason:'response_too_large'};
    const deadlineAt=extractOfficialRaceDeadline(html,date);
-   if(!deadlineAt||extractOfficialBoatRows(html).verified!==true)return {id};
+   if(!deadlineAt)return {id,reason:'deadline_unverified'};
+   if(extractOfficialBoatRows(html).verified!==true)return {id,reason:'six_boat_rows_unverified'};
    return {id,row:{date,venue,race,deadlineAt}};
-  }catch{return {id};}
+  }catch(e){return {id,reason:'fetch_or_parse_'+String(e?.name||'error')};}
  });
- for(const item of discovered){state.discoveryAttempts[item.id]=(state.discoveryAttempts[item.id]||0)+1;if(item.row){state.deadlines[item.id]=item.row;candidates.set(item.id,item.row);}}
- const pending=[...candidates.values()].filter(row=>{
+ for(const item of discovered){state.discoveryAttempts[item.id]=(state.discoveryAttempts[item.id]||0)+1;if(item.row){state.deadlines[item.id]=item.row;candidates.set(item.id,item.row);delete state.discoveryFailures[item.id];}else state.discoveryFailures[item.id]={reason:item.reason||'unknown',at:new Date().toISOString()};}
+ const eligible=[...candidates.values()].filter(row=>{
   const id=row.venue+':'+row.race,deadline=Date.parse(row.deadlineAt||'');
-  return row.date===date&&Number.isInteger(row.venue)&&row.venue>=1&&row.venue<=24&&Number.isInteger(row.race)&&row.race>=1&&row.race<=12&&Number.isFinite(deadline)&&deadline-Date.now()<=600000&&deadline-Date.now()>=30000&&!state.records[id]&&(state.attempts[id]||0)<2;
- }).sort((a,b)=>Date.parse(a.deadlineAt)-Date.parse(b.deadlineAt)).slice(0,12);
- if(!pending.length&&!missing.length){state.updatedAt=new Date().toISOString();await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});return;}
- state.failures=state.failures||{};
+  return row.date===date&&Number.isInteger(row.venue)&&row.venue>=1&&row.venue<=24&&Number.isInteger(row.race)&&row.race>=1&&row.race<=12&&Number.isFinite(deadline)&&deadline-Date.now()<=600000&&deadline-Date.now()>=15000&&!state.records[id]&&(state.attempts[id]||0)<4;
+ }).sort((a,b)=>Date.parse(a.deadlineAt)-Date.parse(b.deadlineAt));
+ const pending=eligible.slice(0,12);
+ state.lastScan={at:new Date().toISOString(),targetCount:venues.length*12,knownDeadlineCount:candidates.size,discoveryBatch:missing.length,eligibleCount:eligible.length,selectedCount:pending.length,expiredUnverified:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)<=now&&!state.records[row.venue+':'+row.race]).length,futureCount:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)>now+600000).length};
  const rows=await mapOfficialLimited(pending,3,async row=>{
   const id=row.venue+':'+row.race;let deadline=Date.parse(row.deadlineAt);
   const source='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date;
@@ -351,11 +354,12 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    if(!res.ok)return {id,reason:'http_'+res.status};const html=await res.text();if(html.length>1000000)return {id,reason:'response_too_large'};
    const capturedAt=new Date().toISOString();if(Date.parse(capturedAt)>=deadline)return {id,reason:'deadline_passed'};
    const exhibition=extractOfficialExhibition(html),start=extractOfficialStartExhibition(html),weather=extractOfficialWeather(html);
-   if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id,reason:'exhibition_or_start_unverified'};
-   return {id,record:{date,venue:row.venue,race:row.race,deadlineAt:new Date(deadline).toISOString(),capturedAt,source,exhibition,start,weather,model:'observation-only-v1'}};
-  }catch{return {id,reason:'fetch_or_parse_failed'};}
+   const observation={date,venue:row.venue,race:row.race,deadlineAt:new Date(deadline).toISOString(),capturedAt,source,exhibition,start,weather,model:'observation-only-v1'};
+   if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id,reason:'exhibition_or_start_unverified',details:{exhibition:exhibition.verified===true,start:start.verified===true,weather:weather.verified===true,exhibitionRows:exhibition.candidateCount??0,startRows:start.candidateCount??0},partial:observation};
+   return {id,record:observation};
+  }catch(e){return {id,reason:'fetch_or_parse_'+String(e?.name||'error')};}
  });
- for(const row of rows){if(row.deferred)continue;state.attempts[row.id]=(state.attempts[row.id]||0)+1;if(row.record&&!state.records[row.id]){state.records[row.id]=row.record;delete state.failures[row.id];}else if(!row.record){state.failures[row.id]={reason:row.reason||'unknown',at:new Date().toISOString()};}}
+ for(const row of rows){if(row.deferred)continue;state.attempts[row.id]=(state.attempts[row.id]||0)+1;if(row.record&&!state.records[row.id]){state.records[row.id]=row.record;delete state.failures[row.id];}else if(!row.record){state.failures[row.id]={reason:row.reason||'unknown',details:row.details||null,at:new Date().toISOString()};if(row.partial){const p=state.partialRecords[row.id]||{};for(const k of ['exhibition','start','weather'])if(row.partial[k]?.verified===true&&!p[k])p[k]={capturedAt:row.partial.capturedAt,deadlineAt:row.partial.deadlineAt,source:row.partial.source,data:row.partial[k]};if(Object.keys(p).length)state.partialRecords[row.id]=p;}}}
  state.updatedAt=new Date().toISOString();
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
 }
@@ -409,7 +413,7 @@ if(u.pathname==='/api/research/before-archive'){
  const raw=await env.MORNING_KV.get('before-archive:v1:'+date);
  if(!raw)return reply(request,{date,status:'not_available'},404);
  const state=JSON.parse(raw);
- return reply(request,{date,status:'recorded',updatedAt:state.updatedAt,verifiedCount:Object.keys(state.records||{}).length,attemptedCount:Object.keys(state.attempts||{}).length,discoveredDeadlineCount:Object.keys(state.deadlines||{}).length,failures:state.failures||{}});
+ return reply(request,{date,status:'recorded',updatedAt:state.updatedAt,verifiedCount:Object.keys(state.records||{}).length,attemptedCount:Object.keys(state.attempts||{}).length,discoveredDeadlineCount:Object.keys(state.deadlines||{}).length,partialCount:Object.keys(state.partialRecords||{}).length,lastScan:state.lastScan||null,discoveryFailures:state.discoveryFailures||{},failures:state.failures||{}});
 }
 // Read-only coverage diagnostics for archived observations; never estimate missing values.
 if(u.pathname==='/api/research/morning-records'){
