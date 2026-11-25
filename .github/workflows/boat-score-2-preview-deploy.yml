@@ -67,6 +67,7 @@ jobs:
           node --check scripts/replay-exclusion-variants.mjs
           node --check scripts/audit-top-two-exclusions.mjs
           node scripts/test-morning-ranking-persistence.mjs
+          node scripts/test-official-course-stats.mjs
           node --check scripts/collect-morning-official-results.mjs
           node --test test-generate-twelve-independent-methods.mjs
           node history-analysis.test.mjs
@@ -203,7 +204,7 @@ jobs:
           for(const script of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi))new vm.Script(script[1]);
           if(!html.includes('id="scenarioCombinationCount"'))throw Error('Missing live scenario combination count');
           if(!html.includes('id="scenarioCourseTrialOutput"')||!html.includes('function rankInnerWinnerCourseTrial('))throw Error('Missing independent course research comparison');
-          for(const id of ['scenarioArchiveStatus','scenarioArchiveList','scenarioArchiveExport','scenarioArchiveOutput','scenarioArchiveAudit','scenarioAuditStatus','scenarioAuditOutput'])if(!html.includes('id="'+id+'"'))throw Error('Missing scenario research record control: '+id);
+          for(const id of ['scenarioArchiveStatus','scenarioArchiveList','scenarioArchiveExport','scenarioArchiveOutput','scenarioArchiveAudit','scenarioAuditStatus','scenarioAuditOutput','scenarioOfficialCourseStats'])if(!html.includes('id="'+id+'"'))throw Error('Missing scenario research record control: '+id);
           for(const id of ['scenarioFirst','scenarioSecond','scenarioThird']){
             const match=html.match(new RegExp('<fieldset id="'+id+'"[^>]*>([\\s\\S]*?)</fieldset>'));
             if(!match||![1,2,3,4,5,6].every(n=>match[1].includes('data-boat="'+n+'"'))||(match[1].match(/aria-pressed="false"/g)||[]).length!==6)throw Error('Invalid multi-selection controls: '+id);
