@@ -90,3 +90,9 @@
 - /api/research/before-archive?date=YYYYMMDD に partialCount、lastScan（対象、締切判明、候補、選択、期限切れ未保存、将来件数）、discoveryFailures、パーサー別失敗理由を追加。
 - 追加テストは部分取得→再試行→完全保存を模擬する。実行はまだ未確認。自動収集が0件だった根本原因は未確定であり、修正完了とは扱わない。
 - 次回は開発ブランチで Read-only research OFF のプレビュー公開を実行しテスト結果・ビルドを確認。その後、実レースの自動収集状況と研究アーカイブ再利用を確認する。旧本番、予想ロジックは変更なし。既存の研究用293R/展示122Rは維持。
+
+## 自動保存取りこぼし対策の公開確認
+- 実行 https://github.com/saumhsau288-collab/boat-score-api/actions/runs/45602041880 は deploy-preview 全工程成功。研究ジョブはスキップ。Cloudflare公開Version ID fe29039f-208d-44a5-8ea9-cadb91ab1634。
+- 本番コードのUTC/JST振り分け、部分保存→再試行→完全保存の模擬回帰テスト成功。公開版の研究API、既存UI、12方式API確認成功。
+- 11/25朝保存13場156R、失敗場0、本命20・穴20・荒れ19。旧形式59候補の順位・時刻不足は補完していない。
+- 実レースでの自動保存改善率、取りこぼし件数、累積研究アーカイブの再利用は未確認。次は研究ONで保存済み293Rの維持と未照合43Rの補完を確認する。翌開催日の締切前自動収集について lastScan / partialCount / discoveryFailures を確認。旧本番・予想ロジック未変更。
