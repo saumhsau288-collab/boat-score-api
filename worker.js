@@ -363,6 +363,48 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  state.updatedAt=new Date().toISOString();
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
 }
+// Read-only daily storage inventory. A planned slot is not proof of a completed race.
+function buildArchiveInventory(date,morning,before,result,now=Date.now()){
+ const validVenue=v=>Number.isInteger(v)&&v>=1&&v<=24;
+ const validRace=r=>Number.isInteger(r)&&r>=1&&r<=12;
+ const validId=x=>x?.date===date&&validVenue(x.venue)&&validRace(x.race);
+ const orderOK=a=>Array.isArray(a)&&a.length===6&&new Set(a).size===6&&a.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
+ const sixRows=a=>Array.isArray(a)&&orderOK(a.map(x=>x?.boat));
+ const timely=x=>{const c=Date.parse(x?.capturedAt||''),d=Date.parse(x?.deadlineAt||'');return Number.isFinite(c)&&Number.isFinite(d)&&c<d;};
+ const m=new Map(),b=new Map(),f=new Map();
+ for(const row of Array.isArray(morning?.records)?morning.records:[]){
+  if(validId(row)&&row.ready===true&&row.officialVerified===true&&row.statsVerified===true&&sixRows(row.rankedScores)&&row.rankedScores.every(x=>Number.isFinite(x.score)))m.set(row.venue+':'+row.race,row);
+ }
+ for(const [k,row] of Object.entries(before?.records||{})){
+  if(validId(row)&&k===row.venue+':'+row.race&&timely(row)&&Date.parse(row.deadlineAt)-Date.parse(row.capturedAt)<=600000&&row.exhibition?.verified===true&&row.start?.verified===true&&sixRows(row.exhibition.rows)&&sixRows(row.start.rows))b.set(k,row);
+ }
+ for(const [k,row] of Object.entries(result?.records||{})){
+  if(validId(row)&&k===row.venue+':'+row.race&&row.verified===true&&orderOK(row.finishOrder))f.set(k,row);
+ }
+ const venues=[...new Set([morning,before,result].flatMap(x=>Array.isArray(x?.venues)?x.venues:[]).filter(validVenue))].sort((a,b)=>a-b);
+ const partialOK=(x,k)=>x?.data?.verified===true&&timely(x)&&(k==='weather'||sixRows(x.data.rows));
+ const counts={morning:0,morningTimed:0,morningOrder:0,before:0,exhibition:0,start:0,weather:0,partial:0,results:0,complete:0};
+ const rows=[];
+ for(const venue of venues)for(let race=1;race<=12;race++){
+  const k=venue+':'+race,mr=m.get(k),br=b.get(k),fr=f.get(k),p=before?.partialRecords?.[k]||{};
+  const deadlineAt=before?.deadlines?.[k]?.deadlineAt||br?.deadlineAt||mr?.deadlineAt||null;
+  const deadline=Date.parse(deadlineAt||'');
+  const expired=Number.isFinite(deadline)&&deadline<=now;
+  const morningOK=!!mr,morningTimed=!!mr&&timely(mr),morningOrder=morningTimed&&orderOK(mr.predictedOrder);
+  const exhibition=!!br||partialOK(p.exhibition,'exhibition'),start=!!br||partialOK(p.start,'start'),weather=br?.weather?.verified===true||partialOK(p.weather,'weather');
+  const partial=!br&&(exhibition||start||weather);
+  const flags={morning:morningOK,morningTimed,morningOrder,before:!!br,exhibition,start,weather,partial,results:!!fr,complete:morningOrder&&!!br&&!!fr};
+  for(const key of Object.keys(counts))if(flags[key])counts[key]++;
+  const missing=[];
+  if(!morningOK)missing.push('morning_missing');else if(!morningOrder)missing.push('morning_evidence_missing');
+  if(!br)missing.push(expired?'before_missing':Number.isFinite(deadline)?'before_pending':'deadline_unknown');
+  if(!fr)missing.push(expired?'result_unconfirmed':Number.isFinite(deadline)?'result_pending':'result_unconfirmed_deadline_unknown');
+  const reason=x=>typeof x==='string'?x:typeof x?.reason==='string'?x.reason:null;
+  rows.push({venue,race,deadlineAt,flags,missing,failures:{deadline:reason(before?.discoveryFailures?.[k]),before:reason(before?.failures?.[k]),result:reason(result?.failures?.[k])},attempts:{deadline:before?.discoveryAttempts?.[k]||0,before:before?.attempts?.[k]||0,result:result?.attempts?.[k]||0}});
+ }
+ const stamp=x=>Number.isFinite(Date.parse(x||''))?x:null;
+ return {date,expected:venues.length?venues.length*12:null,venues,counts,rows,updatedAt:{morning:stamp(morning?.updatedAt),before:stamp(before?.updatedAt),result:stamp(result?.updatedAt)},lastScan:before?.lastScan||null,archivesPresent:{morning:!!morning,before:!!before,result:!!result},source:'worker_kv_automatic_only',note:'予定枠数は実開催確定数ではありません。研究用GitHub保存・事後展示・例外着順の集計は含みません。未確認は中止・返還・不的中を意味しません。'};
+}
 export default {
   async scheduled(event,env,ctx) {
     // Route using the scheduled UTC hour rather than the provider's cron-string formatting.
@@ -435,6 +477,20 @@ if(u.pathname==='/api/research/scheduler-health'){
  const modes=['morning','before','result'];
  const raw=await Promise.all(modes.map(mode=>env.MORNING_KV.get('scheduler-health:v1:'+mode+':'+date)));
  return reply(request,{date,modes:Object.fromEntries(modes.map((mode,i)=>[mode,raw[i]?JSON.parse(raw[i]):null])),note:'Latest recorded execution for each mode; finished does not imply data collection succeeded.'});
+}
+if(u.pathname==='/api/research/archive-inventory'){
+ if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+ const date=u.searchParams.get('date')||'';
+ if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid date'},400);
+ const parsed=new Date(date.slice(0,4)+'-'+date.slice(4,6)+'-'+date.slice(6,8)+'T00:00:00Z');
+ if(!Number.isFinite(parsed.getTime())||parsed.toISOString().slice(0,10).replace(/-/g,'')!==date)return reply(request,{error:'Invalid date'},400);
+ if(!env?.MORNING_KV)return reply(request,{date,status:'not_configured'},503);
+ const keys=['morning:','before-archive:v1:','result-archive:v1:'];
+ try{
+  const raw=await Promise.all(keys.map(k=>env.MORNING_KV.get(k+date)));
+  const values=raw.map(x=>{if(!x)return null;const d=JSON.parse(x);if(d?.date!==date)throw Error('archive date mismatch');return d;});
+  return reply(request,buildArchiveInventory(date,...values));
+ }catch(e){return reply(request,{date,status:'archive_read_failed',error:String(e?.message||e).slice(0,120)},503);}
 }
 if(u.pathname==='/api/research/archive-quality'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -542,7 +598,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261125-archive-retry-v2',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261125-archive-inventory-v1',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -552,7 +608,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <section id="makulaboPanel" hidden><h2>まくらぼ画像取り込み</h2><p id="makulaboFrameStatus" role="status">レースを選択してから画像取り込みを開いてください。</p><button type="button" id="loadMakulaboFrame">選択レースの取り込み画面を開く</button><iframe id="makulaboFrame" title="まくらぼ画像取り込み" style="width:100%;height:75vh;border:0" hidden></iframe></section><section id="historyPanel" hidden><h2>過去レースの予想・確定結果比較</h2><p>上で開催日・競艇場・レースを選択してください。Boat Score 2と同じ予想APIで再計算し、公式の確定着順と照合します。</p><button id="compareHistorical">選択した過去レースを予想・結果照合</button><pre id="compareHistoricalOutput">未実行</pre><small>過去時点の保存済み予想ではありません。取得できる現在の公式成績で再計算する場合があり、朝8時の的中実績とは区別します。まくらぼと直前情報が未取得なら比較に含みません。</small></section>
 
 <section id="morningRankingSection" hidden><h2>朝8時の全国レース予想ランキング</h2><p>当日の開催場を一斉評価した暫定ランキングです。各20レースを上限に表示し、候補が不足する場合は確認できた件数だけ表示します。</p><p id="morningRankingStatus" role="status">朝8時の保存予想を確認しています…</p><div id="morningLinks" aria-label="朝8時の全国ランキングからレースを選択"></div><small>公式6艇と基礎成績による朝の暫定評価です。直前展示・風・進入・まくらぼ50走を加味した確定予想ではありません。的中率は未検証です。</small></section>
-<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261125-archive-retry-v2 · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
+<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261125-archive-inventory-v1 · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="dailyArchiveInventory" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2 style="font-size:18px;margin:0 0 8px">日別の自動保存管理</h2><small>アプリの自動保存（サーバーKV）のみ。GitHubの研究用事後保存とは別集計です。</small><label for="inventoryDate">開催日</label><input type="date" id="inventoryDate"><button type="button" id="loadInventory">保存状況を確認・更新</button><p id="inventoryNotice" role="status">日付を選択して確認してください。</p><div id="inventorySummary"></div><details><summary>不足・未確認レースと理由</summary><div id="inventoryMissing" style="font-size:13px;overflow-wrap:anywhere"></div></details><small>未確認は欠場・中止・返還と断定しません。締切前に保存した情報と事後取得を混ぜません。</small></section><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
 <h2 style="margin:0 0 8px;font-size:18px">1着・2着除外の研究状況（2026/11/23確認）</h2>
 <p style="margin:4px 0 10px">過去3日分のうち検証可能な275レースを分析。レース後に再計算した評価点による研究結果です。</p>
 <table style="width:100%;border-collapse:collapse;font-size:13px"><caption style="text-align:left;margin-bottom:5px">11/19・11/21で候補を選び、11/22の結果で照合</caption>
@@ -642,6 +698,35 @@ document.getElementById('comparisonRight').addEventListener('click',()=>document
 const names=['桐生','戸田','江戸川','平和島','多摩川','浜名湖','蒲郡','常滑','津','三国','びわこ','住之江','尼崎','鳴門','丸亀','児島','宮島','徳山','下関','若松','芦屋','福岡','唐津','大村'];
 const day=document.getElementById('day'),venue=document.getElementById('venue'),race=document.getElementById('race');
 const today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);day.value=today;
+(function(){
+ const date=document.getElementById('inventoryDate'),button=document.getElementById('loadInventory'),notice=document.getElementById('inventoryNotice'),summary=document.getElementById('inventorySummary'),missing=document.getElementById('inventoryMissing');
+ date.value=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+ let seq=0,controller=null;
+ const names=['','桐生','戸田','江戸川','平和島','多摩川','浜名湖','蒲郡','常滑','津','三国','びわこ','住之江','尼崎','鳴門','丸亀','児島','宮島','徳山','下関','若松','芦屋','福岡','唐津','大村'];
+ const reasons={morning_missing:'朝評価点なし',morning_evidence_missing:'朝順位・時刻の証拠不足',before_missing:'締切前直前情報なし',before_pending:'直前情報待ち',deadline_unknown:'締切時刻未確認',result_unconfirmed:'着順未確認',result_pending:'結果待ち',result_unconfirmed_deadline_unknown:'着順・締切未確認'};
+ const jpTime=s=>s?new Date(s).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}):'未保存';
+ const line=(parent,t)=>{const p=document.createElement('p');p.style.margin='6px 0';p.textContent=t;parent.append(p);};
+ function clear(){seq++;if(controller)controller.abort();button.disabled=false;summary.replaceChildren();missing.replaceChildren();notice.textContent='日付を選択して確認してください。';}
+ date.addEventListener('change',clear);
+ button.addEventListener('click',async()=>{
+  if(!date.value)return;clear();const token=seq,selected=date.value.replace(/-/g,'');controller=new AbortController();const signal=controller.signal;button.disabled=true;notice.textContent='保存済み情報を確認中…';
+  try{
+   const res=await fetch('/api/research/archive-inventory?date='+selected,{signal,cache:'no-store'}),d=await res.json();
+   if(signal.aborted||token!==seq)return;
+   if(!res.ok||d.date!==selected||!d.counts||!Array.isArray(d.rows))throw Error('保存状況を取得できませんでした');
+   const total=d.expected;notice.textContent=total===null?'開催予定・保存データをまだ確認できません。':'対象 '+d.venues.length+' 場・予定 '+total+' R（実開催確定数ではありません）';
+   for(const [key,label] of [['morning','朝の評価点'],['morningTimed','締切前時刻付き評価点'],['morningOrder','締切前予想順位'],['before','締切前の完全直前情報'],['exhibition','締切前展示タイム'],['start','締切前展示ST'],['weather','締切前気象'],['partial','部分保存のみ'],['results','通常6艇の公式着順'],['complete','朝順位・直前・着順が揃ったレース']]){
+    const v=d.counts[key]||0;line(summary,label+'：'+v+' / '+(total??'未確認')+' R');
+    if(total>0){const bar=document.createElement('progress');bar.max=total;bar.value=v;bar.style.width='100%';bar.setAttribute('aria-label',label);summary.append(bar);}
+   }
+   line(summary,'最終更新（日本時間） 朝：'+jpTime(d.updatedAt?.morning)+' ／直前：'+jpTime(d.updatedAt?.before)+' ／着順：'+jpTime(d.updatedAt?.result));
+   if(d.lastScan)line(summary,'直前収集：締切判明 '+d.lastScan.knownDeadlineCount+'／候補 '+d.lastScan.eligibleCount+'／期限切れ未保存 '+d.lastScan.expiredUnverified);
+   const incomplete=d.rows.filter(x=>!x.flags.complete);line(missing,'不足・未確認：'+incomplete.length+' R（開催前・結果待ちを含む）');
+   for(const x of incomplete){const p=document.createElement('p');p.style.cssText='margin:8px 0;padding:6px 0;border-bottom:1px solid #354760';p.textContent=(names[x.venue]||x.venue)+' '+x.race+'R：'+x.missing.map(k=>reasons[k]||k).join('／')+'。'+Object.entries(x.failures||{}).filter(([,v])=>v).map(([k,v])=>k+'：'+v+'（'+(x.attempts?.[k]||0)+'回）').join('／');missing.append(p);}
+  }catch(e){if(!signal.aborted&&token===seq)notice.textContent='保存状況の取得失敗。再度確認してください。';}
+  finally{if(token===seq)button.disabled=false;}
+ });
+})();
 (function(){const date=document.getElementById('archiveResearchDate'),button=document.getElementById('loadArchiveResearch'),notice=document.getElementById('archiveResearchNotice'),out=document.getElementById('archiveResearchOutput');date.value=new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10);let seq=0,controller=null;
 date.addEventListener('change',()=>{seq++;if(controller)controller.abort();button.disabled=false;notice.textContent='日付を変更しました。';out.textContent='未取得';});
 button.addEventListener('click',async()=>{if(!date.value)return;const key=date.value.replace(/-/g,''),token=++seq;if(controller)controller.abort();controller=new AbortController();const signal=AbortSignal.any([controller.signal,AbortSignal.timeout(20000)]);button.disabled=true;notice.textContent='保存データを確認中…';out.textContent='';
