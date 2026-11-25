@@ -188,6 +188,12 @@ jobs:
           node <<'NODE'
           const fs=require('node:fs');
           const html=fs.readFileSync('preview-home.html','utf8');
+          for(const id of ['scenarioPredictionPanel','scenarioFirst','scenarioSecond','scenarioThird','runScenarioPrediction','clearScenarioPrediction','scenarioPredictionOutput']) {
+            if(!html.includes('id="'+id+'"'))throw Error('Missing scenario prediction control: '+id);
+          }
+          const vm=require('node:vm');
+          for(const script of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi))new vm.Script(script[1]);
+          console.log('Independent scenario controls and inline browser script syntax verified.');
           for(const id of ['dailyArchiveInventory','inventoryDate','loadInventory','inventorySummary','inventoryMissing']) {
             if(!html.includes('id="'+id+'"'))throw Error('Missing daily archive inventory control: '+id);
           }
