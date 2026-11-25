@@ -158,6 +158,12 @@ jobs:
           const quality=await read('/api/research/archive-quality');
           if(quality.status!==200||!quality.data.morning||!quality.data.before||!quality.data.results)throw Error('Invalid archive quality response');
           console.log('ARCHIVE_QUALITY '+JSON.stringify(quality.data));
+          const inventory=await read('/api/research/archive-inventory');
+          const inv=inventory.data;
+          if(inventory.status!==200||inv.source!=='worker_kv_automatic_only'||!inv.counts||!Array.isArray(inv.rows)||!Array.isArray(inv.venues))throw Error('Invalid daily archive inventory');
+          if(inv.expected!==null&&(inv.rows.length!==inv.expected||Object.values(inv.counts).some(n=>!Number.isInteger(n)||n<0||n>inv.expected)))throw Error('Inconsistent daily archive counts');
+          console.log('ARCHIVE_INVENTORY '+JSON.stringify({date,expected:inv.expected,counts:inv.counts,lastScan:inv.lastScan,updatedAt:inv.updatedAt}));
+
           NODE
       - name: Smoke-test screenshot tool HTML and controls
         shell: bash
@@ -182,6 +188,10 @@ jobs:
           node <<'NODE'
           const fs=require('node:fs');
           const html=fs.readFileSync('preview-home.html','utf8');
+          for(const id of ['dailyArchiveInventory','inventoryDate','loadInventory','inventorySummary','inventoryMissing']) {
+            if(!html.includes('id="'+id+'"'))throw Error('Missing daily archive inventory control: '+id);
+          }
+          if(!html.includes('/api/research/archive-inventory'))throw Error('Inventory API not wired');
           for(const id of ['predictTwelveMethods','twelveMethodStatus','twelveMethodOutput']) {
             if(!html.includes('id="'+id+'"'))throw new Error('Missing deployed twelve-method control: '+id);
           }
