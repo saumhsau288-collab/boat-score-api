@@ -92,3 +92,41 @@ assert.equal(response.data.records[1].predictedOrder,null);
 assert.equal(response.data.records[0].rankedScores.length,6);
 assert.equal((await handler({method:'POST'},fixtureEnv,new URL('https://example.invalid/api/research/morning-records?date='+row.date))).status,405);
 console.log('Archived research API: original records preserved, unverified rows excluded, legacy timestamps not invented.');
+
+
+// Partial verified observations must survive failed full captures, without
+// being promoted to complete six-boat pre-deadline evidence.
+const beforeStart=src.indexOf('async function runScheduledBeforeArchive(');
+const beforeEnd=src.indexOf('\nexport default {',beforeStart);
+assert.ok(beforeStart>=0&&beforeEnd>beforeStart);
+const fixtureNow=Date.now(),fixtureDate=new Date(fixtureNow+9*3600000).toISOString().slice(0,10).replace(/-/g,'');
+const cutoff=new Date(fixtureNow+240000).toISOString();
+const partialStore=new Map();
+partialStore.set('morning:'+fixtureDate,JSON.stringify({date:fixtureDate,venues:[1],records:Array.from({length:12},(_,i)=>({date:fixtureDate,venue:1,race:i+1,ready:true,deadlineAt:i===0?cutoff:new Date(fixtureNow+3600000).toISOString()}))}));
+const fixtureKV={async get(k){return partialStore.get(k)||null;},async put(k,v){partialStore.set(k,v);}};
+let fullCapture=false;
+const collectBefore=vm.runInNewContext(src.slice(beforeStart,beforeEnd)+'\nrunScheduledBeforeArchive;',{
+ jstDateFromUtc:()=>fixtureDate,mapOfficialLimited:async(items,_limit,fn)=>Promise.all(items.map(fn)),
+ fetch:async()=>({ok:true,text:async()=>'<fixture>'}),AbortSignal,
+ extractOfficialRaceDeadline:()=>cutoff,extractOfficialBoatRows:()=>({verified:true}),
+ extractOfficialExhibition:()=>({verified:true,rows:boats,candidateCount:6}),
+ extractOfficialStartExhibition:()=>({verified:fullCapture,rows:fullCapture?boats:[],candidateCount:fullCapture?6:0}),
+ extractOfficialWeather:()=>({verified:true})
+});
+await collectBefore({MORNING_KV:fixtureKV},fixtureNow);
+const beforeKey='before-archive:v1:'+fixtureDate;
+let partialState=JSON.parse(partialStore.get(beforeKey));
+assert.equal(Object.keys(partialState.records).length,0);
+assert.equal(partialState.partialRecords['1:1'].exhibition.data.verified,true);
+assert.equal(partialState.partialRecords['1:1'].start,undefined);
+assert.equal(partialState.lastScan.eligibleCount,1);
+assert.equal(partialState.failures['1:1'].details.start,false);
+const firstCapture=partialState.partialRecords['1:1'].exhibition.capturedAt;
+fullCapture=true;
+await collectBefore({MORNING_KV:fixtureKV},fixtureNow);
+partialState=JSON.parse(partialStore.get(beforeKey));
+assert.equal(Object.keys(partialState.records).length,1);
+assert.equal(partialState.partialRecords['1:1'].exhibition.capturedAt,firstCapture);
+assert.equal(partialState.failures['1:1'],undefined);
+assert.equal(partialState.attempts['1:1'],2);
+console.log('Before archive retains independently verified partial data, retries, and promotes only complete captures.');
