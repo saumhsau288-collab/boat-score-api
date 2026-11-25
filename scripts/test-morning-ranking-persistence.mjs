@@ -130,3 +130,34 @@ assert.equal(partialState.partialRecords['1:1'].exhibition.capturedAt,firstCaptu
 assert.equal(partialState.failures['1:1'],undefined);
 assert.equal(partialState.attempts['1:1'],2);
 console.log('Before archive retains independently verified partial data, retries, and promotes only complete captures.');
+
+
+// Inventory must distinguish old incomplete evidence, partial captures and
+// absent schedules, and must not count malformed six-boat records.
+const invStart=src.indexOf('function buildArchiveInventory(');
+const invEnd=src.indexOf('\nexport default {',invStart);
+assert.ok(invStart>=0&&invEnd>invStart);
+const inventory=vm.runInNewContext(src.slice(invStart,invEnd)+'\nbuildArchiveInventory;');
+const invDate='20261125',at='2026-11-25T03:00:00.000Z',end='2026-11-25T03:05:00.000Z';
+const baseRow={date:invDate,venue:1,race:1,ready:true,officialVerified:true,statsVerified:true,rankedScores:boats,capturedAt:at,deadlineAt:end,predictedOrder:[1,2,3,4,5,6]};
+const savedMorning={date:invDate,venues:[1],records:[baseRow,{...baseRow,race:2,predictedOrder:null},{...baseRow,race:3,statsVerified:false}]};
+const full={date:invDate,venue:1,race:1,capturedAt:at,deadlineAt:end,exhibition:{verified:true,rows:boats},start:{verified:true,rows:boats},weather:{verified:true}};
+const partial={capturedAt:at,deadlineAt:end,data:{verified:true,rows:boats}};
+const savedBefore={date:invDate,venues:[1],records:{'1:1':full,'1:3':{...full,race:3,capturedAt:end}},partialRecords:{'1:2':{exhibition:partial}},failures:{'1:2':{reason:'fixture_missing_start'}}};
+const savedResult={date:invDate,venues:[1],records:{'1:1':{date:invDate,venue:1,race:1,verified:true,finishOrder:[1,2,3,4,5,6]},'1:2':{date:invDate,venue:1,race:2,verified:true,finishOrder:[1,2,3,4,5,5]}}};
+const inv=inventory(invDate,savedMorning,savedBefore,savedResult,Date.parse(end)+1000);
+assert.equal(inv.expected,12);
+assert.equal(inv.rows.length,12);
+assert.equal(inv.counts.morning,2);
+assert.equal(inv.counts.morningOrder,1);
+assert.equal(inv.counts.before,1);
+assert.equal(inv.counts.exhibition,2);
+assert.equal(inv.counts.start,1);
+assert.equal(inv.counts.partial,1);
+assert.equal(inv.counts.results,1);
+assert.equal(inv.counts.complete,1);
+assert.equal(inv.rows[1].failures.before,'fixture_missing_start');
+assert.ok(inv.rows[1].missing.includes('before_missing'));
+assert.equal(inventory(invDate,null,null,null).expected,null);
+assert.equal(inventory(invDate,null,null,null).rows.length,0);
+console.log('Daily archive inventory distinguishes verified full, partial, missing and unknown schedule data.');
