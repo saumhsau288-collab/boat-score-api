@@ -156,8 +156,9 @@ async function runScheduledMorning(env,scheduledTime) {
       const completedRaces=new Set(state.records.filter(x=>x.date===date&&x.venue===venue&&x.ready===true).map(x=>x.race));
       const missingRaces=Array.from({length:12},(_,i)=>i+1).filter(r=>!completedRaces.has(r));
       const rows=await mapOfficialLimited(missingRaces,3,async race=>{
-        const row=buildMorningRaceInputs(date,venue,race,await fetchOfficialRacers(date,venue,race));
-        return row.ready===true?{...row,capturedAt:new Date().toISOString()}:row;
+        const official=await fetchOfficialRacers(date,venue,race);
+        const row=buildMorningRaceInputs(date,venue,race,official);
+        return row.ready===true?{...row,capturedAt:new Date().toISOString(),raceCard:{racers:official.racers,statsByBoat:official.statsByBoat}}:row;
       });
       const existing=new Set(state.records.map(x=>x.date+':'+x.venue+':'+x.race));
       for(const row of rows.filter(x=>x.ready===true)){
@@ -491,7 +492,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261125-local-rate-colors',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261125-morning-card-reuse',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -501,7 +502,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <section id="makulaboPanel" hidden><h2>まくらぼ画像取り込み</h2><p id="makulaboFrameStatus" role="status">レースを選択してから画像取り込みを開いてください。</p><button type="button" id="loadMakulaboFrame">選択レースの取り込み画面を開く</button><iframe id="makulaboFrame" title="まくらぼ画像取り込み" style="width:100%;height:75vh;border:0" hidden></iframe></section><section id="historyPanel" hidden><h2>過去レースの予想・確定結果比較</h2><p>上で開催日・競艇場・レースを選択してください。Boat Score 2と同じ予想APIで再計算し、公式の確定着順と照合します。</p><button id="compareHistorical">選択した過去レースを予想・結果照合</button><pre id="compareHistoricalOutput">未実行</pre><small>過去時点の保存済み予想ではありません。取得できる現在の公式成績で再計算する場合があり、朝8時の的中実績とは区別します。まくらぼと直前情報が未取得なら比較に含みません。</small></section>
 
 <section id="morningRankingSection" hidden><h2>朝8時の全国レース予想ランキング</h2><p>当日の開催場を一斉評価した暫定ランキングです。各20レースを上限に表示し、候補が不足する場合は確認できた件数だけ表示します。</p><p id="morningRankingStatus" role="status">朝8時の保存予想を確認しています…</p><div id="morningLinks" aria-label="朝8時の全国ランキングからレースを選択"></div><small>公式6艇と基礎成績による朝の暫定評価です。直前展示・風・進入・まくらぼ50走を加味した確定予想ではありません。的中率は未検証です。</small></section>
-<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261125-local-rate-colors · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
+<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261125-morning-card-reuse · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
 <h2 style="margin:0 0 8px;font-size:18px">1着・2着除外の研究状況（2026/11/23確認）</h2>
 <p style="margin:4px 0 10px">過去3日分のうち検証可能な275レースを分析。レース後に再計算した評価点による研究結果です。</p>
 <table style="width:100%;border-collapse:collapse;font-size:13px"><caption style="text-align:left;margin-bottom:5px">11/19・11/21で候補を選び、11/22の結果で照合</caption>
@@ -987,7 +988,7 @@ let raceDataRequest=0,raceDataController=null;
 // Browser-only cache of verified race cards, scoped to exact date/venue/race. Never cache missing statistics.
 const previewRaceCardCache=new Map();
 function getPreviewRaceCard(key){const entry=previewRaceCardCache.get(key);if(!entry)return null;if(Date.now()-entry.savedAt>=120000||Date.now()<entry.savedAt){previewRaceCardCache.delete(key);return null;}return entry;}
-function savePreviewRaceCard(key,data){if(data?.racersVerified!==true||data?.statsVerified!==true||data.racersByBoat?.length!==6||data.statsByBoat?.length!==6||new Set(data.racersByBoat.map(x=>x.boat)).size!==6||!data.statsByBoat.every(x=>data.racersByBoat.some(r=>r.boat===x.boat&&String(r.racerId)===String(x.racerId))))return;if(previewRaceCardCache.size>=24)previewRaceCardCache.delete(previewRaceCardCache.keys().next().value);previewRaceCardCache.set(key,{savedAt:Date.now(),data});}
+function savePreviewRaceCard(key,data){if(data?.source==='morning_saved')return;if(data?.racersVerified!==true||data?.statsVerified!==true||data.racersByBoat?.length!==6||data.statsByBoat?.length!==6||new Set(data.racersByBoat.map(x=>x.boat)).size!==6||!data.statsByBoat.every(x=>data.racersByBoat.some(r=>r.boat===x.boat&&String(r.racerId)===String(x.racerId))))return;if(previewRaceCardCache.size>=24)previewRaceCardCache.delete(previewRaceCardCache.keys().next().value);previewRaceCardCache.set(key,{savedAt:Date.now(),data});}
 let previewCardPending=null;
 function cancelPreviewCard(){if(previewCardPending){previewCardPending.controller.abort();previewCardPending=null;}}
 function requestPreviewCard(key,urlBase){const cached=getPreviewRaceCard(key);if(cached)return Promise.resolve({data:cached.data,cached:true});if(previewCardPending?.key===key)return previewCardPending.promise;cancelPreviewCard();const controller=new AbortController();const entry={key,controller,promise:null};entry.promise=(async()=>{try{const response=await fetch('/api/official/racers-only'+urlBase,{signal:AbortSignal.any([controller.signal,AbortSignal.timeout(15000)])});if(!response.ok)throw Error('公式出走表 HTTP '+response.status);const data=await response.json();if(!controller.signal.aborted)savePreviewRaceCard(key,data);return {data,cached:false};}catch(error){return {error};}finally{if(previewCardPending===entry)previewCardPending=null;}})();previewCardPending=entry;return entry.promise;}
@@ -2532,8 +2533,14 @@ if (u.pathname === '/api/makulabo/screenshot-review') {
 if (u.pathname === '/api/official/racers-only') {
  const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
  if(!/^20\d{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply(request,{error:'Invalid parameters'},400);
- const result=await fetchOfficialRacers(date,venue,race,{interactive:true});
- return reply(request,{date,venue,race,racersVerified:result.verified===true,statsVerified:result.statsVerified===true,racersByBoat:result.verified?result.racers:[],statsByBoat:result.statsVerified?result.statsByBoat:[],diagnostics:{reason:result.reason||null,htmlLength:result.htmlLength||null,averageSTParseDiagnostics:result.averageSTParseDiagnostics||[]}});
+ let result=null,source='official_live';
+ if(env?.MORNING_KV&&date===jstDateFromUtc(new Date())&&u.searchParams.get('refresh')!=='1'){
+  try{const state=JSON.parse(await env.MORNING_KV.get('morning:'+date)||'null');const row=state?.records?.find(x=>x.date===date&&x.venue===venue&&x.race===race&&x.ready===true);const c=row?.raceCard,deadline=Date.parse(row?.deadlineAt||''),capture=Date.parse(row?.capturedAt||'');
+   if(Number.isFinite(deadline)&&Number.isFinite(capture)&&capture<deadline&&Date.now()<deadline-15*60000&&c?.racers?.length===6&&c?.statsByBoat?.length===6&&new Set(c.racers.map(x=>x.boat)).size===6&&c.racers.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&x.racerId)&&c.statsByBoat.every(x=>c.racers.some(y=>y.boat===x.boat&&String(y.racerId)===String(x.racerId)))&&new Set(c.statsByBoat.map(x=>x.boat)).size===6){result={verified:true,statsVerified:true,racers:c.racers,statsByBoat:c.statsByBoat};source='morning_saved';}
+  }catch{}
+ }
+ if(!result)result=await fetchOfficialRacers(date,venue,race,{interactive:true,forceRefresh:true});
+ return reply(request,{date,venue,race,source,racersVerified:result.verified===true,statsVerified:result.statsVerified===true,racersByBoat:result.verified?result.racers:[],statsByBoat:result.statsVerified?result.statsByBoat:[],diagnostics:{reason:result.reason||null,htmlLength:result.htmlLength||null,averageSTParseDiagnostics:result.averageSTParseDiagnostics||[]}});
 }
 if (u.pathname === '/api/official/race-data') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -3490,7 +3497,7 @@ function saveCachedVerifiedRacers(date,venue,race,data){
  verifiedRacersCache.set(verifiedRacersCacheKey(date,venue,race),{savedAt:Date.now(),data});
 }
 async function fetchOfficialRacers(date, venue, race, options={}) {
-  const cached=getCachedVerifiedRacers(date,venue,race);
+  const cached=options.forceRefresh?null:getCachedVerifiedRacers(date,venue,race);
   if(cached)return cached;
   const url = new URL(
     "https://www.boatrace.jp/owpc/pc/race/racelist"
