@@ -449,7 +449,7 @@ if (u.pathname === '/api/morning/snapshot') {
   const verifiedEvidence=records.filter(evidenceValid).length;
   const rankedCandidates=['main','upset','chaos'].flatMap(k=>Array.isArray(state.categories?.[k])?state.categories[k]:[]);
   const validCandidateCount=rankedCandidates.filter(x=>{const row=records.find(y=>y.venue===x.venue&&y.race===x.race);return row&&evidenceValid(row)&&x.capturedAt===row.capturedAt&&JSON.stringify(x.predictedOrder)===JSON.stringify(row.predictedOrder);}).length;
-  return reply(request,{date,status:state.status,evidence:{verifiedRecords:verifiedEvidence,unverifiedRecords:records.length-verifiedEvidence,verifiedCandidates:validCandidateCount,unverifiedCandidates:rankedCandidates.length-validCandidateCount},,updatedAt:state.updatedAt||null,venues:state.venues||[],
+  return reply(request,{date,status:state.status,evidence:{verifiedRecords:verifiedEvidence,unverifiedRecords:records.length-verifiedEvidence,verifiedCandidates:validCandidateCount,unverifiedCandidates:rankedCandidates.length-validCandidateCount},updatedAt:state.updatedAt||null,venues:state.venues||[],
     completedVenues:state.completedVenues||[],failedVenues:state.failedVenues||[],exhaustedVenues:state.exhaustedVenues||[],
     scheduleLastCheck:state.scheduleLastCheck||'unknown',
     verifiedRacesByVenue:Object.fromEntries((state.venues||[]).map(v=>[v,(state.records||[]).filter(r=>r.venue===v&&r.ready===true).length])),
