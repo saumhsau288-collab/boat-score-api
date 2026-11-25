@@ -361,9 +361,24 @@ async function runScheduledBeforeArchive(env,scheduledTime){
 }
 export default {
   async scheduled(event,env,ctx) {
-    if(event.cron==='*/5 15-22 * * *')ctx.waitUntil(runScheduledResultArchive(env,event.scheduledTime));
-    else if(event.cron==='*/5 0-14 * * *')ctx.waitUntil(runScheduledBeforeArchive(env,event.scheduledTime));
-    else ctx.waitUntil(runScheduledMorning(env,event.scheduledTime));
+    // Route using the scheduled UTC hour rather than the provider's cron-string formatting.
+    const scheduledTime=event.scheduledTime;
+    const hour=new Date(scheduledTime).getUTCHours();
+    const mode=hour===23?'morning':hour>=15?'result':'before';
+    ctx.waitUntil((async()=>{
+      const date=jstDateFromUtc(new Date(scheduledTime-(mode==='result'?86400000:0)));
+      const key='scheduler-health:v1:'+mode+':'+date;
+      const status={date,mode,scheduledAt:new Date(scheduledTime).toISOString(),cron:event.cron||null,status:'started'};
+      const report=async()=>{try{await env.MORNING_KV.put(key,JSON.stringify(status),{expirationTtl:2592000});}catch(e){console.error('scheduler_health_write_failed',mode,String(e));}};
+      await report();
+      try{
+        if(mode==='morning')await runScheduledMorning(env,scheduledTime);
+        else if(mode==='result')await runScheduledResultArchive(env,scheduledTime);
+        else await runScheduledBeforeArchive(env,scheduledTime);
+        status.status='finished';
+      }catch(error){status.status='failed';status.error=String(error?.message||error).slice(0,240);console.error('scheduler_failed',mode,status.error);throw error;}
+      finally{status.finishedAt=new Date().toISOString();await report();}
+    })());
   },
   async fetch(request,env) {
     const u = new URL(request.url);
@@ -397,6 +412,26 @@ if(u.pathname==='/api/research/before-archive'){
  return reply(request,{date,status:'recorded',updatedAt:state.updatedAt,verifiedCount:Object.keys(state.records||{}).length,attemptedCount:Object.keys(state.attempts||{}).length,discoveredDeadlineCount:Object.keys(state.deadlines||{}).length,failures:state.failures||{}});
 }
 // Read-only coverage diagnostics for archived observations; never estimate missing values.
+if(u.pathname==='/api/research/morning-records'){
+ if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+ const date=u.searchParams.get('date')||'';
+ if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid date'},400);
+ if(!env?.MORNING_KV)return reply(request,{date,status:'not_configured'},503);
+ const raw=await env.MORNING_KV.get('morning:'+date);
+ if(!raw)return reply(request,{date,status:'not_available',records:[]},404);
+ const state=JSON.parse(raw);
+ const records=(Array.isArray(state.records)?state.records:[]).filter(x=>x?.date===date&&x.ready===true&&x.officialVerified===true&&x.statsVerified===true&&Number.isInteger(x.venue)&&x.venue>=1&&x.venue<=24&&Number.isInteger(x.race)&&x.race>=1&&x.race<=12).map(x=>({date,venue:x.venue,race:x.race,capturedAt:x.capturedAt||null,deadlineAt:x.deadlineAt||null,predictedOrder:x.predictedOrder||null,rankedScores:x.rankedScores||null,method:x.method||null}));
+ return reply(request,{date,status:'recorded',records,note:'Original archived fields only; missing values are not backfilled.'});
+}
+if(u.pathname==='/api/research/scheduler-health'){
+ if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+ const date=u.searchParams.get('date')||'';
+ if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid date'},400);
+ if(!env?.MORNING_KV)return reply(request,{date,status:'not_configured'},503);
+ const modes=['morning','before','result'];
+ const raw=await Promise.all(modes.map(mode=>env.MORNING_KV.get('scheduler-health:v1:'+mode+':'+date)));
+ return reply(request,{date,modes:Object.fromEntries(modes.map((mode,i)=>[mode,raw[i]?JSON.parse(raw[i]):null])),note:'Latest recorded execution for each mode; finished does not imply data collection succeeded.'});
+}
 if(u.pathname==='/api/research/archive-quality'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
  const date=u.searchParams.get('date')||'';
@@ -503,7 +538,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261125-request-isolation-v2',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261125-archive-health-v1',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -513,7 +548,7 @@ if (u.pathname === '/' || u.pathname === '/index.html') {
 <section id="makulaboPanel" hidden><h2>まくらぼ画像取り込み</h2><p id="makulaboFrameStatus" role="status">レースを選択してから画像取り込みを開いてください。</p><button type="button" id="loadMakulaboFrame">選択レースの取り込み画面を開く</button><iframe id="makulaboFrame" title="まくらぼ画像取り込み" style="width:100%;height:75vh;border:0" hidden></iframe></section><section id="historyPanel" hidden><h2>過去レースの予想・確定結果比較</h2><p>上で開催日・競艇場・レースを選択してください。Boat Score 2と同じ予想APIで再計算し、公式の確定着順と照合します。</p><button id="compareHistorical">選択した過去レースを予想・結果照合</button><pre id="compareHistoricalOutput">未実行</pre><small>過去時点の保存済み予想ではありません。取得できる現在の公式成績で再計算する場合があり、朝8時の的中実績とは区別します。まくらぼと直前情報が未取得なら比較に含みません。</small></section>
 
 <section id="morningRankingSection" hidden><h2>朝8時の全国レース予想ランキング</h2><p>当日の開催場を一斉評価した暫定ランキングです。各20レースを上限に表示し、候補が不足する場合は確認できた件数だけ表示します。</p><p id="morningRankingStatus" role="status">朝8時の保存予想を確認しています…</p><div id="morningLinks" aria-label="朝8時の全国ランキングからレースを選択"></div><small>公式6艇と基礎成績による朝の暫定評価です。直前展示・風・進入・まくらぼ50走を加味した確定予想ではありません。的中率は未検証です。</small></section>
-<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261125-request-isolation-v2 · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
+<details id="researchPanel" style="margin:16px 0" hidden><summary>開発・研究資料</summary><small>開発版 20261125-archive-health-v1 · <a href="/api/version" target="_blank" rel="noopener">公開バージョンを確認</a></small><section id="archiveResearchStatus" style="margin:14px 0;padding:12px;border:1px solid #64748b;border-radius:10px"><h2>自動収集・分析状況</h2><label for="archiveResearchDate">集計終了日</label><input type="date" id="archiveResearchDate"><button type="button" id="loadArchiveResearch">保存済み分析を確認</button><p id="archiveResearchNotice" role="status">未取得</p><pre id="archiveResearchOutput" style="white-space:pre-wrap;overflow-wrap:anywhere">必要なときだけ取得します。</pre><small>評価順位と確定着順の統計です。自動学習・評価方式変更は未実装です。</small></section><section id="exclusionResearchStatus" aria-label="過去データ除外検証の状況" style="border:1px solid #64748b;border-radius:12px;padding:14px;margin:14px 0">
 <h2 style="margin:0 0 8px;font-size:18px">1着・2着除外の研究状況（2026/11/23確認）</h2>
 <p style="margin:4px 0 10px">過去3日分のうち検証可能な275レースを分析。レース後に再計算した評価点による研究結果です。</p>
 <table style="width:100%;border-collapse:collapse;font-size:13px"><caption style="text-align:left;margin-bottom:5px">11/19・11/21で候補を選び、11/22の結果で照合</caption>
