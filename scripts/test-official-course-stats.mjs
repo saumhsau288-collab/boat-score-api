@@ -38,3 +38,10 @@ assert.equal(matchOfficialCourseStats(missing,'20261126',official,start).rows[0]
 const corrupt={...actual,racers:{...actual.racers,[racers[0].racerId]:actual.racers[racers[0].racerId].map(x=>x.course===6?{...x,normalFinishes:-1}:x)}};
 assert.equal(matchOfficialCourseStats(corrupt,'20261126',official,start).rows[0].status,'count_mismatch');
 console.log('Official course statistics: actual dataset coverage, exact registration match, exhibition course, missing samples and invalid identity guards passed.');
+
+for(const row of shifted.rows){
+ assert.equal(row.priorStrength,20);
+ assert.ok(row.pooledRates.every(x=>x>0&&x<=1));
+ assert.ok(row.smoothedRates.every((x,i)=>Math.abs(x-(row.finishCounts[i]+20*row.pooledRates[i])/(row.normalFinishes+20))<1e-10));
+}
+console.log('Official position rates: pooled same-course priors and 20-race smoothing passed.');
