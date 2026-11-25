@@ -10,13 +10,24 @@ export function matchOfficialCourseStats(dataset, date, official, starts) {
  if(!validSix(racers)||!validSix(stats)||new Set(racers.map(x=>String(x.racerId))).size!==6||!racers.every(x=>/^[1-9]\d{3}$/.test(String(x.racerId))&&stats.some(y=>y.boat===x.boat&&String(y.racerId)===String(x.racerId))))return empty('official_registration_mismatch');
  const startVerified=starts?.verified===true&&validSix(starts.rows)&&new Set(starts.rows.map(x=>x.course)).size===6&&starts.rows.every(x=>Number.isInteger(x.course)&&x.course>=1&&x.course<=6);
  const courses=new Map(startVerified?starts.rows.map(x=>[x.boat,x.course]):racers.map(x=>[x.boat,x.boat]));
+ const pooled=Array.from({length:6},()=>({n:0,counts:[0,0,0]}));
+ for(const entries of Object.values(dataset.racers)){
+  if(!Array.isArray(entries))continue;
+  for(const x of entries){
+   if(!Number.isInteger(x.course)||x.course<1||x.course>6||!Number.isInteger(x.normalFinishes)||x.normalFinishes<=0||!Array.isArray(x.finishCounts)||x.finishCounts.length!==6||!x.finishCounts.every(n=>Number.isInteger(n)&&n>=0)||x.finishCounts.reduce((a,b)=>a+b,0)!==x.normalFinishes||!Number.isInteger(x.entries)||x.normalFinishes>x.entries)continue;
+   const p=pooled[x.course-1];p.n+=x.normalFinishes;for(let i=0;i<3;i++)p.counts[i]+=x.finishCounts[i];
+  }
+ }
  const rows=racers.slice().sort((a,b)=>a.boat-b.boat).map(r=>{
   const racerId=String(r.racerId),course=courses.get(r.boat),entry=dataset.racers[racerId]?.find(x=>x.course===course);
   const base={boat:r.boat,racerId,course};
   if(!entry)return {...base,status:'racer_or_course_missing',entries:null,normalFinishes:null,finishCounts:null,rates:null};
   const counts=entry.finishCounts,n=entry.normalFinishes;
   if(!Array.isArray(counts)||counts.length!==6||!counts.every(x=>Number.isInteger(x)&&x>=0)||!Number.isInteger(entry.entries)||entry.entries<0||!Number.isInteger(n)||n<0||counts.reduce((a,b)=>a+b,0)!==n||n>entry.entries)return {...base,status:'count_mismatch',entries:null,normalFinishes:null,finishCounts:null,rates:null};
-  return {...base,status:n?'available':'no_normal_finish',entries:entry.entries,normalFinishes:n,finishCounts:counts.slice(),rates:n?counts.slice(0,3).map(x=>100*x/n):null};
+  const p=pooled[course-1],prior=p.n?p.counts.map(x=>x/p.n):null;
+  // Shrink small samples toward the pooled rate of the same course.
+  const smoothed=prior&&prior.every(x=>x>0)?prior.map((rate,i)=>(counts[i]+20*rate)/(n+20)):null;
+  return {...base,status:n?'available':'no_normal_finish',entries:entry.entries,normalFinishes:n,finishCounts:counts.slice(),rates:n?counts.slice(0,3).map(x=>100*x/n):null,pooledRates:prior,smoothedRates:smoothed,priorStrength:20};
  });
  return {ready:true,reason:null,periodStart:dataset.periodStart,periodEnd:dataset.periodEnd,source:dataset.source,sourceTextSha256:dataset.sourceTextSha256,courseBasis:startVerified?'verified_exhibition_course':'assumed_frame_not_verified_course',rateDefinition:'exact_finish_count_over_normal_finishes',available:rows.filter(x=>x.status==='available').length,rows};
 }
