@@ -2,6 +2,12 @@ name: Deploy Boat Score 2 isolated preview
 
 on:
   workflow_dispatch:
+    inputs:
+      research_only:
+        description: 'Read-only research: Nov 24 and 25; skip deployment'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -12,6 +18,7 @@ concurrency:
 
 jobs:
   deploy-preview:
+    if: ${{ !inputs.research_only }}
     runs-on: ubuntu-latest
     environment: boat-score-2-preview
     steps:
@@ -237,4 +244,64 @@ jobs:
             chaos:(d.categories.chaos||[]).length,
             legacyMissingOrder,legacyMissingCapture,
             note:legacyMissingOrder||legacyMissingCapture?'Legacy morning snapshot: missing fields were NOT backfilled and must not be used for pre-race accuracy.':'Observed snapshot only; not a historical accuracy test.'}));
+          NODE
+
+  research-two-days:
+    if: ${{ inputs.research_only }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read-only archived six-boat comparison
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://boat-score-2-preview.saumh-sau-288.workers.dev';
+          const dates=['20261124','20261125'];
+          const orderOK=a=>Array.isArray(a)&&a.length===6&&new Set(a).size===6&&a.every(n=>Number.isInteger(n)&&n>=1&&n<=6);
+          const id=x=>x.venue+':'+x.race;
+          const timely=x=>Number.isFinite(Date.parse(x.capturedAt))&&Number.isFinite(Date.parse(x.deadlineAt))&&Date.parse(x.capturedAt)<Date.parse(x.deadlineAt);
+          async function get(path,date){
+           try{const r=await fetch(base+path+'?date='+date,{signal:AbortSignal.timeout(20000)});if(!r.ok){console.log(JSON.stringify({date,path,http:r.status}));return null;}const d=await r.json();return d.date===date?d:null;}
+           catch(e){console.log(JSON.stringify({date,path,error:String(e)}));return null;}
+          }
+          const groups={verified:[],exploratory:[],before:[]};
+          for(const date of dates){
+           const [morning,results,before,quality]=await Promise.all(['/api/morning/snapshot','/api/research/result-archive','/api/research/before-audit','/api/research/archive-quality'].map(p=>get(p,date)));
+           const candidates=Object.values(morning?.categories||{}).flat().filter(x=>x?.date===date);
+           const seen=new Set();let missing=0,invalid=0,strict=0,legacy=0;
+           for(const x of candidates){
+            if(seen.has(id(x)))continue;seen.add(id(x));
+            const scores=x.rankedScores;
+            if(!Array.isArray(scores)||scores.length!==6||!orderOK(scores.map(y=>y.boat))||!scores.every(y=>Number.isFinite(y.score))){invalid++;continue;}
+            const f=results?.records?.[id(x)];
+            if(f?.date!==date||f.venue!==x.venue||f.race!==x.race||f.verified!==true||!orderOK(f.finishOrder)){missing++;continue;}
+            const ranked=scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
+            const verified=timely(x)&&orderOK(x.predictedOrder)&&x.predictedOrder.every((b,i)=>b===ranked[i].boat);
+            const item={date,venue:x.venue,race:x.race,scores:Object.fromEntries(scores.map(y=>[y.boat,y.score])),finish:f.finishOrder};
+            groups[verified?'verified':'exploratory'].push(item);if(verified)strict++;else legacy++;
+           }
+           for(const x of before?.records||[]){
+            if(x.date!==date||!timely(x)||!orderOK(x.finishOrder)||!Array.isArray(x.start)||x.start.length!==6||!orderOK(x.start.map(y=>y.boat)))continue;
+            const rows=x.start.map(y=>({boat:y.boat,course:y.course,st:y.st??y.startTiming??y.startTime}));
+            if(!orderOK(rows.map(y=>y.course)))continue;
+            if(!rows.every(y=>y.st!==null&&y.st!==undefined&&/^(?:0?\.\d+|0)$/.test(String(y.st))&&Number(y.st)>=0&&Number(y.st)<=1))continue;
+            groups.before.push({date,finish:x.finishOrder,rows:rows.map(y=>({...y,st:Number(y.st)}))});
+           }
+           console.log('COVERAGE '+JSON.stringify({date,candidates:seen.size,strict,legacy,missing,invalid,quality:quality?{morning:quality.morning,before:quality.before,results:quality.results,matched:quality.matched}:null}));
+          }
+          function compare(rows,condition,outcome){
+           const tally=a=>({n:a.length,count:a.filter(outcome).length,rate:a.length?Number((100*a.filter(outcome).length/a.length).toFixed(1)):null});
+           return {condition:tally(rows.filter(condition)),comparison:tally(rows.filter(x=>!condition(x)))};
+          }
+          for(const [kind,rows] of Object.entries(groups)){
+           for(const date of [...dates,'combined']){
+            const a=rows.filter(x=>date==='combined'||x.date===date);
+            if(kind==='before'){
+             const spread=x=>{const st=x.rows.filter(y=>y.course<=3).map(y=>y.st);return Math.max(...st)-Math.min(...st);};
+             console.log('ANALYSIS '+JSON.stringify({kind,date,n:a.length,innerSTClose_course4Podium:compare(a,x=>spread(x)<=.05+1e-9,x=>x.finish.slice(0,3).includes(x.rows.find(y=>y.course===4).boat))}));continue;
+            }
+            const spread=x=>Math.max(x.scores[1],x.scores[2],x.scores[3])-Math.min(x.scores[1],x.scores[2],x.scores[3]);
+            console.log('ANALYSIS '+JSON.stringify({kind,date,n:a.length,innerScoreSpread3_boat4Podium:compare(a,x=>spread(x)<=3,x=>x.finish.slice(0,3).includes(4)),innerScoreSpread3_outerPodium:compare(a,x=>spread(x)<=3,x=>x.finish.slice(0,3).some(b=>b>=4))}));
+           }
+          }
+          console.log('Limits: legacy candidates lack pre-deadline evidence; candidate selection is biased; boat numbers are not actual courses; ST means exhibition not race; no causal or betting accuracy claims.');
           NODE
