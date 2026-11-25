@@ -163,26 +163,35 @@ assert.equal(inventory(invDate,null,null,null).rows.length,0);
 console.log('Daily archive inventory distinguishes verified full, partial, missing and unknown schedule data.');
 
 
-// Scenario predictions are an isolated calculation; every output must satisfy
-// fixed positions, with no duplicated combinations or manufactured extra picks.
-const scenarioStart=src.indexOf('function rankScenarioCombinations(');
+// Multi-selection is constrained to permitted boats at each position,
+// never repeats a boat within an order, and never changes the original scores.
+const scenarioStart=src.indexOf('function enumerateScenarioOrders(');
 const scenarioEnd=src.indexOf('\n(function(){',scenarioStart);
 assert.ok(scenarioStart>=0&&scenarioEnd>scenarioStart);
-const scenarioRank=vm.runInNewContext(src.slice(scenarioStart,scenarioEnd)+'\nrankScenarioCombinations;');
+const {scenarioRank,enumerate}=vm.runInNewContext(src.slice(scenarioStart,scenarioEnd)+'\n({scenarioRank:rankScenarioCombinations,enumerate:enumerateScenarioOrders});');
 const originalScores=JSON.stringify(boats);
-for(const fixed of [[1,0,0],[0,4,0],[0,0,6],[2,0,6],[1,2,3]]){
+for(const [fixed,expected] of [
+ [[[1],[],[]],20],[[[],[4],[]],20],[[[],[],[6]],20],
+ [[[2],[],[6]],4],[[[1],[2],[3]],1],
+ [[[1,2],[3,4],[4,5,6]],10],
+ [[[1,2],[1,2],[]],8],
+ [[[1,2,3,4,5,6],[],[]],120]
+]){
  const result=scenarioRank(boats,fixed),picks=[...result.main,...result.upset];
- const n=fixed.filter(Boolean).length,expected=n===1?20:n===2?4:1;
  assert.equal(result.ready,true);
  assert.equal(result.total,expected);
+ assert.equal(enumerate(fixed).length,expected);
  assert.equal(picks.length,Math.min(12,expected));
  assert.equal(result.main.length,Math.min(6,expected));
  assert.equal(new Set(picks.map(x=>x.join('-'))).size,picks.length);
- assert.ok(picks.every(x=>new Set(x).size===3&&fixed.every((b,i)=>!b||x[i]===b)));
+ assert.ok(picks.every(x=>new Set(x).size===3&&fixed.every((b,i)=>!b.length||b.includes(x[i]))));
 }
-assert.equal(scenarioRank(boats,[1,1,0]).ready,false);
-assert.equal(scenarioRank(boats,[0,0,0]).ready,false);
-assert.equal(scenarioRank(boats,[7,0,0]).ready,false);
-assert.equal(scenarioRank(boats.slice(0,5),[1,0,0]).ready,false);
+assert.equal(scenarioRank(boats,[[1],[1],[]]).ready,false);
+assert.equal(scenarioRank(boats,[[1,2],[1,2],[1,2]]).ready,false);
+assert.equal(scenarioRank(boats,[[],[],[]]).ready,false);
+assert.equal(enumerate([[],[],[]]).length,120);
+assert.equal(scenarioRank(boats,[[7],[],[]]).ready,false);
+assert.equal(scenarioRank(boats,[[1,1],[],[]]).ready,false);
+assert.equal(scenarioRank(boats.slice(0,5),[[1],[],[]]).ready,false);
 assert.equal(JSON.stringify(boats),originalScores);
-console.log('Independent scenario constraints: one/two/three positions, unique picks, invalid input and no mutation passed.');
+console.log('Independent scenario multi-selection: valid overlap, impossible conditions, candidate counts and no mutation passed.');
