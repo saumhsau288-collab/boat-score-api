@@ -1,0 +1,3 @@
+# 2026-11-25 checkpoint
+Preview only; never modify boat-score.onrender.com or main.
+Run 45540044520 succeeded, job 138956074433, commit a6ed94061. All three cron schedules configured. Morning snapshot: 13 venues, 156 races, 59 category entries, all 59 missing predictedOrder and capturedAt. Historical exception is not a repair; do not backfill or use for accuracy. Morning card reuse deployed (95add596); actual speed and cancellation handling unverified. Next: inspect morning persistence, enforce timestamp and six-boat order on new records, preserve historical evidence, test before deployment. Cancellation/withdrawal verification and predeadline archive remain open.
