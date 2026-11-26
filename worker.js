@@ -605,6 +605,8 @@ if(u.pathname==='/api/research/four-prediction-comparison'){
  const [morning,before,result]=await Promise.all(['morning:','before-archive:v1:','result-archive:v1:'].map(async k=>JSON.parse(await env.MORNING_KV.get(k+date)||'null')));
  const names=['morningAverage','morningLocal','beforeAverage','beforeLocal'];
  const totals=Object.fromEntries(names.map(k=>[k,{main:0,upset:0,either:0}]));
+ const groupTotals=Object.fromEntries(['complete','fallback'].map(g=>[g,Object.fromEntries(names.map(k=>[k,{main:0,upset:0,either:0}]))]));
+ const overlapTotals={entries:0,unique:0,duplicates:0};
  const audit=summarizeBeforeArchive(date,before,result),matched=new Map(audit.records.map(x=>[x.venue+':'+x.race,x]));
  let count=0;
  const groups={complete:0,fallback:0},missingFinal={count:0},details=[];
@@ -621,11 +623,17 @@ if(u.pathname==='/api/research/four-prediction-comparison'){
  if(!models.every((p,i)=>{if(!p||p.capturedAt!==(i<2?m.capturedAt:b.capturedAt)||(i>=2&&p.morningCapturedAt!==m.capturedAt))return false;const q=rankTrifectaCandidates(p.rankedScores);return q.ready&&JSON.stringify(q.main)===JSON.stringify(p.main)&&JSON.stringify(q.upset)===JSON.stringify(p.upset);}))continue;
  count++;
  const group=complete?'complete':'fallback';groups[group]++;
- details.push({venue:m.venue,race:m.race,group,actual,savedAt:final.savedAt});
- models.forEach((p,i)=>{const t=totals[names[i]],hit=a=>a.some(x=>x.join('-')===actual),main=hit(p.main),upset=hit(p.upset);t.main+=Number(main);t.upset+=Number(upset);t.either+=Number(main||upset);});
+ const sets=models.map(p=>new Set([...p.main,...p.upset].map(x=>x.join('-'))));
+ const entries=models.reduce((n,p)=>n+p.main.length+p.upset.length,0),unique=new Set(sets.flatMap(x=>[...x])).size;
+ const pairs=[];
+ for(let a=0;a<sets.length;a++)for(let b=a+1;b<sets.length;b++)pairs.push({a:names[a],b:names[b],shared:[...sets[a]].filter(x=>sets[b].has(x)).length});
+ overlapTotals.entries+=entries;overlapTotals.unique+=unique;overlapTotals.duplicates+=entries-unique;
+ details.push({venue:m.venue,race:m.race,group,actual,savedAt:final.savedAt,overlap:{entries,unique,duplicates:entries-unique,pairs}});
+ models.forEach((p,i)=>{const t=totals[names[i]],hit=a=>a.some(x=>x.join('-')===actual),main=hit(p.main),upset=hit(p.upset);for(const target of [t,groupTotals[group][names[i]]]){target.main+=Number(main);target.upset+=Number(upset);target.either+=Number(main||upset);}});
  }
  for(const t of Object.values(totals))t.rates=Object.fromEntries(['main','upset','either'].map(k=>[k,count?t[k]/count:null]));
- return reply(request,{date,matched:count,totals,groups,missingFinal:missingFinal.count,details,note:'Paired comparison of stored predeadline snapshots; complete and fallback counts reported separately.'});
+ for(const g of Object.keys(groups))for(const t of Object.values(groupTotals[g]))t.rates=Object.fromEntries(['main','upset','either'].map(k=>[k,groups[g]?t[k]/groups[g]:null]));
+ return reply(request,{date,matched:count,totals,groups,groupTotals,overlapTotals,missingFinal:missingFinal.count,details,note:'Paired comparison of stored predeadline snapshots; complete and fallback counts reported separately.'});
 }
 if(u.pathname==='/api/research/before-prediction-comparison'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
