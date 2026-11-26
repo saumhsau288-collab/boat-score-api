@@ -414,6 +414,12 @@ async function runScheduledBeforeArchive(env,scheduledTime){
   }catch(e){return {id,reason:stage+'_'+String(e?.name||'error')};}
  });
  for(const row of rows){if(row.deferred)continue;state.attempts[row.id]=(state.attempts[row.id]||0)+1;state.attemptHistory[row.id]=[...(state.attemptHistory[row.id]||[]),{at:new Date().toISOString(),outcome:row.record?'saved':row.reason||'unknown',details:row.details||null}].slice(-6);if(row.record&&!state.records[row.id]){state.records[row.id]=row.record;delete state.failures[row.id];}else if(!row.record){state.failures[row.id]={reason:row.reason||'unknown',details:row.details||null,at:new Date().toISOString()};if(row.partial){const p=state.partialRecords[row.id]||{};for(const k of ['exhibition','start','weather'])if(row.partial[k]?.verified===true&&!p[k])p[k]={capturedAt:row.partial.capturedAt,deadlineAt:row.partial.deadlineAt,source:row.partial.source,data:row.partial[k]};if(Object.keys(p).length)state.partialRecords[row.id]=p;}}}
+ state.lastScan.attemptedCount=rows.filter(x=>!x.deferred).length;
+ state.lastScan.savedCount=rows.filter(x=>x.record).length;
+ state.lastScan.deferredCount=rows.filter(x=>x.deferred).length;
+ state.lastScan.failureReasons={};
+ for(const item of rows)if(!item.record&&!item.deferred){const reason=item.reason||'unknown';state.lastScan.failureReasons[reason]=(state.lastScan.failureReasons[reason]||0)+1;}
+ console.log('before_archive_scan',JSON.stringify({date,...state.lastScan}));
  state.updatedAt=new Date().toISOString();
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
  // Final snapshots use the same verified server endpoint as the interactive view.
