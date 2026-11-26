@@ -18,3 +18,5 @@ Run 45777169983 succeeded; unverified wind flag confirmed. Morning evidence rema
 
 ## Retrieval timing and access denial
 Run 45778367479: beforeinfo reuse 14/34 ms, combined 19452/18459 ms. Run 45779441782 (51cb6eb6): Edogawa both upstream HTTP 403, Tamagawa racer 9448 ms and beforeinfo 9275 ms, combined 9880 ms, reuse 41 ms. Morning evidence remains 0/58. Commit f2c94f23a17681e4d82844df025593ac08a211af makes diagnostic workflow skip redundant beforeinfo probe after explicit 403 and logs coverage/source separately. No application behavior change; deployment test pending.
+
+Run 45780532679: both venues verified, Edogawa combined 9673 ms, Tamagawa 18418 ms with two beforeinfo attempts, cache 15/34 ms confirmed. Morning evidence 0/58. Commit fc67303a06c048a7a066603be8ac0364959781fc adds per-attempt duration and outcome diagnostics; retry policy unchanged. Deployment pending.
