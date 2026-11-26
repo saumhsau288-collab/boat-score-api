@@ -395,6 +395,16 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    const exhibition=extractOfficialExhibition(html),start=extractOfficialStartExhibition(html),weather=extractOfficialWeather(html);
    const observation={date,venue:row.venue,race:row.race,deadlineAt:new Date(deadline).toISOString(),capturedAt,source,exhibition,start,weather,model:'observation-only-v1'};
    if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id,reason:'exhibition_or_start_unverified',details:{exhibition:exhibition.verified===true,start:start.verified===true,weather:weather.verified===true,exhibitionRows:exhibition.candidateCount??0,startRows:start.candidateCount??0},partial:observation};
+   const base=(morning?.records||[]).find(m=>m.venue===row.venue&&m.race===row.race&&validSavedMorningRecord(m,date)&&Date.parse(m.capturedAt)<Date.parse(capturedAt));
+   if(base){
+    const ex=applyVerifiedExhibitionAdjustment(base.rankedScores,exhibition);
+    const st=applyVerifiedStartAdjustment(ex.rankedScores,start,base.statsByBoat||[]);
+    if(ex.applied||st.applied){
+     const rankedScores=st.rankedScores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
+     const picks=rankTrifectaCandidates(rankedScores);
+     if(picks.ready)observation.researchPrediction={status:'provisional_not_calibrated',method:'morning_plus_verified_exhibition_start_v1',morningCapturedAt:base.capturedAt,capturedAt,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),main:picks.main,upset:picks.upset,exhibitionApplied:ex.applied,startApplied:st.applied,startReason:st.reason,weatherApplied:false};
+    }
+   }
    return {id,record:observation};
   }catch(e){return {id,reason:stage+'_'+String(e?.name||'error')};}
  });
@@ -656,7 +666,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-archive-15min-v4',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-research-prediction-v5',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
