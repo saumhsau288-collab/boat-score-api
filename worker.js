@@ -111,7 +111,7 @@ function jstDateFromUtc(date) {
 }
 function validSavedMorningRecord(row,date){
  const scores=row?.rankedScores,c=Date.parse(row?.capturedAt||''),d=Date.parse(row?.deadlineAt||'');
- if(row?.date!==date||row.ready!==true||row.officialVerified!==true||row.statsVerified!==true||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||!Number.isFinite(c)||!Number.isFinite(d)||c>=d||!Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x.boat)).size!==6||!scores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)))return false;
+ if(row?.date!==date||row.ready!==true||row.officialVerified!==true||row.statsVerified!==true||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||!Number.isFinite(c)||!Number.isFinite(d)||c>=d||!Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x?.boat)).size!==6||!scores.every(x=>x&&Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)))return false;
  const day=t=>new Date(t+9*3600000).toISOString().slice(0,10).replace(/-/g,'');
  return day(c)===date&&day(d)===date&&JSON.stringify(row.predictedOrder)===JSON.stringify(scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat));
 }
@@ -574,14 +574,14 @@ if (u.pathname === '/api/morning/snapshot') {
   if(!saved)return reply(request,{date,status:'not_available',message:'No saved morning snapshot'},404);
   const state=JSON.parse(saved);
   const records=Array.isArray(state.records)?state.records:[];
-  const evidenceValid=row=>{const c=Date.parse(row?.capturedAt||''),d=Date.parse(row?.deadlineAt||''),o=row?.predictedOrder;return row?.date===date&&row.ready===true&&Number.isFinite(c)&&Number.isFinite(d)&&c<d&&Array.isArray(o)&&o.length===6&&new Set(o).size===6&&o.every(n=>Number.isInteger(n)&&n>=1&&n<=6);};
+  const evidenceValid=row=>validSavedMorningRecord(row,date);
   const verifiedEvidence=records.filter(evidenceValid).length;
   const rankedCandidates=['main','upset','chaos'].flatMap(k=>Array.isArray(state.categories?.[k])?state.categories[k]:[]);
   const validCandidateCount=rankedCandidates.filter(x=>{const row=records.find(y=>y.venue===x.venue&&y.race===x.race);return row&&evidenceValid(row)&&x.capturedAt===row.capturedAt&&JSON.stringify(x.predictedOrder)===JSON.stringify(row.predictedOrder);}).length;
-  return reply(request,{date,status:state.status,evidence:{verifiedRecords:verifiedEvidence,unverifiedRecords:records.length-verifiedEvidence,verifiedCandidates:validCandidateCount,unverifiedCandidates:rankedCandidates.length-validCandidateCount},updatedAt:state.updatedAt||null,venues:state.venues||[],
+  return reply(request,{date,status:state.status,evidence:{verifiedRecords:verifiedEvidence,unverifiedRecords:records.length-verifiedEvidence,quarantinedRecords:Array.isArray(state.invalidMorningRecords)?state.invalidMorningRecords.length:0,verifiedCandidates:validCandidateCount,unverifiedCandidates:rankedCandidates.length-validCandidateCount},updatedAt:state.updatedAt||null,venues:state.venues||[],
     completedVenues:state.completedVenues||[],failedVenues:state.failedVenues||[],exhaustedVenues:state.exhaustedVenues||[],
     scheduleLastCheck:state.scheduleLastCheck||'unknown',
-    verifiedRacesByVenue:Object.fromEntries((state.venues||[]).map(v=>[v,(state.records||[]).filter(r=>r.venue===v&&r.ready===true).length])),
+    verifiedRacesByVenue:Object.fromEntries((state.venues||[]).map(v=>[v,(state.records||[]).filter(r=>r.venue===v&&evidenceValid(r)).length])),
     categories:state.categories||{main:[],upset:[],chaos:[]},boatOneRanking:Array.isArray(state.boatOneRanking)?state.boatOneRanking:[],boatOneRankedAt:state.boatOneRankedAt||null,boatOneRankingMethod:'boat_one_score_margin_v1',boatOneRankingProbabilityVerified:false,eligible:(state.records||[]).length,
     provisional:true,method:'two_factor_morning_screening_unvalidated',modelVersion:'morning-rank-v1',retentionDays:365,calibrationStatus:'not_yet_calibrated',note:'Historical snapshots preserve baseline rankings; no automatic weight tuning until verified results are matched.'});
 }
