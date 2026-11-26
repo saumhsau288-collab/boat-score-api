@@ -376,12 +376,14 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  }).sort((a,b)=>Date.parse(a.deadlineAt)-Date.parse(b.deadlineAt));
  const pending=eligible.slice(0,18);
  state.lastScan={at:new Date().toISOString(),targetCount:venues.length*12,knownDeadlineCount:candidates.size,discoveryBatch:missing.length,eligibleCount:eligible.length,selectedCount:pending.length,expiredUnverified:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)<=now&&!state.records[row.venue+':'+row.race]).length,futureCount:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)>now+900000).length};
+ let accessDenied=false;
  const rows=await mapOfficialLimited(pending,3,async row=>{
   const id=row.venue+':'+row.race;let deadline=Date.parse(row.deadlineAt),stage='deadline_recheck';
+  if(accessDenied)return {id,deferred:true};
   const source='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date;
   try{
    const check=await fetch('https://www.boatrace.jp/owpc/pc/race/racelist?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(15000)});
-   if(!check.ok)return {id,reason:'deadline_recheck_http_'+check.status};
+   if(!check.ok){if(check.status===403||check.status===429)accessDenied=true;return {id,reason:'deadline_recheck_http_'+check.status};}
    const page=await check.text();
    const confirmed=page.length<=1000000&&extractOfficialBoatRows(page).verified===true?extractOfficialRaceDeadline(page,date):null;
    if(!confirmed)return {id,reason:'deadline_recheck_unverified'};
@@ -389,9 +391,10 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    state.deadlines[id]={date,venue:row.venue,race:row.race,deadlineAt:confirmed};
    if(deadline-Date.now()>900000)return {id,deferred:true};
    stage='beforeinfo';
+   if(accessDenied)return {id,deferred:true};
    const budget=Math.min(15000,deadline-Date.now()-1000);if(budget<1000)return {id,reason:'deadline_near'};
    const res=await fetch(source,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(budget)});
-   if(!res.ok)return {id,reason:'http_'+res.status};const html=await res.text();if(html.length>1000000)return {id,reason:'response_too_large'};
+   if(!res.ok){if(res.status===403||res.status===429)accessDenied=true;return {id,reason:'http_'+res.status};}const html=await res.text();if(html.length>1000000)return {id,reason:'response_too_large'};
    const capturedAt=new Date().toISOString();if(Date.parse(capturedAt)>=deadline)return {id,reason:'deadline_passed'};
    if(deadline-Date.parse(capturedAt)>900000)return {id,deferred:true};
    const exhibition=extractOfficialExhibition(html),start=extractOfficialStartExhibition(html),weather=extractOfficialWeather(html);
@@ -414,6 +417,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
   }catch(e){return {id,reason:stage+'_'+String(e?.name||'error')};}
  });
  for(const row of rows){if(row.deferred)continue;state.attempts[row.id]=(state.attempts[row.id]||0)+1;state.attemptHistory[row.id]=[...(state.attemptHistory[row.id]||[]),{at:new Date().toISOString(),outcome:row.record?'saved':row.reason||'unknown',details:row.details||null}].slice(-6);if(row.record&&!state.records[row.id]){state.records[row.id]=row.record;delete state.failures[row.id];}else if(!row.record){state.failures[row.id]={reason:row.reason||'unknown',details:row.details||null,at:new Date().toISOString()};if(row.partial){const p=state.partialRecords[row.id]||{};for(const k of ['exhibition','start','weather'])if(row.partial[k]?.verified===true&&!p[k])p[k]={capturedAt:row.partial.capturedAt,deadlineAt:row.partial.deadlineAt,source:row.partial.source,data:row.partial[k]};if(Object.keys(p).length)state.partialRecords[row.id]=p;}}}
+ state.lastScan.accessDenied=accessDenied;
  state.lastScan.attemptedCount=rows.filter(x=>!x.deferred).length;
  state.lastScan.savedCount=rows.filter(x=>x.record).length;
  state.lastScan.deferredCount=rows.filter(x=>x.deferred).length;
