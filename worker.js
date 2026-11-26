@@ -537,7 +537,16 @@ if(u.pathname==='/api/morning/race-predictions'){
  const before=JSON.parse(await env.MORNING_KV.get('before-archive:v1:'+date)||'null')?.records?.[venue+':'+race];
  const validBefore=before?.date===date&&before.venue===venue&&before.race===race&&Date.parse(before.capturedAt)<Date.parse(before.deadlineAt)&&Date.parse(before.deadlineAt)-Date.parse(before.capturedAt)<=900000;
  const verified=p=>validBefore&&p?.morningCapturedAt===row?.capturedAt&&p?.capturedAt===before.capturedAt?p:null;
- return reply(request,{date,venue,race,deadlineAt:validBefore?before.deadlineAt:row?.deadlineAt||null,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage:verified(before?.researchPrediction),beforeLocal:verified(before?.localResearchPrediction)});
+ const evidence=JSON.parse(await env.MORNING_KV.get('recent50-evidence:v1:'+date+':'+venue+':'+race)||'null');
+ const supplement=p=>{
+ if(!p||!evidence||evidence.date!==date||evidence.venue!==venue||evidence.race!==race||evidence.morningCapturedAt!==row?.capturedAt||!(Date.parse(evidence.capturedAt)<Date.parse(before.deadlineAt)))return p;
+ const rows=evidence.rows;
+ if(!Array.isArray(rows)||rows.length!==6||new Set(rows.map(x=>x.boat)).size!==6||!rows.every(x=>Number.isInteger(x.runs)&&x.runs>0&&x.runs<=50&&Array.isArray(x.counts)&&x.counts.length===6&&x.counts.every(n=>Number.isInteger(n)&&n>=0)&&x.counts.reduce((a,b)=>a+b,0)===x.runs))return p;
+ const rankedScores=p.rankedScores.map(x=>({boat:x.boat,score:x.score+Math.round(rows.find(y=>y.boat===x.boat).counts[0]/rows.find(y=>y.boat===x.boat).runs*1000)/100})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
+ const picks=rankTrifectaCandidates(rankedScores);
+ return picks.ready?{...p,...picks,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),makulaboApplied:true,makulaboCapturedAt:evidence.capturedAt}:p;
+ };
+ return reply(request,{date,venue,race,deadlineAt:validBefore?before.deadlineAt:row?.deadlineAt||null,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage:supplement(verified(before?.researchPrediction)),beforeLocal:supplement(verified(before?.localResearchPrediction))});
 }
 if(u.pathname==='/api/research/four-prediction-comparison'){
  const date=u.searchParams.get('date')||'';
@@ -1022,10 +1031,10 @@ async function renderSavedMorningBlue(){
  const before=[data.beforeAverage,data.beforeLocal][i], source=before||base, el=yellow[i];
  if(!el)continue;
  if(!source?.rankedScores){el.textContent='基礎予想未取得';continue;}
- const hasRecent=Number.isFinite(Date.parse(data.deadlineAt))&&Date.now()<Date.parse(data.deadlineAt)&&Array.isArray(recent)&&recent.length===6&&new Set(recent.map(x=>x.boat)).size===6&&source.rankedScores.every(x=>recent.some(y=>y.boat===x.boat&&Number.isFinite(y.points)));
+ const hasRecent=!source.makulaboApplied&&Number.isFinite(Date.parse(data.deadlineAt))&&Date.now()<Date.parse(data.deadlineAt)&&Array.isArray(recent)&&recent.length===6&&new Set(recent.map(x=>x.boat)).size===6&&source.rankedScores.every(x=>recent.some(y=>y.boat===x.boat&&Number.isFinite(y.points)));
  const rows=source.rankedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
  let picks=hasRecent?trialPicks(rows):source;
- let displayRows=rows, appliedRecent=hasRecent, appliedBefore=Boolean(before);
+ let displayRows=rows, appliedRecent=hasRecent||source.makulaboApplied===true, appliedBefore=Boolean(before);
  const storageKey='four-prediction-final:v1:'+key+':'+i;
  const cutoff=Date.parse(data.deadlineAt),closed=Number.isFinite(cutoff)&&Date.now()>=cutoff;
  let saved=null;
@@ -1034,7 +1043,7 @@ async function renderSavedMorningBlue(){
  if(closed&&validSaved){picks=saved.picks;displayRows=saved.rows;appliedRecent=saved.recent;appliedBefore=saved.before;}
  else if(!closed&&Number.isFinite(cutoff)&&base?.capturedAt){
   if(validSaved&&saved.recent&&!hasRecent&&(!before||saved.before)){picks=saved.picks;displayRows=saved.rows;appliedRecent=saved.recent;appliedBefore=saved.before;}
-  else try{localStorage.setItem(storageKey,JSON.stringify({key,mode:i,capturedAt:new Date().toISOString(),morningCapturedAt:base.capturedAt,rows,picks,recent:hasRecent,before:Boolean(before)}));}catch{}
+  else try{localStorage.setItem(storageKey,JSON.stringify({key,mode:i,capturedAt:new Date().toISOString(),morningCapturedAt:base.capturedAt,rows,picks,recent:appliedRecent,before:Boolean(before)}));}catch{}
  }
  el.style.color=appliedBefore&&appliedRecent?'':'#fbbf24';
  el.textContent=(closed?'締切済／':'')+(appliedBefore?'直前情報反映':'直前情報未取得・基礎予想')+(appliedRecent?'／まくらぼ反映（端末保存）':'／まくらぼ未取得')+'\\n【本命6点】\\n'+picks.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+picks.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+displayRows.map(x=>x.boat).join('-');
