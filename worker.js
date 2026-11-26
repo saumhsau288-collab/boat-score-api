@@ -1025,6 +1025,18 @@ async function renderSavedMorningBlue(){
  if(!res.ok)throw Error('HTTP '+res.status);
  const data=await res.json();
  if(generation!==morningBlueGeneration||key!==dateCode()+':'+venue.value+':'+race.value)return;
+ const recent=recent50SupplementForSelection();
+ const yellow=['combinedCompact','localCombinedPrediction'].map(id=>document.getElementById(id));
+ for(const [i,base] of [data.average,data.local].entries()){
+ const before=[data.beforeAverage,data.beforeLocal][i], source=before||base, el=yellow[i];
+ if(!el)continue;
+ if(!source?.rankedScores){el.textContent='基礎予想未取得';continue;}
+ const hasRecent=Array.isArray(recent)&&recent.length===6&&new Set(recent.map(x=>x.boat)).size===6&&source.rankedScores.every(x=>recent.some(y=>y.boat===x.boat&&Number.isFinite(y.points)));
+ const rows=source.rankedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
+ const picks=hasRecent?trialPicks(rows):source;
+ el.style.color=before&&hasRecent?'':'#fbbf24';
+ el.textContent=(before?'直前情報反映':'直前情報未取得・基礎予想')+(hasRecent?'／まくらぼ反映（画面試算）':'／まくらぼ未取得')+'\\n【本命6点】\\n'+picks.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+picks.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+rows.map(x=>x.boat).join('-');
+ }
  for(const [i,p] of [data.average,data.local].entries()){
  const el=targets[i];if(!el)continue;
  el.textContent=p?.ready?'朝の保存予想 '+p.capturedAt+'\\n【本命6点】\\n'+p.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+p.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+p.predictedOrder.join('-'):'朝の保存予想なし';
