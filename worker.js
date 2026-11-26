@@ -525,6 +525,14 @@ if(u.pathname==='/api/research/morning-records'){
  const records=(Array.isArray(state.records)?state.records:[]).filter(x=>x?.date===date&&x.ready===true&&x.officialVerified===true&&x.statsVerified===true&&Number.isInteger(x.venue)&&x.venue>=1&&x.venue<=24&&Number.isInteger(x.race)&&x.race>=1&&x.race<=12).map(x=>({date,venue:x.venue,race:x.race,capturedAt:x.capturedAt||null,deadlineAt:x.deadlineAt||null,predictedOrder:x.predictedOrder||null,rankedScores:x.rankedScores||null,method:x.method||null,courseStats:x.courseStats||null}));
  return reply(request,{date,status:'recorded',records,note:'Original archived fields only; missing values are not backfilled.'});
 }
+if(u.pathname==='/api/morning/race-predictions'){
+ const date=u.searchParams.get('date')||'',venue=Number(u.searchParams.get('venue')),race=Number(u.searchParams.get('race'));
+ if(request.method!=='GET'||!/^20[0-9]{6}$/.test(date)||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)return reply(request,{error:'Invalid request'},400);
+ if(!env?.MORNING_KV)return reply(request,{error:'Storage unavailable'},503);
+ const state=JSON.parse(await env.MORNING_KV.get('morning:'+date)||'null');
+ const row=(state?.records||[]).find(x=>x.venue===venue&&x.race===race&&validSavedMorningRecord(x,date));
+ return reply(request,{date,venue,race,average:row?.averageMorning||null,local:row?.localMorning||null});
+}
 if(u.pathname==='/api/research/before-prediction-comparison'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
  const date=u.searchParams.get('date')||'';
@@ -918,8 +926,9 @@ function compactPredictionText(full){
  return a&&b?(t.startsWith('【公式直前情報のみ（まくらぼ未取得）】')?'公式直前情報のみ／まくらぼ未取得\n\n':'')+'【本命6点】\n'+a+'\n\n【穴6点】\n'+b:t.split('\n').slice(0,5).join('\n');
 }
 function updateCompactPredictions(){
+ void renderSavedMorningBlue();
  updateVenueTraits();
- for(const [source,target] of [['predictOutput','predictCompact'],['combinedPredictionOutput','combinedCompact']]){
+ for(const [source,target] of [['combinedPredictionOutput','combinedCompact']]){
   const from=document.getElementById(source),to=document.getElementById(target);
   if(from&&to){
    const fallback=source==='combinedPredictionOutput'&&from.textContent.trim().startsWith('【公式直前情報のみ（まくらぼ未取得）】');
@@ -1000,6 +1009,22 @@ function renderExperimental100PointPrediction(){
  '\\n着順別評価：1着=勝ち切る力、2着=2連対率、3着=3連対率。進入が6艇確認済みなら着順別コース仮補正を適用。\\n未反映：'+model.missingInputs.filter(x=>x!=='last50').join('、')+'\\n※コース別補正は実測確率ではなく検証用の仮値。的中率未検証。50走はコース別ではない着順実績です。欠損を実測0とはみなしません。従来予想は変更しません。';
  trial.append(head,pre);document.getElementById('predictOutput')?.parentElement?.appendChild(trial);
 }
+let morningBlueGeneration=0;
+async function renderSavedMorningBlue(){
+ const generation=++morningBlueGeneration,key=dateCode()+':'+venue.value+':'+race.value;
+ const targets=['predictCompact','localBasePrediction'].map(id=>document.getElementById(id));
+ for(const el of targets)if(el)el.textContent='朝の保存予想を確認中…';
+ try{
+ const res=await fetch('/api/morning/race-predictions?'+new URLSearchParams({date:dateCode(),venue:venue.value,race:race.value}));
+ if(!res.ok)throw Error('HTTP '+res.status);
+ const data=await res.json();
+ if(generation!==morningBlueGeneration||key!==dateCode()+':'+venue.value+':'+race.value)return;
+ for(const [i,p] of [data.average,data.local].entries()){
+ const el=targets[i];if(!el)continue;
+ el.textContent=p?.ready?'朝の保存予想 '+p.capturedAt+'\\n【本命6点】\\n'+p.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+p.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+p.predictedOrder.join('-'):'朝の保存予想なし';
+ }
+ }catch(e){if(generation===morningBlueGeneration&&key===dateCode()+':'+venue.value+':'+race.value)for(const el of targets)if(el)el.textContent='朝予想の取得失敗';}
+}
 function renderLocalPredictions(){
  const left=document.getElementById('localBasePrediction'),right=document.getElementById('localCombinedPrediction');
  if(!left||!right)return;
@@ -1031,7 +1056,7 @@ function renderLocalPredictions(){
   }
   const details=document.createElement('small');details.style.display='block';details.style.marginTop='8px';details.textContent=note+'。試算・的中率未検証。色：差±1.00以上で黄／緑、その他は白。';target.appendChild(details);
  };
- draw(left,model.baseScores,trialPicks(model.baseScores),'当地勝率に置換・モーター等は従来配点');
+ void renderSavedMorningBlue();
  // One verified supplemental source is enough for a clearly labelled comparison; never invent missing measurements.
  if(!hasBefore&&!hasRecent){right.textContent='保留：公式展示タイム・展示STと、まくらぼ6艇分のいずれも反映できません。';return;}
  const rows=model.adjustedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)}));
