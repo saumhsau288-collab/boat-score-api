@@ -537,7 +537,28 @@ if(u.pathname==='/api/morning/race-predictions'){
  const before=JSON.parse(await env.MORNING_KV.get('before-archive:v1:'+date)||'null')?.records?.[venue+':'+race];
  const validBefore=before?.date===date&&before.venue===venue&&before.race===race&&Date.parse(before.capturedAt)<Date.parse(before.deadlineAt)&&Date.parse(before.deadlineAt)-Date.parse(before.capturedAt)<=900000;
  const verified=p=>validBefore&&p?.morningCapturedAt===row?.capturedAt&&p?.capturedAt===before.capturedAt?p:null;
- return reply(request,{date,venue,race,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage:verified(before?.researchPrediction),beforeLocal:verified(before?.localResearchPrediction)});
+ return reply(request,{date,venue,race,deadlineAt:validBefore?before.deadlineAt:row?.deadlineAt||null,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage:verified(before?.researchPrediction),beforeLocal:verified(before?.localResearchPrediction)});
+}
+if(u.pathname==='/api/research/four-prediction-comparison'){
+ const date=u.searchParams.get('date')||'';
+ if(request.method!=='GET'||!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid request'},400);
+ if(!env?.MORNING_KV)return reply(request,{error:'Storage unavailable'},503);
+ const [morning,before,result]=await Promise.all(['morning:','before-archive:v1:','result-archive:v1:'].map(async k=>JSON.parse(await env.MORNING_KV.get(k+date)||'null')));
+ const names=['morningAverage','morningLocal','beforeAverage','beforeLocal'];
+ const totals=Object.fromEntries(names.map(k=>[k,{main:0,upset:0,either:0}]));
+ const audit=summarizeBeforeArchive(date,before,result),matched=new Map(audit.records.map(x=>[x.venue+':'+x.race,x]));
+ let count=0;
+ for(const m of morning?.records||[]){
+ if(!validSavedMorningRecord(m,date))continue;
+ const id=m.venue+':'+m.race,b=before?.records?.[id],actual=matched.get(id)?.finishOrder?.slice(0,3).join('-');
+ if(!actual||!b||b.date!==date||Date.parse(b.capturedAt)>=Date.parse(b.deadlineAt)||Date.parse(b.capturedAt)<=Date.parse(m.capturedAt)||Date.parse(b.deadlineAt)-Date.parse(b.capturedAt)>900000)continue;
+ const models=[m.averageMorning,m.localMorning,b.researchPrediction,b.localResearchPrediction];
+ if(!models.every((p,i)=>{if(!p||p.capturedAt!==(i<2?m.capturedAt:b.capturedAt)||(i>=2&&p.morningCapturedAt!==m.capturedAt))return false;const q=rankTrifectaCandidates(p.rankedScores);return q.ready&&JSON.stringify(q.main)===JSON.stringify(p.main)&&JSON.stringify(q.upset)===JSON.stringify(p.upset);}))continue;
+ count++;
+ models.forEach((p,i)=>{const t=totals[names[i]],hit=a=>a.some(x=>x.join('-')===actual),main=hit(p.main),upset=hit(p.upset);t.main+=Number(main);t.upset+=Number(upset);t.either+=Number(main||upset);});
+ }
+ for(const t of Object.values(totals))t.rates=Object.fromEntries(['main','upset','either'].map(k=>[k,count?t[k]/count:null]));
+ return reply(request,{date,matched:count,totals,note:'Stored four-way paired comparison; before models exclude Makulabo until archived evidence is available.'});
 }
 if(u.pathname==='/api/research/before-prediction-comparison'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -1001,7 +1022,7 @@ async function renderSavedMorningBlue(){
  const before=[data.beforeAverage,data.beforeLocal][i], source=before||base, el=yellow[i];
  if(!el)continue;
  if(!source?.rankedScores){el.textContent='基礎予想未取得';continue;}
- const hasRecent=Array.isArray(recent)&&recent.length===6&&new Set(recent.map(x=>x.boat)).size===6&&source.rankedScores.every(x=>recent.some(y=>y.boat===x.boat&&Number.isFinite(y.points)));
+ const hasRecent=Number.isFinite(Date.parse(data.deadlineAt))&&Date.now()<Date.parse(data.deadlineAt)&&Array.isArray(recent)&&recent.length===6&&new Set(recent.map(x=>x.boat)).size===6&&source.rankedScores.every(x=>recent.some(y=>y.boat===x.boat&&Number.isFinite(y.points)));
  const rows=source.rankedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
  const picks=hasRecent?trialPicks(rows):source;
  el.style.color=before&&hasRecent?'':'#fbbf24';
