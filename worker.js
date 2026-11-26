@@ -3186,7 +3186,7 @@ if (u.pathname === '/api/official/race-data') {
   if(weather.windDirectionVerified!==true)missingInputs.push('windDirection');
   return reply(request,{
     status:complete?'official_sources_verified':'partial',missingInputs,capturedAt:new Date().toISOString(),source:'official_race_data',
-    diagnostics:{officialRacersReason:official.verified?null:(official.reason||'official_racer_rows_not_verified'),officialRacerCandidateCount:official.officialBoatRowCandidates??null,officialResponseLength:official.htmlLength??null,officialStatsReason:official.statsVerified?null:'official_stats_not_verified',averageSTParseDiagnostics:official.averageSTParseDiagnostics||[],beforeinfoReason:beforeFailureReason||(before?(exhibition.verified&&start.verified&&weather.verified?'beforeinfo_verified':'beforeinfo_parsing_not_verified'):'beforeinfo_unavailable'),beforeinfoResponseLength:before?.length??null,exhibitionCandidateCount:exhibition.candidateCount??0,startCandidateCount:start.candidateCount??0,exhibitionParserVerified:exhibition.verified===true,startParserVerified:start.verified===true,weatherParserReason:weather.reason??null,windIconEvidence:weather.windIconEvidence||[],windDirectionMarkup:weather.windDirectionMarkup||null,selectedDate:date,selectedVenue:Number(venue),selectedRace:Number(race)},
+    diagnostics:{officialRacersReason:official.verified?null:(official.reason||'official_racer_rows_not_verified'),officialRacerCandidateCount:official.officialBoatRowCandidates??null,officialResponseLength:official.htmlLength??null,officialStatsReason:official.statsVerified?null:'official_stats_not_verified',averageSTParseDiagnostics:official.averageSTParseDiagnostics||[],beforeinfoReason:beforeFailureReason||(before?(exhibition.verified&&start.verified&&weather.verified?'beforeinfo_verified':'beforeinfo_parsing_not_verified'):'beforeinfo_unavailable'),beforeinfoResponseLength:before?.length??null,exhibitionCandidateCount:exhibition.candidateCount??0,startCandidateCount:start.candidateCount??0,exhibitionParserVerified:exhibition.verified===true,startParserVerified:start.verified===true,weatherParserReason:weather.reason??null,windIconEvidence:weather.windIconEvidence||[],windDirectionMarkup:weather.windDirectionMarkup||null,windIconCode:weather.windIconCode??null,selectedDate:date,selectedVenue:Number(venue),selectedRace:Number(race)},
     racersVerified:official.verified,statsVerified:official.statsVerified===true,
     exhibitionVerified:exhibitionMatches,startVerified:startMatches,weatherVerified:weather.verified===true,
     racersByBoat:official.verified?official.racers:[],
@@ -4016,6 +4016,8 @@ function extractOfficialWeather(html) {
     if(start<0)return null;
     return weatherHtml.slice(start,start+550).replace(/\s+/g,' ').slice(0,550);
   })();
+  const windIconCodes=[...new Set([...(windDirectionMarkup||'').matchAll(/\bis-wind(\d{1,2})\b/g)].map(m=>Number(m[1])))];
+  const windIconCode=windIconCodes.length===1?windIconCodes[0]:null;
   const directionNearby=text.match(/風向[\s\S]{0,75}/);
   const directionDiagnostic=windDirection?null:(directionNearby?'wind_direction_label_without_cardinal_text':'wind_direction_label_absent_or_icon_only');
   const verified=windSpeed!==null&&windSpeed>=0&&windSpeed<=60&&
@@ -4023,7 +4025,7 @@ function extractOfficialWeather(html) {
   return {verified,windSpeed:verified?windSpeed:null,waveHeight:verified?waveHeight:null,
     airTemperature:airTemperature!==null&&airTemperature>=-30&&airTemperature<=50?airTemperature:null,
     waterTemperature:waterTemperature!==null&&waterTemperature>=-5&&waterTemperature<=45?waterTemperature:null,
-    windDirection:verified?windDirection:null,windDirectionVerified:verified&&windDirection!==null,windIconEvidence,windDirectionMarkup,reason:directionDiagnostic};
+    windDirection:verified?windDirection:null,windDirectionVerified:verified&&windDirection!==null,windIconEvidence,windDirectionMarkup,windIconCode,reason:directionDiagnostic};
 }
 
 function extractOfficialStartExhibition(html) {
