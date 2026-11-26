@@ -454,7 +454,12 @@ export default {
       const report=async()=>{try{await env.MORNING_KV.put(key,JSON.stringify(status),{expirationTtl:2592000});}catch(e){console.error('scheduler_health_write_failed',mode,String(e));}};
       await report();
       try{
-        if(mode==='morning')await runScheduledMorning(env,scheduledTime);
+        if(mode==='morning'){
+          // Collect imminent races even during the morning scan; keep failures independent.
+          const tasks=await Promise.allSettled([runScheduledMorning(env,scheduledTime),runScheduledBeforeArchive(env,scheduledTime)]);
+          const failed=tasks.filter(x=>x.status==='rejected');
+          if(failed.length)throw Error(failed.map(x=>String(x.reason?.message||x.reason)).join('; '));
+        }
         else if(mode==='result')await runScheduledResultArchive(env,scheduledTime);
         else await runScheduledBeforeArchive(env,scheduledTime);
         status.status='finished';
@@ -648,7 +653,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-archive-timeout-v2',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-archive-morning-v3',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
