@@ -7,7 +7,10 @@ const source=fs.readFileSync(new URL('../worker.js',import.meta.url),'utf8');
 const start=source.indexOf('function buildMorningRaceInputs(');
 const end=source.indexOf('\nfunction classifyDailyRaceCandidates(',start);
 assert.ok(start>=0&&end>start,'Morning ranking implementation must be present');
-const build=vm.runInNewContext(source.slice(start,end)+'\nbuildMorningRaceInputs;');
+const rankStart=source.indexOf('function rankTrifectaCandidates(');
+const rankEnd=source.indexOf('\nfunction parseOfficialFinishOrder(',rankStart);
+assert.ok(rankStart>=0&&rankEnd>rankStart,'Trifecta ranking implementation must be present');
+const build=vm.runInNewContext(source.slice(rankStart,rankEnd)+'\n'+source.slice(start,end)+'\nbuildMorningRaceInputs;');
 const base=[7,6.5,6,5.5,5,4.5].map((rate,i)=>({
  boat:i+1,nationwide:{winRate:rate},local:{winRate:rate},
  motor:{secondPlaceRate:30}
