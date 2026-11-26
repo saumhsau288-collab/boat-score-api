@@ -15,3 +15,6 @@ Next: verify official icon mapping, test fresh morning evidence, investigate dup
 
 ## Follow-up
 Run 45777169983 succeeded; unverified wind flag confirmed. Morning evidence remains 0/58. Commit 019ff3bd8031dabdfc33bc8104542e6408e849bc saves weather with combined race data and permits same-race beforeinfo cache reuse for 120 seconds without claiming compass verification. Explicit refresh=1 bypasses reuse. Deployment and latency measurement pending.
+
+## Retrieval timing and access denial
+Run 45778367479: beforeinfo reuse 14/34 ms, combined 19452/18459 ms. Run 45779441782 (51cb6eb6): Edogawa both upstream HTTP 403, Tamagawa racer 9448 ms and beforeinfo 9275 ms, combined 9880 ms, reuse 41 ms. Morning evidence remains 0/58. Commit f2c94f23a17681e4d82844df025593ac08a211af makes diagnostic workflow skip redundant beforeinfo probe after explicit 403 and logs coverage/source separately. No application behavior change; deployment test pending.
