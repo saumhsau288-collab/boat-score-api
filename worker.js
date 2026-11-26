@@ -546,7 +546,14 @@ if(u.pathname==='/api/morning/race-predictions'){
  const picks=rankTrifectaCandidates(rankedScores);
  return picks.ready?{...p,...picks,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),makulaboApplied:true,makulaboCapturedAt:evidence.capturedAt}:p;
  };
- return reply(request,{date,venue,race,deadlineAt:validBefore?before.deadlineAt:row?.deadlineAt||null,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage:supplement(verified(before?.researchPrediction)),beforeLocal:supplement(verified(before?.localResearchPrediction))});
+ const localRates=(row?.raceCard?.statsByBoat||[]).flatMap(x=>{
+ const raw=x.local?.winRate,n=x.nationwide?.winRate;
+ if(raw==null||n==null||String(raw).trim()===''||String(n).trim()==='')return [];
+ const local=Number(raw),national=Number(n);
+ if(!Number.isFinite(local)||!Number.isFinite(national)||local<0||local>10||national<0||national>10)return [];
+ return [{boat:x.boat,local:local===0?national:local,national,substituted:local===0}];
+ });
+ return reply(request,{date,venue,race,localRates,deadlineAt:validBefore?before.deadlineAt:row?.deadlineAt||null,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage:supplement(verified(before?.researchPrediction)),beforeLocal:supplement(verified(before?.localResearchPrediction))});
 }
 if(u.pathname==='/api/research/four-prediction-comparison'){
  const date=u.searchParams.get('date')||'';
@@ -1025,6 +1032,19 @@ async function renderSavedMorningBlue(){
  if(!res.ok)throw Error('HTTP '+res.status);
  const data=await res.json();
  if(generation!==morningBlueGeneration||key!==dateCode()+':'+venue.value+':'+race.value)return;
+ const appendLocalRates=(el,order)=>{
+ const rates=data.localRates||[];
+ if(!el||!Array.isArray(order)||rates.length!==6)return;
+ for(const boat of order){
+ const rate=rates.find(x=>x.boat===boat);
+ if(!rate)continue;
+ const line=document.createElement('div');
+ const delta=Math.round((rate.local-rate.national)*100);
+ line.style.color=rate.substituted?'#ffffff':delta>=100?'#22c55e':delta<=-100?'#facc15':'#ffffff';
+ line.textContent=boat+'号艇 当地 '+rate.local.toFixed(2)+(rate.substituted?'（全国代用）':'（全国比 '+(delta>0?'+':'')+(delta/100).toFixed(2)+'）');
+ el.appendChild(line);
+ }
+ };
  const recent=recent50SupplementForSelection();
  const yellow=['combinedCompact','localCombinedPrediction'].map(id=>document.getElementById(id));
  for(const [i,base] of [data.average,data.local].entries()){
@@ -1047,10 +1067,12 @@ async function renderSavedMorningBlue(){
  }
  el.style.color=appliedBefore&&appliedRecent?'':'#fbbf24';
  el.textContent=(closed?'締切済／':'')+(appliedBefore?'直前情報反映':'直前情報未取得・基礎予想')+(appliedRecent?'／まくらぼ反映（端末保存）':'／まくらぼ未取得')+'\\n【本命6点】\\n'+picks.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+picks.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+displayRows.map(x=>x.boat).join('-');
+ if(i===1)appendLocalRates(el,displayRows.map(x=>x.boat));
  }
  for(const [i,p] of [data.average,data.local].entries()){
  const el=targets[i];if(!el)continue;
  el.textContent=p?.ready?'朝の保存予想 '+p.capturedAt+'\\n【本命6点】\\n'+p.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+p.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+p.predictedOrder.join('-'):'朝の保存予想なし';
+ if(i===1&&p?.ready)appendLocalRates(el,p.predictedOrder);
  }
  }catch(e){if(generation===morningBlueGeneration&&key===dateCode()+':'+venue.value+':'+race.value)for(const el of targets)if(el)el.textContent='朝予想の取得失敗';}
 }
