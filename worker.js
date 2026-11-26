@@ -109,6 +109,12 @@ async function getVerifiedList(_key, producer) {
 function jstDateFromUtc(date) {
   return new Date(date.getTime()+9*3600000).toISOString().slice(0,10).replace(/-/g,'');
 }
+function validSavedMorningRecord(row,date){
+ const scores=row?.rankedScores,c=Date.parse(row?.capturedAt||''),d=Date.parse(row?.deadlineAt||'');
+ if(row?.date!==date||row.ready!==true||row.officialVerified!==true||row.statsVerified!==true||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||!Number.isFinite(c)||!Number.isFinite(d)||c>=d||!Array.isArray(scores)||scores.length!==6||new Set(scores.map(x=>x.boat)).size!==6||!scores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)))return false;
+ const day=t=>new Date(t+9*3600000).toISOString().slice(0,10).replace(/-/g,'');
+ return day(c)===date&&day(d)===date&&JSON.stringify(row.predictedOrder)===JSON.stringify(scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat));
+}
 async function runScheduledMorning(env,scheduledTime) {
   const date=jstDateFromUtc(new Date(scheduledTime));
   if(!env?.MORNING_KV)throw Error('MORNING_KV binding is required');
@@ -139,6 +145,16 @@ async function runScheduledMorning(env,scheduledTime) {
   if(!Array.isArray(state.failedVenues))state.failedVenues=[];
   if(!Array.isArray(state.records))state.records=[];
   state.venues=venues;
+  const verified=new Map();
+  state.invalidMorningRecords=Array.isArray(state.invalidMorningRecords)?state.invalidMorningRecords:[];
+  const invalidKeys=new Set(state.invalidMorningRecords.map(x=>x?.date+':'+x?.venue+':'+x?.race));
+  for(const row of state.records){
+    const id=row?.date+':'+row?.venue+':'+row?.race;
+    if(validSavedMorningRecord(row,date)){if(!verified.has(id))verified.set(id,row);}
+    else if(!invalidKeys.has(id)){state.invalidMorningRecords.push(row);invalidKeys.add(id);}
+  }
+  state.records=[...verified.values()];
+  state.completedVenues=venues.filter(v=>state.records.filter(x=>x.venue===v).length===12);
   const remaining=venues.filter(v=>!state.completedVenues.includes(v)&&(state.attempts[v]||0)<3).sort((a,b)=>(state.attempts[a]||0)-(state.attempts[b]||0)||a-b).slice(0,2);
   if(!remaining.length){
     // A subsequent cron invocation must not leave a stale 'running' snapshot.
@@ -171,7 +187,7 @@ async function runScheduledMorning(env,scheduledTime) {
         return {...row,capturedAt,predictedOrder,evidenceVersion:2,raceCard:{racers:official.racers,statsByBoat:official.statsByBoat},courseStats:matchOfficialCourseStats(officialCourseData,date,official,null)};
       });
       const existing=new Set(state.records.map(x=>x.date+':'+x.venue+':'+x.race));
-      for(const row of rows.filter(x=>x.ready===true)){
+      for(const row of rows.filter(x=>validSavedMorningRecord(x,date))){
         const id=row.date+':'+row.venue+':'+row.race;
         if(!existing.has(id)){state.records.push(row);existing.add(id);completedRaces.add(row.race);}
       }
