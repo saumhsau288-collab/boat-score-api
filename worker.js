@@ -3173,8 +3173,8 @@ if (u.pathname === '/api/official/race-data') {
   if(exhibitionMatches||startMatches){
     const verifiedExhibition=exhibitionMatches?exhibition:{verified:false,rows:[]};
     const verifiedStart=startMatches?start:{verified:false,rows:[]};
-    saveVerifiedBeforeinfo(date,venue,race,verifiedExhibition,verifiedStart);
-    await writeSharedVerifiedBeforeinfo(env,date,venue,race,verifiedExhibition,verifiedStart);
+    saveVerifiedBeforeinfo(date,venue,race,verifiedExhibition,verifiedStart,weather);
+    await writeSharedVerifiedBeforeinfo(env,date,venue,race,verifiedExhibition,verifiedStart,weather);
   }
   const complete=official.verified&&official.statsVerified&&exhibitionMatches&&startMatches&&weather.verified;
   const missingInputs=[];
@@ -3204,11 +3204,12 @@ if (u.pathname === '/api/official/beforeinfo') {
      Number(venue)<1||Number(venue)>24||Number(race)<1||Number(race)>12)
     return reply(request,{error:'Invalid parameters'},400);
   // Reuse the same race's recently verified exhibition and start data.
-  // Reuse only complete weather and six-boat data; otherwise fetch again.
+  // Reuse verified speed/wave and six-boat data even if compass direction is unknown.
+  // Explicit refresh bypasses this short-lived cache.
   const cached=getVerifiedBeforeinfo(date,venue,race)||await readSharedVerifiedBeforeinfo(env,date,venue,race);
-  if(cached?.exhibition?.verified===true&&cached?.start?.verified===true&&cached?.weather?.verified===true&&cached?.weather?.windDirectionVerified===true){
+  if(u.searchParams.get('refresh')!=='1'&&cached?.exhibition?.verified===true&&cached?.start?.verified===true&&cached?.weather?.verified===true){
     return reply(request,{status:'verified',source:'verified_recent_cache',capturedAt:new Date(cached.savedAt).toISOString(),
-      exhibitionVerified:cached.exhibition.verified===true,startVerified:cached.start.verified===true,weatherVerified:true,windDirectionVerified:true,
+      exhibitionVerified:cached.exhibition.verified===true,startVerified:cached.start.verified===true,weatherVerified:true,windDirectionVerified:cached.weather.windDirectionVerified===true,
       exhibitionByBoat:cached.exhibition.rows,startByCourse:cached.start.rows,
       weather:cached.weather,dataReadyForPrediction:false});
   }
