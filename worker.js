@@ -4002,6 +4002,11 @@ function extractOfficialWeather(html) {
     return match?[match[1]]:[];
   });
   const windDirection=directionMatch?directionMatch[1]:(new Set(imageDirections).size===1?imageDirections[0]:null);
+  // Record only wind-related markup identifiers, not arbitrary upstream HTML.
+  const windIconEvidence=[...weatherHtml.matchAll(/<(?:div|span|i|img)\b[^>]*>/gi)]
+    .flatMap(m=>[...m[0].matchAll(/\b(?:class|src|data-direction|data-wind-direction)\s*=\s*["']([^"']+)["']/gi)]
+      .map(x=>x[1]).filter(x=>/wind|direction/i.test(x)))
+    .map(x=>x.slice(0,160)).filter((x,i,a)=>a.indexOf(x)===i).slice(0,12);
   const directionNearby=text.match(/風向[\s\S]{0,75}/);
   const directionDiagnostic=windDirection?null:(directionNearby?'wind_direction_label_without_cardinal_text':'wind_direction_label_absent_or_icon_only');
   const verified=windSpeed!==null&&windSpeed>=0&&windSpeed<=60&&
@@ -4009,7 +4014,7 @@ function extractOfficialWeather(html) {
   return {verified,windSpeed:verified?windSpeed:null,waveHeight:verified?waveHeight:null,
     airTemperature:airTemperature!==null&&airTemperature>=-30&&airTemperature<=50?airTemperature:null,
     waterTemperature:waterTemperature!==null&&waterTemperature>=-5&&waterTemperature<=45?waterTemperature:null,
-    windDirection:verified?windDirection:null,windDirectionVerified:verified&&windDirection!==null,reason:directionDiagnostic};
+    windDirection:verified?windDirection:null,windDirectionVerified:verified&&windDirection!==null,windIconEvidence,reason:directionDiagnostic};
 }
 
 function extractOfficialStartExhibition(html) {
