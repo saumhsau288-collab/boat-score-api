@@ -23,13 +23,24 @@ const baseline=evaluate(base);
 assert.equal(baseline.ready,true);
 const zero=evaluate(base.map((r,i)=>i===0?{...r,local:{winRate:0}}:r));
 assert.equal(zero.ready,true);
+assert.equal(zero.localMorning?.ready,true,'Local 0.00 must still permit local-only picks');
+assert.ok(zero.localMorning?.nationalFallbackBoats?.includes(1),'Local 0.00 substitution must be disclosed');
+assert.deepEqual(Array.from(zero.localMorning.predictedOrder),Array.from(baseline.localMorning.predictedOrder),'Local 0.00 must preserve equivalent national ranking');
 assert.equal(score(zero,1),score(baseline,1),'Local zero must fall back to national rate');
 const missing=evaluate(base.map((r,i)=>i===0?{...r,local:{winRate:null}}:r));
 assert.equal(missing.ready,true);
+assert.equal(missing.localMorning,null,'Missing local evidence must not invent independent local predictions');
 assert.equal(score(missing,1),score(baseline,1),'Missing local rate must fall back to national rate');
 const reduced=evaluate(base.map((r,i)=>i===0?{...r,local:{winRate:1}}:r));
 assert.equal(reduced.ready,true);
 assert.ok(score(reduced,1)<score(baseline,1),'Nonzero local rate must affect the average');
+for(const m of [baseline.localMorning,zero.localMorning,reduced.localMorning]){
+ assert.equal(m.ready,true);
+ assert.equal(m.main.length,6);
+ assert.equal(m.upset.length,6);
+ assert.equal(new Set([...m.main,...m.upset].map(x=>x.join('-'))).size,12,'Each frame has twelve distinct selections');
+}
+
 const absentNational=evaluate(base.map((r,i)=>i===0?{...r,nationwide:{winRate:null}}:r));
 assert.equal(absentNational.ready,false,'Missing national rate must not be invented');
 console.log('Morning win-rate regression: zero local, missing local, valid average and missing national passed');
