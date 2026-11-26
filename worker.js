@@ -523,6 +523,33 @@ if(u.pathname==='/api/research/morning-records'){
  const records=(Array.isArray(state.records)?state.records:[]).filter(x=>x?.date===date&&x.ready===true&&x.officialVerified===true&&x.statsVerified===true&&Number.isInteger(x.venue)&&x.venue>=1&&x.venue<=24&&Number.isInteger(x.race)&&x.race>=1&&x.race<=12).map(x=>({date,venue:x.venue,race:x.race,capturedAt:x.capturedAt||null,deadlineAt:x.deadlineAt||null,predictedOrder:x.predictedOrder||null,rankedScores:x.rankedScores||null,method:x.method||null,courseStats:x.courseStats||null}));
  return reply(request,{date,status:'recorded',records,note:'Original archived fields only; missing values are not backfilled.'});
 }
+if(u.pathname==='/api/research/before-prediction-comparison'){
+ if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+ const date=u.searchParams.get('date')||'';
+ if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid date'},400);
+ if(!env?.MORNING_KV)return reply(request,{date,status:'not_configured'},503);
+ const [morning,before,result]=await Promise.all(['morning:','before-archive:v1:','result-archive:v1:'].map(async k=>JSON.parse(await env.MORNING_KV.get(k+date)||'null')));
+ const audit=summarizeBeforeArchive(date,before,result);
+ const matched=new Map(audit.records.map(x=>[x.venue+':'+x.race,x]));
+ const rows=[],totals={matched:0,morningMain:0,morningUpset:0,beforeMain:0,beforeUpset:0};
+ for(const m of morning?.records||[]){
+  if(!validSavedMorningRecord(m,date))continue;
+  const id=m.venue+':'+m.race,b=before?.records?.[id],p=b?.researchPrediction;
+  const valid=p?.status==='provisional_not_calibrated'&&p.morningCapturedAt===m.capturedAt&&p.capturedAt===b.capturedAt&&b.date===date&&b.venue===m.venue&&b.race===m.race&&Date.parse(b.capturedAt)>Date.parse(m.capturedAt)&&Date.parse(b.capturedAt)<Date.parse(b.deadlineAt)&&Date.parse(b.deadlineAt)-Date.parse(b.capturedAt)<=900000;
+  const baseline=rankTrifectaCandidates(m.rankedScores),updated=valid?rankTrifectaCandidates(p.rankedScores):null;
+  const ready=updated?.ready===true&&JSON.stringify(updated.main)===JSON.stringify(p.main)&&JSON.stringify(updated.upset)===JSON.stringify(p.upset);
+  const closed=Date.now()>=Date.parse(b?.deadlineAt||m.deadlineAt);
+  const row={venue:m.venue,race:m.race,deadlineAt:b?.deadlineAt||m.deadlineAt,status:closed?'closed':ready?'updated':'morning_only',morning:baseline,before:ready?p:null,weather:b?.weather||null};
+  const actual=matched.get(id)?.finishOrder?.slice(0,3).join('-');
+  if(actual&&ready&&baseline.ready){
+   const hit=picks=>picks.some(x=>x.join('-')===actual);
+   row.hits={morningMain:hit(baseline.main),morningUpset:hit(baseline.upset),beforeMain:hit(updated.main),beforeUpset:hit(updated.upset)};
+   totals.matched++;for(const k of Object.keys(row.hits))totals[k]+=Number(row.hits[k]);
+  }
+  rows.push(row);
+ }
+ return reply(request,{date,totals,rows,note:'Paired provisional comparison; morning picks reconstructed from saved scores, not claimed as original displayed picks. Weather is observation only.'});
+}
 if(u.pathname==='/api/research/scheduler-health'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
  const date=u.searchParams.get('date')||'';
@@ -666,7 +693,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-research-prediction-v5',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-comparison-v6',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
