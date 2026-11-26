@@ -112,7 +112,8 @@ const collectBefore=vm.runInNewContext(src.slice(beforeStart,beforeEnd)+'\nrunSc
  extractOfficialRaceDeadline:()=>cutoff,extractOfficialBoatRows:()=>({verified:true}),
  extractOfficialExhibition:()=>({verified:true,rows:boats,candidateCount:6}),
  extractOfficialStartExhibition:()=>({verified:fullCapture,rows:fullCapture?boats:[],candidateCount:fullCapture?6:0}),
- extractOfficialWeather:()=>({verified:true})
+ extractOfficialWeather:()=>({verified:true}),
+  validSavedMorningRecord:()=>false
 });
 await collectBefore({MORNING_KV:fixtureKV},fixtureNow);
 const beforeKey='before-archive:v1:'+fixtureDate;
@@ -126,7 +127,7 @@ const firstCapture=partialState.partialRecords['1:1'].exhibition.capturedAt;
 fullCapture=true;
 await collectBefore({MORNING_KV:fixtureKV},fixtureNow);
 partialState=JSON.parse(partialStore.get(beforeKey));
-assert.equal(Object.keys(partialState.records).length,1);
+assert.equal(Object.keys(partialState.records).length,1,'Second full capture must save; failure='+JSON.stringify(partialState.failures['1:1']||null));
 assert.equal(partialState.partialRecords['1:1'].exhibition.capturedAt,firstCapture);
 assert.equal(partialState.failures['1:1'],undefined);
 assert.equal(partialState.attempts['1:1'],2);
