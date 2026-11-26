@@ -418,11 +418,13 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
  // Final snapshots use the same verified server endpoint as the interactive view.
  const finalCandidates=Object.values(state.records).filter(b=>b.researchPrediction&&b.localResearchPrediction&&Date.parse(b.deadlineAt)>Date.now()+5000);
+ const finalArchiveStats={attempted:0,complete:0,fallback:0,failed:0,skipped:0};
  await mapOfficialLimited(finalCandidates.slice(0,18),3,async b=>{
   const id=b.venue+':'+b.race;
   try{
    const finalKey='four-final:v1:'+date+':'+id;
-   if(await env.MORNING_KV.get(finalKey))return;
+   if(await env.MORNING_KV.get(finalKey)){finalArchiveStats.skipped++;return;}
+   finalArchiveStats.attempted++;
    const params=new URLSearchParams({date,venue:String(b.venue),race:String(b.race)});
    const origin='https://boat-score-2-preview.saumh-sau-288.workers.dev';
    const evidenceKey='recent50-evidence:v1:'+date+':'+id;
@@ -433,16 +435,20 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    if(Date.now()>=Date.parse(b.deadlineAt))return;
    const response=await workerFetchForArchive(new Request(origin+'/api/morning/race-predictions?'+params),env);
    const data=await response.json();
-   if(data.finalStatus==='saved')return;
+   if(data.finalStatus==='saved'){finalArchiveStats.complete++;return;}
    const cutoff=Date.parse(b.deadlineAt),savedAt=new Date().toISOString();
    if(!response.ok||!data.beforeAverage||!data.beforeLocal||Date.parse(savedAt)>=cutoff)return;
    if(data.beforeAverage.makulaboApplied===true&&data.beforeLocal.makulaboApplied===true)return;
    const fallbackKey='four-fallback:v1:'+date+':'+id;
    if(!await env.MORNING_KV.get(fallbackKey)&&Date.now()<cutoff){
     await env.MORNING_KV.put(fallbackKey,JSON.stringify({date,venue:b.venue,race:b.race,savedAt,deadlineAt:b.deadlineAt,morningCapturedAt:b.researchPrediction.morningCapturedAt,average:data.beforeAverage,local:data.beforeLocal,status:'before_only_fallback'}),{expirationTtl:31536000});
+    finalArchiveStats.fallback++;
    }
-  }catch(e){console.error('automatic_final_archive_failed',id,String(e?.message||e));}
+  }catch(e){finalArchiveStats.failed++;console.error('automatic_final_archive_failed',id,String(e?.message||e));}
  });
+ const archiveSummary={date,scanAt:new Date().toISOString(),eligible:finalCandidates.length,...finalArchiveStats};
+ console.log('automatic_final_archive_scan',JSON.stringify(archiveSummary));
+ return archiveSummary;
 }
 // Read-only daily storage inventory. A planned slot is not proof of a completed race.
 function buildArchiveInventory(date,morning,before,result,now=Date.now()){
@@ -506,7 +512,7 @@ const workerHandler = {
           if(failed.length)throw Error(failed.map(x=>String(x.reason?.message||x.reason)).join('; '));
         }
         else if(mode==='result')await runScheduledResultArchive(env,scheduledTime);
-        else await runScheduledBeforeArchive(env,scheduledTime);
+        else status.beforeArchive=await runScheduledBeforeArchive(env,scheduledTime);
         status.status='finished';
       }catch(error){status.status='failed';status.error=String(error?.message||error).slice(0,240);console.error('scheduler_failed',mode,status.error);throw error;}
       finally{status.finishedAt=new Date().toISOString();await report();}
