@@ -1,0 +1,40 @@
+name: Boat Score 2 historical adjacent research
+on:
+  push:
+    branches:
+      - fix-boat-score-2-syntax-20261115
+    paths:
+      - .github/workflows/boat-score-2-adjacent-history.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify isolated branch and regression tests
+        run: |
+          test "$GITHUB_REF_NAME" = "fix-boat-score-2-syntax-20261115"
+          node scripts/test-analyze-adjacent-winrate-finishes.mjs
+      - name: Fetch and match historical official entries and results
+        run: node scripts/run-historical-adjacent-research.mjs 20261125 5 1,2,3,4,5,6,7,8,9,10,11,12 adjacent-report.json
+      - name: Save research report
+        uses: actions/upload-artifact@v4
+        with:
+          name: adjacent-history-20261125-05
+          path: adjacent-report.json
+          if-no-files-found: error
+      - name: Verify matching coverage
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const r=JSON.parse(fs.readFileSync('adjacent-report.json','utf8'));
+          const n=r.analysis.matched;
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'Matched: '+n+'/12; exploratory only; calibration eligible: 0\n');
+          if(n!==12) throw Error('Incomplete historical matching: '+n+'/12');
+          NODE
