@@ -436,6 +436,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    if(data.finalStatus==='saved')return;
    const cutoff=Date.parse(b.deadlineAt),savedAt=new Date().toISOString();
    if(!response.ok||!data.beforeAverage||!data.beforeLocal||Date.parse(savedAt)>=cutoff)return;
+   if(data.beforeAverage.makulaboApplied===true&&data.beforeLocal.makulaboApplied===true)return;
    const fallbackKey='four-fallback:v1:'+date+':'+id;
    if(!await env.MORNING_KV.get(fallbackKey)&&Date.now()<cutoff){
     await env.MORNING_KV.put(fallbackKey,JSON.stringify({date,venue:b.venue,race:b.race,savedAt,deadlineAt:b.deadlineAt,morningCapturedAt:b.researchPrediction.morningCapturedAt,average:data.beforeAverage,local:data.beforeLocal,status:'before_only_fallback'}),{expirationTtl:31536000});
@@ -585,7 +586,10 @@ if(u.pathname==='/api/morning/race-predictions'){
  try{await env.MORNING_KV.put(finalKey,JSON.stringify({date,venue,race,savedAt,deadlineAt:before.deadlineAt,morningCapturedAt:row.capturedAt,average:beforeAverage,local:beforeLocal}),{expirationTtl:31536000});finalStatus='saved';}catch{finalStatus='save_failed';}
  }
  }
+ // Never reconstruct an enriched final prediction after the deadline.
  if(finalStatus!=='saved'&&Number.isFinite(cutoff)&&Date.now()>=cutoff){
+ beforeAverage=verified(before?.researchPrediction);
+ beforeLocal=verified(before?.localResearchPrediction);
  const fallback=JSON.parse(await env.MORNING_KV.get('four-fallback:v1:'+date+':'+venue+':'+race)||'null');
  if(fallback?.date===date&&fallback.venue===venue&&fallback.race===race&&fallback.morningCapturedAt===row?.capturedAt&&fallback.deadlineAt===before?.deadlineAt&&Date.parse(fallback.savedAt)<cutoff&&fallback.average&&fallback.local){beforeAverage=fallback.average;beforeLocal=fallback.local;finalStatus='fallback_saved';}
  }
