@@ -198,7 +198,9 @@ async function runScheduledMorning(env,scheduledTime) {
         const predictedOrder=row.rankedScores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat);
         if(!Number.isFinite(deadline)||Date.parse(capturedAt)>=deadline||predictedOrder.length!==6||new Set(predictedOrder).size!==6||!predictedOrder.every(x=>Number.isInteger(x)&&x>=1&&x<=6))
           return {...row,ready:false,reason:'invalid_predeadline_record'};
-        return {...row,capturedAt,predictedOrder,evidenceVersion:2,raceCard:{racers:official.racers,statsByBoat:official.statsByBoat},courseStats:matchOfficialCourseStats(officialCourseData,date,official,null)};
+        const averageMorning={...rankTrifectaCandidates(row.rankedScores),rankedScores:row.rankedScores,predictedOrder,method:row.method,capturedAt};
+        const localMorning=row.localMorning?.ready?{...row.localMorning,capturedAt}:null;
+        return {...row,averageMorning,localMorning,capturedAt,predictedOrder,evidenceVersion:2,raceCard:{racers:official.racers,statsByBoat:official.statsByBoat},courseStats:matchOfficialCourseStats(officialCourseData,date,official,null)};
       });
       const existing=new Set(state.records.map(x=>x.date+':'+x.venue+':'+x.race));
       for(const row of rows.filter(x=>validSavedMorningRecord(x,date))){
