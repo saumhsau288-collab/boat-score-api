@@ -399,13 +399,16 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id,reason:'exhibition_or_start_unverified',details:{exhibition:exhibition.verified===true,start:start.verified===true,weather:weather.verified===true,exhibitionRows:exhibition.candidateCount??0,startRows:start.candidateCount??0},partial:observation};
    const base=(morning?.records||[]).find(m=>m.venue===row.venue&&m.race===row.race&&validSavedMorningRecord(m,date)&&Date.parse(m.capturedAt)<Date.parse(capturedAt));
    if(base){
-    const ex=applyVerifiedExhibitionAdjustment(base.rankedScores,exhibition);
-    const st=applyVerifiedStartAdjustment(ex.rankedScores,start,base.statsByBoat||[]);
-    if(ex.applied||st.applied){
+    const recalculate=(scores,method)=>{
+     const ex=applyVerifiedExhibitionAdjustment(scores,exhibition);
+     const st=applyVerifiedStartAdjustment(ex.rankedScores,start,base.raceCard?.statsByBoat||[]);
+     if(!ex.applied&&!st.applied)return null;
      const rankedScores=st.rankedScores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
      const picks=rankTrifectaCandidates(rankedScores);
-     if(picks.ready)observation.researchPrediction={status:'provisional_not_calibrated',method:'morning_plus_verified_exhibition_start_v1',morningCapturedAt:base.capturedAt,capturedAt,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),main:picks.main,upset:picks.upset,exhibitionApplied:ex.applied,startApplied:st.applied,startReason:st.reason,weatherApplied:false};
-    }
+     return picks.ready?{status:'provisional_not_calibrated',method,morningCapturedAt:base.capturedAt,capturedAt,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),main:picks.main,upset:picks.upset,exhibitionApplied:ex.applied,startApplied:st.applied,startReason:st.reason,weatherApplied:false,makulaboApplied:false}:null;
+    };
+    observation.researchPrediction=recalculate(base.rankedScores,'morning_plus_verified_exhibition_start_v1');
+    observation.localResearchPrediction=base.localMorning?.ready===true?recalculate(base.localMorning.rankedScores,'local_morning_plus_verified_exhibition_start_v1'):null;
    }
    return {id,record:observation};
   }catch(e){return {id,reason:stage+'_'+String(e?.name||'error')};}
@@ -531,7 +534,10 @@ if(u.pathname==='/api/morning/race-predictions'){
  if(!env?.MORNING_KV)return reply(request,{error:'Storage unavailable'},503);
  const state=JSON.parse(await env.MORNING_KV.get('morning:'+date)||'null');
  const row=(state?.records||[]).find(x=>x.venue===venue&&x.race===race&&validSavedMorningRecord(x,date));
- return reply(request,{date,venue,race,average:row?.averageMorning||null,local:row?.localMorning||null});
+ const before=JSON.parse(await env.MORNING_KV.get('before-archive:v1:'+date)||'null')?.records?.[venue+':'+race];
+ const validBefore=before?.date===date&&before.venue===venue&&before.race===race&&Date.parse(before.capturedAt)<Date.parse(before.deadlineAt)&&Date.parse(before.deadlineAt)-Date.parse(before.capturedAt)<=900000;
+ const verified=p=>validBefore&&p?.morningCapturedAt===row?.capturedAt&&p?.capturedAt===before.capturedAt?p:null;
+ return reply(request,{date,venue,race,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage:verified(before?.researchPrediction),beforeLocal:verified(before?.localResearchPrediction)});
 }
 if(u.pathname==='/api/research/before-prediction-comparison'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
