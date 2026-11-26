@@ -428,10 +428,18 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    const evidenceKey='recent50-evidence:v1:'+date+':'+id;
    if(!await env.MORNING_KV.get(evidenceKey)){
     const response=await workerFetchForArchive(new Request(origin+'/api/makulabo/heatmap?'+params),env);
-    if(!response.ok)return;
+    if(!response.ok)console.warn('automatic_makulabo_unavailable',id,response.status);
    }
    if(Date.now()>=Date.parse(b.deadlineAt))return;
-   await workerFetchForArchive(new Request(origin+'/api/morning/race-predictions?'+params),env);
+   const response=await workerFetchForArchive(new Request(origin+'/api/morning/race-predictions?'+params),env);
+   const data=await response.json();
+   if(data.finalStatus==='saved')return;
+   const cutoff=Date.parse(b.deadlineAt),savedAt=new Date().toISOString();
+   if(!response.ok||!data.beforeAverage||!data.beforeLocal||Date.parse(savedAt)>=cutoff)return;
+   const fallbackKey='four-fallback:v1:'+date+':'+id;
+   if(!await env.MORNING_KV.get(fallbackKey)&&Date.now()<cutoff){
+    await env.MORNING_KV.put(fallbackKey,JSON.stringify({date,venue:b.venue,race:b.race,savedAt,deadlineAt:b.deadlineAt,morningCapturedAt:b.researchPrediction.morningCapturedAt,average:data.beforeAverage,local:data.beforeLocal,status:'before_only_fallback'}),{expirationTtl:31536000});
+   }
   }catch(e){console.error('automatic_final_archive_failed',id,String(e?.message||e));}
  });
 }
@@ -576,6 +584,10 @@ if(u.pathname==='/api/morning/race-predictions'){
  if(Date.parse(savedAt)<cutoff){
  try{await env.MORNING_KV.put(finalKey,JSON.stringify({date,venue,race,savedAt,deadlineAt:before.deadlineAt,morningCapturedAt:row.capturedAt,average:beforeAverage,local:beforeLocal}),{expirationTtl:31536000});finalStatus='saved';}catch{finalStatus='save_failed';}
  }
+ }
+ if(finalStatus!=='saved'&&Number.isFinite(cutoff)&&Date.now()>=cutoff){
+ const fallback=JSON.parse(await env.MORNING_KV.get('four-fallback:v1:'+date+':'+venue+':'+race)||'null');
+ if(fallback?.date===date&&fallback.venue===venue&&fallback.race===race&&fallback.morningCapturedAt===row?.capturedAt&&fallback.deadlineAt===before?.deadlineAt&&Date.parse(fallback.savedAt)<cutoff&&fallback.average&&fallback.local){beforeAverage=fallback.average;beforeLocal=fallback.local;finalStatus='fallback_saved';}
  }
  const localRates=(row?.raceCard?.statsByBoat||[]).flatMap(x=>{
  const raw=x.local?.winRate,n=x.nationwide?.winRate;
