@@ -546,6 +546,19 @@ if(u.pathname==='/api/morning/race-predictions'){
  const picks=rankTrifectaCandidates(rankedScores);
  return picks.ready?{...p,...picks,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),makulaboApplied:true,makulaboCapturedAt:evidence.capturedAt}:p;
  };
+ let beforeAverage=supplement(verified(before?.researchPrediction)),beforeLocal=supplement(verified(before?.localResearchPrediction));
+ const finalKey='four-final:v1:'+date+':'+venue+':'+race;
+ let finalStatus='not_saved';
+ const frozen=JSON.parse(await env.MORNING_KV.get(finalKey)||'null');
+ const cutoff=Date.parse(before?.deadlineAt||'');
+ const validFrozen=frozen?.date===date&&frozen.venue===venue&&frozen.race===race&&frozen.morningCapturedAt===row?.capturedAt&&Date.parse(frozen.savedAt)<Date.parse(frozen.deadlineAt)&&frozen.deadlineAt===before?.deadlineAt&&frozen.average?.makulaboApplied===true&&frozen.local?.makulaboApplied===true;
+ if(validFrozen){beforeAverage=frozen.average;beforeLocal=frozen.local;finalStatus='saved';}
+ else if(!frozen&&beforeAverage?.makulaboApplied&&beforeLocal?.makulaboApplied&&Number.isFinite(cutoff)&&Date.now()<cutoff){
+ const savedAt=new Date().toISOString();
+ if(Date.parse(savedAt)<cutoff){
+ try{await env.MORNING_KV.put(finalKey,JSON.stringify({date,venue,race,savedAt,deadlineAt:before.deadlineAt,morningCapturedAt:row.capturedAt,average:beforeAverage,local:beforeLocal}),{expirationTtl:31536000});finalStatus='saved';}catch{finalStatus='save_failed';}
+ }
+ }
  const localRates=(row?.raceCard?.statsByBoat||[]).flatMap(x=>{
  const raw=x.local?.winRate,n=x.nationwide?.winRate;
  if(raw==null||n==null||String(raw).trim()===''||String(n).trim()==='')return [];
@@ -553,7 +566,7 @@ if(u.pathname==='/api/morning/race-predictions'){
  if(!Number.isFinite(local)||!Number.isFinite(national)||local<0||local>10||national<0||national>10)return [];
  return [{boat:x.boat,local:local===0?national:local,national,substituted:local===0}];
  });
- return reply(request,{date,venue,race,localRates,deadlineAt:validBefore?before.deadlineAt:row?.deadlineAt||null,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage:supplement(verified(before?.researchPrediction)),beforeLocal:supplement(verified(before?.localResearchPrediction))});
+ return reply(request,{date,venue,race,localRates,deadlineAt:validBefore?before.deadlineAt:row?.deadlineAt||null,average:row?.averageMorning||null,local:row?.localMorning||null,beforeAverage,beforeLocal,finalStatus});
 }
 if(u.pathname==='/api/research/four-prediction-comparison'){
  const date=u.searchParams.get('date')||'';
