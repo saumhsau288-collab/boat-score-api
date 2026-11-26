@@ -1208,7 +1208,7 @@ function summarizeScenarioAudit(records,results){
   generation++;if(controller)controller.abort();controller=null;button.disabled=false;
   if(reset)selectors.forEach(x=>x.querySelectorAll('button[data-boat]').forEach(b=>toggleBoat(b,false)));
   out.replaceChildren();out.style.color='';
-  trialOut.textContent='1着を1号艇だけに指定して比較できます。';trialOut.style.color='';courseOut.textContent='予想実行後に表示します。';officialTrialOut.textContent='1号艇1着固定で比較できます。';
+  trialOut.textContent='1着を1号艇だけに指定して比較できます。';trialOut.style.color='';courseOut.textContent='予想実行後に表示します。';officialTrialOut.textContent='1号艇1着固定で比較できます。';officialTrialOut.style.color='';
   archiveStatus.textContent='予想実行時に自動記録します。';archiveOutput.textContent='';
   status.textContent='着順を1つ以上指定して、指定条件で予想を押してください。';
   refreshConditions();
@@ -1235,7 +1235,7 @@ function summarizeScenarioAudit(records,results){
    if(!active())return;
    if(!res.ok||d.ready!==true||d.date!==date||Number(d.venue)!==Number(v)||Number(d.race)!==Number(r))throw Error('公式6艇の情報が未確認です');
    if(d.method!=='average_national_local_winrate70_motor30_unvalidated')throw Error('全国・当地勝率の6艇照合ができていません');
-   if(d.exhibitionAdjustmentApplied!==true&&d.startAdjustmentApplied!==true)throw Error('直前情報の展示タイム・展示STが未確認です');
+   const missingBefore=d.exhibitionAdjustmentApplied!==true||d.startAdjustmentApplied!==true;
    const recent=recent50SupplementForSelection();
    const scores=Array.isArray(d.rankedScores)?d.rankedScores.map(x=>({boat:x.boat,score:x.score+(recent?.find(y=>y.boat===x.boat)?.points??0)})):[];
    const picks=rankScenarioCombinations(scores,condition);
@@ -1243,15 +1243,16 @@ function summarizeScenarioAudit(records,results){
    const label=condition.map((x,i)=>(i+1)+'着：'+(x.length?x.join('・')+'号艇':'指定なし')).join(' ／ ');
    const fmt=a=>a.length?a.map((x,i)=>(i+1)+'. '+x.join('-')).join('\n'):'該当なし';
    status.textContent=label+'（条件内 '+picks.total+'通り）';
-   out.style.color=recent?'':'#fbbf24';
+   out.style.color=missingBefore||!recent?'#fbbf24':'';
+   officialTrialOut.style.color=missingBefore?'#fbbf24':'';
    const trial=rankInnerWinnerCourseTrial(d.rankedScores,condition,d.scenarioEvidence,recent);
    const officialTrial=rankOfficialPositionTrial(d.rankedScores,condition,d.scenarioEvidence,recent);
    saveArchive(d,condition,picks,trial,scores,recent,officialTrial);
    officialTrialOut.textContent=officialTrial.ready?'【選手別補正研究】本命 '+officialTrial.main.length+'点\n'+fmt(officialTrial.main)+'\n別候補 '+officialTrial.upset.length+'点\n'+fmt(officialTrial.upset)+'\n\n2着／3着の仮補正点（通常完走数）\n'+officialTrial.adjustments.map(x=>x.boat+'号艇 '+x.second.toFixed(2)+'／'+x.third.toFixed(2)+'（'+x.n+'走）').join('\n'):officialTrial.reason;
    renderOfficialCourseStats(d.scenarioEvidence?.courseStats);
-   trialOut.style.color=trial.ready&&(!trial.numeric||!trial.recentOK)?'#fbbf24':'';
+   trialOut.style.color=trial.ready&&(missingBefore||!trial.numeric||!trial.recentOK)?'#fbbf24':'';
    trialOut.textContent=trial.ready?'【研究方式 本命 '+trial.main.length+'点】\n'+fmt(trial.main)+'\n\n【別候補 '+trial.upset.length+'点】\n'+fmt(trial.upset)+'\n\n着順別コース傾向：反映（11/24・25の168R）\nまくらぼ：'+(trial.recentOK?'2着率・3着率を個別加点（全コース）':'未取得・加点なし')+'\n隣接ST：'+(trial.numeric?'数値6艇確認':'F/Lまたは数値不足・隣接補正なし')+'\n展示タイム：'+(trial.exOK?'6艇確認':'追加条件未確認')+'\n追加条件：'+(trial.signals.length?trial.signals.map(x=>x.boat+'号艇：'+x.label+'（+'+x.points+'仮点）').join('\n'):'該当なし')+'\n※展開仮説の比較試算。的中率改善は未検証。':trial.reason;
-   out.textContent='【本命 '+picks.main.length+'点】\n'+fmt(picks.main)+'\n\n【穴・条件内の別候補 '+picks.upset.length+'点】\n'+fmt(picks.upset)+'\n\n【反映状況】\n全国＋当地勝率：合算と同順位になる平均方式（当地0.00は全国で代用）\nモーター：反映\n展示タイム：'+(d.exhibitionAdjustmentApplied?'反映':'未反映')+'\n展示ST：'+(d.startAdjustmentApplied?'反映':'未反映')+'\nまくらぼ50走：'+(recent?'6艇照合済み・加点':'未取得・直前情報のみで試算')+'\n風・波・進入：未反映\n※穴は条件内の別候補で、オッズによる分類ではありません。指定条件の成立確率・的中率は未検証です。';
+   out.textContent=(missingBefore?'【暫定予想：直前情報未確認・不足】\n':'')+'【本命 '+picks.main.length+'点】\n'+fmt(picks.main)+'\n\n【穴・条件内の別候補 '+picks.upset.length+'点】\n'+fmt(picks.upset)+'\n\n【反映状況】\n全国＋当地勝率：合算と同順位になる平均方式（当地0.00は全国で代用）\nモーター：反映\n展示タイム：'+(d.exhibitionAdjustmentApplied?'反映':'未反映')+'\n展示ST：'+(d.startAdjustmentApplied?'反映':'未反映')+'\nまくらぼ50走：'+(recent?'6艇照合済み・加点':'未取得・確認済み公式情報のみで試算')+'\n風・波・進入：未反映\n※穴は条件内の別候補で、オッズによる分類ではありません。指定条件の成立確率・的中率は未検証です。';
   }catch(e){if(active())status.textContent='予想保留：'+e.message;}
   finally{if(token===generation){button.disabled=false;controller=null;}}
  });
