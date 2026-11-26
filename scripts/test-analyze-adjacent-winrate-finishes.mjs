@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {analyze} from './analyze-adjacent-winrate-finishes.mjs';
+const id={date:'20261124',venue:2,race:1};
+const racers=Array.from({length:6},(_,i)=>({boat:i+1,racerId:String(4000+i),nationalWinRate:6-i*.5,localWinRate:i===0?0:5-i*.5}));
+const entry={...id,statsVerified:true,racers};
+const result={...id,status:'parsed_needs_independent_review',racers:racers.map((r,i)=>({boat:r.boat,racerId:r.racerId,finish:i+1}))};
+const run=(e=entry,r=result)=>analyze({rows:[e]},{rows:[r]});
+const a=run();
+assert.equal(a.matched,1);
+assert.equal(a.rejected,0);
+assert.equal(Object.keys(a.groups).length,20);
+assert.equal(a.groups['20261124|local|boat1_won|1|2|inner|1.5+'].localFallbackRaces,1);
+for(const g of Object.values(a.groups)){assert.equal(g.n,1);assert.equal(g.secondThird['2-3'],1);assert.equal(g.boat1Wins,1);}
+assert.equal(run(entry,{...result,refund:true}).matched,0);
+assert.equal(run(entry,{...result,cancelled:true}).matched,0);
+assert.equal(run(entry,{...result,racers:result.racers.map((r,i)=>i===5?{...r,finish:null}:r)}).matched,0);
+assert.equal(run(entry,{...result,racers:result.racers.map((r,i)=>i===5?{...r,racerId:'9999'}:r)}).matched,0);
+assert.equal(run({...entry,statsVerified:false}).matched,0);
+assert.throws(()=>analyze({rows:[entry,entry]},{rows:[result]}),/Duplicate entry/);
+assert.equal(a.exploratoryOnly,true);
+console.log('Adjacent research regression tests passed');
