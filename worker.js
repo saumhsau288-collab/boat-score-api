@@ -370,7 +370,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    if(!res.ok){noteDenied(res);return {id,reason:'http_'+res.status};}
    const html=await res.text();
    if(html.length>1000000)return {id,reason:'response_too_large'};
-   const deadlineAt=extractOfficialRaceDeadline(html,date);
+   const deadlineAt=extractOfficialRaceDeadline(html,date,race);
    if(!deadlineAt)return {id,reason:'deadline_unverified'};
    if(extractOfficialBoatRows(html).verified!==true)return {id,reason:'six_boat_rows_unverified'};
    return {id,row:{date,venue,race,deadlineAt},confirmedThisScan:true};
@@ -393,7 +393,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    const check=await fetch('https://www.boatrace.jp/owpc/pc/race/racelist?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(15000)});
    if(!check.ok){noteDenied(check);return {id,reason:'deadline_recheck_http_'+check.status};}
    const page=await check.text();
-   const confirmed=page.length<=1000000&&extractOfficialBoatRows(page).verified===true?extractOfficialRaceDeadline(page,date):null;
+   const confirmed=page.length<=1000000&&extractOfficialBoatRows(page).verified===true?extractOfficialRaceDeadline(page,date,row.race):null;
    if(!confirmed)return {id,reason:'deadline_recheck_unverified'};
    deadline=Date.parse(confirmed);
    state.deadlines[id]={date,venue:row.venue,race:row.race,deadlineAt:confirmed};
@@ -3858,19 +3858,25 @@ async function scanVenueMorning(date,venue,firstOfficial=null) {
 }
 
 // Accept a cutoff only when an official race-list label and one unambiguous JST time exist.
-function extractOfficialRaceDeadline(html,date) {
-  if(!/^20[0-9]{6}$/.test(String(date))||typeof html!=='string')return null;
-  const clean=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ')
-    .replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ')
-    .replace(/\s+/g,' ').normalize('NFKC');
-  const matches=[...clean.matchAll(/締切(?:予定)?(?:時刻|時間)?\s*[:：]?\s*([01]?\d|2[0-3]):([0-5]\d)/g)];
-  const times=[...new Set(matches.map(m=>m[1].padStart(2,'0')+':'+m[2]))];
-  if(times.length!==1)return null;
-  const [hh,mm]=times[0].split(':').map(Number);
-  const utc=Date.UTC(Number(date.slice(0,4)),Number(date.slice(4,6))-1,Number(date.slice(6,8)),hh-9,mm);
-  const iso=new Date(utc).toISOString();
-  return new Date(utc+9*3600000).toISOString().slice(0,10).replace(/-/g,'')===date?iso:null;
+function extractOfficialRaceDeadline(html,date,race) {
+  if(!/^20[0-9]{6}$/.test(String(date))||typeof html!=='string'||!Number.isInteger(race)||race<1||race>12)return null;
+  const clean=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,' ');
+  const plain=x=>x.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').normalize('NFKC').replace(/\s+/g,' ').trim();
+  const found=[];
+  for(const table of clean.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)){
+    const rows=[...table[0].matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)].map(r=>[...r[0].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(c=>plain(c[1])));
+    for(let i=1;i<rows.length;i++){
+      const header=rows[i-1],times=rows[i];
+      if(header.length!==13||times.length!==13||header[0]!=='レース'||!/^締切(?:予定)?(?:時刻|時間)?$/.test(times[0])||!header.slice(1).every((v,j)=>v===String(j+1)+'R'))continue;
+      if(!times.slice(1).every(v=>/^(?:[01]?\d|2[0-3]):[0-5]\d$/.test(v)))continue;
+      const minutes=times.slice(1).map(v=>{const [h,m]=v.split(':').map(Number);return h*60+m;});
+      if(minutes.some((v,j)=>j>0&&v<=minutes[j-1]))continue;
+      found.push(minutes[race-1]);
+    }
+  }
+  if(!found.length||new Set(found).size!==1)return null;
+  const utc=Date.UTC(Number(date.slice(0,4)),Number(date.slice(4,6))-1,Number(date.slice(6,8)),0,found[0]-540);
+  return new Date(utc+9*3600000).toISOString().slice(0,10).replace(/-/g,'')===date?new Date(utc).toISOString():null;
 }
 
 function buildMorningRaceInputs(date,venue,race,official) {
@@ -4458,7 +4464,7 @@ const officialNames = officialRows.racers;
     const result={
       verified: officialRows.verified,
       statsVerified: statsMatch,
-      deadlineAt:extractOfficialRaceDeadline(html,date),
+      deadlineAt:extractOfficialRaceDeadline(html,date,race),
       statsByBoat: statsMatch ? officialStats.rows : [],
       averageSTParseDiagnostics:statsMatch?officialStats.rows.map(x=>({boat:x.boat,rawCell:x.averageSTParseDiagnostic,parsed:x.averageST})):[],
       officialBoatRowCandidates: officialRows.candidateCount,
