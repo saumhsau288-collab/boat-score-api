@@ -98,7 +98,7 @@ console.log('Archived research API: original records preserved, unverified rows 
 // Partial verified observations must survive failed full captures, without
 // being promoted to complete six-boat pre-deadline evidence.
 const beforeStart=src.indexOf('async function runScheduledBeforeArchive(');
-const beforeEnd=src.indexOf('\nexport default {',beforeStart);
+const beforeEnd=src.indexOf('\nfunction buildArchiveInventory(',beforeStart);
 assert.ok(beforeStart>=0&&beforeEnd>beforeStart);
 const fixtureNow=Date.now(),fixtureDate=new Date(fixtureNow+9*3600000).toISOString().slice(0,10).replace(/-/g,'');
 const cutoff=new Date(fixtureNow+840000).toISOString();
@@ -136,7 +136,7 @@ console.log('Before archive retains independently verified partial data, retries
 // Inventory must distinguish old incomplete evidence, partial captures and
 // absent schedules, and must not count malformed six-boat records.
 const invStart=src.indexOf('function buildArchiveInventory(');
-const invEnd=src.indexOf('\nexport default {',invStart);
+const invEnd=src.indexOf('\nconst workerHandler = {',invStart);
 assert.ok(invStart>=0&&invEnd>invStart);
 const inventory=vm.runInNewContext(src.slice(invStart,invEnd)+'\nbuildArchiveInventory;');
 const invDate='20261125',at='2026-11-25T03:00:00.000Z',end='2026-11-25T03:05:00.000Z';
