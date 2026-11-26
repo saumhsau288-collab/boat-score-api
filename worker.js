@@ -541,7 +541,7 @@ if(u.pathname==='/api/morning/race-predictions'){
  const supplement=p=>{
  if(!p||!evidence||evidence.date!==date||evidence.venue!==venue||evidence.race!==race||evidence.morningCapturedAt!==row?.capturedAt||!(Date.parse(evidence.capturedAt)<Date.parse(before.deadlineAt)))return p;
  const rows=evidence.rows;
- if(!Array.isArray(rows)||rows.length!==6||new Set(rows.map(x=>x.boat)).size!==6||!rows.every(x=>Number.isInteger(x.runs)&&x.runs>0&&x.runs<=50&&Array.isArray(x.counts)&&x.counts.length===6&&x.counts.every(n=>Number.isInteger(n)&&n>=0)&&x.counts.reduce((a,b)=>a+b,0)===x.runs))return p;
+ if(!Array.isArray(rows)||rows.length!==6||new Set(rows.map(x=>x.boat)).size!==6||!rows.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isInteger(x.runs)&&x.runs>0&&x.runs<=50&&Array.isArray(x.counts)&&x.counts.length===6&&x.counts.every(n=>Number.isInteger(n)&&n>=0)&&x.counts.reduce((a,b)=>a+b,0)===x.runs))return p;
  const rankedScores=p.rankedScores.map(x=>({boat:x.boat,score:x.score+Math.round(rows.find(y=>y.boat===x.boat).counts[0]/rows.find(y=>y.boat===x.boat).runs*1000)/100})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
  const picks=rankTrifectaCandidates(rankedScores);
  return picks.ready?{...p,...picks,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),makulaboApplied:true,makulaboCapturedAt:evidence.capturedAt}:p;
@@ -3387,7 +3387,7 @@ if(last50MatchesOfficial&&allSixVerified&&env?.MORNING_KV){
  const v=Number(venue),rr=Number(race),id=v+':'+rr;
  const morning=JSON.parse(await env.MORNING_KV.get('morning:'+date)||'null');
  const base=(morning?.records||[]).find(m=>m.venue===v&&m.race===rr&&validSavedMorningRecord(m,date));
- const deadline=Date.parse(officialRacers.deadlineAt||'');
+ const deadline=Date.parse(officialRacers.deadlineAt||base?.deadlineAt||'');
  const rows=parsedLast50.rows;
  const valid=rows.length===6&&new Set(rows.map(x=>x.boat)).size===6&&rows.every(x=>Number.isInteger(x.runs)&&x.runs>=1&&x.runs<=50&&Array.isArray(x.counts)&&x.counts.length===6&&x.counts.every(n=>Number.isInteger(n)&&n>=0)&&x.counts.reduce((a,b)=>a+b,0)===x.runs);
  if(base&&valid&&Number.isFinite(deadline)&&Date.now()<deadline){
@@ -3788,7 +3788,7 @@ function buildMorningRaceInputs(date,venue,race,official) {
   const top2Ranks=placesVerified?ranks('top2'):null,top3Ranks=placesVerified?ranks('top3'):null;
   const localRanks=localVerified?new Map(scoreRows.slice().sort((a,b)=>(b.local===0?b.win:b.local)-(a.local===0?a.win:a.local)||a.boat-b.boat).map((x,i)=>[x.boat,6-i])):null;
   const localScores=localRanks?scoreRows.map(x=>({boat:x.boat,score:7*localRanks.get(x.boat)+3*motorRanks.get(x.boat)+(placesVerified?(top2Ranks.get(x.boat)+top3Ranks.get(x.boat))/100:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat):null;
-  const localMorning=localScores?{method:'local_winrate70_motor30_unvalidated',rankedScores:localScores,predictedOrder:localScores.map(x=>x.boat),...rankTrifectaCandidates(localScores),nationalFallbackBoats:scoreRows.filter(x=>x.local===0).map(x=>x.boat)}:null;
+  const localMorning=localScores?{...rankTrifectaCandidates(localScores),method:'local_winrate70_motor30_unvalidated',rankedScores:localScores,predictedOrder:localScores.map(x=>x.boat),nationalFallbackBoats:scoreRows.filter(x=>x.local===0).map(x=>x.boat)}:null;
   return {ready:true,date,venue,race,officialVerified:true,statsVerified:true,deadlineAt:official.deadlineAt||null,localMorning,
     rankedScores:scoreRows.map(x=>({boat:x.boat,score:(7*averageRanks.get(x.boat)+3*motorRanks.get(x.boat))+(placesVerified?(top2Ranks.get(x.boat)+top3Ranks.get(x.boat))/100:0)})),
     method:localVerified?'average_national_local_winrate70_motor30_unvalidated':'national_winrate70_motor30_screening_unvalidated',placeRateTieBreakVerified:placesVerified,missingInputs:[...(!localVerified?['local']:[]),...(!placesVerified?['placeRates']:[]),'last50','course','exhibition','start','weather']};
