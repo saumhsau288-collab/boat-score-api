@@ -3746,7 +3746,10 @@ function buildMorningRaceInputs(date,venue,race,official) {
   const averageRanks=new Map(scoreRows.slice().sort((a,b)=>averageWinRates.get(b.boat)-averageWinRates.get(a.boat)||a.boat-b.boat).map((x,i)=>[x.boat,6-i]));
   const placesVerified=scoreRows.every(x=>Number.isFinite(x.top2)&&x.top2>=0&&x.top2<=100&&Number.isFinite(x.top3)&&x.top3>=x.top2&&x.top3<=100);
   const top2Ranks=placesVerified?ranks('top2'):null,top3Ranks=placesVerified?ranks('top3'):null;
-  return {ready:true,date,venue,race,officialVerified:true,statsVerified:true,deadlineAt:official.deadlineAt||null,
+  const localRanks=localVerified?new Map(scoreRows.slice().sort((a,b)=>(b.local===0?b.win:b.local)-(a.local===0?a.win:a.local)||a.boat-b.boat).map((x,i)=>[x.boat,6-i])):null;
+  const localScores=localRanks?scoreRows.map(x=>({boat:x.boat,score:7*localRanks.get(x.boat)+3*motorRanks.get(x.boat)+(placesVerified?(top2Ranks.get(x.boat)+top3Ranks.get(x.boat))/100:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat):null;
+  const localMorning=localScores?{method:'local_winrate70_motor30_unvalidated',rankedScores:localScores,predictedOrder:localScores.map(x=>x.boat),...rankTrifectaCandidates(localScores),nationalFallbackBoats:scoreRows.filter(x=>x.local===0).map(x=>x.boat)}:null;
+  return {ready:true,date,venue,race,officialVerified:true,statsVerified:true,deadlineAt:official.deadlineAt||null,localMorning,
     rankedScores:scoreRows.map(x=>({boat:x.boat,score:(7*averageRanks.get(x.boat)+3*motorRanks.get(x.boat))+(placesVerified?(top2Ranks.get(x.boat)+top3Ranks.get(x.boat))/100:0)})),
     method:localVerified?'average_national_local_winrate70_motor30_unvalidated':'national_winrate70_motor30_screening_unvalidated',placeRateTieBreakVerified:placesVerified,missingInputs:[...(!localVerified?['local']:[]),...(!placesVerified?['placeRates']:[]),'last50','course','exhibition','start','weather']};
 }
