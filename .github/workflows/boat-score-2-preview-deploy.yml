@@ -59,6 +59,20 @@ jobs:
           node scripts/test-twelve-independent-preview.mjs
           node scripts/test-top-two-exclusion.mjs
           node scripts/test-evaluate-top-two-history.mjs
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import vm from 'node:vm';
+          const source=fs.readFileSync('worker.js','utf8');
+          const start=source.indexOf('function classifyDailyRaceCandidates(');
+          const end=source.indexOf('\nfunction summarizeHistoricalOuterFollow(',start);
+          if(start<0||end<=start)throw Error('Morning classifier not found');
+          const classify=vm.runInNewContext(source.slice(start,end)+'\nclassifyDailyRaceCandidates');
+          const row={date:'20261127',venue:3,race:1,ready:true,officialVerified:true,statsVerified:true,capturedAt:'2026-11-26T23:00:00Z',deadlineAt:'2026-11-27T02:00:00Z',rankedScores:[1,2,3,4,5,6].map(boat=>({boat,score:70-boat*5})),predictedOrder:[1,2,3,4,5,6]};
+          const result=classify([row]);
+          const picks=[...result.main,...result.upset,...result.chaos];
+          if(picks.length!==1||picks[0].capturedAt!==row.capturedAt||picks[0].deadlineAt!==row.deadlineAt||JSON.stringify(picks[0].predictedOrder)!==JSON.stringify(row.predictedOrder)||JSON.stringify(picks[0].rankedScores)!==JSON.stringify(row.rankedScores))throw Error('Morning ranking lost original evidence');
+          console.log('Morning classifier preserves six-boat scores, order and timestamps (synthetic fixture)');
+          NODE
           node scripts/test-morning-coverage-guard.mjs
           node scripts/test-morning-winrate-fallback.mjs
           node scripts/test-evaluate-morning-ranking-history.mjs
