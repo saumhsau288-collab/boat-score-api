@@ -27,6 +27,10 @@ jobs:
         run: node scripts/test-course-start-evaluation.mjs
       - name: Validate official result parsing diagnostics
         run: node scripts/test-extract-official-result-diagnostics.mjs
+      - name: Validate adjacent win-rate research
+        run: |
+          node --check scripts/run-historical-adjacent-research.mjs
+          node scripts/test-analyze-adjacent-winrate-finishes.mjs
       - name: Verify Boat Score 2 endpoints and isolation
         run: |
           node --input-type=module <<'NODE'
