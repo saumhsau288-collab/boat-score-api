@@ -238,6 +238,29 @@ jobs:
           console.log('BOAT_ONE_AUDIT '+JSON.stringify({date:d.date,status:d.status,rankedAt:d.rankedAt,selected:d.selected,matched:d.matched,wins:d.wins,pending:d.pending,excluded:d.excluded,other:d.other}));
           NODE
 
+      - name: Measure deployed official race and beforeinfo retrieval
+        run: |
+          node --input-type=module <<'NODE'
+          const base='https://boat-score-2-preview.saumh-sau-288.workers.dev';
+          const date=new Date(Date.now()+9*3600000).toISOString().slice(0,10).replaceAll('-','');
+          async function probe(path){
+            const t=Date.now();
+            try {
+              const res=await fetch(base+path,{signal:AbortSignal.timeout(60000)});
+              const d=await res.json();
+              console.log('OFFICIAL_PROBE '+JSON.stringify({path,http:res.status,elapsedMs:Date.now()-t,status:d.status,racers:d.racersByBoat?.length,stats:d.statsByBoat?.length,exhibition:d.exhibitionByBoat?.length,start:d.startByCourse?.length,weatherVerified:d.weatherVerified,windDirectionVerified:d.windDirectionVerified,missingInputs:d.missingInputs,diagnostics:d.diagnostics,reason:d.reason}));
+              return res.ok?d:null;
+            } catch(e){console.log('OFFICIAL_PROBE '+JSON.stringify({path,elapsedMs:Date.now()-t,error:String(e)}));return null;}
+          }
+          const snapshot=await probe('/api/morning/snapshot?date='+date);
+          const venues=Array.isArray(snapshot?.venues)?snapshot.venues.filter(v=>Number.isInteger(v)&&v>=1&&v<=24):[];
+          if(!venues.length){console.log('No verified scheduled venue in saved snapshot; race probes skipped');process.exit(0);}
+          for(const venue of venues.slice(0,2)){
+            const q='?date='+date+'&venue='+venue+'&race=1';
+            await probe('/api/official/race-data'+q);
+            await probe('/api/official/beforeinfo'+q);
+          }
+          NODE
       - name: Inspect deployed morning snapshot without assuming completion
         shell: bash
         run: |
