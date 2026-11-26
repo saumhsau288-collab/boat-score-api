@@ -416,6 +416,24 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  for(const row of rows){if(row.deferred)continue;state.attempts[row.id]=(state.attempts[row.id]||0)+1;state.attemptHistory[row.id]=[...(state.attemptHistory[row.id]||[]),{at:new Date().toISOString(),outcome:row.record?'saved':row.reason||'unknown',details:row.details||null}].slice(-6);if(row.record&&!state.records[row.id]){state.records[row.id]=row.record;delete state.failures[row.id];}else if(!row.record){state.failures[row.id]={reason:row.reason||'unknown',details:row.details||null,at:new Date().toISOString()};if(row.partial){const p=state.partialRecords[row.id]||{};for(const k of ['exhibition','start','weather'])if(row.partial[k]?.verified===true&&!p[k])p[k]={capturedAt:row.partial.capturedAt,deadlineAt:row.partial.deadlineAt,source:row.partial.source,data:row.partial[k]};if(Object.keys(p).length)state.partialRecords[row.id]=p;}}}
  state.updatedAt=new Date().toISOString();
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
+ // Final snapshots use the same verified server endpoint as the interactive view.
+ const finalCandidates=Object.values(state.records).filter(b=>b.researchPrediction&&b.localResearchPrediction&&Date.parse(b.deadlineAt)>Date.now()+5000);
+ await mapOfficialLimited(finalCandidates.slice(0,18),3,async b=>{
+  const id=b.venue+':'+b.race;
+  try{
+   const finalKey='four-final:v1:'+date+':'+id;
+   if(await env.MORNING_KV.get(finalKey))return;
+   const params=new URLSearchParams({date,venue:String(b.venue),race:String(b.race)});
+   const origin='https://boat-score-2-preview.saumh-sau-288.workers.dev';
+   const evidenceKey='recent50-evidence:v1:'+date+':'+id;
+   if(!await env.MORNING_KV.get(evidenceKey)){
+    const response=await workerFetchForArchive(new Request(origin+'/api/makulabo/heatmap?'+params),env);
+    if(!response.ok)return;
+   }
+   if(Date.now()>=Date.parse(b.deadlineAt))return;
+   await workerFetchForArchive(new Request(origin+'/api/morning/race-predictions?'+params),env);
+  }catch(e){console.error('automatic_final_archive_failed',id,String(e?.message||e));}
+ });
 }
 // Read-only daily storage inventory. A planned slot is not proof of a completed race.
 function buildArchiveInventory(date,morning,before,result,now=Date.now()){
@@ -459,7 +477,7 @@ function buildArchiveInventory(date,morning,before,result,now=Date.now()){
  const stamp=x=>Number.isFinite(Date.parse(x||''))?x:null;
  return {date,expected:venues.length?venues.length*12:null,venues,counts,rows,updatedAt:{morning:stamp(morning?.updatedAt),before:stamp(before?.updatedAt),result:stamp(result?.updatedAt)},lastScan:before?.lastScan||null,archivesPresent:{morning:!!morning,before:!!before,result:!!result},source:'worker_kv_automatic_only',note:'予定枠数は実開催確定数ではありません。研究用GitHub保存・事後展示・例外着順の集計は含みません。未確認は中止・返還・不的中を意味しません。'};
 }
-export default {
+const workerHandler = {
   async scheduled(event,env,ctx) {
     // Route using the scheduled UTC hour rather than the provider's cron-string formatting.
     const scheduledTime=event.scheduledTime;
@@ -3488,6 +3506,8 @@ officialRacersInspection:
     } catch(e) {return reply(request,{status:'unavailable',reason:'upstream_fetch_failed',last50Verified:false,heatmapReadyForAnalysis:false,dataReadyForPrediction:false},502);}
   }
 };
+export default workerHandler;
+function workerFetchForArchive(request,env){return workerHandler.fetch(request,env);}
 // Boat Score データ解析機能
 function inspectBoatData(html) {
   return {
