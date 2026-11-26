@@ -11,7 +11,7 @@ permissions:
 jobs:
   research:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,8 +21,20 @@ jobs:
         run: |
           test "$GITHUB_REF_NAME" = "fix-boat-score-2-syntax-20261115"
           node scripts/test-analyze-adjacent-winrate-finishes.mjs
+      - name: Restore historical page checkpoints
+        uses: actions/cache/restore@v4
+        with:
+          path: .adjacent-cache
+          key: adjacent-20261125-05-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: adjacent-20261125-05-
       - name: Fetch and match historical official entries and results
         run: node scripts/run-historical-adjacent-research.mjs 20261125 5 1,2,3,4,5,6,7,8,9,10,11,12 adjacent-report.json
+      - name: Persist historical page checkpoints
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .adjacent-cache
+          key: adjacent-20261125-05-${{ github.run_id }}-${{ github.run_attempt }}
       - name: Save research report
         uses: actions/upload-artifact@v4
         with:
