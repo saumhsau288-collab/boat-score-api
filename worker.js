@@ -1024,9 +1024,20 @@ async function renderSavedMorningBlue(){
  if(!source?.rankedScores){el.textContent='基礎予想未取得';continue;}
  const hasRecent=Number.isFinite(Date.parse(data.deadlineAt))&&Date.now()<Date.parse(data.deadlineAt)&&Array.isArray(recent)&&recent.length===6&&new Set(recent.map(x=>x.boat)).size===6&&source.rankedScores.every(x=>recent.some(y=>y.boat===x.boat&&Number.isFinite(y.points)));
  const rows=source.rankedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
- const picks=hasRecent?trialPicks(rows):source;
- el.style.color=before&&hasRecent?'':'#fbbf24';
- el.textContent=(before?'直前情報反映':'直前情報未取得・基礎予想')+(hasRecent?'／まくらぼ反映（画面試算）':'／まくらぼ未取得')+'\\n【本命6点】\\n'+picks.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+picks.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+rows.map(x=>x.boat).join('-');
+ let picks=hasRecent?trialPicks(rows):source;
+ let displayRows=rows, appliedRecent=hasRecent, appliedBefore=Boolean(before);
+ const storageKey='four-prediction-final:v1:'+key+':'+i;
+ const cutoff=Date.parse(data.deadlineAt),closed=Number.isFinite(cutoff)&&Date.now()>=cutoff;
+ let saved=null;
+ try{saved=JSON.parse(localStorage.getItem(storageKey)||'null');}catch{}
+ const validSaved=saved?.key===key&&saved?.mode===i&&Date.parse(saved.capturedAt)<cutoff&&saved?.morningCapturedAt===base?.capturedAt&&Array.isArray(saved.rows)&&saved.rows.length===6&&saved.picks?.main?.length===6&&saved.picks?.upset?.length===6;
+ if(closed&&validSaved){picks=saved.picks;displayRows=saved.rows;appliedRecent=saved.recent;appliedBefore=saved.before;}
+ else if(!closed&&Number.isFinite(cutoff)&&base?.capturedAt){
+  if(validSaved&&saved.recent&&!hasRecent&&(!before||saved.before)){picks=saved.picks;displayRows=saved.rows;appliedRecent=saved.recent;appliedBefore=saved.before;}
+  else try{localStorage.setItem(storageKey,JSON.stringify({key,mode:i,capturedAt:new Date().toISOString(),morningCapturedAt:base.capturedAt,rows,picks,recent:hasRecent,before:Boolean(before)}));}catch{}
+ }
+ el.style.color=appliedBefore&&appliedRecent?'':'#fbbf24';
+ el.textContent=(closed?'締切済／':'')+(appliedBefore?'直前情報反映':'直前情報未取得・基礎予想')+(appliedRecent?'／まくらぼ反映（端末保存）':'／まくらぼ未取得')+'\\n【本命6点】\\n'+picks.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+picks.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+displayRows.map(x=>x.boat).join('-');
  }
  for(const [i,p] of [data.average,data.local].entries()){
  const el=targets[i];if(!el)continue;
