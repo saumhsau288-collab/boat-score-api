@@ -290,7 +290,7 @@ function summarizeBeforeArchive(date,before,archive){
  const validBoats=rows=>Array.isArray(rows)&&rows.length===6&&new Set(rows.map(x=>x?.boat)).size===6&&rows.every(x=>Number.isInteger(x?.boat)&&x.boat>=1&&x.boat<=6);
  for(const [id,row] of Object.entries(before?.records||{})){
   const capture=Date.parse(row?.capturedAt||''),deadline=Date.parse(row?.deadlineAt||'');
-  if(row?.date!==date||id!==row.venue+':'+row.race||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||!Number.isFinite(capture)||!Number.isFinite(deadline)||capture>=deadline||deadline-capture>600000||row.exhibition?.verified!==true||row.start?.verified!==true||!validBoats(row.exhibition.rows)||!validBoats(row.start.rows)){summary.excluded++;continue;}
+  if(row?.date!==date||id!==row.venue+':'+row.race||!Number.isInteger(row.venue)||row.venue<1||row.venue>24||!Number.isInteger(row.race)||row.race<1||row.race>12||!Number.isFinite(capture)||!Number.isFinite(deadline)||capture>=deadline||deadline-capture>900000||row.exhibition?.verified!==true||row.start?.verified!==true||!validBoats(row.exhibition.rows)||!validBoats(row.start.rows)){summary.excluded++;continue;}
   const result=archive?.records?.[id],order=result?.finishOrder;
   if(result?.verified!==true||result.date!==date||result.venue!==row.venue||result.race!==row.race||!Array.isArray(order)||order.length!==6||new Set(order).size!==6||!order.every(x=>Number.isInteger(x)&&x>=1&&x<=6)){summary.missingResult++;continue;}
   summary.records.push({date,venue:row.venue,race:row.race,capturedAt:row.capturedAt,deadlineAt:row.deadlineAt,finishOrder:order,exhibition:row.exhibition.rows,start:row.start.rows,weather:row.weather||null});
@@ -348,6 +348,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  state.discoveryFailures=state.discoveryFailures||{};
  state.partialRecords=state.partialRecords||{};
  state.failures=state.failures||{};
+ state.attemptHistory=state.attemptHistory||{};
  const venues=Array.isArray(morning?.venues)&&morning.date===date&&morning.venues.length?morning.venues:(state.venues?.length?state.venues:await officialScheduleVenueCandidates(date)||[]);
  state.venues=venues;
  for(const row of Object.values(state.deadlines))candidates.set(row.venue+':'+row.race,row);
@@ -369,12 +370,12 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  for(const item of discovered){state.discoveryAttempts[item.id]=(state.discoveryAttempts[item.id]||0)+1;if(item.row){state.deadlines[item.id]=item.row;candidates.set(item.id,item.row);delete state.discoveryFailures[item.id];}else state.discoveryFailures[item.id]={reason:item.reason||'unknown',at:new Date().toISOString()};}
  const eligible=[...candidates.values()].filter(row=>{
   const id=row.venue+':'+row.race,deadline=Date.parse(row.deadlineAt||'');
-  return row.date===date&&Number.isInteger(row.venue)&&row.venue>=1&&row.venue<=24&&Number.isInteger(row.race)&&row.race>=1&&row.race<=12&&Number.isFinite(deadline)&&deadline-Date.now()<=600000&&deadline-Date.now()>=15000&&!state.records[id]&&(state.attempts[id]||0)<4;
+  return row.date===date&&Number.isInteger(row.venue)&&row.venue>=1&&row.venue<=24&&Number.isInteger(row.race)&&row.race>=1&&row.race<=12&&Number.isFinite(deadline)&&deadline-Date.now()<=900000&&deadline-Date.now()>=15000&&!state.records[id]&&(state.attempts[id]||0)<6;
  }).sort((a,b)=>Date.parse(a.deadlineAt)-Date.parse(b.deadlineAt));
- const pending=eligible.slice(0,12);
- state.lastScan={at:new Date().toISOString(),targetCount:venues.length*12,knownDeadlineCount:candidates.size,discoveryBatch:missing.length,eligibleCount:eligible.length,selectedCount:pending.length,expiredUnverified:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)<=now&&!state.records[row.venue+':'+row.race]).length,futureCount:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)>now+600000).length};
+ const pending=eligible.slice(0,18);
+ state.lastScan={at:new Date().toISOString(),targetCount:venues.length*12,knownDeadlineCount:candidates.size,discoveryBatch:missing.length,eligibleCount:eligible.length,selectedCount:pending.length,expiredUnverified:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)<=now&&!state.records[row.venue+':'+row.race]).length,futureCount:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)>now+900000).length};
  const rows=await mapOfficialLimited(pending,3,async row=>{
-  const id=row.venue+':'+row.race;let deadline=Date.parse(row.deadlineAt);
+  const id=row.venue+':'+row.race;let deadline=Date.parse(row.deadlineAt),stage='deadline_recheck';
   const source='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date;
   try{
    const check=await fetch('https://www.boatrace.jp/owpc/pc/race/racelist?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(15000)});
@@ -384,18 +385,20 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    if(!confirmed)return {id,reason:'deadline_recheck_unverified'};
    deadline=Date.parse(confirmed);
    state.deadlines[id]={date,venue:row.venue,race:row.race,deadlineAt:confirmed};
-   if(deadline-Date.now()>600000)return {id,deferred:true};
-   const budget=Math.min(12000,deadline-Date.now()-1000);if(budget<1000)return {id,reason:'deadline_near'};
+   if(deadline-Date.now()>900000)return {id,deferred:true};
+   stage='beforeinfo';
+   const budget=Math.min(15000,deadline-Date.now()-1000);if(budget<1000)return {id,reason:'deadline_near'};
    const res=await fetch(source,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(budget)});
    if(!res.ok)return {id,reason:'http_'+res.status};const html=await res.text();if(html.length>1000000)return {id,reason:'response_too_large'};
    const capturedAt=new Date().toISOString();if(Date.parse(capturedAt)>=deadline)return {id,reason:'deadline_passed'};
+   if(deadline-Date.parse(capturedAt)>900000)return {id,deferred:true};
    const exhibition=extractOfficialExhibition(html),start=extractOfficialStartExhibition(html),weather=extractOfficialWeather(html);
    const observation={date,venue:row.venue,race:row.race,deadlineAt:new Date(deadline).toISOString(),capturedAt,source,exhibition,start,weather,model:'observation-only-v1'};
    if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id,reason:'exhibition_or_start_unverified',details:{exhibition:exhibition.verified===true,start:start.verified===true,weather:weather.verified===true,exhibitionRows:exhibition.candidateCount??0,startRows:start.candidateCount??0},partial:observation};
    return {id,record:observation};
-  }catch(e){return {id,reason:'fetch_or_parse_'+String(e?.name||'error')};}
+  }catch(e){return {id,reason:stage+'_'+String(e?.name||'error')};}
  });
- for(const row of rows){if(row.deferred)continue;state.attempts[row.id]=(state.attempts[row.id]||0)+1;if(row.record&&!state.records[row.id]){state.records[row.id]=row.record;delete state.failures[row.id];}else if(!row.record){state.failures[row.id]={reason:row.reason||'unknown',details:row.details||null,at:new Date().toISOString()};if(row.partial){const p=state.partialRecords[row.id]||{};for(const k of ['exhibition','start','weather'])if(row.partial[k]?.verified===true&&!p[k])p[k]={capturedAt:row.partial.capturedAt,deadlineAt:row.partial.deadlineAt,source:row.partial.source,data:row.partial[k]};if(Object.keys(p).length)state.partialRecords[row.id]=p;}}}
+ for(const row of rows){if(row.deferred)continue;state.attempts[row.id]=(state.attempts[row.id]||0)+1;state.attemptHistory[row.id]=[...(state.attemptHistory[row.id]||[]),{at:new Date().toISOString(),outcome:row.record?'saved':row.reason||'unknown',details:row.details||null}].slice(-6);if(row.record&&!state.records[row.id]){state.records[row.id]=row.record;delete state.failures[row.id];}else if(!row.record){state.failures[row.id]={reason:row.reason||'unknown',details:row.details||null,at:new Date().toISOString()};if(row.partial){const p=state.partialRecords[row.id]||{};for(const k of ['exhibition','start','weather'])if(row.partial[k]?.verified===true&&!p[k])p[k]={capturedAt:row.partial.capturedAt,deadlineAt:row.partial.deadlineAt,source:row.partial.source,data:row.partial[k]};if(Object.keys(p).length)state.partialRecords[row.id]=p;}}}
  state.updatedAt=new Date().toISOString();
  await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
 }
@@ -412,7 +415,7 @@ function buildArchiveInventory(date,morning,before,result,now=Date.now()){
   if(validId(row)&&row.ready===true&&row.officialVerified===true&&row.statsVerified===true&&sixRows(row.rankedScores)&&row.rankedScores.every(x=>Number.isFinite(x.score)))m.set(row.venue+':'+row.race,row);
  }
  for(const [k,row] of Object.entries(before?.records||{})){
-  if(validId(row)&&k===row.venue+':'+row.race&&timely(row)&&Date.parse(row.deadlineAt)-Date.parse(row.capturedAt)<=600000&&row.exhibition?.verified===true&&row.start?.verified===true&&sixRows(row.exhibition.rows)&&sixRows(row.start.rows))b.set(k,row);
+  if(validId(row)&&k===row.venue+':'+row.race&&timely(row)&&Date.parse(row.deadlineAt)-Date.parse(row.capturedAt)<=900000&&row.exhibition?.verified===true&&row.start?.verified===true&&sixRows(row.exhibition.rows)&&sixRows(row.start.rows))b.set(k,row);
  }
  for(const [k,row] of Object.entries(result?.records||{})){
   if(validId(row)&&k===row.venue+':'+row.race&&row.verified===true&&orderOK(row.finishOrder))f.set(k,row);
@@ -653,7 +656,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-archive-morning-v3',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-archive-15min-v4',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
