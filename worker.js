@@ -342,8 +342,10 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  const key='before-archive:v1:'+date;
  const state=JSON.parse(await env.MORNING_KV.get(key)||'null')||{date,version:1,records:{},attempts:{}};
  const candidates=new Map();
+ const validIdentity=row=>row?.date===date&&Number.isInteger(row.venue)&&row.venue>=1&&row.venue<=24&&Number.isInteger(row.race)&&row.race>=1&&row.race<=12&&Number.isFinite(Date.parse(row.deadlineAt||''));
+ const morningByRace=new Map();
  for(const row of (morning?.date===date&&Array.isArray(morning.records)?morning.records:[])){
-  if(row.date===date&&row.ready===true&&Number.isFinite(Date.parse(row.deadlineAt||'')))candidates.set(row.venue+':'+row.race,row);
+  if(validIdentity(row)&&row.ready===true){const id=row.venue+':'+row.race;candidates.set(id,row);if(validSavedMorningRecord(row,date))morningByRace.set(id,row);}
  }
  state.deadlines=state.deadlines||{};
  state.discoveryAttempts=state.discoveryAttempts||{};
@@ -354,7 +356,8 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  if(Date.parse(state.cooldownUntil||'')>now){state.lastScan={at:new Date().toISOString(),status:'cooldown',cooldownUntil:state.cooldownUntil,cooldownReason:state.cooldownReason};await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});return {date,status:'cooldown',cooldownUntil:state.cooldownUntil};}
  const venues=Array.isArray(morning?.venues)&&morning.date===date&&morning.venues.length?morning.venues:(state.venues?.length?state.venues:await officialScheduleVenueCandidates(date)||[]);
  state.venues=venues;
- for(const row of Object.values(state.deadlines))candidates.set(row.venue+':'+row.race,row);
+ for(const row of Object.values(state.deadlines))if(validIdentity(row))candidates.set(row.venue+':'+row.race,row);
+ for(const row of Object.values(state.records))if(validIdentity(row)&&!candidates.has(row.venue+':'+row.race))candidates.set(row.venue+':'+row.race,row);
  const missing=venues.filter(v=>Number.isInteger(v)&&v>=1&&v<=24).flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1}))).filter(({venue,race})=>!candidates.has(venue+':'+race)&&(state.discoveryAttempts[venue+':'+race]||0)<8).sort((a,b)=>(state.discoveryAttempts[a.venue+':'+a.race]||0)-(state.discoveryAttempts[b.venue+':'+b.race]||0)||a.race-b.race).slice(0,6);
  let accessDenied=false;
  const noteDenied=res=>{if(res.status!==403&&res.status!==429)return;accessDenied=true;const raw=res.headers?.get?.('Retry-After');const seconds=raw&&/^\d+$/.test(raw)?Number(raw)*1000:Date.parse(raw||'')-Date.now();const delay=Math.max(res.status===403?1800000:900000,Number.isFinite(seconds)?seconds:0);state.cooldownUntil=new Date(Date.now()+delay).toISOString();state.cooldownReason='http_'+res.status;};
@@ -406,7 +409,8 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    const exhibition=extractOfficialExhibition(html),start=extractOfficialStartExhibition(html),weather=extractOfficialWeather(html);
    const observation={date,venue:row.venue,race:row.race,deadlineAt:new Date(deadline).toISOString(),capturedAt,source,exhibition,start,weather,model:'observation-only-v1'};
    if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id,reason:'exhibition_or_start_unverified',details:{exhibition:exhibition.verified===true,start:start.verified===true,weather:weather.verified===true,exhibitionRows:exhibition.candidateCount??0,startRows:start.candidateCount??0},partial:observation};
-   const base=(morning?.records||[]).find(m=>m.venue===row.venue&&m.race===row.race&&validSavedMorningRecord(m,date)&&Date.parse(m.capturedAt)<Date.parse(capturedAt));
+   const savedBase=morningByRace.get(id);
+   const base=savedBase&&Date.parse(savedBase.capturedAt)<Date.parse(capturedAt)?savedBase:null;
    if(base){
     const recalculate=(scores,method)=>{
      const ex=applyVerifiedExhibitionAdjustment(scores,exhibition);
@@ -426,7 +430,9 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  state.lastScan.accessDenied=accessDenied;
  state.lastScan.cooldownUntil=state.cooldownUntil||null;
  state.lastScan.cooldownReason=state.cooldownReason||null;
- state.lastScan.reusedDeadlineCount=pending.filter(x=>confirmedThisScan.has(x.venue+':'+x.race)).length;
+ state.lastScan.reusedDeadlineCount=rows.filter(x=>!x.deferred&&confirmedThisScan.has(x.id)).length;
+ state.lastScan.savedMorningInputs=morningByRace.size;
+ state.lastScan.alreadyArchivedCount=[...candidates.keys()].filter(id=>!!state.records[id]).length;
  state.lastScan.attemptedCount=rows.filter(x=>!x.deferred).length;
  state.lastScan.savedCount=rows.filter(x=>x.record).length;
  state.lastScan.deferredCount=rows.filter(x=>x.deferred).length;
