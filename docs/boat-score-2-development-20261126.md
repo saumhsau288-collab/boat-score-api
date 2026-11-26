@@ -12,3 +12,6 @@ Scope: fix-boat-score-2-syntax-20261115; isolated Cloudflare preview only. Do no
 Last successful deployment: Actions run 45775779694, 3be01f9d. Edogawa 1R code 4, provisional 67.5 degrees; Tamagawa 1R code 11, provisional 225 degrees. Official mapping not established; do not use angles for scoring. Official combined retrieval 9.448 and 20.401 seconds. Morning audit: 0 verified, 58 unverified; do not fabricate historical timestamps. Fresh snapshot verification pending. New flag not yet deployed or tested.
 
 Next: verify official icon mapping, test fresh morning evidence, investigate duplicate retrieval and latency. Preserve existing functionality.
+
+## Follow-up
+Run 45777169983 succeeded; unverified wind flag confirmed. Morning evidence remains 0/58. Commit 019ff3bd8031dabdfc33bc8104542e6408e849bc saves weather with combined race data and permits same-race beforeinfo cache reuse for 120 seconds without claiming compass verification. Explicit refresh=1 bypasses reuse. Deployment and latency measurement pending.
