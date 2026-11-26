@@ -297,7 +297,7 @@ jobs:
           if(d.status==='completed'&&completed.size!==venueSet.size)
             throw Error('Completed status conflicts with incomplete venue coverage');
           const seenRaceKeys=new Set();
-          let legacyMissingOrder=0,legacyMissingCapture=0;
+          let legacyMissingOrder=0,legacyMissingCapture=0,invalidRawOrder=0,invalidRawCapture=0;
           // The 2026-11-23 and 2026-11-25 KV snapshots have observed missing six-boat order fields.
           // Treat these dates as incomplete historical evidence, not valid accuracy samples.
           // The earlier snapshot was collected before six-boat order
@@ -322,14 +322,47 @@ jobs:
               if(date>= '20261123'&&(!Array.isArray(order)||order.length!==6||
                  new Set(order).size!==6||!order.every(n=>Number.isInteger(n)&&n>=1&&n<=6))){
                 if(legacySnapshotDate)legacyMissingOrder++;
-                else throw Error('Morning ranking missing valid six-boat predictedOrder: '+key);
+                else {invalidRawOrder++;console.log('Unverified saved morning ranking order (excluded from verifiedCategories): '+key);}
               }
               if(date>='20261123'&&(!pick.capturedAt||Number.isNaN(Date.parse(pick.capturedAt)))){
                 if(legacySnapshotDate)legacyMissingCapture++;
-                else throw Error('Morning ranking missing capture timestamp: '+key);
+                else {invalidRawCapture++;console.log('Unverified saved morning ranking capture time (excluded from verifiedCategories): '+key);}
               }
             }
           }
+          // The immutable raw categories may contain legacy entries; validation must use
+          // the server's pre-deadline verified subset rather than rewriting past predictions.
+          if(!d.verifiedCategories||!d.categoryCoverage||!d.evidence)
+            throw Error('Missing verified morning snapshot coverage API');
+          let verifiedCandidateCount=0;
+          const verifiedKeys=new Set();
+          for(const category of ['main','upset','chaos']){
+            const verified=d.verifiedCategories[category],raw=d.categories[category],coverage=d.categoryCoverage[category];
+            if(!Array.isArray(verified)||verified.length>raw.length||verified.length>20||
+               coverage?.target!==20||coverage?.verified!==verified.length||
+               coverage?.shortfall!==20-verified.length)
+              throw Error('Invalid verified category coverage: '+category);
+            const rawKeys=new Set(raw.map(x=>x.venue+':'+x.race));
+            for(const pick of verified){
+              const key=pick.venue+':'+pick.race,order=pick.predictedOrder;
+              if(pick.date!==date||pick.category!==category||!rawKeys.has(key)||verifiedKeys.has(key)||
+                 !Number.isInteger(pick.venue)||!venueSet.has(pick.venue)||
+                 !Number.isInteger(pick.race)||pick.race<1||pick.race>12||
+                 !Array.isArray(order)||order.length!==6||new Set(order).size!==6||
+                 !order.every(n=>Number.isInteger(n)&&n>=1&&n<=6)||
+                 !Number.isFinite(Date.parse(pick.capturedAt))||
+                 !Number.isFinite(Date.parse(pick.deadlineAt))||
+                 Date.parse(pick.capturedAt)>=Date.parse(pick.deadlineAt))
+                throw Error('Invalid verified morning ranking: '+key);
+              verifiedKeys.add(key);verifiedCandidateCount++;
+            }
+          }
+          if(verifiedCandidateCount!==d.evidence.verifiedCandidates||
+             d.evidence.unverifiedCandidates!==seenRaceKeys.size-verifiedCandidateCount)
+            throw Error('Morning verified candidate count mismatch');
+          console.log('MORNING_EVIDENCE '+JSON.stringify({verifiedCandidates:verifiedCandidateCount,
+            unverifiedCandidates:d.evidence.unverifiedCandidates,quarantinedRecords:d.evidence.quarantinedRecords,
+            invalidRawOrder,invalidRawCapture,coverage:d.categoryCoverage}));
           if(!Array.isArray(d.boatOneRanking)||d.boatOneRanking.length>20||d.boatOneRankingProbabilityVerified!==false)throw Error('Invalid independent boat-one ranking');
           const oneKeys=new Set();
           let previous=Infinity;
@@ -345,7 +378,7 @@ jobs:
             completedVenues:d.completedVenues.length,eligible,failedVenues:(d.failedVenues||[]).length,
             main:(d.categories.main||[]).length,upset:(d.categories.upset||[]).length,
             chaos:(d.categories.chaos||[]).length,boatOne:d.boatOneRanking.length,
-            legacyMissingOrder,legacyMissingCapture,
+            legacyMissingOrder,legacyMissingCapture,invalidRawOrder,invalidRawCapture,verifiedCandidates:verifiedCandidateCount,
             note:legacyMissingOrder||legacyMissingCapture?'Legacy morning snapshot: missing fields were NOT backfilled and must not be used for pre-race accuracy.':'Observed snapshot only; not a historical accuracy test.'}));
           NODE
 
