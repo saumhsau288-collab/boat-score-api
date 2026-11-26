@@ -356,7 +356,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
   const id=venue+':'+race;
   try{
    const url='https://www.boatrace.jp/owpc/pc/race/racelist?rno='+race+'&jcd='+String(venue).padStart(2,'0')+'&hd='+date;
-   const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(5000)});
+   const res=await fetch(url,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(15000)});
    if(!res.ok)return {id,reason:'http_'+res.status};
    const html=await res.text();
    if(html.length>1000000)return {id,reason:'response_too_large'};
@@ -377,7 +377,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
   const id=row.venue+':'+row.race;let deadline=Date.parse(row.deadlineAt);
   const source='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date;
   try{
-   const check=await fetch('https://www.boatrace.jp/owpc/pc/race/racelist?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(5000)});
+   const check=await fetch('https://www.boatrace.jp/owpc/pc/race/racelist?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(15000)});
    if(!check.ok)return {id,reason:'deadline_recheck_http_'+check.status};
    const page=await check.text();
    const confirmed=page.length<=1000000&&extractOfficialBoatRows(page).verified===true?extractOfficialRaceDeadline(page,date):null;
@@ -648,7 +648,7 @@ if (u.pathname === '/api/official/source-diagnostics') {
   }
   return reply(request,{date,venue,race,checks,verified:false,note:'Connectivity diagnostics only. HTTP 200 does not verify six racers.'});
 }
-if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-official-position-trial-v1',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
+if (u.pathname === '/api/version') return reply(request,{app:'Boat Score 2 preview',build:'20261126-before-archive-timeout-v2',sourceBranch:'fix-boat-score-2-syntax-20261115',features:['official-verified-venues','official-verified-races','six-racer-finish-rate-comparison','abort-obsolete-fetches','bounded-upstream-concurrency'],deployedAt:'not_reported'});
 
 if (u.pathname === '/' || u.pathname === '/index.html') {
   if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
