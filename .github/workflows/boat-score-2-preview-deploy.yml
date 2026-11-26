@@ -271,8 +271,14 @@ jobs:
           if(!venues.length){console.log('No verified scheduled venue in saved snapshot; race probes skipped');process.exit(0);}
           for(const venue of venues.slice(0,2)){
             const q='?date='+date+'&venue='+venue+'&race=1';
-            await probe('/api/official/race-data'+q);
-            await probe('/api/official/beforeinfo'+q);
+            const combined=await probe('/api/official/race-data'+q);
+            const denied=combined?.diagnostics?.officialRacersReason==='official_http_403'||combined?.diagnostics?.beforeinfoReason==='official_beforeinfo_http_403';
+            if(denied){
+              console.log('OFFICIAL_ACCESS_DENIED '+JSON.stringify({venue,date,reason:'upstream_http_403',followupSkipped:true}));
+              continue;
+            }
+            const before=await probe('/api/official/beforeinfo'+q);
+            console.log('OFFICIAL_COVERAGE '+JSON.stringify({venue,date,racers:combined?.racersVerified===true,stats:combined?.statsVerified===true,exhibition:combined?.exhibitionVerified===true,start:combined?.startVerified===true,weather:combined?.weatherVerified===true,beforeinfoSource:before?.source??null}));
           }
           NODE
       - name: Inspect deployed morning snapshot without assuming completion
