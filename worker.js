@@ -3143,6 +3143,7 @@ if (u.pathname === '/api/official/race-data') {
   let beforeFailureReason=null;
   const requestStarted=Date.now();
   let racerElapsedMs=null,beforeElapsedMs=null,beforeAttempts=0;
+  const beforeAttemptDetails=[];
   const racerStarted=Date.now();
   const [official,before]=await Promise.all([
     fetchOfficialRacers(date,venue,race).catch(e=>({verified:false,statsVerified:false,racers:[],statsByBoat:[],reason:'official_fetch_error:'+String(e?.message||e).slice(0,100)})).finally(()=>{racerElapsedMs=Date.now()-racerStarted;}),
@@ -3151,20 +3152,24 @@ if (u.pathname === '/api/official/race-data') {
       try{
       for(let attempt=1;attempt<=2;attempt++){
         beforeAttempts=attempt;
+        const attemptStarted=Date.now();
+        let outcome='unknown';
         try{
           const res=await fetch(beforeUrl.toString(),{headers:{Accept:'text/html'},signal:AbortSignal.timeout(attempt===1?10000:15000)});
-          if(!res.ok){beforeFailureReason='official_beforeinfo_http_'+res.status;return null;}
+          if(!res.ok){outcome='http_'+res.status;beforeFailureReason='official_beforeinfo_http_'+res.status;return null;}
           const contentType=res.headers.get('content-type')||'';
-          if(contentType&&!/text\/html|application\/xhtml\+xml/i.test(contentType)){beforeFailureReason='official_beforeinfo_content_type';return null;}
+          if(contentType&&!/text\/html|application\/xhtml\+xml/i.test(contentType)){outcome='invalid_content_type';beforeFailureReason='official_beforeinfo_content_type';return null;}
           const html=await res.text();
-          if(html.length>1000000){beforeFailureReason='official_beforeinfo_too_large';return null;}
+          if(html.length>1000000){outcome='too_large';beforeFailureReason='official_beforeinfo_too_large';return null;}
           beforeFailureReason=null;
+          outcome='html_received';
           return html;
         }catch(e){
           const timeout=e?.name==='TimeoutError'||e?.name==='AbortError';
           beforeFailureReason=(timeout?'official_beforeinfo_timeout':'official_beforeinfo_fetch_failed')+'_attempt_'+attempt;
+          outcome=timeout?'timeout':'transport_error';
           if(!timeout||attempt===2)return null;
-        }
+        }finally{beforeAttemptDetails.push({attempt,elapsedMs:Date.now()-attemptStarted,outcome});}
       }
       return null;
       }finally{beforeElapsedMs=Date.now()-started;}
@@ -3193,7 +3198,7 @@ if (u.pathname === '/api/official/race-data') {
   if(weather.windDirectionVerified!==true)missingInputs.push('windDirection');
   return reply(request,{
     status:complete?'official_sources_verified':'partial',missingInputs,capturedAt:new Date().toISOString(),source:'official_race_data',
-    diagnostics:{timing:{racerElapsedMs,beforeElapsedMs,beforeAttempts,totalElapsedMs:Date.now()-requestStarted},officialRacersReason:official.verified?null:(official.reason||'official_racer_rows_not_verified'),officialRacerCandidateCount:official.officialBoatRowCandidates??null,officialResponseLength:official.htmlLength??null,officialStatsReason:official.statsVerified?null:'official_stats_not_verified',averageSTParseDiagnostics:official.averageSTParseDiagnostics||[],beforeinfoReason:beforeFailureReason||(before?(exhibition.verified&&start.verified&&weather.verified?'beforeinfo_verified':'beforeinfo_parsing_not_verified'):'beforeinfo_unavailable'),beforeinfoResponseLength:before?.length??null,exhibitionCandidateCount:exhibition.candidateCount??0,startCandidateCount:start.candidateCount??0,exhibitionParserVerified:exhibition.verified===true,startParserVerified:start.verified===true,weatherParserReason:weather.reason??null,windIconEvidence:weather.windIconEvidence||[],windDirectionMarkup:weather.windDirectionMarkup||null,windIconCode:weather.windIconCode??null,windArrowDegrees:weather.windArrowDegrees??null,windArrowVerified:false,selectedDate:date,selectedVenue:Number(venue),selectedRace:Number(race)},
+    diagnostics:{timing:{racerElapsedMs,beforeElapsedMs,beforeAttempts,beforeAttemptDetails,totalElapsedMs:Date.now()-requestStarted},officialRacersReason:official.verified?null:(official.reason||'official_racer_rows_not_verified'),officialRacerCandidateCount:official.officialBoatRowCandidates??null,officialResponseLength:official.htmlLength??null,officialStatsReason:official.statsVerified?null:'official_stats_not_verified',averageSTParseDiagnostics:official.averageSTParseDiagnostics||[],beforeinfoReason:beforeFailureReason||(before?(exhibition.verified&&start.verified&&weather.verified?'beforeinfo_verified':'beforeinfo_parsing_not_verified'):'beforeinfo_unavailable'),beforeinfoResponseLength:before?.length??null,exhibitionCandidateCount:exhibition.candidateCount??0,startCandidateCount:start.candidateCount??0,exhibitionParserVerified:exhibition.verified===true,startParserVerified:start.verified===true,weatherParserReason:weather.reason??null,windIconEvidence:weather.windIconEvidence||[],windDirectionMarkup:weather.windDirectionMarkup||null,windIconCode:weather.windIconCode??null,windArrowDegrees:weather.windArrowDegrees??null,windArrowVerified:false,selectedDate:date,selectedVenue:Number(venue),selectedRace:Number(race)},
     racersVerified:official.verified,statsVerified:official.statsVerified===true,
     exhibitionVerified:exhibitionMatches,startVerified:startMatches,weatherVerified:weather.verified===true,
     racersByBoat:official.verified?official.racers:[],
