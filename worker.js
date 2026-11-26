@@ -115,6 +115,20 @@ function validSavedMorningRecord(row,date){
  const day=t=>new Date(t+9*3600000).toISOString().slice(0,10).replace(/-/g,'');
  return day(c)===date&&day(d)===date&&JSON.stringify(row.predictedOrder)===JSON.stringify(scores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>x.boat));
 }
+function buildVerifiedMorningCategories(records,date){
+  const valid=records.filter(row=>validSavedMorningRecord(row,date));
+  const byKey=new Map(valid.map(row=>[row.venue+':'+row.race,row]));
+  const ranking=classifyDailyRaceCandidates(valid);
+  const categories={main:ranking.main,upset:ranking.upset,chaos:ranking.chaos};
+  for(const [category,picks] of Object.entries(categories)){
+    for(const pick of picks){
+      const row=byKey.get(pick.venue+':'+pick.race);
+      if(!row||pick.date!==date||pick.category!==category||pick.capturedAt!==row.capturedAt||pick.deadlineAt!==row.deadlineAt||JSON.stringify(pick.predictedOrder)!==JSON.stringify(row.predictedOrder))
+        throw Error('Morning ranking evidence mismatch: '+category+':'+pick.venue+':'+pick.race);
+    }
+  }
+  return categories;
+}
 async function runScheduledMorning(env,scheduledTime) {
   const date=jstDateFromUtc(new Date(scheduledTime));
   if(!env?.MORNING_KV)throw Error('MORNING_KV binding is required');
@@ -162,8 +176,8 @@ async function runScheduledMorning(env,scheduledTime) {
     state.exhaustedVenues=exhausted;
     state.status=state.completedVenues.length>=venues.length?'completed':'incomplete';
     state.updatedAt=new Date().toISOString();
-    const ranking=classifyDailyRaceCandidates(state.records);
-    state.categories={main:ranking.main,upset:ranking.upset,chaos:ranking.chaos};
+    state.categories=buildVerifiedMorningCategories(state.records,date);
+    state.categoryEvidenceVersion=2;
     state.boatOneRanking=rankMorningBoatOne(state.records,date);
     state.boatOneRankedAt=state.updatedAt;
     await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
@@ -199,8 +213,8 @@ async function runScheduledMorning(env,scheduledTime) {
       }
     }catch(e){if(!state.failedVenues.includes(venue))state.failedVenues.push(venue);}
     state.updatedAt=new Date().toISOString();
-    const ranking=classifyDailyRaceCandidates(state.records);
-    state.categories={main:ranking.main,upset:ranking.upset,chaos:ranking.chaos};
+    state.categories=buildVerifiedMorningCategories(state.records,date);
+    state.categoryEvidenceVersion=2;
     state.boatOneRanking=rankMorningBoatOne(state.records,date);
     state.boatOneRankedAt=state.updatedAt;
     const exhausted=venues.filter(v=>!state.completedVenues.includes(v)&&(state.attempts[v]||0)>=3);
