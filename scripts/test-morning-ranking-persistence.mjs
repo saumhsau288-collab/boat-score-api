@@ -26,11 +26,19 @@ const parserStart=src.indexOf('function extractOfficialRaceDeadline(');
 const parserEnd=src.indexOf('\nfunction buildMorningRaceInputs(',parserStart);
 assert.ok(parserStart>=0&&parserEnd>parserStart,'Official deadline parser must be present');
 const parseDeadline=vm.runInNewContext(src.slice(parserStart,parserEnd)+'\nextractOfficialRaceDeadline;');
-const html='<div>締切予定時刻 12:15</div><script>締切予定時刻 21:00</script>';
-assert.equal(parseDeadline(html,'20261123'),'2026-11-23T03:15:00.000Z');
-assert.equal(parseDeadline('<div>締切予定時刻 12:15 締切予定時刻 12:20</div>','20261123'),null);
-assert.equal(parseDeadline('<div>12:15</div>','20261123'),null);
-assert.equal(parseDeadline('<div>締切予定時刻 25:15</div>','20261123'),null);
+const raceTimes=["08:35","09:01","09:27","09:53","10:22","10:51","11:19","11:56","12:29","12:58","13:33","14:14"];
+const table=(values)=>'<table><tr><th>レース</th>'+values.map((_,i)=>'<th>'+(i+1)+'R</th>').join('')+'</tr><tr><th>締切予定時刻</th>'+values.map(t=>'<td>'+t+'</td>').join('')+'</tr></table>';
+const html=table(raceTimes)+'<script>締切予定時刻 21:00</script>';
+for(let race=1;race<=12;race++){
+ const expected=new Date(Date.UTC(2026,10,23,Number(raceTimes[race-1].slice(0,2))-9,Number(raceTimes[race-1].slice(3)))).toISOString();
+ assert.equal(parseDeadline(html,'20261123',race),expected,'Race '+race+' deadline must use its own column');
+}
+assert.equal(parseDeadline(table(raceTimes.map((t,i)=>i===1?'08:35':t)),'20261123',2),null,'Duplicated/non-increasing cutoff times are invalid');
+assert.equal(parseDeadline(table(raceTimes)+'<table><tr><th>レース</th>'+raceTimes.map((_,i)=>'<th>'+(i+1)+'R</th>').join('')+'</tr><tr><th>締切予定時刻</th>'+raceTimes.map((t,i)=>'<td>'+(i===0?'08:36':t)+'</td>').join('')+'</tr></table>','20261123',1),null,'Conflicting tables are invalid');
+assert.equal(parseDeadline('<div>締切予定時刻 12:15</div>','20261123',1),null,'Unscoped deadline is invalid');
+assert.equal(parseDeadline(html,'20261123',13),null,'Invalid race number is rejected');
+assert.equal(parseDeadline('<div>12:15</div>','20261123',1),null);
+assert.equal(parseDeadline('<div>締切予定時刻 25:15</div>','20261123',1),null);
 console.log('Production official cutoff parser: labeled JST time, ambiguity and missing evidence checks passed.');
 
 
