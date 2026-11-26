@@ -3372,9 +3372,30 @@ const htmlLength = html.length;
      const allSixVerified = verifiedRows.length === 6 &&
        verifiedRows.every(row => row.verified === true) &&
        new Set(verifiedRows.map(row => row.boat)).size === 6;
+let recentArchiveStatus='not_verified';
+if(last50MatchesOfficial&&allSixVerified&&env?.MORNING_KV){
+ try{
+ const v=Number(venue),rr=Number(race),id=v+':'+rr;
+ const morning=JSON.parse(await env.MORNING_KV.get('morning:'+date)||'null');
+ const base=(morning?.records||[]).find(m=>m.venue===v&&m.race===rr&&validSavedMorningRecord(m,date));
+ const deadline=Date.parse(officialRacers.deadlineAt||'');
+ const rows=parsedLast50.rows;
+ const valid=rows.length===6&&new Set(rows.map(x=>x.boat)).size===6&&rows.every(x=>Number.isInteger(x.runs)&&x.runs>=1&&x.runs<=50&&Array.isArray(x.counts)&&x.counts.length===6&&x.counts.every(n=>Number.isInteger(n)&&n>=0)&&x.counts.reduce((a,b)=>a+b,0)===x.runs);
+ if(base&&valid&&Number.isFinite(deadline)&&Date.now()<deadline){
+ const key='recent50-evidence:v1:'+date+':'+id;
+ const old=JSON.parse(await env.MORNING_KV.get(key)||'null');
+ const capturedAt=new Date().toISOString();
+ if(!old&&Date.parse(capturedAt)<deadline){
+ await env.MORNING_KV.put(key,JSON.stringify({date,venue:v,race:rr,capturedAt,deadlineAt:new Date(deadline).toISOString(),morningCapturedAt:base.capturedAt,rows:rows.map(x=>({boat:x.boat,name:x.name,runs:x.runs,counts:x.counts})),source}),{expirationTtl:31536000});
+ recentArchiveStatus='saved';
+ }else recentArchiveStatus=old?'already_saved':'closed';
+ }else recentArchiveStatus='missing_base_or_closed';
+ }catch(e){recentArchiveStatus='save_failed';}
+}
 return reply(request,{
   status:'fetched',
   source,
+  recentArchiveStatus,
   
 ...inspectBoatData(html),
 boatLinks: extractBoatLinks(html),
