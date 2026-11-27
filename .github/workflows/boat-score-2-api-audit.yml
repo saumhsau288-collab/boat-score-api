@@ -62,6 +62,17 @@ jobs:
                 if(reasons.length&&samples.length<6)samples.push({category,venue:p.venue,race:p.race,reasons,candidate:{date:p.date,capturedAt:p.capturedAt,deadlineAt:p.deadlineAt,predictedOrder:p.predictedOrder},record:r});
               }
               console.log('MORNING_CANDIDATE_DIAGNOSTICS',JSON.stringify({date,counts,evidence:snapshot.evidence,samples}));
+              const picks=Object.values(snapshot.categories||{}).flat();
+              const linked=picks.filter(p=>(archive.records||[]).filter(r=>r.date===date&&r.venue===p.venue&&r.race===p.race).length===1);
+              const checked=[];
+              for(let i=0;i<linked.length;i+=5)await Promise.all(linked.slice(i,i+5).map(async p=>{
+                try{
+                  const r=await fetch(base+'/api/morning/race-predictions?date='+date+'&venue='+p.venue+'&race='+p.race,{signal:AbortSignal.timeout(12000)});
+                  const d=await r.json();
+                  checked.push({venue:p.venue,race:p.race,http:r.status,keys:Object.keys(d),averageReady:d.average?.ready===true,localReady:d.local?.ready===true});
+                }catch(e){checked.push({venue:p.venue,race:p.race,error:String(e)});}
+              }));
+              console.log('CANDIDATE_LINK_AUDIT',JSON.stringify({date,total:picks.length,identityMatched:linked.length,serverSummary:snapshot.candidateLinkSummary??null,checked}));
             }catch(e){console.log('MORNING_CANDIDATE_DIAGNOSTICS_ERROR',date,String(e));}
           }
           for(const date of dates){
