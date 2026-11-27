@@ -29,6 +29,8 @@ jobs:
         run: node scripts/test-extract-official-result-diagnostics.mjs
       - name: Validate morning record recovery
         run: node scripts/test-morning-recovery.mjs
+      - name: Validate morning ranking persistence and linked evidence display
+        run: node scripts/test-morning-ranking-persistence.mjs
       - name: Validate adjacent win-rate research
         run: |
           node --check scripts/run-historical-adjacent-research.mjs
