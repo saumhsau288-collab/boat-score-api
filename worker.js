@@ -396,8 +396,8 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  for(const row of Object.values(state.records))if(validIdentity(row)&&!candidates.has(row.venue+':'+row.race))candidates.set(row.venue+':'+row.race,row);
  const missing=venues.filter(v=>Number.isInteger(v)&&v>=1&&v<=24).flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1}))).filter(({venue,race})=>!candidates.has(venue+':'+race)&&(state.discoveryAttempts[venue+':'+race]||0)<8).sort((a,b)=>(state.discoveryAttempts[a.venue+':'+a.race]||0)-(state.discoveryAttempts[b.venue+':'+b.race]||0)||a.race-b.race).slice(0,6);
  let accessDenied=false;
- const noteDenied=res=>{if(res.status!==403&&res.status!==429)return;accessDenied=true;const raw=res.headers?.get?.('Retry-After');const seconds=raw&&/^\d+$/.test(raw)?Number(raw)*1000:Date.parse(raw||'')-Date.now();const delay=Math.max(res.status===403?1800000:900000,Number.isFinite(seconds)?seconds:0);state.cooldownUntil=new Date(Date.now()+delay).toISOString();state.cooldownReason='http_'+res.status;};
- const discovered=await mapOfficialLimited(missing,3,async ({venue,race})=>{
+ const noteDenied=res=>{if(res.status!==403&&res.status!==429)return;accessDenied=true;const raw=res.headers?.get?.('Retry-After');const seconds=raw&&/^\d+$/.test(raw)?Number(raw)*1000:Date.parse(raw||'')-Date.now();const delay=Math.max(res.status===403?1800000:900000,Number.isFinite(seconds)?seconds:0);const until=Date.now()+delay;if(!Number.isFinite(Date.parse(state.cooldownUntil||''))||until>Date.parse(state.cooldownUntil)){state.cooldownUntil=new Date(until).toISOString();state.cooldownReason='http_'+res.status;}};
+ const discovered=await mapOfficialLimited(missing,1,async ({venue,race})=>{
   const id=venue+':'+race;
   if(accessDenied)return {id,deferred:true};
   try{
@@ -420,7 +420,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  const pending=eligible.slice(0,18);
  const confirmedThisScan=new Set(discovered.filter(x=>x.confirmedThisScan).map(x=>x.id));
  state.lastScan={at:new Date().toISOString(),targetCount:venues.length*12,knownDeadlineCount:candidates.size,discoveryBatch:missing.length,eligibleCount:eligible.length,selectedCount:pending.length,expiredUnverified:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)<=now&&!state.records[row.venue+':'+row.race]).length,futureCount:[...candidates.values()].filter(row=>Date.parse(row.deadlineAt)>now+900000).length};
- const rows=await mapOfficialLimited(pending,3,async row=>{
+ const rows=await mapOfficialLimited(pending,1,async row=>{
   const id=row.venue+':'+row.race;let deadline=Date.parse(row.deadlineAt),stage='deadline_recheck';
   if(accessDenied)return {id,deferred:true};
   const source='https://www.boatrace.jp/owpc/pc/race/beforeinfo?rno='+row.race+'&jcd='+String(row.venue).padStart(2,'0')+'&hd='+date;
@@ -446,7 +446,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    const observation={date,venue:row.venue,race:row.race,deadlineAt:new Date(deadline).toISOString(),capturedAt,source,exhibition,start,weather,model:'observation-only-v1'};
    if(exhibition.verified!==true||start.verified!==true||exhibition.rows?.length!==6||start.rows?.length!==6)return {id,reason:'exhibition_or_start_unverified',details:{exhibition:exhibition.verified===true,start:start.verified===true,weather:weather.verified===true,exhibitionRows:exhibition.candidateCount??0,startRows:start.candidateCount??0},partial:observation};
    const savedBase=morningByRace.get(id);
-   const base=savedBase&&Date.parse(savedBase.capturedAt)<Date.parse(capturedAt)?savedBase:null;
+   const base=savedBase&&Date.parse(savedBase.capturedAt)<Date.parse(capturedAt)&&Date.parse(savedBase.deadlineAt)===deadline?savedBase:null;
    if(base){
     const recalculate=(scores,method)=>{
      const ex=applyVerifiedExhibitionAdjustment(scores,exhibition);
@@ -507,7 +507,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    }
   }catch(e){finalArchiveStats.failed++;console.error('automatic_final_archive_failed',id,String(e?.message||e));}
  });
- const archiveSummary={date,scanAt:new Date().toISOString(),eligible:finalCandidates.length,...finalArchiveStats};
+ const archiveSummary={date,status:accessDenied?'access_denied':'finished',scanAt:new Date().toISOString(),eligible:finalCandidates.length,...finalArchiveStats};
  console.log('automatic_final_archive_scan',JSON.stringify(archiveSummary));
  return archiveSummary;
 }
@@ -530,7 +530,7 @@ function buildArchiveInventory(date,morning,before,result,now=Date.now()){
   if(validId(row)&&k===row.venue+':'+row.race&&row.verified===true&&orderOK(row.finishOrder))f.set(k,row);
  }
  const venues=[...new Set([morning,before,result].flatMap(x=>Array.isArray(x?.venues)?x.venues:[]).filter(validVenue))].sort((a,b)=>a-b);
- const partialOK=(x,k)=>x?.data?.verified===true&&timely(x)&&(k==='weather'||sixRows(x.data.rows));
+ const partialOK=(x,k)=>x?.data?.verified===true&&timely(x)&&Date.parse(x.deadlineAt)-Date.parse(x.capturedAt)<=900000&&jstDateFromUtc(new Date(x.capturedAt))===date&&jstDateFromUtc(new Date(x.deadlineAt))===date&&(k==='weather'||sixRows(x.data.rows));
  const counts={morning:0,morningTimed:0,morningOrder:0,before:0,exhibition:0,start:0,weather:0,partial:0,results:0,complete:0};
  const rows=[];
  for(const venue of venues)for(let race=1;race<=12;race++){
