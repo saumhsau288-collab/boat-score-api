@@ -42,6 +42,12 @@ jobs:
             try{
               const audit=await get('/api/research/morning-boat-one-audit?date='+date);
               const wins=(audit.details||[]).filter(x=>x.status==='win'&&x.finishOrder?.[0]===1);
+              const morning=await get('/api/research/morning-records?date='+date);
+              const sample=(morning.records||[]).slice(0,3);
+              for(const x of sample){
+                const d=await get('/api/morning/race-predictions?date='+date+'&venue='+x.venue+'&race='+x.race);
+                console.log('PREDICTION_STORAGE_DIAGNOSTIC '+JSON.stringify({date,venue:x.venue,race:x.race,keys:Object.keys(d),deadlineAt:d.deadlineAt,averagePresent:!!d.average,localPresent:!!d.local,averageKeys:Object.keys(d.average||{}),localKeys:Object.keys(d.local||{}),averageMainCount:d.average?.main?.length??null,localMainCount:d.local?.main?.length??null,averageUpsetCount:d.average?.upset?.length??null,localUpsetCount:d.local?.upset?.length??null}));
+              }
               const totals=Object.fromEntries(['average','local'].map(k=>[k,{matched:0,main:0,upset:0,either:0,missing:0}]));
               for(const x of wins){
                 const d=await get('/api/morning/race-predictions?date='+date+'&venue='+x.venue+'&race='+x.race);
