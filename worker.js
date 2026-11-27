@@ -751,19 +751,20 @@ if(u.pathname==='/api/research/before-prediction-comparison'){
   if(!validSavedMorningRecord(m,date))continue;
   const id=m.venue+':'+m.race,b=before?.records?.[id],p=b?.researchPrediction;
   const valid=p?.status==='provisional_not_calibrated'&&p.morningCapturedAt===m.capturedAt&&p.capturedAt===b.capturedAt&&b.date===date&&b.venue===m.venue&&b.race===m.race&&Date.parse(b.capturedAt)>Date.parse(m.capturedAt)&&Date.parse(b.capturedAt)<Date.parse(b.deadlineAt)&&Date.parse(b.deadlineAt)-Date.parse(b.capturedAt)<=900000;
-  const baseline=rankTrifectaCandidates(m.rankedScores),updated=valid?rankTrifectaCandidates(p.rankedScores):null;
-  const ready=updated?.ready===true&&JSON.stringify(updated.main)===JSON.stringify(p.main)&&JSON.stringify(updated.upset)===JSON.stringify(p.upset);
+  const identifySaved=p=>{if(!p)return null;const matches=[0,18].filter(bonus=>{const q=rankTrifectaCandidates(p.rankedScores,bonus);return q.ready&&JSON.stringify(q.main)===JSON.stringify(p.main)&&JSON.stringify(q.upset)===JSON.stringify(p.upset);});if(p.firstPlaceBonus!==undefined&&!matches.includes(p.firstPlaceBonus))return null;return matches.length?{...p,ready:true,verifiedFirstPlaceBonus:p.firstPlaceBonus??(matches.length===1?matches[0]:null)}:null;};
+  const baseline= m.averageMorning?.capturedAt===m.capturedAt?identifySaved(m.averageMorning):null,updated=valid?identifySaved(p):null;
+  const ready=updated?.ready===true;
   const closed=Date.now()>=Date.parse(b?.deadlineAt||m.deadlineAt);
-  const row={venue:m.venue,race:m.race,deadlineAt:b?.deadlineAt||m.deadlineAt,status:closed?'closed':ready?'updated':'morning_only',morning:baseline,before:ready?p:null,weather:b?.weather||null};
+  const row={venue:m.venue,race:m.race,deadlineAt:b?.deadlineAt||m.deadlineAt,status:closed?'closed':ready?'updated':'morning_only',morning:baseline,before:ready?updated:null,weather:b?.weather||null};
   const actual=matched.get(id)?.finishOrder?.slice(0,3).join('-');
-  if(actual&&ready&&baseline.ready){
+  if(actual&&ready&&baseline?.ready){
    const hit=picks=>picks.some(x=>x.join('-')===actual);
    row.hits={morningMain:hit(baseline.main),morningUpset:hit(baseline.upset),beforeMain:hit(updated.main),beforeUpset:hit(updated.upset)};
    totals.matched++;for(const k of Object.keys(row.hits))totals[k]+=Number(row.hits[k]);
   }
   rows.push(row);
  }
- return reply(request,{date,totals,rows,note:'Paired provisional comparison; morning picks reconstructed from saved scores, not claimed as original displayed picks. Weather is observation only.'});
+ return reply(request,{date,totals,rows,note:'Paired comparison of saved original tickets only; missing or inconsistent tickets excluded. verifiedFirstPlaceBonus null means ambiguous legacy/new identity. Weather is observation only.'});
 }
 if(u.pathname==='/api/research/scheduler-health'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
