@@ -159,12 +159,24 @@ async function runScheduledMorning(env,scheduledTime) {
   if(!Array.isArray(state.failedVenues))state.failedVenues=[];
   if(!Array.isArray(state.records))state.records=[];
   state.venues=venues;
+  // Reject both sides of a conflicting timetable; do not guess which deadline is correct.
+  const conflictingDeadlines=records=>{
+    const bad=new Set();
+    for(let i=0;i<records.length;i++)for(let j=i+1;j<records.length;j++){
+      const a=records[i],b=records[j];
+      if(a?.date!==date||b?.date!==date||a.venue!==b.venue||a.race===b.race)continue;
+      const x=Date.parse(a.deadlineAt),y=Date.parse(b.deadlineAt);
+      if(Number.isFinite(x)&&Number.isFinite(y)&&(a.race-b.race)*(x-y)<=0){bad.add(a.venue+':'+a.race);bad.add(b.venue+':'+b.race);}
+    }
+    return bad;
+  };
+  const initialConflicts=conflictingDeadlines(state.records);
   const verified=new Map();
   state.invalidMorningRecords=Array.isArray(state.invalidMorningRecords)?state.invalidMorningRecords:[];
   const invalidKeys=new Set(state.invalidMorningRecords.map(x=>x?.date+':'+x?.venue+':'+x?.race));
   for(const row of state.records){
     const id=row?.date+':'+row?.venue+':'+row?.race;
-    if(validSavedMorningRecord(row,date)){if(!verified.has(id))verified.set(id,row);}
+    if(validSavedMorningRecord(row,date)&&!initialConflicts.has(row.venue+':'+row.race)){if(!verified.has(id))verified.set(id,row);}
     else if(!invalidKeys.has(id)){state.invalidMorningRecords.push(row);invalidKeys.add(id);}
   }
   state.records=[...verified.values()];
@@ -203,7 +215,13 @@ async function runScheduledMorning(env,scheduledTime) {
         return {...row,averageMorning,localMorning,capturedAt,predictedOrder,evidenceVersion:2,raceCard:{racers:official.racers,statsByBoat:official.statsByBoat},courseStats:matchOfficialCourseStats(officialCourseData,date,official,null)};
       });
       const existing=new Set(state.records.map(x=>x.date+':'+x.venue+':'+x.race));
-      for(const row of rows.filter(x=>validSavedMorningRecord(x,date))){
+      const incoming=rows.filter(x=>validSavedMorningRecord(x,date));
+      const conflicts=conflictingDeadlines([...state.records,...incoming]);
+      for(const row of incoming.filter(x=>conflicts.has(x.venue+':'+x.race))){
+        const id=row.date+':'+row.venue+':'+row.race;
+        if(!invalidKeys.has(id)){state.invalidMorningRecords.push({...row,quarantineReason:'deadline_order_conflict'});invalidKeys.add(id);}
+      }
+      for(const row of incoming.filter(x=>!conflicts.has(x.venue+':'+x.race))){
         const id=row.date+':'+row.venue+':'+row.race;
         if(!existing.has(id)){state.records.push(row);existing.add(id);completedRaces.add(row.race);}
       }
