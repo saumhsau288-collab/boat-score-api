@@ -709,6 +709,7 @@ if(u.pathname==='/api/research/four-prediction-comparison'){
  const names=['morningAverage','morningLocal','beforeAverage','beforeLocal'];
  const totals=Object.fromEntries(names.map(k=>[k,{main:0,upset:0,either:0}]));
  const groupTotals=Object.fromEntries(['complete','fallback'].map(g=>[g,Object.fromEntries(names.map(k=>[k,{main:0,upset:0,either:0}]))]));
+ const ruleTotals=Object.fromEntries(['legacy','bonus18','ambiguous'].map(rule=>[rule,Object.fromEntries(names.map(k=>[k,{matched:0,main:0,upset:0,either:0}]))]));
  const overlapTotals={entries:0,unique:0,duplicates:0};
  const audit=summarizeBeforeArchive(date,before,result),matched=new Map(audit.records.map(x=>[x.venue+':'+x.race,x]));
  let count=0;
@@ -723,7 +724,8 @@ if(u.pathname==='/api/research/four-prediction-comparison'){
  const final=complete?full:valid(fallback)?fallback:null;
  if(!final){missingFinal.count++;continue;}
  const models=[m.averageMorning,m.localMorning,final.average,final.local];
- if(!models.every((p,i)=>{if(!p||p.capturedAt!==(i<2?m.capturedAt:b.capturedAt)||(i>=2&&p.morningCapturedAt!==m.capturedAt))return false;return [0,18].some(bonus=>{const q=rankTrifectaCandidates(p.rankedScores,bonus);return q.ready&&JSON.stringify(q.main)===JSON.stringify(p.main)&&JSON.stringify(q.upset)===JSON.stringify(p.upset);});}))continue;
+ const rules=models.map((p,i)=>{if(!p||p.capturedAt!==(i<2?m.capturedAt:b.capturedAt)||(i>=2&&p.morningCapturedAt!==m.capturedAt))return null;const matches=[0,18].filter(bonus=>{const q=rankTrifectaCandidates(p.rankedScores,bonus);return q.ready&&JSON.stringify(q.main)===JSON.stringify(p.main)&&JSON.stringify(q.upset)===JSON.stringify(p.upset);});if(!matches.length||(p.firstPlaceBonus!==undefined&&!matches.includes(p.firstPlaceBonus)))return null;const bonus=p.firstPlaceBonus??(matches.length===1?matches[0]:null);return bonus===18?'bonus18':bonus===0?'legacy':'ambiguous';});
+ if(rules.some(x=>!x))continue;
  count++;
  const group=complete?'complete':'fallback';groups[group]++;
  const sets=models.map(p=>new Set([...p.main,...p.upset].map(x=>x.join('-'))));
@@ -731,12 +733,13 @@ if(u.pathname==='/api/research/four-prediction-comparison'){
  const pairs=[];
  for(let a=0;a<sets.length;a++)for(let b=a+1;b<sets.length;b++)pairs.push({a:names[a],b:names[b],shared:[...sets[a]].filter(x=>sets[b].has(x)).length});
  overlapTotals.entries+=entries;overlapTotals.unique+=unique;overlapTotals.duplicates+=entries-unique;
- details.push({venue:m.venue,race:m.race,group,actual,savedAt:final.savedAt,overlap:{entries,unique,duplicates:entries-unique,pairs}});
- models.forEach((p,i)=>{const t=totals[names[i]],hit=a=>a.some(x=>x.join('-')===actual),main=hit(p.main),upset=hit(p.upset);for(const target of [t,groupTotals[group][names[i]]]){target.main+=Number(main);target.upset+=Number(upset);target.either+=Number(main||upset);}});
+ details.push({venue:m.venue,race:m.race,group,actual,rules:Object.fromEntries(names.map((n,i)=>[n,rules[i]])),savedAt:final.savedAt,overlap:{entries,unique,duplicates:entries-unique,pairs}});
+ models.forEach((p,i)=>{const t=totals[names[i]],hit=a=>a.some(x=>x.join('-')===actual),main=hit(p.main),upset=hit(p.upset);const rt=ruleTotals[rules[i]][names[i]];rt.matched++;for(const target of [t,groupTotals[group][names[i]],rt]){target.main+=Number(main);target.upset+=Number(upset);target.either+=Number(main||upset);}});
  }
  for(const t of Object.values(totals))t.rates=Object.fromEntries(['main','upset','either'].map(k=>[k,count?t[k]/count:null]));
  for(const g of Object.keys(groups))for(const t of Object.values(groupTotals[g]))t.rates=Object.fromEntries(['main','upset','either'].map(k=>[k,groups[g]?t[k]/groups[g]:null]));
- return reply(request,{date,matched:count,totals,groups,groupTotals,overlapTotals,missingFinal:missingFinal.count,details,note:'Paired comparison of stored predeadline snapshots; complete and fallback counts reported separately.'});
+ for(const group of Object.values(ruleTotals))for(const t of Object.values(group))t.rates=Object.fromEntries(['main','upset','either'].map(k=>[k,t.matched?t[k]/t.matched:null]));
+ return reply(request,{date,matched:count,totals,ruleTotals,groups,groupTotals,overlapTotals,missingFinal:missingFinal.count,details,note:'Paired comparison of stored predeadline snapshots; complete and fallback counts reported separately.'});
 }
 if(u.pathname==='/api/research/before-prediction-comparison'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
@@ -861,7 +864,7 @@ if (u.pathname === '/api/morning/snapshot') {
     const row=matches.length===1?matches[0]:null;
     const missing=['date','capturedAt','deadlineAt','predictedOrder','rankedScores'].filter(k=>pick[k]==null);
     const mismatch=row?['date','capturedAt','deadlineAt','predictedOrder','rankedScores'].filter(k=>pick[k]!=null&&JSON.stringify(pick[k])!==JSON.stringify(k==='rankedScores'?row.rankedScores?.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>({boat:x.boat,score:x.score})):row[k])):[];
-    return {date,venue:pick.venue,race:pick.race,category:pick.category??null,identityMatched:!!row,matchingRows:matches.length,missing,mismatch,originalRowVerified:!!row&&evidenceValid(row),originalTicketsPresent:!!row&&row.averageMorning?.ready===true&&row.averageMorning.capturedAt===row.capturedAt,categoryVerified:!!row&&validCandidate(pick)&&mismatch.length===0};
+    return {date,venue:pick.venue,race:pick.race,category:pick.category??null,identityMatched:!!row,matchingRows:matches.length,missing,mismatch,originalRowVerified:!!row&&evidenceValid(row),originalTicketsPresent:!!row&&row.averageMorning?.ready===true&&row.averageMorning.capturedAt===row.capturedAt,linkedOriginal:row&&evidenceValid(row)?{capturedAt:row.capturedAt,deadlineAt:row.deadlineAt,predictedOrder:row.predictedOrder,averageMorning:row.averageMorning??null,localMorning:row.localMorning??null,linkType:'identity_only_not_category_evidence'}:null,categoryVerified:!!row&&validCandidate(pick)&&mismatch.length===0};
   });
   let resultArchive=null;try{resultArchive=JSON.parse(await env.MORNING_KV.get('result-archive:v1:'+date)||'null');}catch{}
   const displayDeadlines={};
