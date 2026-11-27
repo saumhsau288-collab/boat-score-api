@@ -1143,7 +1143,7 @@ async function renderSavedMorningBlue(){
  const yellow=['combinedCompact','localCombinedPrediction'].map(id=>document.getElementById(id));
  for(const [i,base] of [data.average,data.local].entries()){
  const before=[data.beforeAverage,data.beforeLocal][i], source=before||base, el=yellow[i];
- if(!el)continue;
+ if(!el)continue;el.style.whiteSpace='pre-wrap';
  if(!source?.rankedScores){el.textContent='基礎予想未取得';continue;}
  const hasRecent=!source.makulaboApplied&&Number.isFinite(Date.parse(data.deadlineAt))&&Date.now()<Date.parse(data.deadlineAt)&&Array.isArray(recent)&&recent.length===6&&new Set(recent.map(x=>x.boat)).size===6&&source.rankedScores.every(x=>recent.some(y=>y.boat===x.boat&&Number.isFinite(y.points)));
  const rows=source.rankedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
@@ -1160,12 +1160,12 @@ async function renderSavedMorningBlue(){
   else try{localStorage.setItem(storageKey,JSON.stringify({key,mode:i,capturedAt:new Date().toISOString(),morningCapturedAt:base.capturedAt,rows,picks,recent:appliedRecent,before:Boolean(before)}));}catch{}
  }
  el.style.color=appliedBefore&&appliedRecent?'':'#fbbf24';
- el.textContent=(closed?'締切済／':'')+(appliedBefore?'直前情報反映':'直前情報未取得・基礎予想')+(appliedRecent?'／まくらぼ反映（端末保存）':'／まくらぼ未取得')+'\\n【本命6点】\\n'+picks.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+picks.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+displayRows.map(x=>x.boat).join('-');
+ el.textContent=(closed?'締切済／':'')+(appliedBefore?'直前情報反映':'直前情報未取得・基礎予想')+(appliedRecent?'／まくらぼ反映（端末保存）':'／まくらぼ未取得')+(String.fromCharCode(10)+'【本命6点】'+String.fromCharCode(10))+picks.main.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'【穴6点】'+String.fromCharCode(10))+picks.upset.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'予想順位：')+displayRows.map(x=>x.boat).join('-');
  if(i===1)appendLocalRates(el,displayRows.map(x=>x.boat));
  }
  for(const [i,p] of [data.average,data.local].entries()){
- const el=targets[i];if(!el)continue;
- el.textContent=p?.ready?'朝の保存予想 '+p.capturedAt+'\\n【本命6点】\\n'+p.main.map(x=>x.join('-')).join('\\n')+'\\n【穴6点】\\n'+p.upset.map(x=>x.join('-')).join('\\n')+'\\n予想順位：'+p.predictedOrder.join('-'):'朝の保存予想なし';
+ const el=targets[i];if(!el)continue;el.style.whiteSpace='pre-wrap';
+ el.textContent=p?.ready?'朝の保存予想 '+new Date(p.capturedAt).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'})+(String.fromCharCode(10)+'【本命6点】'+String.fromCharCode(10))+p.main.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'【穴6点】'+String.fromCharCode(10))+p.upset.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'予想順位：')+p.predictedOrder.join('-'):'朝の保存予想なし';
  if(i===1&&p?.ready)appendLocalRates(el,p.predictedOrder);
  }
  }catch(e){if(generation===morningBlueGeneration&&key===dateCode()+':'+venue.value+':'+race.value)for(const el of targets)if(el)el.textContent='朝予想の取得失敗';}
