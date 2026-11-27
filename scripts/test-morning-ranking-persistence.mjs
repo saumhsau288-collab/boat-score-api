@@ -360,3 +360,28 @@ console.log('Official position trial: separate second/third adjustments, evidenc
  assert.equal(run([link],'boatOne').length,0);assert.equal(JSON.stringify(link),snapshot);
  console.log('Morning linked evidence display regression passed.');
  }
+
+
+ // Exercise the production persistence guard with isolated KV.
+const persistStart=src.indexOf('async function persistMorningState(');
+const persistEnd=src.indexOf('async function runScheduledMorning(',persistStart);
+assert.ok(persistStart>=0&&persistEnd>persistStart);
+const warnings=[],writes=[];
+let stored=null,stale=false;
+const persist=vm.runInNewContext(src.slice(persistStart,persistEnd)+'\npersistMorningState;',{
+ buildVerifiedMorningCategories:()=>({main:[{venue:1,race:1}],upset:[],chaos:[]}),
+ console:{warn:(...args)=>warnings.push(args)}
+});
+const persistenceEnv={MORNING_KV:{async put(k,v){writes.push(k);stored=v;},async get(){return stale?null:stored;}}};
+const persistenceState={date:'20261123',categoryEvidenceVersion:2,records:[{}],categories:{main:[{venue:1,race:1}],upset:[],chaos:[]}};
+await persist(persistenceEnv,'morning:fixture',persistenceState);
+assert.equal(JSON.parse(stored).persistenceAudit.counts.main.shortfall,19);
+assert.equal(JSON.parse(stored).persistenceAudit.status,'shortfall');
+assert.equal(warnings.length,0);
+await assert.rejects(persist(persistenceEnv,'morning:fixture',{...persistenceState,categories:{main:[],upset:[],chaos:[]}}),/evidence mismatch/);
+assert.equal(writes.length,1);
+stale=true;
+await persist(persistenceEnv,'morning:fixture',persistenceState);
+assert.equal(warnings.length,1);
+assert.equal(writes.length,2,'Stale read must not trigger an overwrite');
+console.log('Morning persistence audit, mismatch rejection and stale KV readback regression passed.');
