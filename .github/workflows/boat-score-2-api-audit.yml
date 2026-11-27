@@ -86,6 +86,13 @@ jobs:
               if(!response.ok&&response.status!==404)failed=true;
             }catch(e){console.log('BEFORE_OBSERVATIONS_ERROR',date,String(e));failed=true;}
           }
+          for(const date of dates){
+            try{
+              const get=async path=>{const r=await fetch(base+path+'?date='+date,{signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error(path+' HTTP '+r.status);return r.json();};
+              const [quality,comparison]=await Promise.all([get('/api/research/archive-quality'),get('/api/research/four-prediction-comparison')]);
+              console.log('STORAGE_RECONCILIATION',JSON.stringify({date,quality,comparisonKeys:Object.keys(comparison),totals:comparison.totals??null,summary:comparison.summary??null,rows:Array.isArray(comparison.rows)?comparison.rows.length:null}));
+            }catch(e){console.log('STORAGE_RECONCILIATION_ERROR',date,String(e));}
+          }
           // Compare archived deadlines against independently fetched official timetable columns.
           for(const date of dates){
             try{
