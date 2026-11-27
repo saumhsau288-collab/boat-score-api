@@ -344,23 +344,12 @@ assert.equal(JSON.stringify(boats),originalScores);
 assert.equal(makeScenarioRecord(recordInput,recordConditions,recordPicks,ctrial,boats,positionRecent,'2026-11-26T01:00:02Z',newOfficial).officialPositionTrial.method,newOfficial.method);
 console.log('Official position trial: separate second/third adjustments, evidence gate, saved comparison and unchanged existing model passed.');
 
- // Regression: linked original evidence is display-only and must be unique and consistent.
- {
- const begin=src.indexOf("if(key!=='boatOne'){const matches=(d.candidateLinks||[])");
- const finish=src.indexOf("}}Promise.resolve().then(async()=>{const venues=",begin);
- assert.ok(begin>=0&&finish>begin);
- const render=vm.runInNewContext('(function(d,key,requestedDate,v,r,document,section){'+src.slice(begin,finish)+'})');
- const original={capturedAt:'2026-11-26T00:00:00Z',deadlineAt:'2026-11-26T01:00:00Z',predictedOrder:[1,2,3,4,5,6],rankedScores:[1,2,3,4,5,6].map(boat=>({boat,score:60-boat}))};
- const link={date:'20261126',venue:1,race:1,category:'main',identityMatched:true,originalRowVerified:true,mismatch:[],linkedOriginal:original,categoryVerified:false};
- const run=(links,key='main')=>{const nodes=[];render({candidateLinks:links},key,'20261126',1,1,{createElement:()=>({style:{}})},{appendChild:n=>nodes.push(n)});return nodes;};
- const snapshot=JSON.stringify(link);
- const nodes=run([link]);assert.equal(nodes.length,1);assert.ok(nodes[0].textContent.includes('復元情報'));assert.ok(nodes[0].style.cssText.includes('#fde047'));assert.ok(nodes[0].textContent.includes('6号艇 54'));
- assert.ok(!run([{...link,categoryVerified:true}])[0].style.cssText.includes('#fde047'));
- for(const bad of [[],[link,link],[{...link,mismatch:['capturedAt']}],[{...link,linkedOriginal:null}],[{...link,originalRowVerified:false}],[{...link,date:'20261125'}],[{...link,category:'upset'}]])assert.equal(run(bad).length,0);
- assert.equal(run([link],'boatOne').length,0);assert.equal(JSON.stringify(link),snapshot);
- console.log('Morning linked evidence display regression passed.');
- }
-
+ // Compact morning list: evidence remains in the API, not the race buttons.
+assert.ok(!src.includes("if(key!=='boatOne'){const matches=(d.candidateLinks||[])"));
+assert.ok(src.includes("miss:['#991b1b','#fff','ハズレ']"));
+assert.ok(src.split("+(info.status==='hit'||info.status==='miss'?style[2]:'')").length>=3);
+assert.ok(src.includes('linkedOriginal'));
+console.log('Compact morning list display regression passed.');
 
  // Exercise the production persistence guard with isolated KV.
 const persistStart=src.indexOf('async function persistMorningState(');
