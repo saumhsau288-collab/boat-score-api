@@ -854,6 +854,14 @@ if (u.pathname === '/api/morning/snapshot') {
   const validCandidate=x=>{const row=records.find(y=>y.venue===x?.venue&&y.race===x?.race);return !!(row&&evidenceValid(row)&&x.date===date&&x.capturedAt===row.capturedAt&&x.deadlineAt===row.deadlineAt&&JSON.stringify(x.predictedOrder)===JSON.stringify(row.predictedOrder));};
   const verifiedCategories=Object.fromEntries(['main','upset','chaos'].map(k=>[k,(Array.isArray(state.categories?.[k])?state.categories[k]:[]).filter(validCandidate)]));
   const validCandidateCount=Object.values(verifiedCategories).reduce((n,rows)=>n+rows.length,0);
+  // Read-only linkage for legacy lists. Identity alone is not prediction evidence.
+  const candidateLinks=rankedCandidates.map(pick=>{
+    const matches=records.filter(row=>row.date===date&&row.venue===pick.venue&&row.race===pick.race);
+    const row=matches.length===1?matches[0]:null;
+    const missing=['date','capturedAt','deadlineAt','predictedOrder','rankedScores'].filter(k=>pick[k]==null);
+    const mismatch=row?['date','capturedAt','deadlineAt','predictedOrder','rankedScores'].filter(k=>pick[k]!=null&&JSON.stringify(pick[k])!==JSON.stringify(k==='rankedScores'?row.rankedScores?.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>({boat:x.boat,score:x.score})):row[k])):[];
+    return {date,venue:pick.venue,race:pick.race,category:pick.category??null,identityMatched:!!row,matchingRows:matches.length,missing,mismatch,originalRowVerified:!!row&&evidenceValid(row),originalTicketsPresent:!!row&&row.averageMorning?.ready===true&&row.averageMorning.capturedAt===row.capturedAt,categoryVerified:!!row&&validCandidate(pick)&&mismatch.length===0};
+  });
   let resultArchive=null;try{resultArchive=JSON.parse(await env.MORNING_KV.get('result-archive:v1:'+date)||'null');}catch{}
   const displayDeadlines={};
   const timetableVenues=[...new Set(rankedCandidates.map(x=>x.venue).filter(v=>Number.isInteger(v)&&v>=1&&v<=24))];
@@ -909,7 +917,7 @@ if (u.pathname === '/api/morning/snapshot') {
     completedVenues:state.completedVenues||[],failedVenues:state.failedVenues||[],exhaustedVenues:state.exhaustedVenues||[],
     scheduleLastCheck:state.scheduleLastCheck||'unknown',
     verifiedRacesByVenue:Object.fromEntries((state.venues||[]).map(v=>[v,(state.records||[]).filter(r=>r.venue===v&&evidenceValid(r)).length])),
-    raceStatuses,categories:state.categories||{main:[],upset:[],chaos:[]},verifiedCategories,categoryCoverage:Object.fromEntries(Object.entries(verifiedCategories).map(([k,rows])=>[k,{verified:rows.length,target:20,shortfall:Math.max(0,20-rows.length)}])),boatOneRanking:Array.isArray(state.boatOneRanking)?state.boatOneRanking:[],boatOneRankedAt:state.boatOneRankedAt||null,boatOneRankingMethod:'boat_one_score_margin_v1',boatOneRankingProbabilityVerified:false,eligible:(state.records||[]).length,
+    raceStatuses,candidateLinks,candidateLinkSummary:{total:candidateLinks.length,identityMatched:candidateLinks.filter(x=>x.identityMatched).length,originalTicketsPresent:candidateLinks.filter(x=>x.originalTicketsPresent).length,categoryVerified:candidateLinks.filter(x=>x.categoryVerified).length},categories:state.categories||{main:[],upset:[],chaos:[]},verifiedCategories,categoryCoverage:Object.fromEntries(Object.entries(verifiedCategories).map(([k,rows])=>[k,{verified:rows.length,target:20,shortfall:Math.max(0,20-rows.length)}])),boatOneRanking:Array.isArray(state.boatOneRanking)?state.boatOneRanking:[],boatOneRankedAt:state.boatOneRankedAt||null,boatOneRankingMethod:'boat_one_score_margin_v1',boatOneRankingProbabilityVerified:false,eligible:(state.records||[]).length,
     provisional:true,method:'two_factor_morning_screening_unvalidated',modelVersion:'morning-rank-v1',retentionDays:365,calibrationStatus:'not_yet_calibrated',note:'Historical snapshots preserve baseline rankings; no automatic weight tuning until verified results are matched.'});
 }
 
