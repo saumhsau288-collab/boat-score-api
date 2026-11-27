@@ -127,6 +127,16 @@ function buildVerifiedMorningCategories(records,date){
         throw Error('Morning ranking evidence mismatch: '+category+':'+pick.venue+':'+pick.race);
     }
   }
+  // Copy original saved tickets only; never generate tickets during evidence repair.
+  for(const picks of Object.values(categories))for(const pick of picks){
+    const row=byKey.get(pick.venue+':'+pick.race);
+    const p=row.averageMorning;
+    if(p?.ready===true&&p.capturedAt===row.capturedAt){
+      pick.averageMorning=JSON.parse(JSON.stringify(p));
+    }
+    if(row.localMorning?.ready===true&&row.localMorning.capturedAt===row.capturedAt)
+      pick.localMorning=JSON.parse(JSON.stringify(row.localMorning));
+  }
   return categories;
 }
 async function runScheduledMorning(env,scheduledTime) {
@@ -877,8 +887,9 @@ if (u.pathname === '/api/morning/snapshot') {
     const displayDeadline=Date.parse(deadlineAt||'');
     let status=deadlineAt&&Date.now()<displayDeadline?'upcoming':'pending';
     const result=resultArchive?.records?.[id],order=result?.finishOrder,p=row?.averageMorning;
+    const savedTicketMatches=!pick.averageMorning||JSON.stringify(pick.averageMorning)===JSON.stringify(p);
     const validPicks=x=>Array.isArray(x)&&x.length===6&&x.every(t=>Array.isArray(t)&&t.length===3&&new Set(t).size===3&&t.every(n=>Number.isInteger(n)&&n>=1&&n<=6));
-    if(archivedDeadline&&deadlineAt===archivedDeadline&&Date.now()>=deadline&&validCandidate(pick)&&p?.ready===true&&p.capturedAt===row.capturedAt&&validPicks(p.main)&&validPicks(p.upset)&&result?.verified===true&&result.date===date&&result.venue===pick.venue&&result.race===pick.race&&Array.isArray(order)&&order.length===6&&new Set(order).size===6&&order.every(n=>Number.isInteger(n)&&n>=1&&n<=6)){
+    if(archivedDeadline&&deadlineAt===archivedDeadline&&Date.now()>=deadline&&validCandidate(pick)&&savedTicketMatches&&p?.ready===true&&p.capturedAt===row.capturedAt&&validPicks(p.main)&&validPicks(p.upset)&&result?.verified===true&&result.date===date&&result.venue===pick.venue&&result.race===pick.race&&Array.isArray(order)&&order.length===6&&new Set(order).size===6&&order.every(n=>Number.isInteger(n)&&n>=1&&n<=6)){
       status=[...p.main,...p.upset].some(t=>t.every((n,i)=>n===order[i]))?'hit':'miss';
     }
     raceStatuses[id]={deadlineAt,status,deadlineSource:displayDeadlines[id]?'official_retrieved_schedule':archivedDeadline?'archived':'unverified',reason:status==='pending'?(!deadlineAt?'deadline_unverified':!validCandidate(pick)?'prediction_evidence_missing':!result?.verified?'result_pending':'comparison_unverified'):null};
