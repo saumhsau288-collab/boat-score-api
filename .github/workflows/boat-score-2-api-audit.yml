@@ -79,6 +79,21 @@ jobs:
                 t.matched++;t.firstByBoat[o[0]-1]++;t.secondByBoat[o[1]-1]++;t.thirdByBoat[o[2]-1]++;t.adjacent12+=Number(Math.abs(o[0]-o[1])===1);t.adjacent13+=Number(Math.abs(o[0]-o[2])===1);t.firstByScoreRank[x.predictedOrder.indexOf(o[0])]++;
                 const v=t.byVenue[x.venue]??={matched:0,firstByBoat:Array(6).fill(0),adjacent12:0};v.matched++;v.firstByBoat[o[0]-1]++;v.adjacent12+=Number(Math.abs(o[0]-o[1])===1);
               }
+              // Compare reconstructed research candidates only; never rewrite saved predictions.
+              const comparison={matched:0,oldHit:0,newHit:0,topLost:0,tiedTop:0};
+              for(const x of m?.records||[]){
+                const y=f?.records?.[x.venue+':'+x.race],o=y?.finishOrder,rs=x.rankedScores;
+                if(x.date!==date||y?.date!==date||y.verified!==true||!Array.isArray(o)||o.length!==6||new Set(o).size!==6||!o.every(n=>Number.isInteger(n)&&n>=1&&n<=6)||!(Date.parse(x.capturedAt)<Date.parse(x.deadlineAt))||!Array.isArray(rs)||rs.length!==6||new Set(rs.map(z=>z.boat)).size!==6||!rs.every(z=>Number.isInteger(z.boat)&&z.boat>=1&&z.boat<=6&&Number.isFinite(z.score)))continue;
+                const ranked=rs.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
+                if(JSON.stringify(ranked.map(z=>z.boat))!==JSON.stringify(x.predictedOrder))continue;
+                const top=ranked[0].boat, scores=new Map(rs.map(z=>[z.boat,z.score])), all=[];
+                for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&a!==c&&b!==c)all.push({key:[a,b,c].join('-'),a,score:scores.get(a)*.56+scores.get(b)*.29+scores.get(c)*.15});
+                all.sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
+                const used=new Set(all.slice(0,6).map(z=>z.key)),actual=o.slice(0,3).join('-');
+                const old=all.filter(z=>z.a>=4&&!used.has(z.key)).slice(0,6),next=all.filter(z=>z.a!==top&&!used.has(z.key)).slice(0,6);
+                comparison.matched++;comparison.topLost+=Number(o[0]!==top);comparison.tiedTop+=Number(ranked[0].score===ranked[1].score);comparison.oldHit+=Number(old.some(z=>z.key===actual));comparison.newHit+=Number(next.some(z=>z.key===actual));
+              }
+              console.log('UPSET_RESEARCH '+JSON.stringify({date,...comparison,mode:'retrospective_reconstruction_not_saved_predictions'}));
               console.log('ARCHIVED_PATTERN '+JSON.stringify({date,...t,note:'boat numbers, not actual entry courses'}));
             }catch(e){failed=true;console.error('pattern audit',date,String(e));}
           }
