@@ -1278,15 +1278,17 @@ async function renderSavedMorningBlue(){
  const rows=source.rankedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
  let picks=hasRecent?trialPicks(rows,source.firstPlaceBonus===18?18:0):source;
  let displayRows=rows, appliedRecent=hasRecent||source.makulaboApplied===true, appliedBefore=Boolean(before);
- const storageKey='four-prediction-final:v1:'+key+':'+i;
+ const modelVersion=picks.firstPlaceBonus===18?'bonus18':'legacy_or_unknown';
+ const storageKey='four-prediction-final:v2:'+modelVersion+':'+key+':'+i;
+ const legacyStorageKey='four-prediction-final:v1:'+key+':'+i;
  const cutoff=Date.parse(data.deadlineAt),closed=Number.isFinite(cutoff)&&Date.now()>=cutoff;
  let saved=null;
- try{saved=JSON.parse(localStorage.getItem(storageKey)||'null');}catch{}
- const validSaved=saved?.key===key&&saved?.mode===i&&Date.parse(saved.capturedAt)<cutoff&&saved?.morningCapturedAt===base?.capturedAt&&Array.isArray(saved.rows)&&saved.rows.length===6&&saved.picks?.main?.length===6&&saved.picks?.upset?.length===6;
+ try{saved=JSON.parse(localStorage.getItem(storageKey)||'null');if(!saved&&modelVersion==='legacy_or_unknown'){const old=JSON.parse(localStorage.getItem(legacyStorageKey)||'null');if(old?.picks?.firstPlaceBonus!==18)saved=old;}}catch{}
+ const validSaved=saved?.key===key&&saved?.mode===i&&(modelVersion==='bonus18'?saved?.picks?.firstPlaceBonus===18:saved?.picks?.firstPlaceBonus!==18)&&Date.parse(saved.capturedAt)>=Date.parse(base?.capturedAt)&&Date.parse(saved.capturedAt)<cutoff&&saved?.morningCapturedAt===base?.capturedAt&&Array.isArray(saved.rows)&&saved.rows.length===6&&saved.picks?.main?.length===6&&saved.picks?.upset?.length===6;
  if(closed&&validSaved){picks=saved.picks;displayRows=saved.rows;appliedRecent=saved.recent;appliedBefore=saved.before;}
  else if(!closed&&Number.isFinite(cutoff)&&base?.capturedAt){
   if(validSaved&&saved.recent&&!hasRecent&&(!before||saved.before)){picks=saved.picks;displayRows=saved.rows;appliedRecent=saved.recent;appliedBefore=saved.before;}
-  else try{localStorage.setItem(storageKey,JSON.stringify({key,mode:i,capturedAt:new Date().toISOString(),morningCapturedAt:base.capturedAt,rows,picks,recent:appliedRecent,before:Boolean(before)}));}catch{}
+  else try{localStorage.setItem(storageKey,JSON.stringify({key,mode:i,modelVersion,capturedAt:new Date().toISOString(),morningCapturedAt:base.capturedAt,rows,picks,recent:appliedRecent,before:Boolean(before)}));}catch{}
  }
  el.style.color=appliedBefore&&appliedRecent?'':'#fbbf24';
  el.textContent=(closed?'締切済／':'')+(appliedBefore?'直前情報反映':'直前情報未取得・基礎予想')+(appliedRecent?'／まくらぼ反映（端末保存）':'／まくらぼ未取得')+(String.fromCharCode(10)+'【本命6点】'+String.fromCharCode(10))+picks.main.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'【穴6点】'+String.fromCharCode(10))+picks.upset.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'予想順位：')+displayRows.map(x=>x.boat).join('-')+(picks.firstPlaceBonus===18&&Array.isArray(picks.firstPlaceOrder)?String.fromCharCode(10)+'1着評価順位（1号艇＋18）：'+picks.firstPlaceOrder.join('-'):'');
