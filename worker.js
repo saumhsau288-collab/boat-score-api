@@ -582,6 +582,35 @@ if(u.pathname==='/api/research/rank-audit'){
  if(!raw)return reply(request,{date,status:'not_available'},404);
  return reply(request,JSON.parse(raw));
 }
+if(u.pathname==='/api/research/before-observations'){
+ if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
+ const date=u.searchParams.get('date')||'';
+ if(!/^20[0-9]{6}$/.test(date))return reply(request,{error:'Invalid date'},400);
+ if(!env?.MORNING_KV)return reply(request,{date,status:'not_configured'},503);
+ const raw=await env.MORNING_KV.get('before-archive:v1:'+date);
+ if(!raw)return reply(request,{date,status:'not_available',records:[]},404);
+ const state=JSON.parse(raw);
+ const records=[];
+ const ids=new Set([...Object.keys(state.records||{}),...Object.keys(state.partialRecords||{})]);
+ for(const id of ids){
+  const [venue,race]=id.split(':').map(Number);
+  if(id!==venue+':'+race||!Number.isInteger(venue)||venue<1||venue>24||!Number.isInteger(race)||race<1||race>12)continue;
+  const full=state.records?.[id],partial=state.partialRecords?.[id];
+  for(const kind of ['exhibition','start','weather']){
+   const options=[];
+   if(full?.date===date&&full.venue===venue&&full.race===race)options.push({data:full[kind],capturedAt:full.capturedAt,deadlineAt:full.deadlineAt,source:full.source,origin:'complete'});
+   if(partial?.[kind])options.push({...partial[kind],origin:'partial'});
+   for(const x of options){
+    const c=Date.parse(x.capturedAt),d=Date.parse(x.deadlineAt);
+    if(x.data?.verified!==true||!Number.isFinite(c)||!Number.isFinite(d)||c>=d||d-c>900000||jstDateFromUtc(new Date(c))!==date||jstDateFromUtc(new Date(d))!==date)continue;
+    if(kind!=='weather'&&(!Array.isArray(x.data.rows)||x.data.rows.length!==6||new Set(x.data.rows.map(y=>y.boat)).size!==6||!x.data.rows.every(y=>Number.isInteger(y.boat)&&y.boat>=1&&y.boat<=6)))continue;
+    records.push({date,venue,race,kind,origin:x.origin,capturedAt:x.capturedAt,deadlineAt:x.deadlineAt,source:x.source,data:x.data});
+    break;
+   }
+  }
+ }
+ return reply(request,{date,status:'recorded',records,note:'Verified archived observations only; timing uses archived deadline, no imputation.'});
+}
 if(u.pathname==='/api/research/before-archive'){
  if(request.method!=='GET')return reply(request,{error:'Method not allowed'},405);
  const date=u.searchParams.get('date')||'';
