@@ -30,6 +30,21 @@ jobs:
           const paths=['/api/morning/snapshot','/api/research/morning-records','/api/research/before-archive','/api/research/result-archive','/api/research/scheduler-health','/api/research/archive-quality','/api/research/four-prediction-comparison','/api/research/before-prediction-comparison','/api/research/morning-boat-one-audit'];
           let failed=false;
           for(const date of dates){
+            try{
+              const get=async path=>{const r=await fetch(base+path+'?date='+date,{signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error(path+' HTTP '+r.status);return r.json();};
+              const [snapshot,archive]=await Promise.all([get('/api/morning/snapshot'),get('/api/research/morning-records')]);
+              const rows=new Map((archive.records||[]).map(x=>[x.venue+':'+x.race,x]));
+              const counts={},samples=[];
+              for(const [category,picks] of Object.entries(snapshot.categories||{}))for(const p of picks){
+                const r=rows.get(p.venue+':'+p.race);
+                const reasons=!r?['missing_record']:[...(p.date!==date?['date']:[]),...(p.capturedAt!==r.capturedAt?['capture']:[]),...(p.deadlineAt!==r.deadlineAt?['deadline']:[]),...(JSON.stringify(p.predictedOrder)!==JSON.stringify(r.predictedOrder)?['order']:[]),...(!Array.isArray(p.rankedScores)?['missing_scores']:[])];
+                for(const reason of reasons)counts[reason]=(counts[reason]||0)+1;
+                if(reasons.length&&samples.length<6)samples.push({category,venue:p.venue,race:p.race,reasons,candidate:{date:p.date,capturedAt:p.capturedAt,deadlineAt:p.deadlineAt,predictedOrder:p.predictedOrder},record:r});
+              }
+              console.log('MORNING_CANDIDATE_DIAGNOSTICS',JSON.stringify({date,counts,evidence:snapshot.evidence,samples}));
+            }catch(e){console.log('MORNING_CANDIDATE_DIAGNOSTICS_ERROR',date,String(e));}
+          }
+          for(const date of dates){
             try {
               const response=await fetch(base+'/api/research/before-observations?date='+date,{signal:AbortSignal.timeout(20000)});
               const body=await response.json();
