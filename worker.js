@@ -723,7 +723,7 @@ if(u.pathname==='/api/research/four-prediction-comparison'){
  const final=complete?full:valid(fallback)?fallback:null;
  if(!final){missingFinal.count++;continue;}
  const models=[m.averageMorning,m.localMorning,final.average,final.local];
- if(!models.every((p,i)=>{if(!p||p.capturedAt!==(i<2?m.capturedAt:b.capturedAt)||(i>=2&&p.morningCapturedAt!==m.capturedAt))return false;const q=rankTrifectaCandidates(p.rankedScores);return q.ready&&JSON.stringify(q.main)===JSON.stringify(p.main)&&JSON.stringify(q.upset)===JSON.stringify(p.upset);}))continue;
+ if(!models.every((p,i)=>{if(!p||p.capturedAt!==(i<2?m.capturedAt:b.capturedAt)||(i>=2&&p.morningCapturedAt!==m.capturedAt))return false;return [0,18].some(bonus=>{const q=rankTrifectaCandidates(p.rankedScores,bonus);return q.ready&&JSON.stringify(q.main)===JSON.stringify(p.main)&&JSON.stringify(q.upset)===JSON.stringify(p.upset);});}))continue;
  count++;
  const group=complete?'complete':'fallback';groups[group]++;
  const sets=models.map(p=>new Set([...p.main,...p.upset].map(x=>x.join('-'))));
@@ -4223,7 +4223,7 @@ function applyVerifiedStartAdjustment(baseScores,start,verifiedStats=[]){
     reason:null,averageSTSubstitutions:substitutions,method:'verified_start_timing_or_official_average_st_small_adjustment_unvalidated'};
 }
 
-function rankTrifectaCandidates(rankedScores) {
+function rankTrifectaCandidates(rankedScores, bonus=18) {
   if(!Array.isArray(rankedScores)||rankedScores.length!==6||new Set(rankedScores.map(x=>x.boat)).size!==6||
     !rankedScores.every(x=>Number.isInteger(x.boat)&&x.boat>=1&&x.boat<=6&&Number.isFinite(x.score)))
     return {ready:false,main:[],upset:[],reason:'six_verified_scores_required'};
@@ -4231,14 +4231,15 @@ function rankTrifectaCandidates(rankedScores) {
   const combinations=[];
   for(let first=1;first<=6;first++)for(let second=1;second<=6;second++)for(let third=1;third<=6;third++){
     if(first===second||first===third||second===third)continue;
-    const strength=scores.get(first)*0.56+scores.get(second)*0.29+scores.get(third)*0.15;
+    const strength=(scores.get(first)+(first===1?bonus:0))*0.56+scores.get(second)*0.29+scores.get(third)*0.15;
     combinations.push({boats:[first,second,third],strength});
   }
   const ordered=combinations.sort((a,b)=>b.strength-a.strength||a.boats.join('').localeCompare(b.boats.join('')));
   const main=ordered.slice(0,6).map(x=>x.boats);
   const used=new Set(main.map(x=>x.join('-')));
-  const upset=ordered.filter(x=>x.boats[0]>=4&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
-  return {ready:main.length===6&&upset.length===6,main,upset,reason:null,method:'two_factor_heuristic_unvalidated'};
+  const top=[1,2,3,4,5,6].sort((a,b)=>(scores.get(b)+(b===1?bonus:0))-(scores.get(a)+(a===1?bonus:0))||a-b)[0];
+  const upset=ordered.filter(x=>(bonus===0?x.boats[0]>=4:x.boats[0]!==top)&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
+  return {ready:main.length===6&&upset.length===6,main,upset,reason:null,method:bonus===0?'two_factor_heuristic_unvalidated':'boat_one_first_bonus18_v1',firstPlaceBonus:bonus};
 }
 
 function parseOfficialFinishOrder(html) {
