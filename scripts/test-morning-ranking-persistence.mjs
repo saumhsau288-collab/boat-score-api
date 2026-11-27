@@ -63,7 +63,7 @@ async function trigger(iso,mode,date,expectFailure=false){
  await scheduler({scheduledTime:Date.parse(iso),cron:'provider normalized expression'},env,{waitUntil(p){pending=p;}});
  assert.ok(pending,'Scheduled collector must register asynchronous work');
  if(expectFailure)await assert.rejects(pending,/fixture collection failure/);else await pending;
- assert.deepEqual(calls.slice(callsBefore),mode==='morning'?['morning','before']:mode==='before'?['before','result']:[mode]);
+ assert.deepEqual(calls.slice(callsBefore),mode==='morning'?['morning','before']:mode==='before'?(expectFailure?['before']:['before','result']):[mode]);
  if(mode==='before')assert.equal(callDetails.slice(callsBefore).find(x=>x.mode==='result')?.today,true,'Before scheduler must collect only due same-day results');
  if(mode==='result')assert.equal(callDetails.slice(callsBefore).find(x=>x.mode==='result')?.today,undefined,'Nightly recovery must retain yesterday result mode');
  const health=saved.get('scheduler-health:v1:'+mode+':'+date);
