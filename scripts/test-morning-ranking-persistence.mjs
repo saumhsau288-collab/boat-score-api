@@ -48,9 +48,9 @@ const schedulerStart=src.indexOf('  async scheduled(event,env,ctx) {');
 const schedulerEnd=src.indexOf('\n  async fetch(request,env)',schedulerStart);
 assert.ok(schedulerStart>=0&&schedulerEnd>schedulerStart);
 const schedulerSource=src.slice(schedulerStart,schedulerEnd).trim().replace(/,$/,'');
-const calls=[],saved=new Map();
+const calls=[],saved=new Map(),callDetails=[];
 let failMode=null;
-const run=mode=>async()=>{calls.push(mode);if(failMode===mode)throw Error('fixture collection failure');};
+const run=mode=>async(...args)=>{calls.push(mode);callDetails.push({mode,today:mode==='result'?args[2]:null});if(failMode===mode)throw Error('fixture collection failure');};
 const scheduler=vm.runInNewContext('({'+schedulerSource+'}).scheduled',{
  jstDateFromUtc:d=>new Date(d.getTime()+9*3600000).toISOString().slice(0,10).replace(/-/g,''),
  runScheduledMorning:run('morning'),runScheduledBeforeArchive:run('before'),runScheduledResultArchive:run('result'),
@@ -63,7 +63,9 @@ async function trigger(iso,mode,date,expectFailure=false){
  await scheduler({scheduledTime:Date.parse(iso),cron:'provider normalized expression'},env,{waitUntil(p){pending=p;}});
  assert.ok(pending,'Scheduled collector must register asynchronous work');
  if(expectFailure)await assert.rejects(pending,/fixture collection failure/);else await pending;
- assert.deepEqual(calls.slice(callsBefore),mode==='morning'?['morning','before']:[mode]);
+ assert.deepEqual(calls.slice(callsBefore),mode==='morning'?['morning','before']:mode==='before'?['before','result']:[mode]);
+ if(mode==='before')assert.equal(callDetails.slice(callsBefore).find(x=>x.mode==='result')?.today,true,'Before scheduler must collect only due same-day results');
+ if(mode==='result')assert.equal(callDetails.slice(callsBefore).find(x=>x.mode==='result')?.today,undefined,'Nightly recovery must retain yesterday result mode');
  const health=saved.get('scheduler-health:v1:'+mode+':'+date);
  assert.equal(health.status,expectFailure?'failed':'finished');
  assert.equal(health.date,date);
@@ -78,7 +80,7 @@ await trigger('2026-11-25T15:00:00.000Z','result','20261125');
 await trigger('2026-11-25T22:55:00.000Z','result','20261125');
 failMode='before';
 await trigger('2026-11-25T04:00:00.000Z','before','20261125',true);
-console.log('Production scheduler: UTC/JST routing, previous-day result archive, health and failure recording passed.');
+console.log('Production scheduler: UTC/JST routing, same-day and previous-day result archives, health and failure recording passed.');
 
 // Read the production API handler with a fixture containing original and legacy rows.
 const recordsStart=src.indexOf("if(u.pathname==='/api/research/morning-records'){");
