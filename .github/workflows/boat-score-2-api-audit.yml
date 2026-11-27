@@ -1,6 +1,11 @@
 name: Boat Score 2 read-only API audit
 on:
   workflow_dispatch:
+    inputs:
+      date:
+        description: 'Optional JST date (YYYYMMDD)'
+        required: false
+        type: string
   push:
     branches: [fix-boat-score-2-syntax-20261115]
     paths: ['.github/workflows/boat-score-2-api-audit.yml']
@@ -10,17 +15,21 @@ jobs:
   audit:
     if: github.ref == 'refs/heads/fix-boat-score-2-syntax-20261115'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     steps:
       - name: Read preview API diagnostics
         shell: bash
+        env:
+          AUDIT_DATE: ${{ inputs.date }}
         run: |
           node --input-type=module <<'JS'
           const base='https://boat-score-2-preview.saumh-sau-288.workers.dev';
-          const date=new Date(Date.now()+9*3600000).toISOString().slice(0,10).replaceAll('-','');
-          const paths=['/api/morning/snapshot','/api/research/morning-records','/api/research/before-archive','/api/research/result-archive','/api/research/scheduler-health','/api/research/archive-quality'];
+          const requested=process.env.AUDIT_DATE||'';
+          if(requested&&!/^20\d{6}$/.test(requested))throw Error('Invalid audit date');
+          const dates=requested?[requested]:[1,0].map(n=>new Date(Date.now()+9*3600000-n*86400000).toISOString().slice(0,10).replaceAll('-',''));
+          const paths=['/api/morning/snapshot','/api/research/morning-records','/api/research/before-archive','/api/research/result-archive','/api/research/scheduler-health','/api/research/archive-quality','/api/research/four-prediction-comparison','/api/research/before-prediction-comparison','/api/research/morning-boat-one-audit'];
           let failed=false;
-          for(const path of paths){
+          for(const date of dates)for(const path of paths){
             try{
               const res=await fetch(base+path+'?date='+date,{signal:AbortSignal.timeout(25000),redirect:'error'});
               const d=await res.json();
