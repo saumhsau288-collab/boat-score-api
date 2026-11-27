@@ -29,6 +29,37 @@ jobs:
           const dates=requested?[requested]:[1,0].map(n=>new Date(Date.now()+9*3600000-n*86400000).toISOString().slice(0,10).replaceAll('-',''));
           const paths=['/api/morning/snapshot','/api/research/morning-records','/api/research/before-archive','/api/research/result-archive','/api/research/scheduler-health','/api/research/archive-quality','/api/research/four-prediction-comparison','/api/research/before-prediction-comparison','/api/research/morning-boat-one-audit'];
           let failed=false;
+          // Compare archived deadlines against independently fetched official timetable columns.
+          for(const date of dates){
+            try{
+              const res=await fetch(base+'/api/research/morning-records?date='+date,{signal:AbortSignal.timeout(25000)});
+              if(!res.ok){console.log('DEADLINE_ARCHIVE_HTTP '+date+' '+res.status);continue;}
+              const data=await res.json();
+              const venues=[...new Set((data.records||[]).map(x=>x.venue))];
+              for(const venue of venues){
+                try{
+                  const url='https://www.boatrace.jp/owpc/pc/race/racelist?rno=1&jcd='+String(venue).padStart(2,'0')+'&hd='+date;
+                  const response=await fetch(url,{signal:AbortSignal.timeout(15000)});
+                  if(!response.ok)throw Error('official HTTP '+response.status);
+                  const html=await response.text();
+                  const plain=x=>x.replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;|&#xA0;/gi,' ').normalize('NFKC').replace(/\s+/g,' ').trim();
+                  const tables=[];
+                  for(const t of html.matchAll(/<table\b[^>]*>[\s\S]*?<\/table>/gi)){
+                    const rows=[...t[0].matchAll(/<tr\b[^>]*>[\s\S]*?<\/tr>/gi)].map(r=>[...r[0].matchAll(/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(c=>plain(c[1])));
+                    for(let i=1;i<rows.length;i++){
+                      const h=rows[i-1],v=rows[i];
+                      if(h.length===13&&v.length===13&&h[0]==='レース'&&h.slice(1).every((x,j)=>x===(j+1)+'R')&&/^締切(?:予定)?(?:時刻|時間)?$/.test(v[0])&&v.slice(1).every(x=>/^\d{1,2}:\d{2}$/.test(x)))tables.push(v.slice(1));
+                    }
+                  }
+                  if(!tables.length||new Set(tables.map(x=>JSON.stringify(x))).size!==1)throw Error('official timetable unavailable or ambiguous');
+                  const times=tables[0].map(x=>x.padStart(5,'0'));
+                  const rows=(data.records||[]).filter(x=>x.venue===venue).map(x=>({race:x.race,official:times[x.race-1],saved:Number.isFinite(Date.parse(x.deadlineAt))?new Date(Date.parse(x.deadlineAt)+9*3600000).toISOString().slice(11,16):null}));
+                  console.log('OFFICIAL_DEADLINE_COMPARE '+JSON.stringify({date,venue,times,rows,matched:rows.filter(x=>x.official===x.saved).length,mismatched:rows.filter(x=>x.official!==x.saved).length}));
+                }catch(e){console.log('OFFICIAL_DEADLINE_UNVERIFIED '+JSON.stringify({date,venue,error:String(e)}));}
+              }
+            }catch(e){console.log('DEADLINE_COMPARE_ERROR '+date+' '+String(e));}
+          }
+
           for(const date of dates)for(const path of paths){
             try{
               const res=await fetch(base+path+'?date='+date,{signal:AbortSignal.timeout(25000),redirect:'error'});
