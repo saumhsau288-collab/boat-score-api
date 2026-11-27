@@ -318,9 +318,9 @@ function summarizeBeforeArchive(date,before,archive){
  }
  return summary;
 }
-async function runScheduledResultArchive(env,scheduledTime){
+async function runScheduledResultArchive(env,scheduledTime,today=false){
  if(!env?.MORNING_KV)throw Error('MORNING_KV binding is required');
- const date=jstDateFromUtc(new Date(scheduledTime-86400000));
+ const date=jstDateFromUtc(new Date(scheduledTime-(today?0:86400000)));
  const key='result-archive:v1:'+date;
  const morning=JSON.parse(await env.MORNING_KV.get('morning:'+date)||'null');
  let state=JSON.parse(await env.MORNING_KV.get(key)||'null');
@@ -331,7 +331,15 @@ async function runScheduledResultArchive(env,scheduledTime){
  if(!venues.length)return;
  if(!state||state.date!==date)state={date,version:1,records:{},attempts:{},updatedAt:null};
  const targets=venues.flatMap(venue=>Array.from({length:12},(_,i)=>({venue,race:i+1})));
- const pending=targets.filter(({venue,race})=>{const id=venue+':'+race;return !state.records[id]&&(state.attempts[id]||0)<6;}).sort((a,b)=>(state.attempts[a.venue+':'+a.race]||0)-(state.attempts[b.venue+':'+b.race]||0)).slice(0,12);
+ const due=new Set();
+ if(today){
+  for(const venue of venues){
+   let table=null;try{table=JSON.parse(await env.MORNING_KV.get('display-timetable:v1:'+date+':'+venue)||'null');}catch{}
+   if(table?.date!==date||table.venue!==venue||!Array.isArray(table.times)||table.times.length!==12||!table.times.every((t,i)=>Number.isFinite(Date.parse(t))&&jstDateFromUtc(new Date(t))===date&&(i===0||Date.parse(t)>Date.parse(table.times[i-1]))))continue;
+   table.times.forEach((t,i)=>{if(Date.parse(t)+15*60000<=scheduledTime)due.add(venue+':'+(i+1));});
+  }
+ }
+ const pending=targets.filter(({venue,race})=>{const id=venue+':'+race;return !state.records[id]&&(!today||due.has(id))&&(state.attempts[id]||0)<(today?3:6);}).sort((a,b)=>(state.attempts[a.venue+':'+a.race]||0)-(state.attempts[b.venue+':'+b.race]||0)).slice(0,12);
  const rows=await mapOfficialLimited(pending,3,async ({venue,race})=>{
   const id=venue+':'+race,source='https://www.boatrace.jp/owpc/pc/race/raceresult?rno='+race+'&jcd='+String(venue).padStart(2,'0')+'&hd='+date;
   try{const response=await fetch(source,{headers:{Accept:'text/html'},signal:AbortSignal.timeout(12000)});
@@ -555,7 +563,10 @@ const workerHandler = {
           if(failed.length)throw Error(failed.map(x=>String(x.reason?.message||x.reason)).join('; '));
         }
         else if(mode==='result')await runScheduledResultArchive(env,scheduledTime);
-        else status.beforeArchive=await runScheduledBeforeArchive(env,scheduledTime);
+        else {
+          status.beforeArchive=await runScheduledBeforeArchive(env,scheduledTime);
+          await runScheduledResultArchive(env,scheduledTime,true);
+        }
         status.status='finished';
       }catch(error){status.status='failed';status.error=String(error?.message||error).slice(0,240);console.error('scheduler_failed',mode,status.error);throw error;}
       finally{status.finishedAt=new Date().toISOString();await report();}
