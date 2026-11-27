@@ -480,11 +480,11 @@ async function runScheduledBeforeArchive(env,scheduledTime){
  // Final snapshots use the same verified server endpoint as the interactive view.
  const finalCandidates=Object.values(state.records).filter(b=>b.researchPrediction&&b.localResearchPrediction&&Date.parse(b.deadlineAt)>Date.now()+5000);
  const finalArchiveStats={attempted:0,complete:0,fallback:0,failed:0,skipped:0};
- await mapOfficialLimited(finalCandidates.slice(0,18),3,async b=>{
+ await mapOfficialLimited(accessDenied?[]:finalCandidates.sort((a,b)=>Date.parse(a.deadlineAt)-Date.parse(b.deadlineAt)).slice(0,18),3,async b=>{
   const id=b.venue+':'+b.race;
   try{
    const finalKey='four-final:v1:'+date+':'+id;
-   if(await env.MORNING_KV.get(finalKey)){finalArchiveStats.skipped++;return;}
+   if(Date.now()>=Date.parse(b.deadlineAt)||await env.MORNING_KV.get(finalKey)){finalArchiveStats.skipped++;return;}
    finalArchiveStats.attempted++;
    const params=new URLSearchParams({date,venue:String(b.venue),race:String(b.race)});
    const origin='https://boat-score-2-preview.saumh-sau-288.workers.dev';
@@ -507,7 +507,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
    }
   }catch(e){finalArchiveStats.failed++;console.error('automatic_final_archive_failed',id,String(e?.message||e));}
  });
- const archiveSummary={date,status:accessDenied?'access_denied':'finished',scanAt:new Date().toISOString(),eligible:finalCandidates.length,...finalArchiveStats};
+ const archiveSummary={date,status:accessDenied?'access_denied':'finished',cooldownUntil:state.cooldownUntil||null,scanAt:new Date().toISOString(),eligible:finalCandidates.length,...finalArchiveStats};
  console.log('automatic_final_archive_scan',JSON.stringify(archiveSummary));
  return archiveSummary;
 }
@@ -575,7 +575,7 @@ const workerHandler = {
         else if(mode==='result')await runScheduledResultArchive(env,scheduledTime);
         else {
           status.beforeArchive=await runScheduledBeforeArchive(env,scheduledTime);
-          await runScheduledResultArchive(env,scheduledTime,true);
+          if(!['cooldown','access_denied'].includes(status.beforeArchive?.status))await runScheduledResultArchive(env,scheduledTime,true);
         }
         status.status='finished';
       }catch(error){status.status='failed';status.error=String(error?.message||error).slice(0,240);console.error('scheduler_failed',mode,status.error);throw error;}
