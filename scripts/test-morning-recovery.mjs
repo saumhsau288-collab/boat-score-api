@@ -9,7 +9,7 @@ const row=race=>({date,venue:20,race,ready:true,officialVerified:true,statsVerif
 const records=Array.from({length:12},(_,i)=>row(i+1));delete records[9].predictedOrder;
 let state={date,venues:[20],completedVenues:[20],attempts:{20:1},records},fetched=[];
 class FixedDate extends Date{constructor(...a){super(...(a.length?a:[now.getTime()]));}static now(){return now.getTime();}}
-const ctx=vm.createContext({Date:FixedDate,jstDateFromUtc:()=>date,officialScheduleVenueCandidates:async()=>[20],mapOfficialLimited:async(items,limit,fn)=>Promise.all(items.map(fn)),fetchOfficialRacers:async(d,v,r)=>{fetched.push(r);return {racers:[],statsByBoat:[]}},buildMorningRaceInputs:(d,v,r)=>row(r),matchOfficialCourseStats:()=>null,officialCourseData:{},classifyDailyRaceCandidates:()=>({main:[],upset:[],chaos:[]}),rankMorningBoatOne:()=>[]});
+const ctx=vm.createContext({Date:FixedDate,jstDateFromUtc:()=>date,officialScheduleVenueCandidates:async()=>[20],mapOfficialLimited:async(items,limit,fn)=>Promise.all(items.map(fn)),fetchOfficialRacers:async(d,v,r)=>{fetched.push(r);return {racers:[],statsByBoat:[]}},buildMorningRaceInputs:(d,v,r)=>row(r),rankTrifectaCandidates:()=>({ready:true,main:[],upset:[]}),matchOfficialCourseStats:()=>null,officialCourseData:{},classifyDailyRaceCandidates:()=>({main:[],upset:[],chaos:[]}),rankMorningBoatOne:()=>[]});
 vm.runInContext(source.slice(start,end),ctx);
 const env={MORNING_KV:{get:async()=>JSON.stringify(state),put:async(k,v)=>{state=JSON.parse(v)}}};
 await ctx.runScheduledMorning(env,now.getTime());
