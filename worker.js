@@ -139,6 +139,24 @@ function buildVerifiedMorningCategories(records,date){
   }
   return categories;
 }
+async function persistMorningState(env,key,state){
+  // Audit the serialized payload before writing; never manufacture missing evidence.
+  if(state.categoryEvidenceVersion===2){
+    const expected=buildVerifiedMorningCategories(state.records,state.date);
+    const counts={};
+    for(const category of ['main','upset','chaos']){
+      const picks=state.categories[category];
+      if(JSON.stringify(picks)!==JSON.stringify(expected[category]))throw Error('Morning persistence evidence mismatch: '+category);
+      counts[category]={saved:picks.length,target:20,shortfall:Math.max(0,20-picks.length)};
+    }
+    state.persistenceAudit={version:1,checkedAt:new Date().toISOString(),counts,recordCount:state.records.length,status:Object.values(counts).every(x=>x.shortfall===0)?'complete':'shortfall'};
+  }
+  const payload=JSON.stringify(state);
+  await env.MORNING_KV.put(key,payload,{expirationTtl:31536000});
+  // KV reads may be eventually consistent: report a mismatch without rewriting the archive.
+  const readback=await env.MORNING_KV.get(key);
+  if(readback!==payload)console.warn('Morning KV readback not yet confirmed',key);
+}
 async function runScheduledMorning(env,scheduledTime) {
   const date=jstDateFromUtc(new Date(scheduledTime));
   if(!env?.MORNING_KV)throw Error('MORNING_KV binding is required');
@@ -154,7 +172,7 @@ async function runScheduledMorning(env,scheduledTime) {
     if(state&&Array.isArray(state.completedVenues)){
       state.scheduleLastCheck='unverified';
       state.updatedAt=new Date().toISOString();
-      await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
+      await persistMorningState(env,key,state);
     }else{
       await env.MORNING_KV.put(key,JSON.stringify({date,status:'schedule_unverified',
         updatedAt:new Date().toISOString(),venues:[],completedVenues:[],failedVenues:[],
@@ -202,7 +220,7 @@ async function runScheduledMorning(env,scheduledTime) {
     state.categoryEvidenceVersion=2;
     state.boatOneRanking=rankMorningBoatOne(state.records,date);
     state.boatOneRankedAt=state.updatedAt;
-    await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
+    await persistMorningState(env,key,state);
     return;
   }
   for(const venue of remaining){
@@ -226,6 +244,12 @@ async function runScheduledMorning(env,scheduledTime) {
       });
       const existing=new Set(state.records.map(x=>x.date+':'+x.venue+':'+x.race));
       const incoming=rows.filter(x=>validSavedMorningRecord(x,date));
+      state.collectionFailures=state.collectionFailures||{};
+      for(const row of rows){
+        const id=venue+':'+row.race;
+        if(validSavedMorningRecord(row,date))delete state.collectionFailures[id];
+        else state.collectionFailures[id]={reason:row.reason||'invalid_morning_evidence',attempt:state.attempts[venue],at:new Date().toISOString()};
+      }
       const conflicts=conflictingDeadlines([...state.records,...incoming]);
       for(const row of incoming.filter(x=>conflicts.has(x.venue+':'+x.race))){
         const id=row.date+':'+row.venue+':'+row.race;
@@ -241,7 +265,7 @@ async function runScheduledMorning(env,scheduledTime) {
       }else if(!state.failedVenues.includes(venue)){
         state.failedVenues.push(venue);
       }
-    }catch(e){if(!state.failedVenues.includes(venue))state.failedVenues.push(venue);}
+    }catch(e){state.collectionFailures=state.collectionFailures||{};state.collectionFailures['venue:'+venue]={reason:String(e?.message||e).slice(0,300),attempt:state.attempts[venue],at:new Date().toISOString()};if(!state.failedVenues.includes(venue))state.failedVenues.push(venue);}
     state.updatedAt=new Date().toISOString();
     state.categories=buildVerifiedMorningCategories(state.records,date);
     state.categoryEvidenceVersion=2;
@@ -250,7 +274,7 @@ async function runScheduledMorning(env,scheduledTime) {
     const exhausted=venues.filter(v=>!state.completedVenues.includes(v)&&(state.attempts[v]||0)>=3);
     state.status=state.completedVenues.length>=venues.length?'completed':exhausted.length+state.completedVenues.length>=venues.length?'incomplete':'partial';
     state.exhaustedVenues=exhausted;
-    await env.MORNING_KV.put(key,JSON.stringify(state),{expirationTtl:31536000});
+    await persistMorningState(env,key,state);
   }
 }
 // Separate, bounded official result archive. Never overwrite a verified result with a failed fetch.
