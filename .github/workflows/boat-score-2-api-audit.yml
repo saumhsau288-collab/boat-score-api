@@ -31,6 +31,26 @@ jobs:
           let failed=false;
           for(const date of dates){
             try{
+              const url=base+'/api/morning/snapshot?date='+date;
+              const initial=await fetch(url,{signal:AbortSignal.timeout(15000)}).then(r=>r.json());
+              const picks=Object.values(initial.categories||{}).flat();
+              const venues=[...new Set(picks.map(p=>p.venue))];
+              const statuses={};
+              for(let i=0;i<venues.length;i+=3)await Promise.allSettled(venues.slice(i,i+3).map(async venue=>{
+                const t=Date.now();
+                try{
+                  const r=await fetch(url+'&refreshDeadlines=1&deadlineVenue='+venue,{signal:AbortSignal.timeout(45000)});
+                  const d=await r.json();
+                  const rows=picks.filter(p=>p.venue===venue).map(p=>({race:p.race,...d.raceStatuses?.[venue+':'+p.race]}));
+                  for(const row of rows)statuses[venue+':'+row.race]=row;
+                  console.log('DISPLAY_DEADLINE_VENUE',JSON.stringify({date,venue,http:r.status,elapsedMs:Date.now()-t,rows}));
+                }catch(e){console.log('DISPLAY_DEADLINE_ERROR',date,venue,String(e));}
+              }));
+              console.log('DISPLAY_DEADLINE_COVERAGE',JSON.stringify({date,total:picks.length,known:picks.filter(p=>statuses[p.venue+':'+p.race]?.deadlineAt).length,official:picks.filter(p=>statuses[p.venue+':'+p.race]?.deadlineSource==='official_retrieved_schedule').length}));
+            }catch(e){console.log('DISPLAY_DEADLINE_AUDIT_ERROR',date,String(e));failed=true;}
+          }
+          for(const date of dates){
+            try{
               const get=async path=>{const r=await fetch(base+path+'?date='+date,{signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error(path+' HTTP '+r.status);return r.json();};
               const [snapshot,archive]=await Promise.all([get('/api/morning/snapshot'),get('/api/research/morning-records')]);
               const rows=new Map((archive.records||[]).map(x=>[x.venue+':'+x.race,x]));
