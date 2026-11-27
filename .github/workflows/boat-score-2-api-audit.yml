@@ -62,5 +62,20 @@ jobs:
               console.log('BOAT_ONE_CONDITIONAL '+JSON.stringify({date,wins:wins.length,totals}));
             }catch(e){failed=true;console.error('conditional audit',date,String(e));}
           }
+          for(let offset=1;offset<=7;offset++){
+            const date=new Date(Date.now()+9*3600000-offset*86400000).toISOString().slice(0,10).replaceAll('-','');
+            try{
+              const get=async p=>{const r=await fetch(base+p+'?date='+date,{signal:AbortSignal.timeout(25000),redirect:'error'});return r.ok?r.json():null;};
+              const [m,f]=await Promise.all([get('/api/research/morning-records'),get('/api/research/result-archive')]);
+              const t={matched:0,firstByBoat:Array(6).fill(0),secondByBoat:Array(6).fill(0),thirdByBoat:Array(6).fill(0),adjacent12:0,adjacent13:0,firstByScoreRank:Array(6).fill(0),byVenue:{}};
+              for(const x of m?.records||[]){
+                const y=f?.records?.[x.venue+':'+x.race],o=y?.finishOrder;
+                if(x.date!==date||y?.date!==date||y.verified!==true||!Array.isArray(o)||o.length!==6||new Set(o).size!==6||!o.every(n=>Number.isInteger(n)&&n>=1&&n<=6)||!(Date.parse(x.capturedAt)<Date.parse(x.deadlineAt))||!Array.isArray(x.predictedOrder)||x.predictedOrder.length!==6||new Set(x.predictedOrder).size!==6||!x.predictedOrder.every(n=>Number.isInteger(n)&&n>=1&&n<=6))continue;
+                t.matched++;t.firstByBoat[o[0]-1]++;t.secondByBoat[o[1]-1]++;t.thirdByBoat[o[2]-1]++;t.adjacent12+=Number(Math.abs(o[0]-o[1])===1);t.adjacent13+=Number(Math.abs(o[0]-o[2])===1);t.firstByScoreRank[x.predictedOrder.indexOf(o[0])]++;
+                const v=t.byVenue[x.venue]??={matched:0,firstByBoat:Array(6).fill(0),adjacent12:0};v.matched++;v.firstByBoat[o[0]-1]++;v.adjacent12+=Number(Math.abs(o[0]-o[1])===1);
+              }
+              console.log('ARCHIVED_PATTERN '+JSON.stringify({date,...t,note:'boat numbers, not actual entry courses'}));
+            }catch(e){failed=true;console.error('pattern audit',date,String(e));}
+          }
           if(failed)process.exitCode=1;
           JS
