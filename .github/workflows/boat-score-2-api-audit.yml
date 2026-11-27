@@ -35,6 +35,9 @@ jobs:
               const res=await fetch(base+'/api/research/morning-records?date='+date,{signal:AbortSignal.timeout(25000)});
               if(!res.ok){console.log('DEADLINE_ARCHIVE_HTTP '+date+' '+res.status);continue;}
               const data=await res.json();
+              const resultResponse=await fetch(base+'/api/research/result-archive?date='+date,{signal:AbortSignal.timeout(25000)});
+              const results=resultResponse.ok?(await resultResponse.json()).records||{}:{};
+              const recovered=[];
               const venues=[...new Set((data.records||[]).map(x=>x.venue))];
               for(const venue of venues){
                 try{
@@ -53,10 +56,25 @@ jobs:
                   }
                   if(!tables.length||new Set(tables.map(x=>JSON.stringify(x))).size!==1)throw Error('official timetable unavailable or ambiguous');
                   const times=tables[0].map(x=>x.padStart(5,'0'));
+                  const mins=times.map(x=>{const [h,m]=x.split(':').map(Number);return h>=0&&h<24&&m>=0&&m<60?h*60+m:NaN;});
+                  if(mins.some((x,i)=>!Number.isFinite(x)||(i>0&&x<=mins[i-1])))throw Error('invalid timetable ordering');
+                  for(const x of (data.records||[]).filter(x=>x.venue===venue&&x.date===date&&Number.isInteger(x.race)&&x.race>=1&&x.race<=12)){
+                    const corrected=new Date(Date.UTC(+date.slice(0,4),+date.slice(4,6)-1,+date.slice(6,8),0,mins[x.race-1]-540)).toISOString();
+                    const capture=Date.parse(x.capturedAt);
+                    const status=Number.isFinite(capture)&&new Date(capture+9*3600000).toISOString().slice(0,10).replaceAll('-','')===date&&capture<Date.parse(corrected)?'before_retrieved_schedule':'unverified_or_late';
+                    const y=results[venue+':'+x.race],o=y?.finishOrder;
+                    const finish=y?.verified===true&&y.date===date&&y.venue===venue&&y.race===x.race&&Array.isArray(o)&&o.length===6&&new Set(o).size===6&&o.every(n=>Number.isInteger(n)&&n>=1&&n<=6)?o:null;
+                    recovered.push({date,venue,race:x.race,originalDeadlineAt:x.deadlineAt,correctedDeadlineAt:corrected,capturedAt:x.capturedAt,checkedAt:new Date().toISOString(),source:url,status,finishOrder:finish,predictedOrder:x.predictedOrder});
+                  }
                   const rows=(data.records||[]).filter(x=>x.venue===venue).map(x=>({race:x.race,official:times[x.race-1],saved:Number.isFinite(Date.parse(x.deadlineAt))?new Date(Date.parse(x.deadlineAt)+9*3600000).toISOString().slice(11,16):null}));
                   console.log('OFFICIAL_DEADLINE_COMPARE '+JSON.stringify({date,venue,times,rows,matched:rows.filter(x=>x.official===x.saved).length,mismatched:rows.filter(x=>x.official!==x.saved).length}));
                 }catch(e){console.log('OFFICIAL_DEADLINE_UNVERIFIED '+JSON.stringify({date,venue,error:String(e)}));}
               }
+              const fs=await import('node:fs/promises');
+              await fs.mkdir('deadline-recovery',{recursive:true});
+              await fs.writeFile('deadline-recovery/'+date+'.json',JSON.stringify({date,mode:'retrospective_schedule_not_original_evidence',records:recovered},null,2));
+              const eligible=recovered.filter(x=>x.status==='before_retrieved_schedule'&&x.finishOrder);
+              console.log('RECOVERY_SUMMARY '+JSON.stringify({date,records:recovered.length,changed:recovered.filter(x=>Date.parse(x.originalDeadlineAt)!==Date.parse(x.correctedDeadlineAt)).length,preSchedule:recovered.filter(x=>x.status==='before_retrieved_schedule').length,matched:eligible.length,adjacent12:eligible.filter(x=>Math.abs(x.finishOrder[0]-x.finishOrder[1])===1).length,adjacent13:eligible.filter(x=>Math.abs(x.finishOrder[0]-x.finishOrder[2])===1).length,topScoreWins:eligible.filter(x=>x.predictedOrder?.[0]===x.finishOrder[0]).length}));
             }catch(e){console.log('DEADLINE_COMPARE_ERROR '+date+' '+String(e));}
           }
 
@@ -130,3 +148,11 @@ jobs:
           }
           if(failed)process.exitCode=1;
           JS
+
+      - name: Preserve deadline recovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deadline-recovery-${{ github.run_id }}
+          path: deadline-recovery/*.json
+          if-no-files-found: warn
