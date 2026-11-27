@@ -65,8 +65,13 @@ jobs:
           for(let offset=1;offset<=7;offset++){
             const date=new Date(Date.now()+9*3600000-offset*86400000).toISOString().slice(0,10).replaceAll('-','');
             try{
-              const get=async p=>{const r=await fetch(base+p+'?date='+date,{signal:AbortSignal.timeout(25000),redirect:'error'});return r.ok?r.json():null;};
-              const [m,f]=await Promise.all([get('/api/research/morning-records'),get('/api/research/result-archive')]);
+              const get=async p=>{const r=await fetch(base+p+'?date='+date,{signal:AbortSignal.timeout(25000),redirect:'error'});if(!r.ok&&r.status!==404)throw Error(p+' HTTP '+r.status);return {http:r.status,data:await r.json()};};
+              const [mr,fr]=await Promise.all([get('/api/research/morning-records'),get('/api/research/result-archive')]);
+              const m=mr.data,f=fr.data;
+              const groups={};
+              for(const x of m?.records||[])(groups[x.venue]??=[]).push({race:x.race,deadlineAt:x.deadlineAt});
+              const conflicts=Object.entries(groups).flatMap(([venue,rows])=>rows.sort((a,b)=>a.race-b.race).filter((x,i)=>!Number.isFinite(Date.parse(x.deadlineAt))||(i>0&&Date.parse(x.deadlineAt)<=Date.parse(rows[i-1].deadlineAt))).map(x=>({venue,...x})));
+              console.log('ARCHIVE_COVERAGE '+JSON.stringify({date,morningHttp:mr.http,resultHttp:fr.http,morningCount:m?.records?.length??0,resultCount:Object.keys(f?.records||{}).length,deadlineConflicts:conflicts,deadlineGroups:groups}));
               const t={matched:0,firstByBoat:Array(6).fill(0),secondByBoat:Array(6).fill(0),thirdByBoat:Array(6).fill(0),adjacent12:0,adjacent13:0,firstByScoreRank:Array(6).fill(0),byVenue:{}};
               for(const x of m?.records||[]){
                 const y=f?.records?.[x.venue+':'+x.race],o=y?.finishOrder;
