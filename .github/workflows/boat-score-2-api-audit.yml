@@ -29,6 +29,16 @@ jobs:
           const dates=requested?[requested]:[2,1,0].map(n=>new Date(Date.now()+9*3600000-n*86400000).toISOString().slice(0,10).replaceAll('-',''));
           const paths=['/api/morning/snapshot','/api/research/morning-records','/api/research/before-archive','/api/research/result-archive','/api/research/scheduler-health','/api/research/archive-quality','/api/research/four-prediction-comparison','/api/research/before-prediction-comparison','/api/research/morning-boat-one-audit'];
           let failed=false;
+          // Compact current-day read-only UI coverage audit.
+          const today=dates.at(-1);
+          try {
+            const response=await fetch(base+'/api/morning/snapshot?date='+today,{signal:AbortSignal.timeout(20000)});
+            const d=await response.json();
+            const groups={...d.categories,boatOne:d.boatOneRanking||[]};
+            const coverage=Object.fromEntries(Object.entries(groups).map(([k,rows])=>[k,{total:rows.length,deadline:rows.filter(p=>Number.isFinite(Date.parse(k==='boatOne'?p.deadlineAt:d.raceStatuses?.[p.venue+':'+p.race]?.deadlineAt))).length,hit:k==='boatOne'?null:rows.filter(p=>d.raceStatuses?.[p.venue+':'+p.race]?.status==='hit').length,miss:k==='boatOne'?null:rows.filter(p=>d.raceStatuses?.[p.venue+':'+p.race]?.status==='miss').length}]));
+            console.log('CURRENT_DISPLAY_AUDIT',JSON.stringify({date:today,http:response.status,status:d.status,evidence:d.evidence,coverage}));
+          } catch(e){console.log('CURRENT_DISPLAY_AUDIT_ERROR',String(e));}
+
           for(const date of dates){
             try{
               const url=base+'/api/morning/snapshot?date='+date;
