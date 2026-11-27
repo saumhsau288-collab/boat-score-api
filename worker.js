@@ -454,7 +454,7 @@ async function runScheduledBeforeArchive(env,scheduledTime){
      if(!ex.applied&&!st.applied)return null;
      const rankedScores=st.rankedScores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat);
      const picks=rankTrifectaCandidates(rankedScores);
-     return picks.ready?{status:'provisional_not_calibrated',method,morningCapturedAt:base.capturedAt,capturedAt,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),main:picks.main,upset:picks.upset,exhibitionApplied:ex.applied,startApplied:st.applied,startReason:st.reason,weatherApplied:false,makulaboApplied:false}:null;
+     return picks.ready?{status:'provisional_not_calibrated',method,morningCapturedAt:base.capturedAt,capturedAt,rankedScores,predictedOrder:rankedScores.map(x=>x.boat),main:picks.main,upset:picks.upset,firstPlaceBonus:picks.firstPlaceBonus,predictionVersion:picks.predictionVersion,firstPlaceOrder:picks.firstPlaceOrder,exhibitionApplied:ex.applied,startApplied:st.applied,startReason:st.reason,weatherApplied:false,makulaboApplied:false}:null;
     };
     observation.researchPrediction=recalculate(base.rankedScores,'morning_plus_verified_exhibition_start_v1');
     observation.localResearchPrediction=base.localMorning?.ready===true?recalculate(base.localMorning.rankedScores,'local_morning_plus_verified_exhibition_start_v1'):null;
@@ -1169,16 +1169,17 @@ document.getElementById('trialApply').onclick=function(){
  updateCombinedPredictionPanel();
 };
 document.getElementById('trialClear').onclick=function(){resetTrialConditions();updateCombinedPredictionPanel();};
-function trialPicks(rows){
+function trialPicks(rows,bonus=0){
  const scores=new Map(rows.map(x=>[x.boat,x.score])),comb=[];
  for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++){
   if(a===b||a===c||b===c)continue;
-  comb.push({boats:[a,b,c],strength:scores.get(a)*.56+scores.get(b)*.29+scores.get(c)*.15});
+  comb.push({boats:[a,b,c],strength:(scores.get(a)+(a===1?bonus:0))*.56+scores.get(b)*.29+scores.get(c)*.15});
  }
  comb.sort((a,b)=>b.strength-a.strength||a.boats.join('').localeCompare(b.boats.join('')));
  const main=comb.slice(0,6).map(x=>x.boats),used=new Set(main.map(x=>x.join('-')));
- const upset=comb.filter(x=>x.boats[0]>=4&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
- return {main,upset};
+ const firstPlaceOrder=[1,2,3,4,5,6].sort((a,b)=>(scores.get(b)+(b===1?bonus:0))-(scores.get(a)+(a===1?bonus:0))||a-b);
+ const upset=comb.filter(x=>(bonus===18?x.boats[0]!==firstPlaceOrder[0]:x.boats[0]>=4)&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
+ return {main,upset,firstPlaceBonus:bonus,predictionVersion:bonus===18?'boat_one_first_bonus18_v1':'legacy_v1',firstPlaceOrder};
 }
 function compactPredictionText(full){
  const t=String(full||'').trim();
@@ -1275,7 +1276,7 @@ async function renderSavedMorningBlue(){
  if(!source?.rankedScores){el.textContent='基礎予想未取得';continue;}
  const hasRecent=!source.makulaboApplied&&Number.isFinite(Date.parse(data.deadlineAt))&&Date.now()<Date.parse(data.deadlineAt)&&Array.isArray(recent)&&recent.length===6&&new Set(recent.map(x=>x.boat)).size===6&&source.rankedScores.every(x=>recent.some(y=>y.boat===x.boat&&Number.isFinite(y.points)));
  const rows=source.rankedScores.map(x=>({boat:x.boat,score:x.score+(hasRecent?recent.find(y=>y.boat===x.boat).points:0)})).sort((a,b)=>b.score-a.score||a.boat-b.boat);
- let picks=hasRecent?trialPicks(rows):source;
+ let picks=hasRecent?trialPicks(rows,source.firstPlaceBonus===18?18:0):source;
  let displayRows=rows, appliedRecent=hasRecent||source.makulaboApplied===true, appliedBefore=Boolean(before);
  const storageKey='four-prediction-final:v1:'+key+':'+i;
  const cutoff=Date.parse(data.deadlineAt),closed=Number.isFinite(cutoff)&&Date.now()>=cutoff;
@@ -1288,12 +1289,12 @@ async function renderSavedMorningBlue(){
   else try{localStorage.setItem(storageKey,JSON.stringify({key,mode:i,capturedAt:new Date().toISOString(),morningCapturedAt:base.capturedAt,rows,picks,recent:appliedRecent,before:Boolean(before)}));}catch{}
  }
  el.style.color=appliedBefore&&appliedRecent?'':'#fbbf24';
- el.textContent=(closed?'締切済／':'')+(appliedBefore?'直前情報反映':'直前情報未取得・基礎予想')+(appliedRecent?'／まくらぼ反映（端末保存）':'／まくらぼ未取得')+(String.fromCharCode(10)+'【本命6点】'+String.fromCharCode(10))+picks.main.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'【穴6点】'+String.fromCharCode(10))+picks.upset.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'予想順位：')+displayRows.map(x=>x.boat).join('-');
+ el.textContent=(closed?'締切済／':'')+(appliedBefore?'直前情報反映':'直前情報未取得・基礎予想')+(appliedRecent?'／まくらぼ反映（端末保存）':'／まくらぼ未取得')+(String.fromCharCode(10)+'【本命6点】'+String.fromCharCode(10))+picks.main.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'【穴6点】'+String.fromCharCode(10))+picks.upset.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'予想順位：')+displayRows.map(x=>x.boat).join('-')+(picks.firstPlaceBonus===18&&Array.isArray(picks.firstPlaceOrder)?String.fromCharCode(10)+'1着評価順位（1号艇＋18）：'+picks.firstPlaceOrder.join('-'):'');
  if(i===1)appendLocalRates(el,displayRows.map(x=>x.boat));
  }
  for(const [i,p] of [data.average,data.local].entries()){
  const el=targets[i];if(!el)continue;el.style.whiteSpace='pre-wrap';
- el.textContent=p?.ready?'朝の保存予想 '+new Date(p.capturedAt).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'})+(String.fromCharCode(10)+'【本命6点】'+String.fromCharCode(10))+p.main.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'【穴6点】'+String.fromCharCode(10))+p.upset.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'予想順位：')+p.predictedOrder.join('-'):'朝の保存予想なし';
+ el.textContent=p?.ready?'朝の保存予想 '+new Date(p.capturedAt).toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'})+(String.fromCharCode(10)+'【本命6点】'+String.fromCharCode(10))+p.main.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'【穴6点】'+String.fromCharCode(10))+p.upset.map(x=>x.join('-')).join(String.fromCharCode(10))+(String.fromCharCode(10)+'予想順位：')+p.predictedOrder.join('-')+(p.firstPlaceBonus===18&&Array.isArray(p.firstPlaceOrder)?String.fromCharCode(10)+'1着評価順位（1号艇＋18）：'+p.firstPlaceOrder.join('-'):''):'朝の保存予想なし';
  if(i===1&&p?.ready)appendLocalRates(el,p.predictedOrder);
  }
  }catch(e){if(generation===morningBlueGeneration&&key===dateCode()+':'+venue.value+':'+race.value)for(const el of targets)if(el)el.textContent='朝予想の取得失敗';}
@@ -3125,7 +3126,7 @@ document.getElementById('checkRaceData').addEventListener('click',async()=>{
      const candidateScores=totals.map(row=>({boat:row.boat,score:row.total}));
      const candidates=candidateGate?rankTrifectaCandidates(candidateScores):{ready:false};
      candidatesLine.textContent=candidates.ready?
-      '試験的な三連単候補（未検証の5指標順位モデル）：本命6点 '+candidates.main.map(x=>x.join('-')).join('、')+' ／ 外枠1着の穴6点 '+candidates.upset.map(x=>x.join('-')).join('、')+'。的中確率や期待回収率は算出していません。':
+      '試験的な三連単候補（未検証の5指標順位モデル）：本命6点 '+candidates.main.map(x=>x.join('-')).join('、')+' ／ 最高1着評価艇以外の穴6点 '+candidates.upset.map(x=>x.join('-')).join('、')+'。的中確率や期待回収率は算出していません。':
       '三連単の本命6点・穴6点：保留（公式6艇情報、まくらぼ直近50走、展示・進入・風の検証が必要）。';
      comparison.appendChild(candidatesLine);
      const audit=document.createElement('p');
@@ -4240,7 +4241,7 @@ function rankTrifectaCandidates(rankedScores, bonus=18) {
   const used=new Set(main.map(x=>x.join('-')));
   const top=[1,2,3,4,5,6].sort((a,b)=>(scores.get(b)+(b===1?bonus:0))-(scores.get(a)+(a===1?bonus:0))||a-b)[0];
   const upset=ordered.filter(x=>(bonus===0?x.boats[0]>=4:x.boats[0]!==top)&&!used.has(x.boats.join('-'))).slice(0,6).map(x=>x.boats);
-  return {ready:main.length===6&&upset.length===6,main,upset,reason:null,method:bonus===0?'two_factor_heuristic_unvalidated':'boat_one_first_bonus18_v1',firstPlaceBonus:bonus};
+  return {ready:main.length===6&&upset.length===6,main,upset,reason:null,method:bonus===0?'two_factor_heuristic_unvalidated':'boat_one_first_bonus18_v1',firstPlaceBonus:bonus,predictionVersion:bonus===0?'legacy_v1':'boat_one_first_bonus18_v1',firstPlaceOrder:[1,2,3,4,5,6].sort((a,b)=>(scores.get(b)+(b===1?bonus:0))-(scores.get(a)+(a===1?bonus:0))||a-b)};
 }
 
 function parseOfficialFinishOrder(html) {
