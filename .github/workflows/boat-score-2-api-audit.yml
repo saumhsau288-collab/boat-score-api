@@ -88,6 +88,21 @@ jobs:
                 patterns[side]++;v[side]++;
                 if(o[1]===p[0])patterns.topSecond++;else if(o[2]===p[0])patterns.topThird++;else patterns.topOutsidePodium++;
               }
+              const gaps={};
+              for(const x of eligible){
+                const original=(data.records||[]).find(y=>y.venue===x.venue&&y.race===x.race);
+                const p=original?.rankedScores;
+                if(!Array.isArray(p)||p.length!==6||new Set(p.map(y=>y.boat)).size!==6||!p.every(y=>Number.isFinite(y.score)&&Number.isInteger(y.boat)&&y.boat>=1&&y.boat<=6))continue;
+                const ranked=[...p].sort((a,b)=>b.score-a.score||a.boat-b.boat);
+                if(ranked[0].boat!==x.predictedOrder?.[0])continue;
+                const gap=ranked[0].score-ranked[1].score;
+                const key=gap===0?'0':gap<1?'0-1':gap<3?'1-3':gap<5?'3-5':'5+';
+                const g=gaps[key]??={matched:0,topWins:0,topSecond:0,topThird:0,topOutside:0};
+                g.matched++;
+                const pos=x.finishOrder.indexOf(ranked[0].boat);
+                g[['topWins','topSecond','topThird'][pos]||'topOutside']++;
+              }
+              console.log('RECOVERED_SCORE_GAPS '+JSON.stringify({date,gaps,mode:'retrospective_unvalidated'}));
               console.log('RECOVERED_RANK_PATTERNS '+JSON.stringify({date,mode:'boat_number_not_actual_course',...patterns}));
               console.log('RECOVERY_SUMMARY '+JSON.stringify({date,records:recovered.length,changed:recovered.filter(x=>Date.parse(x.originalDeadlineAt)!==Date.parse(x.correctedDeadlineAt)).length,preSchedule:recovered.filter(x=>x.status==='before_retrieved_schedule').length,matched:eligible.length,adjacent12:eligible.filter(x=>Math.abs(x.finishOrder[0]-x.finishOrder[1])===1).length,adjacent13:eligible.filter(x=>Math.abs(x.finishOrder[0]-x.finishOrder[2])===1).length,topScoreWins:eligible.filter(x=>x.predictedOrder?.[0]===x.finishOrder[0]).length}));
             }catch(e){console.log('DEADLINE_COMPARE_ERROR '+date+' '+String(e));}
