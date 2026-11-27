@@ -240,7 +240,10 @@ jobs:
             try{
               const audit=await get('/api/research/morning-boat-one-audit?date='+date);
               const wins=(audit.details||[]).filter(x=>x.status==='win'&&x.finishOrder?.[0]===1);
-              const morning=await get('/api/research/morning-records?date='+date);
+              const morningResponse=await fetch(base+'/api/research/morning-records?date='+date,{signal:AbortSignal.timeout(25000),redirect:'error'});
+              if(morningResponse.status===404&&date===new Date(Date.now()+9*3600000).toISOString().slice(0,10).replaceAll('-','')&&new Date(Date.now()+9*3600000).getUTCHours()<8){console.log('MORNING_AUDIT_NOT_DUE',date);continue;}
+              if(!morningResponse.ok)throw Error('morning-records HTTP '+morningResponse.status);
+              const morning=await morningResponse.json();
               const sample=(morning.records||[]).slice(0,3);
               for(const x of sample){
                 const d=await get('/api/morning/race-predictions?date='+date+'&venue='+x.venue+'&race='+x.race);
