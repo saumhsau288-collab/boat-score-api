@@ -37,5 +37,24 @@ jobs:
               if(!res.ok&&res.status!==404)failed=true;
             }catch(e){failed=true;console.error(path,String(e));}
           }
+          for(const date of dates){
+            const get=async(path)=>{const r=await fetch(base+path,{signal:AbortSignal.timeout(25000),redirect:'error'});if(!r.ok)throw Error(path+' HTTP '+r.status);return r.json();};
+            try{
+              const audit=await get('/api/research/morning-boat-one-audit?date='+date);
+              const wins=(audit.details||[]).filter(x=>x.status==='win'&&x.finishOrder?.[0]===1);
+              const totals=Object.fromEntries(['average','local'].map(k=>[k,{matched:0,main:0,upset:0,either:0,missing:0}]));
+              for(const x of wins){
+                const d=await get('/api/morning/race-predictions?date='+date+'&venue='+x.venue+'&race='+x.race);
+                const actual=x.finishOrder.slice(0,3).join('-');
+                for(const k of Object.keys(totals)){
+                  const p=d[k],t=totals[k];
+                  if(d.date!==date||d.venue!==x.venue||d.race!==x.race||!p||!Array.isArray(p.main)||!Array.isArray(p.upset)||p.main.length!==6||p.upset.length!==6){t.missing++;continue;}
+                  const hit=a=>a.some(y=>Array.isArray(y)&&y.join('-')===actual);
+                  const m=hit(p.main),u=hit(p.upset);t.matched++;t.main+=Number(m);t.upset+=Number(u);t.either+=Number(m||u);
+                }
+              }
+              console.log('BOAT_ONE_CONDITIONAL '+JSON.stringify({date,wins:wins.length,totals}));
+            }catch(e){failed=true;console.error('conditional audit',date,String(e));}
+          }
           if(failed)process.exitCode=1;
           JS
