@@ -156,7 +156,9 @@ console.log('Before archive retains independently verified partial data, retries
 const invStart=src.indexOf('function buildArchiveInventory(');
 const invEnd=src.indexOf('\nconst workerHandler = {',invStart);
 assert.ok(invStart>=0&&invEnd>invStart);
-const inventory=vm.runInNewContext(src.slice(invStart,invEnd)+'\nbuildArchiveInventory;');
+const inventory=vm.runInNewContext(src.slice(invStart,invEnd)+'\nbuildArchiveInventory;',{
+  jstDateFromUtc:d=>new Date(d.getTime()+9*3600000).toISOString().slice(0,10).replace(/-/g,'')
+});
 const invDate='20261125',at='2026-11-25T03:00:00.000Z',end='2026-11-25T03:05:00.000Z';
 const baseRow={date:invDate,venue:1,race:1,ready:true,officialVerified:true,statsVerified:true,rankedScores:boats,capturedAt:at,deadlineAt:end,predictedOrder:[1,2,3,4,5,6]};
 const savedMorning={date:invDate,venues:[1],records:[baseRow,{...baseRow,race:2,predictedOrder:null},{...baseRow,race:3,statsVerified:false}]};
