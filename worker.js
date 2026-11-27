@@ -123,7 +123,7 @@ function buildVerifiedMorningCategories(records,date){
   for(const [category,picks] of Object.entries(categories)){
     for(const pick of picks){
       const row=byKey.get(pick.venue+':'+pick.race);
-      if(!row||pick.date!==date||pick.category!==category||pick.capturedAt!==row.capturedAt||pick.deadlineAt!==row.deadlineAt||JSON.stringify(pick.predictedOrder)!==JSON.stringify(row.predictedOrder))
+      if(!row||pick.date!==date||pick.category!==category||pick.capturedAt!==row.capturedAt||pick.deadlineAt!==row.deadlineAt||JSON.stringify(pick.predictedOrder)!==JSON.stringify(row.predictedOrder)||!Array.isArray(pick.rankedScores)||JSON.stringify(pick.rankedScores)!==JSON.stringify(row.rankedScores.slice().sort((a,b)=>b.score-a.score||a.boat-b.boat).map(x=>({boat:x.boat,score:x.score}))))
         throw Error('Morning ranking evidence mismatch: '+category+':'+pick.venue+':'+pick.race);
     }
   }
@@ -833,7 +833,17 @@ if (u.pathname === '/api/morning/snapshot') {
   const validCandidate=x=>{const row=records.find(y=>y.venue===x?.venue&&y.race===x?.race);return !!(row&&evidenceValid(row)&&x.date===date&&x.capturedAt===row.capturedAt&&x.deadlineAt===row.deadlineAt&&JSON.stringify(x.predictedOrder)===JSON.stringify(row.predictedOrder));};
   const verifiedCategories=Object.fromEntries(['main','upset','chaos'].map(k=>[k,(Array.isArray(state.categories?.[k])?state.categories[k]:[]).filter(validCandidate)]));
   const validCandidateCount=Object.values(verifiedCategories).reduce((n,rows)=>n+rows.length,0);
-  return reply(request,{date,status:state.status,evidence:{verifiedRecords:verifiedEvidence,unverifiedRecords:records.length-verifiedEvidence,quarantinedRecords:Array.isArray(state.invalidMorningRecords)?state.invalidMorningRecords.length:0,verifiedCandidates:validCandidateCount,unverifiedCandidates:rankedCandidates.length-validCandidateCount},updatedAt:state.updatedAt||null,venues:state.venues||[],
+  // Legacy candidates remain immutable. Report missing evidence separately from mismatches.
+  const candidateEvidenceIssues={missingRecord:0,missingFields:0,mismatch:0};
+  for(const pick of rankedCandidates){
+    if(validCandidate(pick))continue;
+    const row=records.find(y=>y.venue===pick?.venue&&y.race===pick?.race);
+    if(!row)candidateEvidenceIssues.missingRecord++;
+    else if(!pick.capturedAt||!pick.deadlineAt||!Array.isArray(pick.predictedOrder)||!Array.isArray(pick.rankedScores))candidateEvidenceIssues.missingFields++;
+    else candidateEvidenceIssues.mismatch++;
+  }
+
+  return reply(request,{date,status:state.status,evidence:{verifiedRecords:verifiedEvidence,unverifiedRecords:records.length-verifiedEvidence,quarantinedRecords:Array.isArray(state.invalidMorningRecords)?state.invalidMorningRecords.length:0,verifiedCandidates:validCandidateCount,unverifiedCandidates:rankedCandidates.length-validCandidateCount,candidateEvidenceIssues,categoryEvidenceVersion:state.categoryEvidenceVersion||null},updatedAt:state.updatedAt||null,venues:state.venues||[],
     completedVenues:state.completedVenues||[],failedVenues:state.failedVenues||[],exhaustedVenues:state.exhaustedVenues||[],
     scheduleLastCheck:state.scheduleLastCheck||'unknown',
     verifiedRacesByVenue:Object.fromEntries((state.venues||[]).map(v=>[v,(state.records||[]).filter(r=>r.venue===v&&evidenceValid(r)).length])),
