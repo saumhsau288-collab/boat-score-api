@@ -74,6 +74,21 @@ jobs:
               await fs.mkdir('deadline-recovery',{recursive:true});
               await fs.writeFile('deadline-recovery/'+date+'.json',JSON.stringify({date,mode:'retrospective_schedule_not_original_evidence',records:recovered},null,2));
               const eligible=recovered.filter(x=>x.status==='before_retrieved_schedule'&&x.finishOrder);
+              const patterns={matched:0,topLost:0,winnerInside:0,winnerOutside:0,topSecond:0,topThird:0,topOutsidePodium:0,byVenue:{},winnerRank:[0,0,0,0,0,0]};
+              for(const x of eligible){
+                const p=x.predictedOrder,o=x.finishOrder;
+                if(!Array.isArray(p)||p.length!==6||new Set(p).size!==6||!p.every(n=>Number.isInteger(n)&&n>=1&&n<=6))continue;
+                patterns.matched++;
+                const v=patterns.byVenue[x.venue]??={matched:0,topLost:0,winnerInside:0,winnerOutside:0};
+                v.matched++;
+                patterns.winnerRank[p.indexOf(o[0])]++;
+                if(p[0]===o[0])continue;
+                patterns.topLost++;v.topLost++;
+                const side=o[0]<p[0]?'winnerInside':'winnerOutside';
+                patterns[side]++;v[side]++;
+                if(o[1]===p[0])patterns.topSecond++;else if(o[2]===p[0])patterns.topThird++;else patterns.topOutsidePodium++;
+              }
+              console.log('RECOVERED_RANK_PATTERNS '+JSON.stringify({date,mode:'boat_number_not_actual_course',...patterns}));
               console.log('RECOVERY_SUMMARY '+JSON.stringify({date,records:recovered.length,changed:recovered.filter(x=>Date.parse(x.originalDeadlineAt)!==Date.parse(x.correctedDeadlineAt)).length,preSchedule:recovered.filter(x=>x.status==='before_retrieved_schedule').length,matched:eligible.length,adjacent12:eligible.filter(x=>Math.abs(x.finishOrder[0]-x.finishOrder[1])===1).length,adjacent13:eligible.filter(x=>Math.abs(x.finishOrder[0]-x.finishOrder[2])===1).length,topScoreWins:eligible.filter(x=>x.predictedOrder?.[0]===x.finishOrder[0]).length}));
             }catch(e){console.log('DEADLINE_COMPARE_ERROR '+date+' '+String(e));}
           }
