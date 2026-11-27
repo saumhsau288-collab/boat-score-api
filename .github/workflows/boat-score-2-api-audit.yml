@@ -1,0 +1,32 @@
+name: Boat Score 2 read-only API audit
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix-boat-score-2-syntax-20261115]
+    paths: ['.github/workflows/boat-score-2-api-audit.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/fix-boat-score-2-syntax-20261115'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read preview API diagnostics
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          const base='https://boat-score-2-preview.saumh-sau-288.workers.dev';
+          const date=new Date(Date.now()+9*3600000).toISOString().slice(0,10).replaceAll('-','');
+          const paths=['/api/morning/snapshot','/api/research/morning-records','/api/research/before-archive','/api/research/result-archive','/api/research/scheduler-health','/api/research/archive-quality'];
+          let failed=false;
+          for(const path of paths){
+            try{
+              const res=await fetch(base+path+'?date='+date,{signal:AbortSignal.timeout(25000),redirect:'error'});
+              const d=await res.json();
+              console.log(JSON.stringify({path,date,http:res.status,status:d.status,summary:Object.fromEntries(Object.entries(d).map(([k,v])=>[k,Array.isArray(v)?{count:v.length}:k==='categories'||k==='verifiedCategories'?Object.fromEntries(Object.entries(v||{}).map(([a,b])=>[a,Array.isArray(b)?b.length:null])):v]))}));
+              if(!res.ok&&res.status!==404)failed=true;
+            }catch(e){failed=true;console.error(path,String(e));}
+          }
+          if(failed)process.exitCode=1;
+          JS
