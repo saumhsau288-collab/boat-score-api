@@ -29,6 +29,38 @@ jobs:
           const dates=requested?[requested]:[2,1,0].map(n=>new Date(Date.now()+9*3600000-n*86400000).toISOString().slice(0,10).replaceAll('-',''));
           const paths=['/api/morning/snapshot','/api/research/morning-records','/api/research/before-archive','/api/research/result-archive','/api/research/scheduler-health','/api/research/archive-quality','/api/research/four-prediction-comparison','/api/research/before-prediction-comparison','/api/research/morning-boat-one-audit'];
           let failed=false;
+          // Fixed-date paired retrospective proxy-course study, no archive writes.
+          try {
+            const date='20261128';
+            const get=async p=>{const r=await fetch(base+p+'?date='+date,{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error(p+' '+r.status);return r.json();};
+            const [m,s,f]=await Promise.all([get('/api/research/morning-records'),get('/api/research/before-observations'),get('/api/research/result-archive')]);
+            const valid=a=>Array.isArray(a)&&a.length===6&&new Set(a).size===6&&a.every(b=>Number.isInteger(b)&&b>=1&&b<=6);
+            const totals={},excluded={},seen=new Set();let n=0,active=0;
+            for(const x of m.records||[]){
+              const id=x.venue+':'+x.race,y=f.records?.[id],o=y?.finishOrder,rs=x.rankedScores;
+              const st=(s.records||[]).find(z=>z.date===date&&z.venue===x.venue&&z.race===x.race&&z.kind==='start');
+              const rows=st?.data?.rows;
+              const reason=seen.has(id)?'duplicate':x.date!==date||y?.date!==date||y?.venue!==x.venue||y?.race!==x.race||y?.verified!==true||!valid(o)?'result':!(Date.parse(x.capturedAt)<Date.parse(x.deadlineAt))?'morning_time':!Array.isArray(rs)||!valid(rs.map(z=>z.boat))||!rs.every(z=>Number.isFinite(z.score))?'scores':!st||st.data?.verified!==true||!(Date.parse(st.capturedAt)<Date.parse(st.deadlineAt))||Date.parse(st.deadlineAt)!==Date.parse(x.deadlineAt)||!Array.isArray(rows)||!valid(rows.map(z=>z.boat))||!valid(rows.map(z=>z.course))?'start':!rows.every(z=>typeof z.startTiming==='number'&&Number.isFinite(z.startTiming)&&z.startTiming>=0&&z.startTiming<=1)?'non_numeric_st':null;
+              if(reason){excluded[reason]=(excluded[reason]||0)+1;continue;}
+              seen.add(id);n++;
+              const scores=new Map(rs.map(z=>[z.boat,z.score])),c3=rows.find(z=>z.course===3),c4=rows.find(z=>z.course===4),c5=rows.find(z=>z.course===5);
+              const fast=c4.startTiming<c3.startTiming,strong=scores.get(c4.boat)>scores.get(c3.boat);
+              if(fast||strong)active++;
+              for(const adjusted of [false,true]){
+                const score=(b,pos)=>scores.get(b)+(pos===1&&b===1?18:0)+(adjusted&&b===c4.boat?2*Number(fast)+2*Number(strong):0)+(adjusted&&fast&&strong&&b===c5.boat&&pos!==1?2:0);
+                const top=[1,2,3,4,5,6].sort((a,b)=>score(b,1)-score(a,1)||a-b)[0],all=[];
+                for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&a!==c&&b!==c)all.push({a,key:[a,b,c].join('-'),v:score(a,1)*.56+score(b,2)*.29+score(c,3)*.15});
+                all.sort((a,b)=>b.v-a.v||a.key.localeCompare(b.key));
+                for(const k of [6,10]){
+                  const t=totals[(adjusted?'proxy':'base')+'_'+k]??={n:0,main:0,upset:0,either:0,shortfall:0};
+                  const main=all.slice(0,k),hole=all.slice(k).filter(z=>z.a!==top).slice(0,12-k),actual=o.slice(0,3).join('-');
+                  const mh=main.some(z=>z.key===actual),hh=hole.some(z=>z.key===actual);
+                  t.n++;t.main+=+mh;t.upset+=+hh;t.either+=+(mh||hh);t.shortfall+=+(hole.length!==12-k);
+                }
+              }
+            }
+            console.log('KADO_PROXY_STUDY',JSON.stringify({date,n,active,excluded,totals,mode:'morning_scores_plus_archived_exhibition_ST_proxy_not_actual_SD'}));
+          }catch(e){console.log('KADO_PROXY_ERROR',String(e));}
           for(const date of dates){
             try{
               const get=async p=>{const r=await fetch(base+p+'?date='+date,{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error(p+' '+r.status);return r.json();};
