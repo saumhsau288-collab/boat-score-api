@@ -44,10 +44,10 @@ jobs:
                 for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&a!==c&&b!==c)all.push({a,key:[a,b,c].join('-'),score:first(a)*.56+scores.get(b)*.29+scores.get(c)*.15});
                 all.sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
                 const actual=o.slice(0,3).join('-');
-                const hits=[6,8,10,12].map(n=>[...all.slice(0,n),...all.slice(n).filter(z=>z.a!==top).slice(0,12-n)].some(z=>z.key===actual));
+                const hits=[6,8,10,12].map(n=>[...all.slice(0,n),...all.slice(n).filter(z=>z.a!==top).slice(0,6)].some(z=>z.key===actual));
                 for(const g of [groups.all,...(selected.has(id)?[groups.main]:[])]){g.n++;hits.forEach((h,i)=>g.hits[i]+=Number(h));}
               }
-              console.log('ALLOCATION_RESEARCH',JSON.stringify({date,mode:'retrospective_first_place_bonus18_not_original_tickets',allocations:[6,8,10,12],groups}));
+              console.log('ALLOCATION_RESEARCH',JSON.stringify({date,mode:'retrospective_first_place_bonus18_not_original_tickets',holePoints:6,allocations:[6,8,10,12],groups}));
             }catch(e){console.log('ALLOCATION_RESEARCH_ERROR',date,String(e));}
           }
 
