@@ -1,0 +1,98 @@
+name: Research pre-race evidence gate tests
+
+on:
+  push:
+    branches:
+      - research/verified-prerace-evidence-gate-20261123
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check evidence gate syntax
+        run: |
+          node --check scripts/validate-independent-prerace-evidence.mjs
+          node --check scripts/validate-independent-prerace-evidence.test.mjs
+          node --check scripts/audit-independent-morning-capture.mjs
+          node --check scripts/audit-independent-morning-capture.test.mjs
+          node --check scripts/audit-morning-capture-evidence.mjs
+          node --check scripts/audit-morning-capture-evidence.test.mjs
+          node --check scripts/bridge-racer-evidence-to-method-gate.mjs
+          node --check scripts/bridge-racer-evidence-to-method-gate.test.mjs
+          node --check scripts/evaluate-saved-independent-methods.mjs
+          node --check scripts/evaluate-saved-independent-methods.test.mjs
+          node --check scripts/seal-independent-prediction-draft.mjs
+          node --check scripts/seal-independent-prediction-draft.test.mjs
+          node --check scripts/append-independent-research-draft.mjs
+          node --check scripts/append-independent-research-draft.test.mjs
+          node --check scripts/read-independent-research-drafts.mjs
+          node --check scripts/read-independent-research-drafts.test.mjs
+          node --check scripts/report-independent-method-accuracy.mjs
+          node --check scripts/report-independent-method-accuracy.test.mjs
+          node --check scripts/compare-saved-old-new-methods.mjs
+          node --check scripts/compare-saved-old-new-methods.test.mjs
+          node --check scripts/audit-paired-comparison-fairness.mjs
+          node --check scripts/audit-paired-comparison-fairness.test.mjs
+          node --check scripts/inspect-saved-morning-capture.mjs
+          node --check scripts/inspect-saved-morning-capture.test.mjs
+          node --check scripts/fetch-readonly-morning-ranking-snapshot.mjs
+          node --check scripts/fetch-readonly-morning-ranking-snapshot.test.mjs
+          node --check scripts/assess-prediction-phase.mjs
+          node --check scripts/assess-prediction-phase.test.mjs
+          node --check scripts/seal-morning-evidence-draft.mjs
+          node --check scripts/seal-morning-evidence-draft.test.mjs
+          node --check scripts/store-morning-evidence-drafts.mjs
+          node --check scripts/store-morning-evidence-drafts.test.mjs
+          node --check scripts/import-morning-evidence-snapshot.mjs
+          node --check scripts/import-morning-evidence-snapshot.test.mjs
+          node --check scripts/prepare-morning-evidence-from-official-entry.mjs
+          node --check scripts/prepare-morning-evidence-from-official-entry.test.mjs
+          node --check scripts/import-morning-official-bundle.mjs
+          node --check scripts/import-morning-official-bundle.test.mjs
+          node --check scripts/audit-morning-collector-compatibility.mjs
+          node --check scripts/audit-morning-collector-compatibility.test.mjs
+      - name: Test evidence gate offline
+        run: |
+          node scripts/validate-independent-prerace-evidence.test.mjs
+          node scripts/audit-independent-morning-capture.test.mjs
+          node scripts/audit-morning-capture-evidence.test.mjs
+          node scripts/bridge-racer-evidence-to-method-gate.test.mjs
+          node scripts/evaluate-saved-independent-methods.test.mjs
+          node scripts/seal-independent-prediction-draft.test.mjs
+          node scripts/append-independent-research-draft.test.mjs
+          node scripts/read-independent-research-drafts.test.mjs
+          node scripts/report-independent-method-accuracy.test.mjs
+          node scripts/compare-saved-old-new-methods.test.mjs
+          node scripts/audit-paired-comparison-fairness.test.mjs
+          node scripts/inspect-saved-morning-capture.test.mjs
+          node scripts/fetch-readonly-morning-ranking-snapshot.test.mjs
+          node scripts/assess-prediction-phase.test.mjs
+          node scripts/seal-morning-evidence-draft.test.mjs
+          node scripts/store-morning-evidence-drafts.test.mjs
+          node scripts/import-morning-evidence-snapshot.test.mjs
+          node scripts/prepare-morning-evidence-from-official-entry.test.mjs
+          node scripts/import-morning-official-bundle.test.mjs
+          node scripts/audit-morning-collector-compatibility.test.mjs
+      - name: Read-only preview morning snapshot probe
+        continue-on-error: true
+        env:
+          TARGET_DATE: '20261123'
+        run: |
+          node scripts/fetch-readonly-morning-ranking-snapshot.mjs "$TARGET_DATE" "morning-snapshot-audit-${TARGET_DATE}.json"
+      - name: Upload read-only snapshot probe artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-morning-snapshot-audit
+          path: morning-snapshot-audit-*.json
+          if-no-files-found: warn
+          retention-days: 14
