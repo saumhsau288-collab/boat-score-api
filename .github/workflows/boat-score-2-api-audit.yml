@@ -29,6 +29,28 @@ jobs:
           const dates=requested?[requested]:[2,1,0].map(n=>new Date(Date.now()+9*3600000-n*86400000).toISOString().slice(0,10).replaceAll('-',''));
           const paths=['/api/morning/snapshot','/api/research/morning-records','/api/research/before-archive','/api/research/result-archive','/api/research/scheduler-health','/api/research/archive-quality','/api/research/four-prediction-comparison','/api/research/before-prediction-comparison','/api/research/morning-boat-one-audit'];
           let failed=false;
+          for(const date of dates){
+            try{
+              const get=async p=>{const r=await fetch(base+p+'?date='+date,{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error(p+' '+r.status);return r.json();};
+              const [m,f,s]=await Promise.all([get('/api/research/morning-records'),get('/api/research/result-archive'),get('/api/morning/snapshot')]);
+              const selected=new Set((s.categories?.main||[]).map(x=>x.venue+':'+x.race));
+              const groups={all:{n:0,hits:[0,0,0,0]},main:{n:0,hits:[0,0,0,0]}};
+              const seen=new Set();
+              for(const x of m.records||[]){
+                const id=x.venue+':'+x.race,y=f.records?.[id],o=y?.finishOrder,rs=x.rankedScores;
+                if(seen.has(id)||x.date!==date||y?.date!==date||y.verified!==true||!(Date.parse(x.capturedAt)<Date.parse(x.deadlineAt))||!Array.isArray(o)||o.length!==6||new Set(o).size!==6||!o.every(b=>Number.isInteger(b)&&b>=1&&b<=6)||!Array.isArray(rs)||rs.length!==6||new Set(rs.map(z=>z.boat)).size!==6||!rs.every(z=>Number.isInteger(z.boat)&&z.boat>=1&&z.boat<=6&&Number.isFinite(z.score)))continue;
+                seen.add(id);
+                const scores=new Map(rs.map(z=>[z.boat,z.score])),first=b=>scores.get(b)+(b===1?18:0),top=[1,2,3,4,5,6].sort((a,b)=>first(b)-first(a)||a-b)[0],all=[];
+                for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&a!==c&&b!==c)all.push({a,key:[a,b,c].join('-'),score:first(a)*.56+scores.get(b)*.29+scores.get(c)*.15});
+                all.sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
+                const actual=o.slice(0,3).join('-');
+                const hits=[6,8,10,12].map(n=>[...all.slice(0,n),...all.slice(n).filter(z=>z.a!==top).slice(0,12-n)].some(z=>z.key===actual));
+                for(const g of [groups.all,...(selected.has(id)?[groups.main]:[])]){g.n++;hits.forEach((h,i)=>g.hits[i]+=Number(h));}
+              }
+              console.log('ALLOCATION_RESEARCH',JSON.stringify({date,mode:'retrospective_first_place_bonus18_not_original_tickets',allocations:[6,8,10,12],groups}));
+            }catch(e){console.log('ALLOCATION_RESEARCH_ERROR',date,String(e));}
+          }
+
           // Compact current-day read-only UI coverage audit.
           const today=dates.at(-1);
           try {
