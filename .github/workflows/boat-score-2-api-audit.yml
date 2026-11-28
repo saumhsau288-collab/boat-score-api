@@ -34,7 +34,7 @@ jobs:
               const get=async p=>{const r=await fetch(base+p+'?date='+date,{signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error(p+' '+r.status);return r.json();};
               const [m,f,s]=await Promise.all([get('/api/research/morning-records'),get('/api/research/result-archive'),get('/api/morning/snapshot')]);
               const selected=new Set((s.categories?.main||[]).map(x=>x.venue+':'+x.race));
-              const groups={all:{n:0,hits:[0,0,0,0]},main:{n:0,hits:[0,0,0,0]}};
+              const groups={all:{n:0,hits:Array(28).fill(0)},main:{n:0,hits:Array(28).fill(0)}};
               const seen=new Set();
               for(const x of m.records||[]){
                 const id=x.venue+':'+x.race,y=f.records?.[id],o=y?.finishOrder,rs=x.rankedScores;
@@ -44,10 +44,10 @@ jobs:
                 for(let a=1;a<=6;a++)for(let b=1;b<=6;b++)for(let c=1;c<=6;c++)if(a!==b&&a!==c&&b!==c)all.push({a,key:[a,b,c].join('-'),score:first(a)*.56+scores.get(b)*.29+scores.get(c)*.15});
                 all.sort((a,b)=>b.score-a.score||a.key.localeCompare(b.key));
                 const actual=o.slice(0,3).join('-');
-                const hits=[6,8,10,12].map(n=>[...all.slice(0,n),...all.slice(n).filter(z=>z.a!==top).slice(0,6)].some(z=>z.key===actual));
+                const hits=[6,8,10,12].flatMap(n=>Array.from({length:7},(_,h)=>[...all.slice(0,n),...all.slice(n).filter(z=>z.a!==top).slice(0,h)].some(z=>z.key===actual)));
                 for(const g of [groups.all,...(selected.has(id)?[groups.main]:[])]){g.n++;hits.forEach((h,i)=>g.hits[i]+=Number(h));}
               }
-              console.log('ALLOCATION_RESEARCH',JSON.stringify({date,mode:'retrospective_first_place_bonus18_not_original_tickets',holePoints:6,allocations:[6,8,10,12],groups}));
+              console.log('ALLOCATION_RESEARCH',JSON.stringify({date,mode:'retrospective_first_place_bonus18_not_original_tickets',holePoints:[0,1,2,3,4,5,6],allocations:[6,8,10,12],groups}));
             }catch(e){console.log('ALLOCATION_RESEARCH_ERROR',date,String(e));}
           }
 
